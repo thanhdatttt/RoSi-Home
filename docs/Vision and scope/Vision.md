@@ -1,0 +1,9 @@
+## 1. Vision – AI Landlord Assistant
+
+RosiHome's long-term vision is to evolve beyond a property management application into an **AI-powered Landlord Assistant**. Instead of simply recording data and automating repetitive tasks, the platform will proactively help landlords make better operational decisions. By continuously learning from rent payments, utility consumption, maintenance requests, lease renewals, and occupancy history, the AI assistant will provide personalized recommendations such as identifying overdue payments, predicting lease expirations, detecting abnormal utility usage, forecasting vacancies, and generating monthly business insights. The goal is to transform RosiHome from a passive management tool into an intelligent assistant that helps small landlords spend less time on administration and more time making informed decisions.
+
+---
+
+## 2. Vision – Rental Market Benchmark Data
+
+As RosiHome grows and serves thousands of rental units across different regions, the platform aims to build one of the largest anonymized datasets on Vietnam's small-scale rental market. This aggregated data will enable landlords to benchmark their properties against similar rentals by comparing occupancy rates, rental prices, utility costs, payment behavior, and maintenance trends within their local area. Rather than relying solely on personal experience, landlords will gain access to data-driven insights that support pricing strategies, investment decisions, and business planning. Over time, this benchmarking capability can become a unique competitive advantage that is difficult for new competitors to replicate, while creating additional value beyond traditional property management software.
