@@ -32,7 +32,7 @@
 - [ ] Users can successfully log in using registered credentials.
 - [ ] System enforces role-based access control (RBAC): Tenants only access their own data; Landlords access all data for their managed properties.
 - [ ] System prevents Tenants from accessing Landlord-specific views (e.g., business dashboard) by returning a 403 Forbidden error.
-- [ ] Provide password recovery functionality via email or SMS.
+- [ ] Provide password recovery functionality via email.
 
 ---
 
@@ -65,21 +65,24 @@
 **Acceptance Criteria:**
 - [ ] Landlord can create a tenant profile including name, phone number, and identification details (e.g., ID card number).
 - [ ] System prevents duplicate tenant profiles within the same landlord portfolio based on ID number.
-- [ ] Tenant profiles can be linked to registered tenant user accounts to grant them dashboard access.
+- [ ] Landlord can generate and send an invitation link (which includes a unique "Tenant Code") to the tenant.
+- [ ] When the tenant registers or logs in via the invitation link, their user account is automatically linked to the tenant profile.
+- [ ] Fallback: If the tenant registers independently, they can manually enter the unique "Tenant Code" in their dashboard to link their account to the landlord's tenant profile.
 
 ---
 
-### F-04 · Utility Pricing Configuration
+### F-04 · Utility & Additional Fees Configuration
 
 - **Workflows:** WF-1
-- **User Story:** As a landlord, I want to configure the pricing for utilities like electricity and water, so that the system calculates monthly charges accurately based on my specific rates.
+- **User Story:** As a landlord, I want to configure the pricing for utilities (electricity, water) and other recurring fees (e.g., internet, trash collection, parking), so that the system calculates monthly charges accurately based on my specific rates.
 - **Priority:** Must Have
 
 **Acceptance Criteria:**
 - [ ] Landlord can set a price per unit (kWh) for electricity.
-- [ ] Landlord can set a price per unit (m3) or per person for water.
-- [ ] These utility rates are saved globally for the property or individually per room.
-- [ ] The system uses these configured rates when calculating the monthly invoice.
+- [ ] Landlord can set a price per unit (m3) or a fixed rate per person for water.
+- [ ] Landlord can define and configure custom additional recurring fees (e.g., Internet, Trash Collection, Parking) as fixed monthly amounts per room or per person.
+- [ ] These utility rates and additional fees can be saved globally for the entire property or customized individually per room.
+- [ ] The system automatically includes all configured utilities and active additional fees when calculating the monthly invoice.
 
 ---
 
