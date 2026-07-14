@@ -27,19 +27,12 @@ Every month the landlord must manually calculate rental invoices by visiting eac
 ### Current Workflow
 
 1. The landlord visits every rental unit to record electricity and water meter readings in a notebook.
-    
 2. Previous meter readings are retrieved from notebooks or spreadsheets.
-    
 3. Utility consumption is manually calculated for each room.
-    
 4. The landlord uses a calculator to determine electricity and water charges.
-    
 5. Monthly rent and utility charges are added together manually.
-    
 6. The landlord sends the payment amount to each tenant individually through Zalo or another messaging application.
-    
 7. If a calculation error is discovered, the landlord recalculates the invoice and sends a corrected amount.
-    
 
 ### Result
 
@@ -52,24 +45,16 @@ The monthly billing process consumes several hours for each billing cycle. Manua
 **User Type:** Self-managing landlord and tenant
 
 ### Problem
-
 Payment confirmation depends on bank transfer notifications, screenshots, and chat messages. Because payment records are stored across different platforms, both landlords and tenants may disagree about whether a payment has already been completed.
 
 ### Current Workflow
-
 1. The tenant transfers rent to the landlord's bank account.
-    
 2. The tenant sends a payment confirmation message or screenshot through Zalo.
-    
 3. The landlord checks the banking application to verify the transfer.
-    
 4. The landlord manually updates an Excel spreadsheet or notebook to record the payment.
-    
 5. If payment evidence cannot be located later, both parties search through previous chat conversations or bank transaction history.
-    
 
 ### Result
-
 Payment history is fragmented across spreadsheets, banking applications, and messaging platforms. This makes payment verification difficult and increases the possibility of payment disputes or missing records.
 
 ---
@@ -79,24 +64,16 @@ Payment history is fragmented across spreadsheets, banking applications, and mes
 **User Type:** Self-managing landlord and tenant
 
 ### Problem
-
 Lease expiration dates and maintenance requests are managed informally through memory, notebooks, phone calls, or messaging applications. Important deadlines and repair requests can easily be forgotten.
 
 ### Current Workflow
-
 1. The tenant contacts the landlord through a phone call or Zalo to report a maintenance issue or discuss lease renewal.
-    
 2. The landlord remembers the request or writes it in a notebook.
-    
 3. Lease expiration dates are checked manually by reviewing printed contracts or stored documents.
-    
 4. Maintenance work is arranged without any centralized tracking.
-    
 5. The landlord manually follows up with tenants regarding repairs or lease renewal.
-    
 
 ### Result
-
 Maintenance requests may be delayed or forgotten, while lease renewals may be missed entirely. These issues reduce tenant satisfaction and can lead to unnecessary rental vacancies and income loss.
 
 ---
@@ -107,26 +84,24 @@ The current rental management process is highly fragmented because no centralize
 
 The primary entities involved in the current domain are illustrated below.
 
-|Entity|Description|Relationships|
-|---|---|---|
-|**Landlord**|Owns and manages one or more rental properties manually.|Manages Properties, Rooms, Tenants, Payments, Contracts, and Maintenance Requests.|
-|**Property**|A boarding house or apartment building owned by the landlord.|Contains multiple Rooms.|
-|**Room**|Individual rental unit within a property.|Occupied by one Tenant and associated with one Lease Contract.|
-|**Tenant**|Individual renting a room.|Occupies one Room, pays Rent, submits Maintenance Requests.|
-|**Lease Contract**|Physical or digital document describing rental terms.|Connects a Tenant with a Room and contains rental period information.|
-|**Meter Reading**|Electricity and water readings recorded manually each month.|Used to calculate Utility Charges for a Room.|
-|**Invoice**|Monthly rent and utility charges calculated manually.|Generated from Rent and Meter Readings and paid by the Tenant.|
-|**Payment Record**|Payment evidence stored in spreadsheets, bank applications, or chat history.|Linked to an Invoice but maintained manually.|
-|**Maintenance Request**|Repair request submitted through phone calls or messaging applications.|Created by the Tenant and handled by the Landlord without centralized tracking.|
+| Entity                  | Description                                                                  | Relationships                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Landlord**            | Owns and manages one or more rental properties manually.                     | Manages Properties, Rooms, Tenants, Payments, Contracts, and Maintenance Requests. |
+| **Property**            | A boarding house or apartment building owned by the landlord.                | Contains multiple Rooms.                                                           |
+| **Room**                | Individual rental unit within a property.                                    | Occupied by one or more Tenant(s) and associated with one Lease Contract.          |
+| **Tenant**              | Individual renting a room.                                                   | Occupies one Room, pays Rent, submits Maintenance Requests.                        |
+| **Lease Contract**      | Physical or digital document describing rental terms.                        | Connects a Tenant with a Room and contains rental period information.              |
+| **Meter Reading**       | Electricity and water readings recorded manually each month.                 | Used to calculate Utility Charges for a Room.                                      |
+| **Invoice**             | Monthly rent and utility charges calculated manually.                        | Generated from Rent and Meter Readings and paid by the Tenant.                     |
+| **Payment Record**      | Payment evidence stored in spreadsheets, bank applications, or chat history. | Linked to an Invoice but maintained manually.                                      |
+| **Maintenance Request** | Repair request submitted through phone calls or messaging applications.      | Created by the Tenant and handled by the Landlord without centralized tracking.    |
 
 In the current domain, relationships between these entities are not maintained within a single system. Instead, landlords manually transfer information between notebooks, spreadsheets, calculators, and messaging applications whenever monthly operations are performed. This fragmented process creates inconsistencies, duplicate records, and additional administrative effort, highlighting the need for a centralized property management platform such as RosiHome.
 
 # 4. Current Users' Problems and Objectives
-
 RosiHome is designed to address the operational challenges experienced by both self-managing landlords and tenants. Although landlords and tenants share the same rental process, their problems and objectives differ depending on their responsibilities within the business.
 
 ## 4.1 Self-Managing Landlord
-
 The landlord is responsible for managing the entire rental operation, including tenant records, rent calculation, payment tracking, lease management, maintenance coordination, and financial monitoring. Most of these activities are performed manually, making the management process increasingly difficult as the number of rental units grows.
 
 |Current Problem|Objective|
@@ -140,7 +115,6 @@ The landlord is responsible for managing the entire rental operation, including 
 ---
 
 ## 4.2 Tenant
-
 Tenants currently have limited visibility into their rental information and depend on direct communication with landlords for most rental-related activities.
 
 |Current Problem|Objective|
@@ -155,43 +129,36 @@ By addressing these problems, RosiHome aims to simplify rental management for la
 ---
 
 # 5. Components and Features to be Developed
-
 The project scope focuses on developing the core functionality required to digitize the day-to-day rental management workflow for self-managing landlords. The following components will be implemented in the Minimum Viable Product (MVP).
 
 ## 5.1 User Management
-
 - User registration and authentication
 - Role-based access for landlords and tenants
 - User profile management
 
 ## 5.2 Property and Room Management
-
 - Property registration
 - Room creation and management
 - Room occupancy status
 - Room availability management
 
 ## 5.3 Tenant Management
-
 - Tenant profile management
 - Tenant assignment to rooms
 - Tenant contact information management
 
 ## 5.4 Lease Management
-
 - Digital lease information storage
 - Lease start and end date management
 - Automatic lease renewal reminders
 
 ## 5.5 Utility Management
-
 - Monthly electricity and water meter recording
 - Automatic utility consumption calculation
 - Configurable utility pricing
 - Automatic invoice generation
 
 ## 5.6 Billing and Payment Management
-
 - Monthly rent invoice generation
 - VietQR payment QR code generation
 - Payment proof upload by tenants
@@ -200,21 +167,18 @@ The project scope focuses on developing the core functionality required to digit
 - Outstanding payment tracking
 
 ## 5.7 Maintenance Management
-
 - Maintenance request submission
 - Photo attachment for maintenance issues
 - Request status tracking
 - Maintenance history management
 
 ## 5.8 Dashboard and Reporting
-
 - Monthly revenue summary
 - Occupancy statistics
 - Outstanding payment overview
 - Basic financial dashboard
 
 ## 5.9 Notifications
-
 - Rent payment reminders
 - Lease expiration reminders
 - Maintenance status notifications
@@ -224,11 +188,9 @@ Collectively, these components establish a centralized property management platf
 ---
 
 # 6. Components and Features Excluded
-
 To ensure that the project remains achievable within the allocated development schedule, several advanced features are intentionally excluded from the MVP. These features may be considered for future versions of RosiHome but will not be implemented as part of the current project.
 
 ## 6.1 Artificial Intelligence Features
-
 The project will not include AI-powered capabilities such as:
 
 - AI-generated business insights and recommendations
@@ -241,33 +203,23 @@ The project will not include AI-powered capabilities such as:
 These capabilities align with RosiHome's long-term vision but require substantial historical data and additional machine learning infrastructure beyond the scope of the MVP.
 
 ## 6.2 Rental Market Benchmarking
-
 The system will not collect or analyze anonymized market-wide rental data for benchmarking purposes. Features such as comparing rental prices, occupancy rates, maintenance trends, or payment behavior across similar properties are outside the current project scope.
 
 ## 6.3 Online Payment Gateway Integration
-
 RosiHome will generate VietQR payment codes only. It will not integrate directly with banking systems or payment gateways to automatically verify or process financial transactions.
 
 ## 6.4 Legally Binding Electronic Contracts
-
 The application will store lease information digitally but will not provide legally binding electronic signatures or electronic contract execution.
 
 ## 6.5 Internet of Things (IoT) Integration
-
 Automatic collection of electricity or water meter readings through smart devices will not be supported. Meter readings will continue to be entered manually by landlords.
 
-## 6.6 Multi-Landlord Collaboration
-
-The system is designed for individual self-managing landlords. Collaborative management involving multiple landlords, staff members, or property management companies is excluded from the project scope.
-
-## 6.7 Advanced Financial Management
-
+## 6.6 Advanced Financial Management
 The application will not include comprehensive accounting features such as tax reporting, expense management, payroll, or financial auditing. The dashboard will focus on operational metrics relevant to rental property management.
 
 These exclusions ensure that development effort remains focused on delivering a stable and usable MVP that addresses the primary pain points identified during the requirements analysis, while leaving opportunities for future expansion beyond the scope of this project.
 
 # 7. Future Business Use Cases
-
 The following business use cases describe how rental management activities will be performed after the implementation of RosiHome. These workflows demonstrate how the system improves efficiency, transparency, and communication between landlords and tenants by replacing fragmented manual processes with a centralized platform.
 
 ## Business Use Case 1 – Automated Monthly Billing and Payment
@@ -275,11 +227,9 @@ The following business use cases describe how rental management activities will 
 **User Type:** Self-managing landlord and tenant
 
 ### Problem
-
 The landlord needs an efficient method to calculate monthly rent and utility charges while ensuring tenants receive accurate invoices and can make payments conveniently without manual communication.
 
 ### Future Workflow
-
 1. The landlord logs into RosiHome and records the latest electricity and water meter readings for each occupied room.
 2. RosiHome automatically calculates utility consumption based on the previous month's readings and the configured utility rates.
 3. The system generates a monthly invoice that combines rent and utility charges for each tenant.
@@ -300,11 +250,9 @@ The monthly billing process becomes faster and more accurate because rent and ut
 **User Type:** Self-managing landlord and tenant
 
 ### Problem
-
 Lease renewals and maintenance requests must be managed systematically to prevent forgotten deadlines, delayed repairs, and tenant dissatisfaction.
 
 ### Future Workflow
-
 1. When a new tenant moves in, the landlord creates a digital lease record within RosiHome, including the lease period and rental terms.
 2. The system continuously monitors lease expiration dates.
 3. Before the lease expires, RosiHome automatically sends reminder notifications to both the landlord and the tenant.
@@ -314,7 +262,6 @@ Lease renewals and maintenance requests must be managed systematically to preven
 7. The tenant receives notifications whenever the maintenance request status changes until the issue is resolved.
 
 ### Result
-
 Lease renewals are handled before contracts expire, reducing unexpected vacancies. Maintenance requests are tracked from submission to completion, ensuring better communication, improved response times, and increased tenant satisfaction.
 
 ## Business Use Case 3 – Portfolio Performance Monitoring
@@ -322,11 +269,9 @@ Lease renewals are handled before contracts expire, reducing unexpected vacancie
 **User Type:** Self-managing landlord
 
 ### Problem
-
 The landlord needs a clear overview of the rental business to monitor occupancy, revenue, outstanding payments, and overall property performance without manually compiling information from multiple sources.
 
 ### Future Workflow
-
 1. The landlord logs into RosiHome and opens the dashboard.
 2. The system automatically aggregates data from properties, rooms, invoices, lease records, and payment history.
 3. The dashboard displays key performance indicators, including occupancy rate, monthly rental income, outstanding payments, and upcoming lease expirations.
@@ -334,8 +279,8 @@ The landlord needs a clear overview of the rental business to monitor occupancy,
 5. If necessary, the landlord navigates directly from the dashboard to the corresponding property, invoice, or lease record to perform follow-up actions.
 
 ### Result
-
 The landlord gains an up-to-date overview of the rental business without manually compiling information from spreadsheets or notebooks. This enables faster decision-making, improves financial visibility, and helps identify operational issues before they become significant problems.
+
 ---
 
 # 8. Future Domain Model
@@ -379,7 +324,6 @@ The successful implementation and operation of RosiHome depends on several assum
 These assumptions establish the operating environment for the MVP and define the conditions under which the proposed solution is expected to achieve its intended objectives.
 
 # 10. Risks
-
 Although RosiHome has been designed to address the operational challenges of self-managing landlords, several risks may affect the successful development and adoption of the system. Identifying these risks early enables appropriate mitigation strategies throughout the project lifecycle.
 
 |Risk|Description|Mitigation Strategy|
