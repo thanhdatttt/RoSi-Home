@@ -69,13 +69,27 @@
 
 ---
 
+### F-04 · Utility Pricing Configuration
+
+- **Workflows:** WF-1
+- **User Story:** As a landlord, I want to configure the pricing for utilities like electricity and water, so that the system calculates monthly charges accurately based on my specific rates.
+- **Priority:** Must Have
+
+**Acceptance Criteria:**
+- [ ] Landlord can set a price per unit (kWh) for electricity.
+- [ ] Landlord can set a price per unit (m3) or per person for water.
+- [ ] These utility rates are saved globally for the property or individually per room.
+- [ ] The system uses these configured rates when calculating the monthly invoice.
+
+---
+
 ## EPIC 3: Automated Monthly Billing and Payment
 
 > Primary workflow: **WF-1**. Streamlines the calculation of utilities, rent, and payment tracking.
 
 ---
 
-### F-04 · Utility Meter Reading & Calculation
+### F-05 · Utility Meter Reading & Calculation
 
 - **Workflows:** WF-1
 - **User Story:** As a landlord, I want to record monthly utility readings and have the system calculate charges, so that I avoid manual calculation errors.
@@ -89,7 +103,7 @@
 
 ---
 
-### F-05 · Billing and Invoice Generation
+### F-06 · Billing and Invoice Generation
 
 - **Workflows:** WF-1
 - **User Story:** As a landlord, I want the system to generate a comprehensive invoice combining rent and utilities, so that tenants receive clear and itemized billing statements.
@@ -102,7 +116,7 @@
 
 ---
 
-### F-06 · VietQR Payment Integration
+### F-07 · VietQR Payment Integration
 
 - **Workflows:** WF-1
 - **User Story:** As a tenant, I want to scan a VietQR code to pay my rent, so that I don't have to manually enter the landlord's bank details or transfer message.
@@ -115,7 +129,7 @@
 
 ---
 
-### F-07 · Payment Verification and Tracking
+### F-08 · Payment Verification and Tracking
 
 - **Workflows:** WF-1
 - **User Story:** As a landlord, I want to receive payment proofs and verify them, so that I can track outstanding balances accurately.
@@ -129,13 +143,26 @@
 
 ---
 
+### F-09 · Rent Payment Reminders
+
+- **Workflows:** WF-1
+- **User Story:** As a landlord and tenant, I want automated reminders for unpaid rent, so that payments are completed on time without awkward manual follow-ups.
+- **Priority:** Should Have
+
+**Acceptance Criteria:**
+- [ ] System automatically identifies unpaid invoices past their due date.
+- [ ] System sends a reminder notification (in-app and/or email) to the tenant for the pending payment.
+- [ ] Landlord can also manually trigger a payment reminder for a specific unpaid invoice.
+
+---
+
 ## EPIC 4: Lease Management and Maintenance Tracking
 
 > Primary workflow: **WF-2**. Systematically manage lease lifecycles and maintenance requests.
 
 ---
 
-### F-08 · Digital Lease Tracking
+### F-10 · Digital Lease Tracking
 
 - **Workflows:** WF-2
 - **User Story:** As a landlord, I want to create digital lease records, so that I can safely store rental terms and link tenants to specific rooms.
@@ -148,7 +175,7 @@
 
 ---
 
-### F-09 · Automated Lease Renewal Reminders
+### F-11 · Automated Lease Renewal Reminders
 
 - **Workflows:** WF-2
 - **User Story:** As a landlord and tenant, I want to receive notifications before a lease expires, so that I can plan for renewal or move-out without missing deadlines.
@@ -161,7 +188,7 @@
 
 ---
 
-### F-10 · Maintenance Request Submission
+### F-12 · Maintenance Request Submission
 
 - **Workflows:** WF-2
 - **User Story:** As a tenant, I want to submit maintenance requests with photos, so that I can efficiently report issues to the landlord.
@@ -174,7 +201,7 @@
 
 ---
 
-### F-11 · Maintenance Status Tracking
+### F-13 · Maintenance Status Tracking
 
 - **Workflows:** WF-2
 - **User Story:** As a landlord, I want to update the status of maintenance requests, so that tenants are kept informed of repair progress.
@@ -193,7 +220,7 @@
 
 ---
 
-### F-12 · Centralized Business Dashboard
+### F-14 · Centralized Business Dashboard
 
 - **Workflows:** WF-3
 - **User Story:** As a landlord, I want a dashboard summarizing occupancy, revenue, and outstanding payments, so that I can quickly assess my rental business health.
