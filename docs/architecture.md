@@ -59,7 +59,6 @@ flowchart TB
     MOB["Mobile App (React Native)"] --> API
     API --> DB[("PostgreSQL")]
     API --> STORAGE[("Cloud Storage<br/>photos, proofs")]
-    API --> AI["AI API<br/>(Claude/GPT-4o)"]
     API --> QR["VietQR Generator"]
     QR -.->|tenant scans & pays directly| BANK["Tenant's Bank App"]
     BANK -.->|screenshot uploaded as proof| API
@@ -74,14 +73,7 @@ The dotted lines matter: money moves directly between the tenant's bank and the 
 - **Unit** → generates → **Invoices** (rent + utilities) → settled by → **Payment** (QR + proof)
 - **Unit/Tenant** → can raise → **Maintenance Requests**
 
-## 5. AI Usage
-
-| Use | Tool | Purpose |
-|---|---|---|
-| Writing the code | Claude Code, Codex, Gemini | Used by the team *while building*, speeds up the 8–10 week timeline |
-| Running inside the app | Gemini/GPT API | Reads meter photos, writes the weekly landlord summary |
-
-## 6. Why This Stack Works
+## 5. Why This Stack Works
 
 - One language across backend, web, and mobile — easy for team to build under a deadline.
 - Every part of the stack is well-documented and represented in AI training data, which is what actually makes the 8–10 week AI-assisted timeline realistic.
