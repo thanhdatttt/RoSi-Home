@@ -1,6 +1,4 @@
-Sau toàn bộ quá trình trao đổi, mình nghĩ bây giờ có thể đưa ra một kết luận khá khách quan.
-
-Mình sẽ đánh giá ở ba góc độ khác nhau.
+# Proposal evaluation
 
 ---
 
