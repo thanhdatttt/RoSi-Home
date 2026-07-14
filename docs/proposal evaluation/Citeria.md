@@ -1,15 +1,15 @@
 
-## Bộ 10 tiêu chí đề xuất — bám sát đúng 10 ý của giáo sư
+## 10 Proposal Evaluation Criteria — aligned with the professor's 10 points
 
-| #   | Tiêu chí                                     | Nội dung cần đánh giá                                                                                                                                          | Tỷ trọng |
+| #   | Criteria                                     | Evaluation Details / Content to Evaluate                                                                                                                      | Weight   |
 | --- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------: |
-| 1   | **Pain points / vấn đề / nhu cầu**           | Vấn đề, nguyên nhân, tác động được mô tả rõ ràng, cụ thể, có căn cứ không?                                                                                     |      10% |
-| 2   | **Thị trường & Stakeholders**                | Xác định rõ target audience, sponsor, customer, user, stakeholder và nhu cầu riêng của từng nhóm                                                               |      10% |
-| 3   | **Giải pháp (core business use case)**       | Giải pháp giải quyết trực tiếp vấn đề, use case chính rõ ràng, khả thi, có logic nghiệp vụ chặt chẽ                                                            |      15% |
-| 4   | **Đối thủ / điểm yếu / điểm khác biệt**      | Có phân tích competitor, chỉ ra weakness của thị trường hiện tại và USP của giải pháp không?                                                                   |      10% |
-| 5   | **Rủi ro / điểm mạnh / cơ hội / tầm nhìn**   | Nhận diện risks, strengths, opportunities cụ thể; có trình bày grand vision dài hạn của sản phẩm không?                                                        |      10% |
-| 6   | **Mục tiêu kinh doanh & lợi ích dự kiến**    | Lý do giải quyết vấn đề này, dự đoán benefit/revenue/income, có đo lường được không?                                                                           |      10% |
-| 7   | **Customer discovery report**                | Có bằng chứng thực nghiệm (phỏng vấn/khảo sát khách hàng thật) hay chỉ là giả định chủ quan của nhóm?                                                          |      10% |
-| 8   | **High-level features & expected artifacts** | Tính năng cấp cao, deliverables/artifacts dự kiến có liệt kê cụ thể, đúng phạm vi không?                                                                       |      10% |
-| 9   | **Budget & Timing**                          | Ngân sách và mốc thời gian sơ bộ có hợp lý, tương xứng với phạm vi và nguồn lực nhóm không?                                                                    |      10% |
-| 10  | **Context diagram & Elevator pitch**         | Có context diagram thể hiện đúng ranh giới hệ thống-actor bên ngoài? Elevator pitch có súc tích, thuyết phục, đúng công thức (vấn đề–giải pháp–giá trị) không? |       5% |
+| 1   | **Pain points / Problem / Needs**            | Are the problem, causes, and impacts described clearly, specifically, and with supporting evidence?                                                            |      10% |
+| 2   | **Market & Stakeholders**                    | Clearly identify the target audience, sponsor, customer, user, stakeholders, and the specific needs of each group.                                             |      10% |
+| 3   | **Solution (Core Business Use Case)**        | Does the solution directly address the problem? Are the main use cases clear, feasible, and backed by solid business logic?                                    |      15% |
+| 4   | **Competitors / Weaknesses / Differentiation** | Is there a competitor analysis identifying current market weaknesses and the Unique Selling Proposition (USP) of the solution?                                 |      10% |
+| 5   | **Risks / Strengths / Opportunities / Vision** | Are specific risks, strengths, and opportunities identified? Is the long-term grand vision of the product presented?                                           |      10% |
+| 6   | **Business Goals & Expected Benefits**       | The rationale for solving this problem, and the projected benefits/revenue/income (are they measurable)?                                                       |      10% |
+| 7   | **Customer Discovery Report**                | Is there empirical evidence (interviews/surveys with real customers) or is it just the team's subjective assumptions?                                          |      10% |
+| 8   | **High-Level Features & Expected Artifacts** | Are high-level features and expected deliverables/artifacts specifically listed and within the correct scope?                                                  |      10% |
+| 9   | **Budget & Timing**                          | Are the preliminary budget and timeline reasonable and aligned with the project scope and team resources?                                                      |      10% |
+| 10  | **Context Diagram & Elevator Pitch**         | Is there a context diagram showing the correct system boundary and external actors? Is the elevator pitch concise, convincing, and following the standard formula (problem-solution-value)? |       5% |
