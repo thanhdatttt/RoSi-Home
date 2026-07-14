@@ -116,6 +116,9 @@
 - [ ] System automatically creates a monthly invoice on a predefined billing date.
 - [ ] Invoice provides an itemized breakdown: base rent, electricity charges, water charges, and any additional fees.
 - [ ] Both the landlord and the assigned tenant can view and download the invoice (as PDF) within the application.
+- [ ] Upon generation, the system sends an in-app notification to the landlord summarizing the action (e.g., "Sent invoices to all tenants").
+- [ ] Upon generation, the system sends a push/in-app notification to each tenant (e.g., "Received this month's invoice").
+- [ ] Tapping the notification on the tenant's device automatically opens the app and deep-links directly to display the generated invoice.
 
 ---
 
@@ -235,3 +238,20 @@
 - [ ] Dashboard highlights total outstanding payments dynamically.
 - [ ] Dashboard lists overdue invoices with quick links to the tenant/room details.
 - [ ] Dashboard lists upcoming lease expirations with quick links to the lease records.
+- [ ] Dashboard displays a summary of pending maintenance requests requiring landlord attention.
+
+---
+
+### F-15 · Monthly Business Report & Analytics
+
+- **Workflows:** WF-3
+- **User Story:** As a landlord, I want to generate a comprehensive monthly performance report, so that I can analyze cash flow, occupancy trends, and operational efficiency to make data-driven decisions.
+- **Priority:** Should Have
+
+**Acceptance Criteria:**
+- [ ] Landlord can select a specific month/year or a custom date range to generate the report.
+- [ ] **Financial Metrics:** Report displays Expected Revenue vs. Actual Collected Revenue, broken down by categories (Base Rent, Utilities, Additional Fees).
+- [ ] **Debt Tracking:** Report clearly highlights Total Outstanding Debt and lists specific overdue invoices.
+- [ ] **Occupancy & Churn:** Report shows the average Occupancy Rate for the period, along with total Move-ins, Move-outs, and a list of upcoming lease expirations.
+- [ ] **Operational Metrics:** Report summarizes maintenance efficiency (e.g., Total new requests vs. Resolved requests).
+- [ ] Landlord can export this structured report as a PDF (for reading).
