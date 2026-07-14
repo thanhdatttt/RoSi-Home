@@ -92,32 +92,35 @@ Current solutions generally fall into two categories:
 
 Meanwhile, many Vietnamese landlords own only **1–30 rental units** and manage their properties themselves as a side business. Their primary need is not an enterprise management system but a lightweight, affordable solution that digitizes their daily workflow with minimal learning effort.
 
+Another gap is that **most solutions in the small-landlord segment are landlord-centric**. While some platforms provide limited tenant-facing features (such as viewing invoices or receiving payment requests), tenants often still rely on messaging applications like Zalo for communication and issue reporting. RosiHome is designed as a **two-sided platform**, giving both landlords and tenants dedicated applications that improve transparency, communication, and collaboration throughout the rental lifecycle.
+
 ---
 
 ## 4.3 Competitive Comparison
 
-|Capability|Excel|Zalo|EasyTro|Resident|Quản lý trọ – CL Team|**RosiHome**|
-|---|---|---|---|---|---|---|
-|Room management|✓|✗|✓|✓|✓|✓|
-|Automatic utility calculation|✗|✗|✓|✓|✓|✓|
-|QR payment support|✗|✗|✓|✓|Partial|✓|
-|Payment history|✗|✗|✓|✓|✓|✓|
-|Lease renewal reminders|✗|✗|✓|✓|✓|✓|
-|Maintenance request management|✗|✗|Limited|✓|Limited|✓|
-|Revenue dashboard|✗|✗|Basic|✓|Basic|✓|
-|Tenant self-service|✗|✗|Partial|✓|✗|✓|
-|Designed for self-managing landlords|✓|✓|✓|Partial|✓|✓|
+| Capability                           | Excel | Zalo | EasyTro | Resident | Quản lý trọ – CL Team | **RosiHome** |
+| ------------------------------------ | ----- | ---- | ------- | -------- | --------------------- | ------------ |
+| Room management                      | ✓     | ✗    | ✓       | ✓        | ✓                     | ✓            |
+| Automatic utility calculation        | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
+| QR payment support                   | ✗     | ✗    | ✓       | ✓        | Partial               | ✓            |
+| Payment history                      | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
+| Lease renewal reminders              | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
+| Maintenance request management       | ✗     | ✗    | Limited | ✓        | Limited               | ✓            |
+| Revenue dashboard                    | ✗     | ✗    | Basic   | ✓        | Basic                 | ✓            |
+| Tenant self-service                  | ✗     | ✗    | Partial | ✓        | ✗                     | ✓            |
+| Designed for self-managing landlords | ✓     | ✓    | ✓       | Partial  | ✓                     | ✓            |
 
 ---
 
 ## 4.4 RosiHome's Unique Value Proposition
 
 Rather than competing directly with enterprise property management systems, **RosiHome focuses on the underserved segment of self-managing landlords who own between 1 and 30 rental units**.
+**Built for Both Landlords and Tenants** – Unlike many small-landlord solutions that primarily optimize the landlord's workflow, RosiHome provides dedicated experiences for both landlords and tenants. Tenants can view invoices, payment history, lease information, and submit maintenance requests directly through the app, reducing reliance on messaging apps and improving transparency.
 
 Its competitive advantage lies in four key principles:
 
 - **Simple** – only includes features that landlords use every month, reducing learning time and operational complexity.
-- **Affordable** – avoids expensive infrastructure and payment gateway integration by using VietQR-based bank transfers.
+- **Affordable** – avoids expensive infrastructure and payment gateway integration by using VietQR-based bank transfers and offers affordable pricing for small landlords.
 - **Localized** – designed specifically for Vietnamese rental practices, including utility billing, VietQR payments, and local lease management.
 - **End-to-End Workflow** – integrates rent calculation, billing, payment tracking, lease reminders, maintenance requests, and business reporting into a single platform, eliminating the need to switch between spreadsheets, calculators, messaging applications, and notebooks.---
 ## 5. Feasibility Study

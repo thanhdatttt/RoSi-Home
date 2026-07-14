@@ -37,20 +37,19 @@ flowchart LR
 
 ## 2. Tech Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Backend | **Node.js + Express (or NestJS)** | Same language as the frontend and mobile app — no context-switching; huge AI training coverage means AI agents write it accurately |
-| Web frontend | **React** | Most common frontend framework; fastest for AI tools to scaffold |
-| Mobile app | **React Native** | Shares the same React knowledge and a lot of code with the web app |
-| Database | **PostgreSQL** | Simple, reliable, free-tier hosting available |
-| ORM | **Prisma/Drizzle** | Beginner-friendly, AI-tools generate correct Prisma schemas/queries reliably |
-| Auth | **JWT (via a library like Passport.js or Auth.js)** | Avoids building security logic from scratch |
-| File storage | **Cloud storage (Supabase Storage or S3-compatible)** | Stores meter photos, maintenance photos, payment proof screenshots |
-| AI features (runtime) | **Gemini or GPT-4o API** (vision-capable) | Reads meter photos, generates the landlord's weekly summary |
-| Payment | **VietQR standard** | Generates a bank-transfer QR code; RosiHome never touches tenant money |
-| Testing | **Jest** (unit), **Playwright** (E2E) | Matches the team's testing coursework, JS-native so no extra setup |
-| CI/CD | **GitHub Actions** | Free, simple, one student can own it |
-| Hosting | **Render / Railway / Vercel** (free/student tiers) | One-click deploy, no dedicated DevOps engineer needed |
+| Layer            | Choice                                              | Why                                                                                                                                |
+| ---------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Backend          | **Node.js + Express**                               | Same language as the frontend and mobile app — no context-switching; huge AI training coverage means AI agents write it accurately |
+| Web frontend     | **React**                                           | Most common frontend framework; fastest for AI tools to scaffold                                                                   |
+| Mobile app       | **React Native**                                    | Shares the same React knowledge and a lot of code with the web app                                                                 |
+| Database         | **PostgreSQL**                                      | Simple, reliable, free-tier hosting available                                                                                      |
+| ORM              | **Drizzle**                                         | Beginner-friendly, AI-tools generate correct Dizzle schemas/queries reliably                                                       |
+| Auth             | **JWT (via a library like Passport.js or Auth.js)** | Avoids building security logic from scratch                                                                                        |
+| Database storage | **Supabase**                                        | Integrates well with Drizzle and reduces backend setup                                                                             |
+| File storage     | **Cloud storage (Supabase Storage)**                | Stores meter photos, maintenance photos, payment proof screenshots                                                                 |
+| Payment          | **VietQR standard**                                 | Generates a bank-transfer QR code; RosiHome never touches tenant money                                                             |
+| CI/CD            | **GitHub Actions**                                  | Free, simple, one student can own it                                                                                               |
+| Hosting          | **Render / Railway / Vercel** (free/student tiers)  | One-click deploy, no dedicated DevOps engineer needed                                                                              |
 
 ## 3. How It Fits Together
 
