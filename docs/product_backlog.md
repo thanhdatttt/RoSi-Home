@@ -36,7 +36,7 @@
 
 Unless a story explicitly states otherwise, it is `Done` only when:
 
-- All acceptance criteria pass on the delivery surface selected during planning (`Web`, `Mobile`, or `Both`).
+- All acceptance criteria pass in the RosiHome mobile application. The MVP does not require a Web delivery surface.
 - Authorization and ownership rules are enforced by the backend, not only hidden in the user interface.
 - Relevant automated tests pass, including at least the main success path and critical validation/authorization paths.
 - No unresolved severity-critical or severity-high defect remains within the story scope.
@@ -58,19 +58,19 @@ Unless a story explicitly states otherwise, it is `Done` only when:
 
 ---
 
-## 3. Open Product Decisions
+## 3. Product Decision Record
 
-These decisions are intentionally not resolved by the backlog author. Stories referencing them remain `Needs Clarification` until the team or product owner records a decision.
+The team has resolved the following cross-cutting product decisions. Their outcomes are incorporated into the affected stories below.
 
-| Decision | Question | Affected stories |
+| Decision | Approved outcome | Affected stories |
 | :--- | :--- | :--- |
-| **PD-01 Account onboarding** | Can a person freely register as either Landlord or Tenant, or must a tenant be invited/linked by a landlord? Can one account hold both roles? | US-AUTH-01, US-TENANT-03 |
-| **PD-02 Password recovery** | Is password recovery included in the MVP, and if so, is the delivery channel email, SMS, or both? | US-AUTH-06 |
-| **PD-03 Utility pricing** | Are rates configured per property, per room, or with property defaults plus room overrides? Is water billed per cubic metre, per tenant, or both? | US-UTILITY-01, US-UTILITY-02 |
-| **PD-04 Invoice creation** | Is an invoice generated manually after meter entry, automatically on a schedule, or by both mechanisms? Is PDF export required in the MVP? | US-INVOICE-01, US-INVOICE-03 |
-| **PD-05 Notification channels** | Which reminders are in-app, email, or both? Does “30 days before expiry” require exactly one notification or a configurable reminder window? | US-REMINDER-01, US-REMINDER-02, US-LEASE-05 |
-| **PD-06 Corrections** | After an invoice is generated, may a landlord correct a meter reading or invoice? If yes, what audit and tenant-notification behavior is required? | US-METER-03 |
-| **PD-07 Client coverage** | Which stories must be delivered on Web, Mobile, or both for the MVP? | All stories |
+| **PD-01 Account onboarding** | A landlord creates the tenant profile and lease. The system then provisions a Tenant account using the tenant's phone number as username, requires an email address, and emails a temporary password plus the mobile-app link. An account has exactly one role; Landlord and Tenant roles cannot be combined. Landlords use self-registration. | US-AUTH-01, US-TENANT-03, US-LEASE-01 |
+| **PD-02 Password recovery** | Password recovery is included and uses email only. | US-AUTH-06 |
+| **PD-03 Utility pricing** | Electricity and water rates are configured once per property. Electricity is metered per kWh and water is metered per cubic metre; per-person water billing and room-level rate overrides are excluded. | US-UTILITY-01, US-UTILITY-02 |
+| **PD-04 Invoice creation** | A scheduled job generates a draft invoice only when new meter readings exist for the billing period; otherwise it skips that room. PDF export is required. | US-INVOICE-01, US-INVOICE-03 |
+| **PD-05 Notification channels** | Notifications are mobile push notifications only; Web notifications are excluded. Reminder schedules are configurable and can send multiple lease-expiry reminders during the 30 days before expiration. | US-REMINDER-01, US-REMINDER-02, US-LEASE-05, notification acceptance criteria in payment and maintenance stories |
+| **PD-06 Corrections and sending** | A scheduled invoice is created as `Draft`. Before sending it, the landlord may correct meter readings and have the draft recalculated. The landlord explicitly sends the reviewed invoice, after which it becomes visible to the tenant. A `Paid` invoice cannot be silently changed. | US-METER-03, US-INVOICE-01, US-INVOICE-04 |
+| **PD-07 Client coverage** | All MVP user stories are delivered on Mobile. No Web implementation is required for these stories. | All stories |
 
 ---
 
@@ -84,19 +84,20 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 - **Feature objective:** Users can establish and access the correct RosiHome account, manage basic profile information, and see only data permitted by their role and relationships.
 - **Priority:** Must Have
 
-#### US-AUTH-01 — Register an account
+#### US-AUTH-01 — Register a landlord account
 
-- **Status:** Needs Clarification (PD-01)
-- **User story:** As a new user, I want to register an account so that I can access RosiHome with my own identity.
+- **Status:** Refined
+- **User story:** As a new landlord, I want to register a Landlord account so that I can manage my rental portfolio in RosiHome.
 - **Dependencies:** None.
 
 **Acceptance criteria:**
 
-- [ ] The registration flow requires full name, a unique login identifier, password, and password confirmation.
+- [ ] The landlord registration flow requires full name, a unique login identifier, password, and password confirmation.
 - [ ] Invalid or missing values produce field-level validation errors and no account is created.
 - [ ] Duplicate login identifiers are rejected without revealing sensitive account information.
 - [ ] Password and confirmation must match, and the stored password is never persisted or returned as plain text.
-- [ ] Successful registration creates exactly one active account under the onboarding and role rules selected in PD-01.
+- [ ] Successful self-registration creates exactly one account with the `Landlord` role.
+- [ ] The registration operation cannot assign both `Landlord` and `Tenant` roles to the same account.
 
 #### US-AUTH-02 — Log in
 
@@ -119,7 +120,7 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 **Acceptance criteria:**
 
-- [ ] An authenticated user can invoke logout from the selected delivery surface.
+- [ ] An authenticated user can invoke logout from the mobile application.
 - [ ] After logout, protected screens and API operations require authentication again.
 - [ ] Revisiting cached protected pages does not reveal usable private data after the session has ended.
 
@@ -152,15 +153,15 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-AUTH-06 — Recover a forgotten password
 
-- **Status:** Needs Clarification (PD-02)
+- **Status:** Refined
 - **Priority:** Should Have
-- **User story:** As a registered user who forgot my password, I want to reset it through an approved recovery channel so that I can regain access.
-- **Dependencies:** US-AUTH-01 and an approved email/SMS provider if an external channel is selected.
+- **User story:** As a registered user who forgot my password, I want to reset it through email so that I can regain access.
+- **Dependencies:** US-AUTH-01 and an approved transactional-email provider.
 
 **Acceptance criteria:**
 
 - [ ] The recovery request does not reveal whether a submitted identifier belongs to an account.
-- [ ] A time-limited, single-use recovery credential is delivered through the channel selected in PD-02.
+- [ ] A time-limited, single-use recovery credential is delivered only to the email address associated with the account.
 - [ ] A valid recovery credential allows the user to set and confirm a new password that meets the password rules.
 - [ ] Expired, reused, or invalid recovery credentials are rejected.
 - [ ] The previous password no longer authenticates the user after a successful reset.
@@ -248,8 +249,9 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 **Acceptance criteria:**
 
 - [ ] Only an authenticated landlord can create a tenant profile in their portfolio.
-- [ ] Full name and phone/contact information are required; approved identification fields can also be recorded.
-- [ ] If an identification number is supplied, a duplicate within the same landlord's portfolio is rejected.
+- [ ] Full name, phone number, identification number, and email address are required for a tenant who will receive a lease/account.
+- [ ] The email address has a valid format and the phone number can be used as the tenant username.
+- [ ] A duplicate identification number, phone number, or email address within the same landlord's portfolio is rejected.
 - [ ] The created tenant profile belongs to the authenticated landlord's portfolio and is not exposed to another landlord.
 - [ ] Creating a profile alone does not mark a room as occupied.
 
@@ -266,19 +268,21 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 - [ ] Identification uniqueness and field-validation rules are enforced on update.
 - [ ] The landlord cannot view or modify another landlord's tenant profile.
 
-#### US-TENANT-03 — Link a tenant profile to a user account
+#### US-TENANT-03 — Provision a tenant account from a lease
 
-- **Status:** Needs Clarification (PD-01)
-- **User story:** As a landlord, I want to link a tenant profile to the correct tenant account so that the tenant can access their own rental information.
-- **Dependencies:** US-TENANT-01, US-AUTH-01, and the onboarding/linking mechanism selected in PD-01.
+- **Status:** Refined
+- **User story:** As a landlord, I want the system to provision a tenant account when I create the tenant's lease so that the tenant can access RosiHome without self-registering.
+- **Dependencies:** US-TENANT-01, US-LEASE-01, and an approved transactional-email provider.
 
 **Acceptance criteria:**
 
-- [ ] A landlord can initiate or confirm a link only for a tenant profile in their portfolio.
-- [ ] The system prevents linking the tenant profile to an account that does not satisfy the approved tenant onboarding rules.
-- [ ] The same link cannot be created twice.
-- [ ] Once linked, the tenant account can access only data associated through its approved lease/profile relationship.
-- [ ] A link operation does not create or activate a lease by itself.
+- [ ] Lease creation requires the tenant's full name, phone number, identification number, and email address before account provisioning.
+- [ ] The system provisions exactly one account with the `Tenant` role and uses the tenant's phone number as the username.
+- [ ] The same phone number, email address, or tenant profile cannot provision a duplicate account.
+- [ ] The system generates a temporary password that is not exposed in application logs or stored as plain text.
+- [ ] The tenant receives an email containing the username, temporary password, and mobile-app link.
+- [ ] The tenant is required to replace the temporary password at first successful login.
+- [ ] The provisioned account cannot also hold the `Landlord` role and can access only data linked through its tenant profile and lease.
 
 ### F-04 — Utility Pricing Configuration
 
@@ -288,30 +292,31 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-UTILITY-01 — Configure utility rates
 
-- **Status:** Needs Clarification (PD-03)
+- **Status:** Refined
 - **User story:** As a landlord, I want to configure electricity and water rates so that monthly utility charges use my actual pricing rules.
-- **Dependencies:** US-PROPERTY-01 and the pricing scope/method selected in PD-03.
+- **Dependencies:** US-PROPERTY-01.
 
 **Acceptance criteria:**
 
-- [ ] The landlord can configure an electricity price per kWh for an owned pricing scope.
-- [ ] The landlord can configure water pricing using only the billing methods approved in PD-03.
+- [ ] The landlord can configure one electricity price per kWh for an owned property.
+- [ ] The landlord can configure one water price per cubic metre for an owned property.
 - [ ] A rate must be a valid non-negative monetary amount and include its unit/method.
-- [ ] The landlord cannot create or change rates for another landlord's property or room.
-- [ ] A saved configuration identifies when and where the rate applies.
+- [ ] The landlord cannot create or change rates for another landlord's property.
+- [ ] Room-level overrides and per-person water billing are not available.
+- [ ] A saved configuration identifies the property and effective time from which the rate applies.
 
 #### US-UTILITY-02 — View and update utility rates
 
-- **Status:** Needs Clarification (PD-03)
+- **Status:** Refined
 - **User story:** As a landlord, I want to view and update utility rates so that future calculations reflect current pricing.
 - **Dependencies:** US-UTILITY-01.
 
 **Acceptance criteria:**
 
-- [ ] The landlord can view the effective electricity and water rates for each relevant property/room.
+- [ ] The landlord can view the effective electricity and water rates for each owned property.
 - [ ] The landlord can update a rate after the same validation and ownership rules used at creation.
 - [ ] A rate change does not silently recalculate an already finalized invoice.
-- [ ] New calculations use the effective applicable rate according to the rule selected in PD-03.
+- [ ] New calculations for every room in the property use the effective property-level rates.
 
 ---
 
@@ -356,17 +361,18 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-METER-03 — Correct a reading used for billing
 
-- **Status:** Needs Clarification (PD-06)
-- **User story:** As a landlord, I want to correct an erroneous reading so that tenant charges can be corrected without losing accountability.
-- **Dependencies:** US-METER-02 and the correction policy selected in PD-06.
+- **Status:** Refined
+- **User story:** As a landlord, I want to correct an erroneous reading before sending its draft invoice so that the tenant receives an accurate bill without losing accountability.
+- **Dependencies:** US-METER-02 and US-INVOICE-01.
 
 **Acceptance criteria:**
 
 - [ ] Only the landlord who owns the room can request a correction.
-- [ ] The correction preserves the original value, corrected value, time, and responsible user if an audit trail is approved.
+- [ ] A reading can be corrected when its generated invoice is still `Draft`; a `Sent` or `Paid` invoice is not silently changed through this operation.
+- [ ] The correction preserves the original value, corrected value, change time, and responsible landlord.
 - [ ] The system revalidates reading order and recalculates affected charges consistently.
-- [ ] An invoice already marked `Paid` is not silently changed.
-- [ ] Any invoice update and tenant notification follow the policy selected in PD-06.
+- [ ] The associated draft invoice is recalculated from the corrected reading and retains exactly one invoice for the room/lease and billing period.
+- [ ] The landlord can review the recalculated draft before sending it through US-INVOICE-04.
 
 ### F-06 — Billing and Invoice Generation
 
@@ -376,18 +382,20 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-INVOICE-01 — Generate a monthly invoice
 
-- **Status:** Needs Clarification (PD-04)
-- **User story:** As a landlord, I want to generate a monthly invoice from rent and utility data so that the tenant receives one complete amount due.
-- **Dependencies:** US-LEASE-01, US-METER-02, US-UTILITY-01, and the trigger selected in PD-04.
+- **Status:** Refined
+- **User story:** As a landlord, I want the system to generate a scheduled draft invoice from rent and new utility readings so that I can review a complete monthly bill before sending it.
+- **Dependencies:** US-LEASE-01, US-METER-02, US-UTILITY-01, and a scheduled-job baseline.
 
 **Acceptance criteria:**
 
-- [ ] An invoice can be generated only for an active lease and a billing period not already invoiced for that lease/room.
-- [ ] Required meter readings and effective utility rates must exist before generation when those utilities apply.
+- [ ] At the configured billing schedule, the system evaluates each room with an active lease for the target billing period.
+- [ ] A draft invoice is generated only when new electricity and water readings exist for that room and billing period.
+- [ ] If required new readings are absent, the room is skipped without creating an incomplete invoice; the skip reason is recorded for the landlord.
+- [ ] An invoice can be generated only for a billing period not already invoiced for that lease/room.
 - [ ] The invoice stores an itemized breakdown of base rent, electricity, water, approved additional fees, total amount, billing period, issue date, and due date.
 - [ ] The total equals the sum of its stored line items using the approved monetary rounding rule.
 - [ ] Repeating the same generation action does not create a duplicate invoice.
-- [ ] A newly generated unpaid invoice has a consistent initial status defined by the team.
+- [ ] A newly generated invoice has status `Draft` and is not yet visible to the tenant.
 
 #### US-INVOICE-02 — View an invoice
 
@@ -398,23 +406,38 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 **Acceptance criteria:**
 
 - [ ] The landlord can view invoices for leases in owned properties.
-- [ ] The assigned tenant can view only invoices linked to their tenant account/lease.
+- [ ] The assigned tenant can view only `Sent` or `Paid` invoices linked to their tenant account/lease; draft invoices are landlord-only.
 - [ ] The invoice displays its billing period, line items, total, due date, and payment status.
 - [ ] An unrelated landlord or tenant cannot access the invoice by changing its identifier.
 
 #### US-INVOICE-03 — Download an invoice document
 
-- **Status:** Needs Clarification (PD-04)
-- **Priority:** Should Have
+- **Status:** Refined
+- **Priority:** Must Have
 - **User story:** As a landlord or assigned tenant, I want to download an invoice document so that I can retain or share a billing record outside RosiHome.
-- **Dependencies:** US-INVOICE-02 and approval of PDF/document export in PD-04.
+- **Dependencies:** US-INVOICE-02 and PDF-generation baseline.
 
 **Acceptance criteria:**
 
-- [ ] An authorized landlord or tenant can download a document for an accessible invoice.
+- [ ] An authorized landlord can download a PDF for an owned invoice; an assigned tenant can download a PDF only after the invoice has been sent.
 - [ ] The downloaded document contains the same billing identity, line items, total, due date, and status shown in the application.
 - [ ] The document does not expose data from another property, lease, tenant, or invoice.
 - [ ] An unauthorized download request is rejected by the backend.
+
+#### US-INVOICE-04 — Review and send a draft invoice
+
+- **Status:** Refined
+- **User story:** As a landlord, I want to review and explicitly send a generated draft invoice so that the tenant receives only a bill I have confirmed.
+- **Dependencies:** US-INVOICE-01 and US-METER-03 when a correction is required.
+
+**Acceptance criteria:**
+
+- [ ] The landlord can open and review a draft invoice only for a lease in an owned property.
+- [ ] The draft displays the readings, effective rates, line items, total, billing period, and due date used in its calculation.
+- [ ] Sending changes the invoice status from `Draft` to `Sent` exactly once and records the sender and sent time.
+- [ ] After sending, the assigned tenant can view the invoice and receives a mobile push notification linking to it.
+- [ ] An invoice with missing required data or a status other than `Draft` cannot be sent through this operation.
+- [ ] Sending does not mark the invoice as paid; payment still requires the verification workflow.
 
 ### F-07 — VietQR Payment Integration
 
@@ -468,6 +491,7 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 - [ ] The proof is associated with the tenant, invoice, upload time, and a verification-pending state.
 - [ ] Another tenant cannot view, replace, or submit proof for the invoice.
 - [ ] The owning landlord can access the proof through an authorized request.
+- [ ] A successful upload sends the owning landlord a mobile push notification linking to the pending proof.
 
 #### US-PAYMENT-02 — Verify payment manually
 
@@ -506,28 +530,29 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-REMINDER-01 — Receive an automatic overdue-payment reminder
 
-- **Status:** Needs Clarification (PD-05)
+- **Status:** Refined
 - **User story:** As a tenant, I want to receive a reminder when my invoice is overdue so that I can act on an outstanding payment.
-- **Dependencies:** US-INVOICE-01 and the notification channel/schedule selected in PD-05.
+- **Dependencies:** US-INVOICE-04 and a mobile push-notification service.
 
 **Acceptance criteria:**
 
 - [ ] The system identifies an invoice as overdue only when its due date has passed and it is not paid.
 - [ ] A reminder identifies the relevant invoice, amount due, and due date without exposing another tenant's information.
 - [ ] A paid invoice is not included in a subsequent overdue-reminder run.
-- [ ] Re-running a scheduled job does not create duplicate reminders outside the approved reminder frequency.
-- [ ] Delivery uses only the channel(s) approved in PD-05 and records delivery status where supported.
+- [ ] The landlord can configure the mobile reminder schedule allowed by the product.
+- [ ] Re-running a scheduled job does not create duplicate reminders outside the configured reminder frequency.
+- [ ] Delivery uses mobile push notification only and records delivery status where supported; no Web notification is created.
 
 #### US-REMINDER-02 — Send a manual payment reminder
 
-- **Status:** Needs Clarification (PD-05)
+- **Status:** Refined
 - **User story:** As a landlord, I want to send a reminder for a specific unpaid invoice so that I can follow up without composing a separate message.
-- **Dependencies:** US-INVOICE-02 and the channel selected in PD-05.
+- **Dependencies:** US-INVOICE-02 and a mobile push-notification service.
 
 **Acceptance criteria:**
 
 - [ ] The landlord can trigger a reminder only for an unpaid invoice in an owned property.
-- [ ] The tenant receives the invoice reference, outstanding amount, and due date through the approved channel.
+- [ ] The tenant receives a mobile push notification containing the invoice reference, outstanding amount, and due date; no Web notification is created.
 - [ ] The action records the trigger time and responsible landlord.
 - [ ] The operation is rejected if the invoice is already paid or does not belong to the landlord.
 
@@ -607,17 +632,19 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 #### US-LEASE-05 — Receive a lease-expiration reminder
 
-- **Status:** Needs Clarification (PD-05)
+- **Status:** Refined
 - **User story:** As a landlord or tenant, I want advance notice of a lease expiration so that renewal or move-out can be planned.
-- **Dependencies:** US-LEASE-01 and the notification schedule/channel selected in PD-05.
+- **Dependencies:** US-LEASE-01 and a mobile push-notification service.
 
 **Acceptance criteria:**
 
-- [ ] A scheduled process evaluates active lease expiration dates at the approved frequency.
+- [ ] A scheduled process evaluates active lease expiration dates at least daily.
 - [ ] Only the owning landlord and assigned tenant receive a reminder for the lease.
 - [ ] The reminder identifies the relevant room and expiration date.
 - [ ] An ended or already expired lease does not receive a future-expiration reminder.
-- [ ] Re-running the scheduled process does not create duplicate reminders outside the approved reminder policy.
+- [ ] The landlord can configure multiple reminder times within the 30 days before expiration.
+- [ ] Each configured reminder is delivered as a mobile push notification only; no Web notification is created.
+- [ ] Re-running the scheduled process does not duplicate a reminder already sent for the same lease and configured reminder time.
 
 #### US-LEASE-06 — View upcoming lease expirations
 
@@ -652,6 +679,7 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 - [ ] Invalid files are rejected without creating inaccessible/orphaned attachments.
 - [ ] A successful request records the tenant, room, submission time, and initial `Pending` status.
 - [ ] The owning landlord can access the new request; unrelated users cannot.
+- [ ] A successful submission sends the owning landlord a mobile push notification linking to the request.
 
 #### US-MAINT-02 — View submitted maintenance requests
 
@@ -695,7 +723,7 @@ These decisions are intentionally not resolved by the backlog author. Stories re
 
 - [ ] The owning landlord can change the status among `Pending`, `In Progress`, and `Completed` according to allowed transitions approved by the team.
 - [ ] The system records the previous status, new status, change time, and responsible landlord.
-- [ ] The assigned tenant sees the new status and receives an in-app notification of the change.
+- [ ] The assigned tenant sees the new status and receives a mobile push notification of the change; no Web notification is created.
 - [ ] A landlord cannot update a request belonging to another landlord's property.
 - [ ] Repeating the same status update does not create misleading duplicate history entries or notifications.
 
@@ -787,8 +815,8 @@ The order below is a dependency guide, not a fixed sprint plan. Independent stor
 1. **Technical baseline:** repository conventions, environments, database migration workflow, CI, deployment, test baseline, and file storage.
 2. **Identity and authorization:** US-AUTH-01 through US-AUTH-04 and US-PROFILE-01.
 3. **Portfolio setup:** US-PROPERTY-01, US-ROOM-01, US-TENANT-01, then their view/update stories.
-4. **Tenant access and leasing:** US-TENANT-03 and US-LEASE-01 through US-LEASE-04.
-5. **Utility and billing:** US-UTILITY-01, US-METER-01, US-METER-02, US-INVOICE-01, and US-INVOICE-02.
+4. **Tenant access and leasing:** US-LEASE-01, tenant-account provisioning in US-TENANT-03, then US-LEASE-02 through US-LEASE-04.
+5. **Utility and billing:** US-UTILITY-01, US-METER-01, US-METER-02, US-INVOICE-01, US-METER-03 when correction is needed, then US-INVOICE-04 and US-INVOICE-02.
 6. **Payment:** US-VIETQR-01, US-VIETQR-02, US-PAYMENT-01 through US-PAYMENT-03.
 7. **Maintenance:** US-MAINT-01 through US-MAINT-05 can proceed in parallel once identity, tenant linking, leases, and file storage are available.
 8. **Monitoring and reminders:** dashboard stories, lease reminders, and payment reminders after their source data and notification baseline exist.
@@ -801,8 +829,8 @@ Technical baseline items should be tracked as technical tasks/enablers. They are
 
 Before moving a story from `Refined` or `Needs Clarification` to `Ready`, the team must:
 
-- Resolve every referenced product decision and record the result in the appropriate product document or issue.
-- Select the delivery surface (`Web`, `Mobile`, or `Both`) and confirm that the story is small enough for one pull request or an explicitly bounded implementation cycle.
+- Apply the approved Product Decision Record and resolve any newly discovered story-specific question in the appropriate product document or issue.
+- Confirm Mobile delivery and that the story is small enough for one pull request or an explicitly bounded implementation cycle.
 - Confirm that dependencies are complete or available in the target branch/environment.
 - Review acceptance criteria with the person responsible for product decisions.
 - Add story-specific technical notes only when architecture and repository context do not already provide them.
@@ -821,7 +849,7 @@ The coding agent should receive the story as its primary specification together 
 | **F-03** | Tenant Profile Management | Must Have | 3 |
 | **F-04** | Utility Pricing Configuration | Must Have | 2 |
 | **F-05** | Utility Meter Reading and Calculation | Must Have | 3 |
-| **F-06** | Billing and Invoice Generation | Must Have | 3 |
+| **F-06** | Billing and Invoice Generation | Must Have | 4 |
 | **F-07** | VietQR Payment Integration | Must Have | 2 |
 | **F-08** | Payment Verification and Tracking | Must Have | 3 |
 | **F-09** | Rent Payment Reminders | Should Have | 2 |
@@ -830,4 +858,4 @@ The coding agent should receive the story as its primary specification together 
 | **F-12** | Maintenance Request Submission | Must Have | 2 |
 | **F-13** | Maintenance Status Tracking | Must Have | 3 |
 | **F-14** | Centralized Business Dashboard | Must Have | 4 |
-|  | **Total** |  | **43** |
+|  | **Total** |  | **44** |
