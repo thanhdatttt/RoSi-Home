@@ -6,8 +6,9 @@
 |---|---|
 | Document | Cost–Time–Resources Estimation Methodology |
 | Project | RosiHome |
-| Version | 0.1 (Working Draft) |
+| Version | 0.3 (Working Draft) |
 | Status | Draft for team and sponsor review |
+| Last updated | 2026-07-14 |
 | Estimation approach | Empirical, flow-based forecasting using Kanban |
 | Measurement unit | User story accepted and deployed, supported by effort, cost, and quality measures |
 | Prepared by | RosiHome project team |
@@ -37,7 +38,7 @@ This methodology uses the following project documents as inputs:
 - `docs/architecture.md` for the current technical solution and major technology resources; and
 - the product backlog and acceptance criteria, once approved, for bottom-up estimation and measurement.
 
-Until a formal scope change is approved, AI-assisted development tools are project resources, while **AI-powered product features are outside the MVP**. Therefore, development-tool usage belongs in the MVP cost estimate, but runtime LLM cost for meter-photo recognition or AI-generated landlord reports does not belong in the MVP cost baseline.
+The project team has confirmed that **AI-powered product features are outside the MVP**. AI-assisted development tools remain project resources. Therefore, development-tool usage belongs in the MVP cost estimate, but runtime LLM cost for meter-photo recognition or AI-generated landlord reports does not belong in the MVP cost baseline unless a formal scope change is approved.
 
 If two source documents conflict, the conflict must be recorded in the Statement of Work (SOW) reconciliation table and resolved before the integrated Cost–Time–Resources baseline is approved.
 
@@ -190,6 +191,8 @@ Initial WIP limits are provisional and must be adjusted using pilot evidence:
 
 Increasing agent count is permitted only when downstream queues remain within their WIP limits and quality measures do not materially deteriorate.
 
+Although the team's stated theoretical maximum is 13 concurrent agent sessions, the pilot will not begin at that limit. The initial implementation WIP limit is **five stories, with no more than one active implementation story per team member**. Concurrency may be increased in controlled steps only after review, testing, integration, and deployment queues remain stable. This prevents theoretical tool concurrency from being mistaken for demonstrated delivery capacity.
+
 ## 8. Definition of Ready and Definition of Done
 
 ### 8.1 Definition of Ready (DoR)
@@ -265,6 +268,16 @@ Changes during the pilot must be logged because tool or process changes can inva
 Agents may work in parallel only on stories with sufficiently independent file, schema, and API boundaries. Each modifying agent must use an isolated branch or worktree. Shared contracts must be agreed before parallel implementation begins.
 
 Authentication may be implemented early because many later stories depend on identity and role behavior. This sequencing decision does not require converting the modular monolith into microservices.
+
+The pilot will use a staged concurrency experiment where backlog independence permits:
+
+| Stage | Maximum active agent sessions | Purpose |
+|---|---:|---|
+| C1 | Up to 5 | Establish one-session-per-member reference throughput and integration behavior |
+| C2 | Up to 8 | Test whether additional parallel sessions improve accepted throughput without overloading review and testing |
+| C3 | Up to 13 | Test the stated theoretical maximum only if C2 remains stable and account limits permit |
+
+Moving to the next stage requires no material deterioration in acceptance yield, rework ratio, deployment success rate, or blocked time. A stage may be skipped if the selected stories are not independent enough for a valid comparison.
 
 ### 9.6 Pilot validity checks
 
@@ -430,6 +443,16 @@ Resources are estimated in four groups.
 
 One person may perform multiple roles, but capacity must not be double-counted. The Resource Plan will record availability by week, skills, role, maximum committed hours, leave/exam constraints, and assignment.
 
+The current team profile is:
+
+| Resource | Quantity | Current profile | Capacity status |
+|---|---:|---|---|
+| Full-stack student developers | 5 | Basic-to-intermediate full-stack capability; no specialist role assigned | 15–20 hours/member/week; 75–100 gross team-hours/week |
+| Human reviewers/testers | 5 potential, drawn from the same developers | Peer review and acceptance work must be scheduled separately from implementation | Drawn from the same 75–100 team-hours; must not be added again |
+| Project management/coordination | Performed by a team member | Must not be counted as full development availability at the same time | Assignment and hours TBD |
+
+The team expects AI agents to generate approximately 90% of code. This is recorded as an **operating hypothesis**, not as a verified productivity or quality factor. Human accountability remains required for requirements, architecture, review, testing, security, integration, deployment, and acceptance. The pilot will measure generated-code rework and human touch time before this hypothesis is used in forecasting.
+
 ### 13.2 AI resources
 
 - provider and plan;
@@ -440,6 +463,25 @@ One person may perform multiple roles, but capacity must not be double-counted. 
 - API spend limits;
 - required skills, prompts, tools, and context;
 - isolated worktrees or execution environments.
+
+The current planned AI resource configuration is:
+
+| Provider/product | Team members | Accounts | Machines | Planned model | Stated sessions per member | Theoretical concurrent sessions | Cash-cost treatment |
+|---|---:|---:|---:|---|---:|---:|---|
+| ChatGPT Plus with Codex desktop/CLI | 2 | 2 | 2 | GPT-5.6 Sol | 2 | 4 | Two paid subscriptions plus any purchased usage credits |
+| Google AI Pro student access with Antigravity | 3 | 3 | 3 | Gemini 3.1 Pro | 3 | 9 | Zero incremental subscription cash cost while student benefit remains valid; record credited value and expiry risk |
+| **Total** | **5** | **5** | **5** | Mixed-model pool | — | **13 theoretical** | Subject to plan limits and actual usage |
+
+This configuration is a planning assumption as of 2026-07-14. GPT-5.6 Sol availability may vary by rollout and account, Gemini 3.1 Pro is currently documented as a preview model, and both providers apply usage limits that may change. The team must record the exact selectable model, product surface, usage allowance, and reset behavior observed on each account at pilot start.
+
+The mixed-model pool requires provider-specific reporting. Results must not be combined without retaining provider/model labels because capability, latency, limits, and work quality may differ. At minimum, pilot results will report accepted throughput, cycle time, rework, and cost separately for the ChatGPT/Codex and Gemini cohorts before a team-wide total is presented.
+
+#### Subscription measurement rules
+
+- ChatGPT Plus is a fixed cash cost for included usage. If Codex usage credits are purchased after included limits are reached, those credits are recorded as a separate variable cost. The Codex Usage panel is the preferred usage record for these accounts.
+- Google AI Pro student access has zero incremental cash cost only while the benefit remains active. Its normal paid or fallback cost must be included in the conservative scenario.
+- If a subscription surface does not expose raw input/output token counts, the team must not invent token values. It will record the available unit instead, such as credits, tasks, sessions, prompts, active duration, usage-limit events, and accepted stories.
+- API token formulas apply only when token counts and rates are actually available. Subscription and API usage must never be double-counted.
 
 ### 13.3 Technical resources
 
@@ -614,11 +656,11 @@ This methodology is ready for approval when:
 | ID | Required decision/data | Owner | Needed by | Status |
 |---|---|---|---|---|
 | TBD-01 | Approved MVP backlog and acceptance criteria | Product Owner / Project Manager | Before pilot selection | Open |
-| TBD-02 | Final confirmation that runtime AI features are excluded from MVP | Sponsor / Project Manager | Before cost baseline | Open |
-| TBD-03 | Team member roles, skills, and weekly availability | Project Manager | Before resource estimate | Open |
+| TBD-02 | Runtime AI features excluded from MVP | Sponsor / Project Manager | Confirmed 2026-07-14 | Resolved |
+| TBD-03 | Five full-stack members at 15–20 hours/member/week identified; named assignments and PM allocation still required | Project Manager | Before final resource baseline | Partially resolved |
 | TBD-04 | Pilot start date and five-day working calendar | Project Manager | Before pilot | Open |
-| TBD-05 | Claude Code access method, model, plan, and spend limit | Technical owner | Before pilot | Open |
-| TBD-06 | Maximum agent concurrency and available machines/worktrees | Technical owner | Before pilot | Open |
+| TBD-05 | Codex desktop/CLI and Antigravity selected; confirm selectable model identifiers, usage allowances, and spend limits on each pilot account | Technical owner | Before pilot | Partially resolved |
+| TBD-06 | Five machines and theoretical 13 sessions identified; validate isolated workspaces and staged concurrency C1–C3 | Technical owner | During pilot setup | Partially resolved |
 | TBD-07 | Selected hosting, database, storage, and deployment target | Architecture owner | Before infrastructure estimate | Open |
 | TBD-08 | Human shadow-rate basis | Sponsor / Project Manager | Before economic cost estimate | Open |
 | TBD-09 | VND/USD conversion source and baseline date | Cost owner | Before cost baseline | Open |
@@ -637,4 +679,9 @@ This methodology is ready for approval when:
 - Claude Code cost management and usage tracking: <https://code.claude.com/docs/en/costs>
 - Claude Code monitoring and telemetry: <https://code.claude.com/docs/en/monitoring-usage>
 - Claude Code subagents and isolated worktrees: <https://code.claude.com/docs/en/sub-agents>
-
+- OpenAI, GPT-5.6 availability by ChatGPT plan and Codex surface: <https://help.openai.com/en/articles/20001354-gpt-56-in-chatgpt/>
+- OpenAI, Codex use with ChatGPT plans and shared usage limits: <https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan>
+- OpenAI, Codex credit and token-based rate card: <https://help.openai.com/en/articles/20001106>
+- Google AI Pro benefits and developer-tool access: <https://support.google.com/googleone/answer/14534406>
+- Google, Gemini Apps usage limits: <https://support.google.com/gemini/answer/16275805>
+- Google, Gemini 3.1 Pro Preview model documentation: <https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview>
