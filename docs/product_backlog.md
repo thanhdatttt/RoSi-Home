@@ -1,6 +1,6 @@
 # Product Backlog: RosiHome Property Management System
 
-> This backlog refines the MVP scope in `vision_and_scope.md` into a traceable hierarchy of Epic → Feature → User Story. Features preserve the product-level view; child stories are the units intended for implementation, testing, review, and deployment.
+> This backlog refines the RosiHome product scope into a traceable hierarchy of Epic → Feature → User Story. It targets implementation and verification in the development environment and covers the current product development scope. Features preserve the product-level view, while child stories are the units intended for implementation, testing, review, and deployment.
 
 ---
 
@@ -8,53 +8,63 @@
 
 ### 1.1 Work-item hierarchy
 
-| Level | Purpose | Implementation unit? |
-| :--- | :--- | :---: |
-| **Epic** | Groups a major product capability or workflow. | No |
-| **Feature (F-xx)** | Describes a user-facing product capability and preserves the original MVP scope. | Usually no |
-| **User Story (US-xxx-xx)** | Describes one independently testable user outcome within a feature. | Yes, when `Ready` |
-| **Technical Task** | Describes implementation work needed to complete a story. | No user-story throughput credit |
+| Level                      | Purpose                                                                      |      Implementation unit?       |
+| :------------------------- | :--------------------------------------------------------------------------- | :-----------------------------: |
+| **Epic**                   | Groups a major product capability or workflow.                               |               No                |
+| **Feature (F-xx)**         | Describes a user-facing product capability within the current product scope. |           Usually no            |
+| **User Story (US-xxx-xx)** | Describes one independently testable user outcome within a feature.          |        Yes, when `Ready`        |
+| **Technical Task**         | Describes implementation work needed to complete a story.                    | No user-story throughput credit |
 
 ### 1.2 Story status
 
-| Status | Meaning |
-| :--- | :--- |
-| **Refined** | The story has a bounded scope and testable acceptance criteria, but still requires team review before commitment. |
-| **Needs Clarification** | A product decision listed in Section 3 must be resolved before implementation. |
-| **Ready** | The team has approved the story, resolved its dependencies and open decisions, and selected its delivery surface. |
-| **In Progress** | Implementation has started. |
-| **Done** | The Definition of Done has been satisfied. |
+| Status                  | Meaning                                                                                                           |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------- |
+| **Refined**             | The story has a bounded scope and testable acceptance criteria, but still requires team review before commitment. |
+| **Needs Clarification** | A product decision listed in Section 3 must be resolved before implementation.                                    |
+| **Ready**               | The team has approved the story, resolved its dependencies and open decisions, and selected its delivery surface. |
+| **In Progress**         | Implementation has started.                                                                                       |
+| **Done**                | The Definition of Done has been satisfied.                                                                        |
 
 `Refined` does not automatically mean `Ready`. The team should move only reviewed stories to `Ready` before assigning them to a developer or coding agent.
 
 ### 1.3 Priority
 
-- **Must Have:** Required for the MVP's core workflows.
-- **Should Have:** Valuable for the MVP but may be deferred if schedule or capacity is constrained.
+- **Must Have:** Required for the product's core workflows in the current development scope.
+- **Should Have:** Valuable product behavior that may be scheduled after the core dependency path.
 
 ### 1.4 Global Definition of Done
 
 Unless a story explicitly states otherwise, it is `Done` only when:
 
-- All acceptance criteria pass in the RosiHome mobile application. The MVP does not require a Web delivery surface.
+- All acceptance criteria pass in the RosiHome mobile application. The current product scope does not require a Web delivery surface.
 - Authorization and ownership rules are enforced by the backend, not only hidden in the user interface.
 - Relevant automated tests pass, including at least the main success path and critical validation/authorization paths.
 - No unresolved severity-critical or severity-high defect remains within the story scope.
 - Code has been reviewed and merged according to the team's Git workflow.
 - Database migrations and configuration changes required by the story are reproducible.
-- The completed behavior has been deployed to and verified in the agreed integration or pilot environment.
+- The completed behavior has been deployed to and verified in the agreed development/integration environment.
 - User-facing and API errors do not expose passwords, tokens, private files, or another landlord's or tenant's data.
+
+### 1.5 Cross-cutting audit and deletion rules
+
+These rules apply to every story that creates, changes, archives, removes, or restores auditable business data:
+
+- Business records covered by an audit trail must use soft deletion; product/API operations must not physically delete those records.
+- A soft-deleted record stores at least `deletedAt` and `deletedBy`, is excluded from normal active queries, and remains available to authorized audit/history workflows.
+- Audit events are append-only and record the actor, action, entity type, entity identifier, timestamp, and the relevant before/after values without storing passwords, tokens, or unnecessary sensitive data.
+- Update, status-transition, correction, and soft-delete operations must be attributable to the responsible authenticated user.
+- Database uniqueness and relationship rules must explicitly define how soft-deleted records are handled so that archived data does not produce accidental conflicts or data loss.
 
 ---
 
 ## 2. Workflow Mapping Reference
 
-| Workflow | Description | Primary users |
-| :--- | :--- | :--- |
-| **WF-1** | Automated Monthly Billing and Payment | Landlord, Tenant |
-| **WF-2** | Lease Management and Maintenance Tracking | Landlord, Tenant |
-| **WF-3** | Portfolio Performance Monitoring | Landlord |
-| **WF-4** | Infrastructure and Core Management | System, Landlord, Tenant |
+| Workflow | Description                               | Primary users            |
+| :------- | :---------------------------------------- | :----------------------- |
+| **WF-1** | Automated Monthly Billing and Payment     | Landlord, Tenant         |
+| **WF-2** | Lease Management and Maintenance Tracking | Landlord, Tenant         |
+| **WF-3** | Portfolio Performance Monitoring          | Landlord                 |
+| **WF-4** | Infrastructure and Core Management        | System, Landlord, Tenant |
 
 ---
 
@@ -62,15 +72,16 @@ Unless a story explicitly states otherwise, it is `Done` only when:
 
 The team has resolved the following cross-cutting product decisions. Their outcomes are incorporated into the affected stories below.
 
-| Decision | Approved outcome | Affected stories |
-| :--- | :--- | :--- |
-| **PD-01 Account onboarding** | A landlord creates the tenant profile and lease. The system then provisions a Tenant account using the tenant's phone number as username, requires an email address, and emails a temporary password plus the mobile-app link. An account has exactly one role; Landlord and Tenant roles cannot be combined. Landlords use self-registration. | US-AUTH-01, US-TENANT-03, US-LEASE-01 |
-| **PD-02 Password recovery** | Password recovery is included and uses email only. | US-AUTH-06 |
-| **PD-03 Utility pricing** | Electricity and water rates are configured once per property. Electricity is metered per kWh and water is metered per cubic metre; per-person water billing and room-level rate overrides are excluded. | US-UTILITY-01, US-UTILITY-02 |
-| **PD-04 Invoice creation** | A scheduled job generates a draft invoice only when new meter readings exist for the billing period; otherwise it skips that room. PDF export is required. | US-INVOICE-01, US-INVOICE-03 |
-| **PD-05 Notification channels** | Notifications are mobile push notifications only; Web notifications are excluded. Reminder schedules are configurable and can send multiple lease-expiry reminders during the 30 days before expiration. | US-REMINDER-01, US-REMINDER-02, US-LEASE-05, notification acceptance criteria in payment and maintenance stories |
-| **PD-06 Corrections and sending** | A scheduled invoice is created as `Draft`. Before sending it, the landlord may correct meter readings and have the draft recalculated. The landlord explicitly sends the reviewed invoice, after which it becomes visible to the tenant. A `Paid` invoice cannot be silently changed. | US-METER-03, US-INVOICE-01, US-INVOICE-04 |
-| **PD-07 Client coverage** | All MVP user stories are delivered on Mobile. No Web implementation is required for these stories. | All stories |
+| Decision                          | Approved outcome                                                                                                                                                                                                                                                                                                                                                                        | Affected stories                                                                                                 |
+| :-------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| **PD-01 Account onboarding**      | Landlords use self-registration. A landlord does not create a separate tenant profile before leasing; the landlord enters tenant identity/contact information while creating the lease. The system creates the tenant record and provisions a Tenant account using the phone number as username, then emails a temporary password and mobile-app link. An account has exactly one role. | US-AUTH-01, US-TENANT-01, US-TENANT-02, US-LEASE-01                                                              |
+| **PD-02 Password recovery**       | Password recovery is included and uses email only.                                                                                                                                                                                                                                                                                                                                      | US-AUTH-06                                                                                                       |
+| **PD-03 Utility pricing**         | Utility configuration is property-level. Electricity is metered per kWh. For water, each property selects either metered pricing per cubic metre or a configurable flat monthly amount per tenant. Developer-seeded defaults must be versioned by source, locality, and effective date rather than hard-coded as one permanent national value.                                          | US-UTILITY-01, US-UTILITY-02, US-METER-02                                                                        |
+| **PD-04 Invoice creation**        | A scheduled job generates a draft invoice only when all new readings required by the property's utility methods exist for the billing period; otherwise it skips that room. Flat per-tenant water billing does not require a water reading. PDF export is required.                                                                                                                     | US-INVOICE-01, US-INVOICE-03                                                                                     |
+| **PD-05 Notification channels**   | Notifications are mobile push notifications only. For each property, a landlord can enable any combination of lease-expiry reminders at 7, 3, and 1 day before expiration.                                                                                                                                                                                                              | US-REMINDER-01, US-REMINDER-02, US-LEASE-05, notification acceptance criteria in payment and maintenance stories |
+| **PD-06 Corrections and sending** | A scheduled invoice is created as `Draft`. Before sending it, the landlord may correct meter readings and have the draft recalculated. The landlord explicitly sends the reviewed invoice, after which it becomes visible to the tenant. A `Paid` invoice cannot be silently changed.                                                                                                   | US-METER-03, US-INVOICE-01, US-INVOICE-04                                                                        |
+| **PD-07 Client coverage**         | All current product stories are delivered on Mobile and verified in the development/integration environment. No Web implementation is required for these stories.                                                                                                                                                                                                                       | All stories                                                                                                      |
+| **PD-08 Audit and deletion**      | Auditable business records use append-only audit events and soft deletion. Hard deletion through product/API workflows is prohibited for those records.                                                                                                                                                                                                                                 | All stories that update, archive, remove, correct, or transition business records                                |
 
 ---
 
@@ -92,9 +103,9 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 **Acceptance criteria:**
 
-- [ ] The landlord registration flow requires full name, a unique login identifier, password, and password confirmation.
+- [ ] The landlord registration flow requires full name, a unique login identifier (email), password, and password confirmation.
 - [ ] Invalid or missing values produce field-level validation errors and no account is created.
-- [ ] Duplicate login identifiers are rejected without revealing sensitive account information.
+- [ ] Duplicate login identifiers (emails) are rejected without revealing sensitive account information.
 - [ ] Password and confirmation must match, and the stored password is never persisted or returned as plain text.
 - [ ] Successful self-registration creates exactly one account with the `Landlord` role.
 - [ ] The registration operation cannot assign both `Landlord` and `Tenant` roles to the same account.
@@ -109,7 +120,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 - [ ] A registered active user can log in with the supported login identifier and correct password.
 - [ ] Invalid credentials return a generic authentication error and do not identify which credential was incorrect.
-- [ ] Successful login establishes an authenticated session/token and returns the user's current role information.
+- [ ] Successful login establishes an authenticated token (JWT) and returns the user's current role information.
 - [ ] Passwords and authentication tokens are not exposed in logs or API responses beyond the required authentication response.
 
 #### US-AUTH-03 — Log out
@@ -137,6 +148,21 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] A tenant can access only records linked to that tenant account through the approved tenant/lease relationship.
 - [ ] Changing a URL, identifier, or request payload cannot bypass role or ownership checks.
 - [ ] An unauthenticated request to a protected operation is rejected according to the API authentication convention.
+
+#### US-AUTH-05 — Change password
+
+- **Status:** Refined
+- **User story:** As an authenticated user, I want to change my password so that I can replace a temporary or compromised credential.
+- **Dependencies:** US-AUTH-02.
+
+**Acceptance criteria:**
+
+- [ ] A user changing an established password must provide the correct current password, a new password, and password confirmation.
+- [ ] The new password and confirmation must match and satisfy the approved password policy.
+- [ ] The new password cannot be the same as the current password.
+- [ ] A tenant who signs in with a temporary password is required to set a new password before accessing other protected product functions.
+- [ ] After a successful change, the temporary/previous password no longer authenticates the user.
+- [ ] The password change is recorded as a security audit event without storing either password value.
 
 #### US-PROFILE-01 — View and update a user profile
 
@@ -187,7 +213,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 **Acceptance criteria:**
 
 - [ ] Only an authenticated landlord can create a property.
-- [ ] Property name and address are required; missing or invalid values prevent creation and produce validation errors.
+- [ ] Property name and address are required (unique per landlord); missing or invalid values prevent creation and produce validation errors.
 - [ ] The created property is associated with the authenticated landlord.
 - [ ] The new property appears in that landlord's property list and is not visible to another landlord.
 - [ ] Creating rooms, editing, and archiving a property are outside this story.
@@ -202,7 +228,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 - [ ] The landlord can list and open details for properties they own.
 - [ ] The landlord can update editable basic details, including property name and address.
-- [ ] Invalid updates are rejected without changing the stored property.
+- [ ] Invalid updates are rejected without changing the stored property (check unique name and address per landlord before saving).
 - [ ] The landlord cannot view or update another landlord's property.
 - [ ] Property deletion/archival is outside this story unless separately approved.
 
@@ -234,60 +260,62 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] The landlord cannot directly override an occupancy status that conflicts with the active lease relationship.
 - [ ] The landlord cannot view or update a room belonging to another landlord.
 
-### F-03 — Tenant Profile Management
+#### US-ROOM-03 — Add multiple rooms to a property
+
+- **Status:** Refined
+- **User story:** As a landlord, I want to add multiple rooms in one operation so that I can set up a property without repeating the same form for every room.
+- **Dependencies:** US-PROPERTY-01.
+
+**Acceptance criteria:**
+
+- [ ] The landlord can add a bounded list of rooms only to a property they own.
+- [ ] Each row requires a room name/number (default automatically numbering) and a valid non-negative base rent.
+- [ ] Room names/numbers must be unique both within the submitted list and among active rooms in the selected property.
+- [ ] Validation errors identify the affected rows before records are created.
+- [ ] The operation is atomic: either every valid submitted room is created or none are created when any row fails validation.
+- [ ] Every created room starts as `Vacant` and is attributable to the authenticated landlord in the audit trail.
+
+### F-03 — Tenant Information and Account Management
 
 - **Workflows:** WF-1, WF-2, WF-3, WF-4
-- **Feature objective:** A landlord can maintain tenant records and connect a tenant profile to the correct system account and rental relationship.
+- **Feature objective:** Tenant information is captured from the lease workflow, maintained as part of the rental relationship, and connected to the automatically provisioned Tenant account.
 - **Priority:** Must Have
 
-#### US-TENANT-01 — Create a tenant profile
+#### US-TENANT-01 — View and update tenant information created from a lease
 
 - **Status:** Refined
-- **User story:** As a landlord, I want to create a tenant profile so that I can use it in lease and rental workflows.
-- **Dependencies:** US-AUTH-04.
+- **User story:** As a landlord, I want to view and update tenant information captured during lease creation so that the rental contact record remains current.
+- **Dependencies:** US-LEASE-01.
 
 **Acceptance criteria:**
 
-- [ ] Only an authenticated landlord can create a tenant profile in their portfolio.
-- [ ] Full name, phone number, identification number, and email address are required for a tenant who will receive a lease/account.
-- [ ] The email address has a valid format and the phone number can be used as the tenant username.
-- [ ] A duplicate identification number, phone number, or email address within the same landlord's portfolio is rejected.
-- [ ] The created tenant profile belongs to the authenticated landlord's portfolio and is not exposed to another landlord.
-- [ ] Creating a profile alone does not mark a room as occupied.
-
-#### US-TENANT-02 — View and update a tenant profile
-
-- **Status:** Refined
-- **User story:** As a landlord, I want to view and update a tenant's contact information so that the tenant record remains current.
-- **Dependencies:** US-TENANT-01.
-
-**Acceptance criteria:**
-
-- [ ] The landlord can list and open tenant profiles within their own portfolio.
+- [ ] The landlord can list and open tenant information derived from leases within their own portfolio.
 - [ ] The landlord can update approved profile and contact fields.
-- [ ] Identification uniqueness and field-validation rules are enforced on update.
-- [ ] The landlord cannot view or modify another landlord's tenant profile.
+- [ ] Email, phone number, and identification-number format/uniqueness rules are enforced on update.
+- [ ] An update to a login-related phone number or email follows the approved account-identity synchronization and verification rules.
+- [ ] The landlord cannot view or modify tenant information associated only with another landlord.
+- [ ] Archiving/removing a tenant relationship uses soft deletion and preserves lease, invoice, payment, and audit history.
 
-#### US-TENANT-03 — Provision a tenant account from a lease
+#### US-TENANT-02 — Provision a tenant account from a lease
 
 - **Status:** Refined
 - **User story:** As a landlord, I want the system to provision a tenant account when I create the tenant's lease so that the tenant can access RosiHome without self-registering.
-- **Dependencies:** US-TENANT-01, US-LEASE-01, and an approved transactional-email provider.
+- **Dependencies:** US-LEASE-01 and an approved transactional-email provider.
 
 **Acceptance criteria:**
 
 - [ ] Lease creation requires the tenant's full name, phone number, identification number, and email address before account provisioning.
 - [ ] The system provisions exactly one account with the `Tenant` role and uses the tenant's phone number as the username.
-- [ ] The same phone number, email address, or tenant profile cannot provision a duplicate account.
+- [ ] The same phone number, email address, tenant information record, or lease event cannot provision a duplicate account.
 - [ ] The system generates a temporary password that is not exposed in application logs or stored as plain text.
 - [ ] The tenant receives an email containing the username, temporary password, and mobile-app link.
-- [ ] The tenant is required to replace the temporary password at first successful login.
-- [ ] The provisioned account cannot also hold the `Landlord` role and can access only data linked through its tenant profile and lease.
+- [ ] The tenant is required to replace the temporary password through US-AUTH-05 at first successful login.
+- [ ] The provisioned account cannot also hold the `Landlord` role and can access only data linked through its tenant information record and lease.
 
-### F-04 — Utility Pricing Configuration
+### F-04 — Utility Pricing and Property Surcharge Configuration
 
 - **Workflows:** WF-1
-- **Feature objective:** A landlord can maintain electricity and water pricing used consistently by the utility calculation and invoice workflows.
+- **Feature objective:** A landlord can maintain property-level electricity, water, and recurring surcharge rules used consistently by calculation and invoice workflows.
 - **Priority:** Must Have
 
 #### US-UTILITY-01 — Configure utility rates
@@ -299,11 +327,12 @@ The team has resolved the following cross-cutting product decisions. Their outco
 **Acceptance criteria:**
 
 - [ ] The landlord can configure one electricity price per kWh for an owned property.
-- [ ] The landlord can configure one water price per cubic metre for an owned property.
-- [ ] A rate must be a valid non-negative monetary amount and include its unit/method.
+- [ ] For each property, the landlord can select exactly one water billing method: `Metered per m³` or `Flat amount per tenant per month`.
+- [ ] Metered water requires a valid price per cubic metre; flat water requires a valid monthly amount per tenant (for example, VND 100,000 per tenant for unlimited usage).
+- [ ] Every rate must be a valid non-negative monetary amount and include its unit/method.
 - [ ] The landlord cannot create or change rates for another landlord's property.
-- [ ] Room-level overrides and per-person water billing are not available.
 - [ ] A saved configuration identifies the property and effective time from which the rate applies.
+- [ ] When a property has no landlord-defined rate, the system can use only an applicable developer-seeded default whose source, locality, and effective date are recorded.
 
 #### US-UTILITY-02 — View and update utility rates
 
@@ -317,6 +346,21 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] The landlord can update a rate after the same validation and ownership rules used at creation.
 - [ ] A rate change does not silently recalculate an already finalized invoice.
 - [ ] New calculations for every room in the property use the effective property-level rates.
+
+#### US-CHARGE-01 — Configure recurring property surcharges
+
+- **Status:** Refined
+- **User story:** As a landlord, I want to configure recurring property-wide surcharges so that shared services such as internet appear consistently on tenant invoices.
+- **Dependencies:** US-PROPERTY-01.
+
+**Acceptance criteria:**
+
+- [ ] The landlord can create a surcharge only for a property they own, with a name, non-negative monthly amount, effective start date, and optional end date.
+- [ ] An active surcharge applies to each applicable active lease/invoice in that property for the covered billing period (for example, a VND 500,000 internet surcharge per tenant invoice).
+- [ ] The surcharge appears as a separate named invoice line item rather than being merged into rent or utility consumption.
+- [ ] The landlord can update or deactivate a surcharge prospectively; the change does not silently modify a `Sent` or `Paid` invoice.
+- [ ] Duplicate active surcharge names within the same property and overlapping effective period are rejected.
+- [ ] Deactivation uses soft deletion/status history and records the responsible landlord and time.
 
 ---
 
@@ -339,7 +383,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 **Acceptance criteria:**
 
 - [ ] The landlord can select a room they own and a billing period without an existing reading.
-- [ ] Electricity and water readings accept only valid non-negative values in their configured units.
+- [ ] Electricity and, when the property uses metered water, water readings accept only valid non-negative values in their configured units.
 - [ ] The initial reading is stored as a baseline and does not create negative or invented consumption.
 - [ ] The system prevents duplicate meter records for the same room, utility, and billing period.
 - [ ] The landlord cannot record readings for another landlord's room.
@@ -352,12 +396,16 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 **Acceptance criteria:**
 
-- [ ] The landlord can enter current electricity and water readings for a room and billing period.
+- [ ] The landlord can enter the current electricity reading and, when the property uses `Metered per m³`, the current water reading for a room and billing period.
 - [ ] The system displays and uses the immediately preceding applicable readings.
 - [ ] A current reading lower than its previous reading is rejected with a field-level error.
 - [ ] Consumption equals current reading minus previous reading for metered utilities.
-- [ ] The charge equals consumption multiplied by the effective configured rate, using the project's approved monetary rounding rule.
-- [ ] The saved result retains the inputs and effective rates needed to reproduce the calculation.
+- [ ] Electricity charge equals electricity consumption multiplied by the effective property-level electricity rate, using the approved monetary rounding rule.
+- [ ] Under `Metered per m³`, water charge equals water consumption multiplied by the effective property-level water rate.
+- [ ] Under `Flat amount per tenant per month`, water charge equals the configured flat amount multiplied by the active tenant count for the lease/room; water-meter consumption is not used for the charge.
+- [ ] If no landlord-defined rate exists, the calculation uses the developer-seeded default applicable to the property's locality and billing-period date; it must not silently use an expired or different-locality default.
+- [ ] Developer-seeded electricity defaults reference the official rules applicable to rental electricity at their effective date; metered water defaults reference the tariff approved for the relevant province/city.
+- [ ] The saved result retains the inputs, billing method, rates, rate source/version, locality, and effective date needed to reproduce the calculation.
 
 #### US-METER-03 — Correct a reading used for billing
 
@@ -384,15 +432,17 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 - **Status:** Refined
 - **User story:** As a landlord, I want the system to generate a scheduled draft invoice from rent and new utility readings so that I can review a complete monthly bill before sending it.
-- **Dependencies:** US-LEASE-01, US-METER-02, US-UTILITY-01, and a scheduled-job baseline.
+- **Dependencies:** US-LEASE-01, US-METER-02, US-UTILITY-01, US-CHARGE-01 when recurring surcharges apply, and a scheduled-job baseline.
 
 **Acceptance criteria:**
 
 - [ ] At the configured billing schedule, the system evaluates each room with an active lease for the target billing period.
-- [ ] A draft invoice is generated only when new electricity and water readings exist for that room and billing period.
-- [ ] If required new readings are absent, the room is skipped without creating an incomplete invoice; the skip reason is recorded for the landlord.
+- [ ] A draft invoice is generated only when every new reading required by the property's configured billing methods exists for that room and billing period.
+- [ ] Flat per-tenant water billing does not require a water reading; its charge uses the active tenant count and configured flat amount.
+- [ ] If a required new reading is absent, the room is skipped without creating an incomplete invoice; the skip reason is recorded for the landlord.
 - [ ] An invoice can be generated only for a billing period not already invoiced for that lease/room.
-- [ ] The invoice stores an itemized breakdown of base rent, electricity, water, approved additional fees, total amount, billing period, issue date, and due date.
+- [ ] The invoice stores an itemized breakdown of base rent, electricity, water, each applicable recurring property surcharge, total amount, billing period, issue date, and due date.
+- [ ] Each surcharge is snapshotted as a separate named line item using the configuration effective for that property and billing period.
 - [ ] The total equals the sum of its stored line items using the approved monetary rounding rule.
 - [ ] Repeating the same generation action does not create a duplicate invoice.
 - [ ] A newly generated invoice has status `Draft` and is not yet visible to the tenant.
@@ -541,7 +591,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] A paid invoice is not included in a subsequent overdue-reminder run.
 - [ ] The landlord can configure the mobile reminder schedule allowed by the product.
 - [ ] Re-running a scheduled job does not create duplicate reminders outside the configured reminder frequency.
-- [ ] Delivery uses mobile push notification only and records delivery status where supported; no Web notification is created.
+- [ ] Delivery uses mobile push notification only and records delivery status where supported.
 
 #### US-REMINDER-02 — Send a manual payment reminder
 
@@ -552,7 +602,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 **Acceptance criteria:**
 
 - [ ] The landlord can trigger a reminder only for an unpaid invoice in an owned property.
-- [ ] The tenant receives a mobile push notification containing the invoice reference, outstanding amount, and due date; no Web notification is created.
+- [ ] The tenant receives a mobile push notification containing the invoice reference, outstanding amount, and due date
 - [ ] The action records the trigger time and responsible landlord.
 - [ ] The operation is rejected if the invoice is already paid or does not belong to the landlord.
 
@@ -571,28 +621,31 @@ The team has resolved the following cross-cutting product decisions. Their outco
 #### US-LEASE-01 — Create a digital lease
 
 - **Status:** Refined
-- **User story:** As a landlord, I want to create a lease connecting a tenant to a room so that the rental relationship and terms are recorded.
-- **Dependencies:** US-ROOM-01 and US-TENANT-01.
+- **User story:** As a landlord, I want to enter tenant information while creating a room lease so that the rental relationship is recorded and the tenant account can be provisioned without a separate profile-creation step.
+- **Dependencies:** US-ROOM-01 and an approved transactional-email provider for subsequent account provisioning.
 
 **Acceptance criteria:**
 
-- [ ] The landlord can select only a tenant profile and room within their own portfolio.
+- [ ] The landlord can select only a room within their own portfolio and enters the tenant's full name, phone number, identification number, and mandatory email address as part of the lease flow.
+- [ ] Email, phone number, and identification number are validated and checked against active tenant/account records before the lease is created.
 - [ ] Start date, end date, agreed rent, and deposit are required and validated; end date must be after start date.
 - [ ] The system rejects a lease whose active period conflicts with another lease for the same room.
+- [ ] Successful submission atomically creates the tenant information record and lease; there is no standalone “create tenant profile” prerequisite.
 - [ ] Creating a currently active lease causes the room's derived status to be `Occupied`.
 - [ ] The lease stores the tenant, room, period, agreed rent, deposit, creator, and current status.
-- [ ] This feature stores lease information only; legally binding electronic signing is outside the MVP.
+- [ ] Successful lease creation triggers tenant-account provisioning through US-TENANT-02; a retryable email failure does not create a duplicate tenant account or lease.
+- [ ] This feature stores lease information only; legally binding electronic signing is outside the current product development scope.
 
 #### US-LEASE-02 — View lease information
 
 - **Status:** Refined
 - **User story:** As a landlord or assigned tenant, I want to view lease information so that I can refer to the agreed rental period and terms.
-- **Dependencies:** US-LEASE-01 and US-TENANT-03 for tenant access.
+- **Dependencies:** US-LEASE-01 and US-TENANT-02 for tenant access.
 
 **Acceptance criteria:**
 
 - [ ] A landlord can view leases belonging to owned properties.
-- [ ] A linked tenant can view only leases associated with their tenant profile/account.
+- [ ] A linked tenant can view only leases associated with their tenant information record/account.
 - [ ] The view shows the room, lease period, agreed rent, deposit, and status.
 - [ ] Unrelated landlords and tenants cannot access the lease by changing its identifier.
 
@@ -619,7 +672,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 **Acceptance criteria:**
 
 - [ ] Only the owning landlord can end the lease.
-- [ ] The operation records an actual end date and an ended/expired status without deleting historical lease information.
+- [ ] The operation records an actual end date and an ended/expired status transition without deleting historical lease information; any later archive operation uses soft deletion.
 - [ ] A room with no other active lease is displayed as `Vacant` after the lease ends.
 - [ ] A room is not released if another valid active lease still applies.
 - [ ] Ending a lease does not delete historical invoices, payments, readings, or maintenance records.
@@ -642,8 +695,9 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] Only the owning landlord and assigned tenant receive a reminder for the lease.
 - [ ] The reminder identifies the relevant room and expiration date.
 - [ ] An ended or already expired lease does not receive a future-expiration reminder.
-- [ ] The landlord can configure multiple reminder times within the 30 days before expiration.
-- [ ] Each configured reminder is delivered as a mobile push notification only; no Web notification is created.
+- [ ] For each owned property, the landlord can enable any combination of reminders at exactly 7, 3, and 1 day before lease expiration.
+- [ ] A property's reminder configuration applies only to active leases in that property.
+- [ ] Each enabled reminder is delivered as a mobile push notification to the owning landlord and assigned tenant.
 - [ ] Re-running the scheduled process does not duplicate a reminder already sent for the same lease and configured reminder time.
 
 #### US-LEASE-06 — View upcoming lease expirations
@@ -669,7 +723,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 - **Status:** Refined
 - **User story:** As a tenant, I want to submit a maintenance request with photographs so that my landlord has enough information to arrange a repair.
-- **Dependencies:** US-TENANT-03, an active lease, and file storage baseline.
+- **Dependencies:** US-TENANT-02, an active lease, and file storage baseline.
 
 **Acceptance criteria:**
 
@@ -752,17 +806,18 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - **Feature objective:** A landlord can quickly assess the current state of their rental portfolio and navigate to records requiring attention.
 - **Priority:** Must Have
 
-#### US-DASH-01 — View occupancy summary
+#### US-DASH-01 — View occupied room count
 
 - **Status:** Refined
-- **User story:** As a landlord, I want to see current room occupancy so that I can identify available units quickly.
+- **User story:** As a landlord, I want to see the number of occupied rooms compared with my total rooms so that I can understand current capacity at a glance.
 - **Dependencies:** US-ROOM-02 and US-LEASE-04.
 
 **Acceptance criteria:**
 
-- [ ] The dashboard shows total rooms, occupied rooms, vacant rooms, and occupancy rate for the authenticated landlord's portfolio.
-- [ ] Occupancy rate equals occupied rooms divided by total rooms using current active-lease status.
-- [ ] The zero-room case is displayed without a divide-by-zero or misleading percentage.
+- [ ] The dashboard displays occupancy as `occupied rooms / total rooms` (for example, `12 / 15 rooms occupied`) for the authenticated landlord's portfolio.
+- [ ] The occupied-room count includes only rooms with a currently active lease; the total-room count includes active rooms in owned properties.
+- [ ] The dashboard does not display an occupancy percentage for this summary.
+- [ ] A landlord with no rooms sees `0 / 0 rooms occupied` without a calculation error.
 - [ ] No room belonging to another landlord contributes to the summary.
 
 #### US-DASH-02 — View monthly revenue summary
@@ -806,20 +861,97 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] Each item links to the authorized lease record.
 - [ ] Ended leases and leases from another landlord are excluded.
 
+### F-15 — Monthly Business Report and Analytics
+
+- **Workflows:** WF-3
+- **Feature objective:** A landlord can generate a structured report for a selected period to analyze cash flow, debt, occupancy/churn, lease risk, and maintenance efficiency.
+- **Priority:** Should Have
+
+#### US-REPORT-01 — Select a reporting period and generate a report
+
+- **Status:** Refined
+- **User story:** As a landlord, I want to generate a report for a month/year or custom date range so that I can analyze performance for a clearly defined period.
+- **Dependencies:** US-AUTH-04 and the source-data stories referenced by US-REPORT-02 through US-REPORT-04.
+
+**Acceptance criteria:**
+
+- [ ] The landlord can select a specific month/year or a custom start and end date.
+- [ ] The start date must not be after the end date; invalid or incomplete periods do not generate a report.
+- [ ] The generated report records its reporting period, generation time, timezone, and authenticated landlord.
+- [ ] Only data belonging to the authenticated landlord and falling under the defined metric date rules contributes to the report.
+- [ ] A valid period with no matching activity returns a structured zero/empty-state report rather than an error.
+
+#### US-REPORT-02 — Analyze financial performance and debt
+
+- **Status:** Refined
+- **User story:** As a landlord, I want financial and debt metrics in the report so that I can compare expected cash flow with actual collections and identify unpaid amounts.
+- **Dependencies:** US-REPORT-01, US-INVOICE-01, US-PAYMENT-02, US-PAYMENT-03, and US-CHARGE-01.
+
+**Acceptance criteria:**
+
+- [ ] The report displays Expected Revenue and Actual Collected Revenue for the selected period.
+- [ ] Both metrics are broken down into Base Rent, Electricity, Water, and Additional Fees/Property Surcharges.
+- [ ] Expected Revenue reconciles to applicable invoice line items under the approved reporting-date rule; Actual Collected Revenue includes only verified payments under that rule.
+- [ ] The report displays Total Outstanding Debt and lists the contributing overdue invoices with tenant/room context, due date, and outstanding amount.
+- [ ] Paid invoices are excluded from outstanding debt, and data from another landlord is excluded from all financial metrics.
+
+#### US-REPORT-03 — Analyze occupancy, churn, and lease expirations
+
+- **Status:** Refined
+- **User story:** As a landlord, I want occupancy and tenant-movement metrics in the report so that I can understand property utilization and upcoming lease risk.
+- **Dependencies:** US-REPORT-01, US-ROOM-02, US-LEASE-01, US-LEASE-04, and US-LEASE-06.
+
+**Acceptance criteria:**
+
+- [ ] Average Occupancy Rate for the selected period is calculated as occupied room-days divided by available active room-days, expressed as a percentage.
+- [ ] When the period has no available room-days, average occupancy is shown as `N/A` rather than producing a divide-by-zero result.
+- [ ] Move-ins count leases whose effective start date falls within the selected period.
+- [ ] Move-outs count leases whose actual end/move-out date falls within the selected period.
+- [ ] The report lists active leases approaching expiration using the same eligibility/window rules as US-LEASE-06.
+- [ ] All occupancy, churn, and lease results include only the authenticated landlord's properties.
+
+#### US-REPORT-04 — Analyze maintenance efficiency
+
+- **Status:** Refined
+- **User story:** As a landlord, I want maintenance metrics in the report so that I can evaluate request volume and resolution performance.
+- **Dependencies:** US-REPORT-01 and US-MAINT-01 through US-MAINT-05.
+
+**Acceptance criteria:**
+
+- [ ] The report displays the number of maintenance requests submitted during the selected period.
+- [ ] The report displays the number completed during the selected period, including requests submitted before the period when they were completed inside it.
+- [ ] New and completed counts use submission/completion timestamps respectively and are not inferred from the request's current status alone.
+- [ ] The report displays a resolution rate and average resolution time when sufficient completed-request data exists; otherwise the metric is shown as `N/A`.
+- [ ] Maintenance metrics include only requests associated with the authenticated landlord's properties.
+
+#### US-REPORT-05 — Export a business report as PDF
+
+- **Status:** Refined
+- **User story:** As a landlord, I want to export the generated business report as a PDF so that I can read, archive, or share a stable copy.
+- **Dependencies:** US-REPORT-01 through US-REPORT-04 and a PDF-generation baseline.
+
+**Acceptance criteria:**
+
+- [ ] The landlord can export an authorized generated report from the mobile application as a readable PDF.
+- [ ] The PDF identifies the landlord/report, selected period, generation time, and currency.
+- [ ] The PDF contains the same financial, debt, occupancy/churn, lease-expiration, and maintenance metrics as the generated report.
+- [ ] Empty or unavailable metrics are represented consistently and do not break the document layout.
+- [ ] The export does not contain data belonging to another landlord, and an unauthorized export request is rejected by the backend.
+
 ---
 
 ## 4. Dependency and Suggested Delivery Order
 
 The order below is a dependency guide, not a fixed sprint plan. Independent stories may be implemented in parallel after their prerequisites are available.
 
-1. **Technical baseline:** repository conventions, environments, database migration workflow, CI, deployment, test baseline, and file storage.
-2. **Identity and authorization:** US-AUTH-01 through US-AUTH-04 and US-PROFILE-01.
-3. **Portfolio setup:** US-PROPERTY-01, US-ROOM-01, US-TENANT-01, then their view/update stories.
-4. **Tenant access and leasing:** US-LEASE-01, tenant-account provisioning in US-TENANT-03, then US-LEASE-02 through US-LEASE-04.
-5. **Utility and billing:** US-UTILITY-01, US-METER-01, US-METER-02, US-INVOICE-01, US-METER-03 when correction is needed, then US-INVOICE-04 and US-INVOICE-02.
+1. **Technical baseline:** repository conventions, development/integration environments, database migration workflow, CI, deployment, test baseline, file storage, transactional email, mobile push notifications, audit/soft-delete support, and versioned regulatory rate seed data.
+2. **Identity and authorization:** US-AUTH-01 through US-AUTH-05, US-PROFILE-01, and US-AUTH-06.
+3. **Portfolio setup:** US-PROPERTY-01, US-ROOM-01, optional bulk setup in US-ROOM-03, then the property/room view-update stories.
+4. **Tenant access and leasing:** US-LEASE-01, tenant-account provisioning in US-TENANT-02, US-TENANT-01 for later information maintenance, then US-LEASE-02 through US-LEASE-04.
+5. **Utility and billing:** US-UTILITY-01, optional recurring surcharges in US-CHARGE-01, US-METER-01, US-METER-02, US-INVOICE-01, US-METER-03 when correction is needed, then US-INVOICE-04 and US-INVOICE-02.
 6. **Payment:** US-VIETQR-01, US-VIETQR-02, US-PAYMENT-01 through US-PAYMENT-03.
 7. **Maintenance:** US-MAINT-01 through US-MAINT-05 can proceed in parallel once identity, tenant linking, leases, and file storage are available.
-8. **Monitoring and reminders:** dashboard stories, lease reminders, and payment reminders after their source data and notification baseline exist.
+8. **Monitoring, reminders, and reports:** dashboard stories, lease/payment reminders, and US-REPORT-01 through US-REPORT-05 after their source data and notification/PDF baselines exist.
 
 Technical baseline items should be tracked as technical tasks/enablers. They are necessary work, but they should not be counted as completed user stories when measuring user-story throughput.
 
@@ -842,20 +974,31 @@ The coding agent should receive the story as its primary specification together 
 
 ## 6. Feature Summary
 
-| Feature | Description | Priority | Child stories |
-| :--- | :--- | :---: | ---: |
-| **F-01** | User Registration, Authentication, and Profile Management | Must Have | 6 |
-| **F-02** | Property and Room Management | Must Have | 4 |
-| **F-03** | Tenant Profile Management | Must Have | 3 |
-| **F-04** | Utility Pricing Configuration | Must Have | 2 |
-| **F-05** | Utility Meter Reading and Calculation | Must Have | 3 |
-| **F-06** | Billing and Invoice Generation | Must Have | 4 |
-| **F-07** | VietQR Payment Integration | Must Have | 2 |
-| **F-08** | Payment Verification and Tracking | Must Have | 3 |
-| **F-09** | Rent Payment Reminders | Should Have | 2 |
-| **F-10** | Digital Lease Tracking | Must Have | 4 |
-| **F-11** | Automated Lease Renewal Reminders | Should Have | 2 |
-| **F-12** | Maintenance Request Submission | Must Have | 2 |
-| **F-13** | Maintenance Status Tracking | Must Have | 3 |
-| **F-14** | Centralized Business Dashboard | Must Have | 4 |
-|  | **Total** |  | **44** |
+| Feature  | Description                                               |  Priority   | Child stories |
+| :------- | :-------------------------------------------------------- | :---------: | ------------: |
+| **F-01** | User Registration, Authentication, and Profile Management |  Must Have  |             7 |
+| **F-02** | Property and Room Management                              |  Must Have  |             5 |
+| **F-03** | Tenant Information and Account Management                 |  Must Have  |             2 |
+| **F-04** | Utility Pricing and Property Surcharges                   |  Must Have  |             3 |
+| **F-05** | Utility Meter Reading and Calculation                     |  Must Have  |             3 |
+| **F-06** | Billing and Invoice Generation                            |  Must Have  |             4 |
+| **F-07** | VietQR Payment Integration                                |  Must Have  |             2 |
+| **F-08** | Payment Verification and Tracking                         |  Must Have  |             3 |
+| **F-09** | Rent Payment Reminders                                    | Should Have |             2 |
+| **F-10** | Digital Lease Tracking                                    |  Must Have  |             4 |
+| **F-11** | Automated Lease Renewal Reminders                         | Should Have |             2 |
+| **F-12** | Maintenance Request Submission                            |  Must Have  |             2 |
+| **F-13** | Maintenance Status Tracking                               |  Must Have  |             3 |
+| **F-14** | Centralized Business Dashboard                            |  Must Have  |             4 |
+| **F-15** | Monthly Business Report and Analytics                     | Should Have |             5 |
+|          | **Total**                                                 |             |        **51** |
+
+---
+
+## 7. Regulatory Pricing Notes
+
+- Regulatory prices are time- and locality-dependent configuration data, not permanent constants in application code.
+- At implementation time, developers must verify and seed the electricity rules effective for rental housing, recording the official source and effective date. The current official reference is the Government Portal's summary of Circular 60/2025/TT-BCT: <https://xaydungchinhsach.chinhphu.vn/quy-dinh-gia-ban-le-dien-sinh-hoat-119251209090437888.htm>.
+- Water does not have one universal retail price for all properties in Vietnam. Under Article 54 of Decree 117/2007/ND-CP, provincial-level People's Committees approve local domestic-water tariffs within the national framework: <https://vanban.chinhphu.vn/?docid=33015&pageid=27160>.
+- Seeded defaults must therefore include at least utility type, billing method, locality, monetary value/tariff structure, official source reference, and `effectiveFrom`/`effectiveTo` dates.
+- When no verified default exists for the property's locality and billing period, the system must require an authorized rate configuration rather than silently applying an unrelated or expired default.
