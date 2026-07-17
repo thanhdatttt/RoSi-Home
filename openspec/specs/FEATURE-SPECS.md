@@ -1,388 +1,469 @@
-# RosiHome — Feature Specifications (AI-Agent Ready)
+# RosiHome — Feature Specifications (Implementation-Ready)
 
-> Companion to `01-ARCHITECTURE.md`. Read that file first — this document assumes its schema, response envelope, error codes, and module structure. Each feature below maps 1:1 to `product_backlog.md` (F-01…F-14). Every Acceptance Criterion (AC) is turned into an explicit rule, endpoint, or test.
+**Audience:** AI coding agents implementing one user story at a time.
+**Prerequisite reading:** `01-ARCHITECTURE.md` (auth, error format, data model, soft-delete/audit rules, money rounding, status enums). This document does not repeat those rules — it applies them per story.
 
-Conventions used below:
-- `Auth:` states which role(s) may call the endpoint. `owner-scoped` means the service layer must additionally verify the resource belongs to the caller (see Architecture §6).
-- Request/response bodies are shown as TypeScript-flavored JSON; `?` marks optional fields.
-- All money fields are `number`, VND, integer-safe (no decimals needed for VND in practice, but stored as `numeric(12,2)` for flexibility).
+**Convention used below:** each story lists `Endpoint(s)`, `Auth`, `Request`, `Response`, `Business rules` (implementation-ready restatement of the acceptance criteria), and `Edge cases`. Story IDs match `product_backlog.md` exactly — keep them in code comments/commit messages for traceability.
 
 ---
 
-## F-01 · User Registration and Authentication
-**Module:** `modules/auth/` · **Tables:** `users`, `password_reset_tokens`
+## EPIC 1 — Infrastructure and User Management
 
-### Endpoints
-| Method | Path | Auth | Body / Query |
-|---|---|---|---|
-| POST | `/v1/auth/register` | public | `{ fullName, email?, phone?, password, confirmPassword, role: 'landlord'\|'tenant' }` |
-| POST | `/v1/auth/login` | public | `{ identifier, password }` — identifier is email or phone |
-| POST | `/v1/auth/refresh` | public (refresh cookie) | — |
-| POST | `/v1/auth/logout` | authenticated | — |
-| POST | `/v1/auth/forgot-password` | public | `{ identifier }` |
-| POST | `/v1/auth/reset-password` | public | `{ token, newPassword, confirmPassword }` |
-| GET | `/v1/auth/me` | authenticated | — |
+### F-01 — User Registration, Authentication, and Profile Management
 
-### Rules (from AC)
-- Reject if `email` and `phone` are both missing, or if `password !== confirmPassword` (`VALIDATION_ERROR`).
-- Reject duplicate `email`/`phone` with `CONFLICT`.
-- Password hashed with bcrypt (cost 10+); never return `password_hash` in any response.
-- On login, verify hash; on failure return generic `UNAUTHENTICATED` — don't reveal whether the identifier exists.
-- Every protected route uses `auth.middleware.ts`; role-restricted routes additionally use `rbac.middleware.ts`.
-- Tenant calling a landlord-only route (e.g. `/v1/dashboard`) → `403 FORBIDDEN`.
-- `forgot-password` always responds `200` with a generic message regardless of whether the identifier exists (avoid user enumeration); actual email/SMS only sent if a matching user exists.
-- Reset token single-use: `used_at` set on successful reset; expired/used tokens → `VALIDATION_ERROR`.
+#### US-AUTH-01 — Register a landlord account
+- **Endpoint:** `POST /api/v1/auth/register`
+- **Auth:** none (public)
+- **Request:** `{ fullName, email, password, passwordConfirmation }`
+- **Response:** `201 { data: { userId, role: "Landlord" } }` (no token — user must log in explicitly)
+- **Business rules:**
+  - All fields required; `email` must be valid format; `password`/`passwordConfirmation` must match and satisfy the password policy (§3.4 of architecture doc).
+  - Create `users` row (`role=Landlord`, `username=email`) and `landlord_profiles` row in one transaction.
+  - Duplicate email → `409 CONFLICT`, generic message `"Unable to register with these details."` (does not confirm the email exists — avoid user enumeration).
+- **Edge cases:** race condition on duplicate email is caught by the DB unique constraint, not just an app-level pre-check.
 
-### Tests to generate
-- Register success (email path, phone path), duplicate email, password mismatch.
-- Login success/failure, RBAC 403 on cross-role route, refresh token rotation, logout invalidates refresh token.
+#### US-AUTH-02 — Log in
+- **Endpoint:** `POST /api/v1/auth/login`
+- **Auth:** none
+- **Request:** `{ username, password }` (username = email for landlord, phone for tenant)
+- **Response:** `200 { data: { token, user: { id, role, fullName, mustChangePassword } } }`
+- **Business rules:**
+  - Look up by `username`; compare bcrypt hash; on any failure return `401 UNAUTHENTICATED` with a generic message — never reveal whether the username exists.
+  - On success, issue JWT (§3.2) and return `mustChangePassword` so the mobile app can route straight to the forced password-change screen for first-time tenants.
+
+#### US-AUTH-03 — Log out
+- **Endpoint:** `POST /api/v1/auth/logout`
+- **Auth:** required (any role)
+- **Response:** `200 { data: { success: true } }`
+- **Business rules:** Stateless JWT — this endpoint is a no-op on the server (nothing to invalidate) but exists for symmetry/analytics. The mobile app is responsible for deleting the token from secure storage and clearing in-memory cached protected data on this call.
+
+#### US-AUTH-04 — Enforce role and data ownership
+- **Not a standalone endpoint** — this is the `requireAuth` + `requireRole` + service-layer ownership pattern described in architecture §3.3, applied to *every* protected route in this document. Implement it once as middleware/helpers and reuse; do not special-case it per module.
+- **Business rules:** unauthenticated → `401`; wrong role → `403`; right role but not the owner → `404` (never `403`, to avoid confirming existence — see architecture §3.3).
+
+#### US-AUTH-05 — Change password
+- **Endpoint:** `POST /api/v1/auth/change-password`
+- **Auth:** required (any role) — this is the *one* route reachable even when `mustChangePassword=true`
+- **Request:** `{ currentPassword, newPassword, newPasswordConfirmation }`
+- **Response:** `200 { data: { success: true } }`
+- **Business rules:**
+  - Verify `currentPassword` against stored hash → `401` if wrong.
+  - `newPassword === newPasswordConfirmation`, satisfies password policy, and **must differ** from `currentPassword` → `422` otherwise.
+  - On success: update `passwordHash`, set `mustChangePassword=false`, write an `audit_events` row (`action="password.changed"`, no password values stored).
+
+#### US-PROFILE-01 — View and update a user profile
+- **Endpoints:** `GET /api/v1/profile`, `PATCH /api/v1/profile`
+- **Auth:** required (any role)
+- **Request (PATCH):** editable fields only — `fullName`, `phone` (landlord); tenant profile fields are edited via `US-TENANT-01`, not this endpoint (tenant_info is a separate record from the login account).
+- **Response:** `200 { data: { id, fullName, email/username, phone, role } }`
+- **Business rules:** `role` is never accepted in the request body (reject/ignore silently — do not let the client attempt privilege escalation). Uniqueness re-validated on any identifier change.
+
+#### US-AUTH-06 — Recover a forgotten password
+- **Endpoints:** `POST /api/v1/auth/forgot-password` (request), `POST /api/v1/auth/reset-password` (confirm)
+- **Auth:** none
+- **Request (forgot):** `{ email }` → always `200 { data: { success: true } }` regardless of whether the email exists (no enumeration).
+- **Request (reset):** `{ token, newPassword, newPasswordConfirmation }`
+- **Business rules:**
+  - Recovery token: random, single-use, stored hashed with an expiry (recommend 30 min), table `password_reset_tokens(id, userId, tokenHash, expiresAt, usedAt)`.
+  - Email delivery only, to the account's registered email (landlords have one directly; tenants use `tenant_info.email`).
+  - On successful reset: mark token `usedAt`, update `passwordHash`, invalidate any other outstanding tokens for that user.
+  - Expired/used/invalid token → `422 UNPROCESSABLE`.
 
 ---
 
-## F-02 · Property and Room Management
-**Module:** `modules/properties/`, `modules/rooms/` · **Tables:** `properties`, `rooms`
+## EPIC 2 — Portfolio and Property Setup
 
-### Endpoints
-| Method | Path | Auth |
+### F-02 — Property and Room Management
+
+#### US-PROPERTY-01 — Create a property
+- **Endpoint:** `POST /api/v1/properties`
+- **Auth:** Landlord
+- **Request:** `{ name, address }`
+- **Response:** `201 { data: property }`
+- **Business rules:** both fields required; `UNIQUE(landlordId, name)` and `UNIQUE(landlordId, address)` among active rows → `409` on violation; `landlordId` always taken from `req.user.id`.
+
+#### US-PROPERTY-02 — View and update owned properties
+- **Endpoints:** `GET /api/v1/properties`, `GET /api/v1/properties/:id`, `PATCH /api/v1/properties/:id`
+- **Auth:** Landlord (ownership enforced)
+- **Business rules:** update re-validates uniqueness excluding the row itself; a landlord requesting another landlord's property ID gets `404`.
+
+#### US-ROOM-01 — Add a room to a property
+- **Endpoint:** `POST /api/v1/properties/:propertyId/rooms`
+- **Auth:** Landlord, must own `propertyId`
+- **Request:** `{ name, baseRent }`
+- **Response:** `201 { data: room }` — response includes derived `status: "Vacant"`.
+- **Business rules:** `name` required, `UNIQUE(propertyId, name)` active rows → `409`; `baseRent >= 0` → `422` otherwise.
+
+#### US-ROOM-02 — View and update room information
+- **Endpoints:** `GET /api/v1/properties/:propertyId/rooms`, `GET /api/v1/rooms/:id`, `PATCH /api/v1/rooms/:id`
+- **Auth:** Landlord, ownership via property
+- **Response:** includes derived `status` (§4.6 of architecture doc — computed from active lease existence, never a stored/editable field).
+- **Business rules:** `PATCH` body must not accept a `status`/`occupancy` field at all (reject unknown fields via zod `.strict()`), so it's structurally impossible to override it.
+
+#### US-ROOM-03 — Add multiple rooms to a property
+- **Endpoint:** `POST /api/v1/properties/:propertyId/rooms/bulk`
+- **Auth:** Landlord, must own `propertyId`
+- **Request:** `{ rooms: [{ name?, baseRent }] }` (bounded list, recommend max 50; `name` optional → auto-numbered e.g. `Room 1`, `Room 2`, ... continuing from the highest existing numeric suffix in the property)
+- **Response:** `201 { data: { created: room[] } }` or `422` with per-row field errors (`{ error: { fields: [{ field: "rooms[2].name", message: "..." }] } }`) if any row is invalid.
+- **Business rules:** the whole batch runs in **one transaction** — all-or-nothing (architecture §4.4); validate name uniqueness both within the submitted array and against existing active rooms *before* inserting anything.
+
+### F-03 — Tenant Information and Account Management
+
+#### US-TENANT-01 — View and update tenant information created from a lease
+- **Endpoints:** `GET /api/v1/tenants`, `GET /api/v1/tenants/:id`, `PATCH /api/v1/tenants/:id`
+- **Auth:** Landlord — scoped to `tenant_info` rows linked to at least one lease in a property the landlord owns (join `tenant_info → leases → rooms → properties`)
+- **Request (PATCH):** `{ fullName?, phone?, email?, idNumber? }`
+- **Business rules:**
+  - Format + uniqueness validation on `phone`/`email`/`idNumber` (active rows) on every update.
+  - If `phone` or `email` changes and that value is also the tenant's login `username`/contact address, synchronize `users.username` (email flows are simpler; a phone/username change requires re-verifying uniqueness against `users.username` too) — treat as a single transaction; if the new value collides with another account, reject with `409` before changing anything.
+  - "Archiving" a tenant relationship = soft-deleting the `tenant_info` row (or ending the lease, per US-LEASE-04) — never hard-delete; historical leases/invoices/payments keep referencing the row via FK, unaffected by `deletedAt`.
+  - A landlord who has no lease relationship to this tenant gets `404`.
+
+#### US-TENANT-02 — Provision a tenant account from a lease
+- **Not a standalone endpoint** — this is a service function `provisionTenantAccount(tenantInfo)` invoked *inside* the `POST /leases` transaction (US-LEASE-01), never called directly by the client.
+- **Business rules:**
+  1. Validate `tenant_info` doesn't already have a `userId` (idempotency guard — a lease renewal or second lease for the same tenant does not re-provision).
+  2. Create `users` row (`role=Tenant`, `username=phone`, random temp password hashed, `mustChangePassword=true`).
+  3. Link `tenant_info.userId`.
+  4. Send an email (async, but the DB transaction commits first — see below) with username, temp password, and the mobile app link/store URL.
+  5. **Retry safety:** if the email send fails, do **not** roll back the DB transaction; instead queue/retry the email send separately (e.g. an `email_send` job with `status=pending`) so a flaky email provider never causes a duplicate account or duplicate lease on the client's retry of `POST /leases`. `POST /leases` itself must be safe to retry: if the lease/tenant already exists for the exact same idempotent submission (see US-LEASE-01), return the existing record rather than erroring or duplicating.
+
+---
+
+## EPIC 2 (cont.) — Utility Pricing
+
+### F-04 — Utility Pricing and Property Surcharge Configuration
+
+#### US-UTILITY-01 — Configure utility rates
+- **Endpoint:** `POST /api/v1/properties/:propertyId/utility-rates`
+- **Auth:** Landlord, must own property
+- **Request:** `{ electricityRatePerKwh, waterBillingMethod: "Metered"|"Flat", waterRatePerM3?, waterFlatAmountPerTenant?, effectiveFrom }`
+- **Response:** `201 { data: utilityRateRow }`
+- **Business rules:**
+  - `waterBillingMethod=Metered` requires `waterRatePerM3 >= 0`; `=Flat` requires `waterFlatAmountPerTenant >= 0`; the other field must be omitted/null — `422` if both or neither supplied.
+  - All rates non-negative integers (VND). Insert as a **new row** in `utility_rate_history` (append-only versioning, architecture §5.2) — never update an old row in place.
+  - If no rate exists yet for the property and none is created, calculations fall back to `regulatory_rate_defaults` (see US-METER-02) — that fallback is read-only reference data, never auto-copied into `utility_rate_history`.
+
+#### US-UTILITY-02 — View and update utility rates
+- **Endpoints:** `GET /api/v1/properties/:propertyId/utility-rates` (returns current effective rate: latest row with `effectiveFrom <= today`), `POST /api/v1/properties/:propertyId/utility-rates` (an "update" is simply a new versioned row per above, `effectiveFrom` in the future or today)
+- **Business rules:** a rate change never touches already-generated `invoice_line_items` (those snapshot `sourceRateId` and `unitRate` at generation time — immutable history). Future invoice generation runs pick up the new effective row automatically.
+
+#### US-CHARGE-01 — Configure recurring property surcharges
+- **Endpoints:** `POST /api/v1/properties/:propertyId/surcharges`, `GET .../surcharges`, `PATCH /api/v1/surcharges/:id`, `DELETE /api/v1/surcharges/:id` (soft, sets `active=false`/`deletedAt`)
+- **Auth:** Landlord, must own property
+- **Request (POST):** `{ name, monthlyAmount, effectiveFrom, effectiveTo? }`
+- **Business rules:**
+  - `monthlyAmount >= 0`; no two **active** surcharges in the same property with the same `name` and overlapping `[effectiveFrom, effectiveTo ?? +inf)` → `409`.
+  - Deactivation/update is **prospective only**: an invoice already `Sent`/`Paid` keeps its already-snapshotted surcharge line item untouched; only future invoice generation runs see the change.
+  - `DELETE` sets `active=false` + `deletedAt`/`deletedBy` (soft) and records the responsible landlord/time via the shared audit mechanism (architecture §4.3).
+
+---
+
+## EPIC 3 — Automated Monthly Billing and Payment
+
+### F-05 — Utility Meter Reading and Calculation
+
+#### US-METER-01 — Record an initial meter reading
+- **Endpoint:** `POST /api/v1/rooms/:roomId/meter-readings`
+- **Auth:** Landlord, must own room's property
+- **Request:** `{ utilityType: "Electricity"|"Water", billingPeriod, value }`
+- **Business rules:**
+  - Allowed only when no reading exists yet for `(roomId, utilityType, billingPeriod)` — otherwise route to US-METER-02's flow (or reject with `409` directing the client to the "record monthly reading" endpoint if this is genuinely a first reading attempt on an occupied period).
+  - `value >= 0`. Stored with `isInitial=true`. No consumption/charge is computed from an initial reading alone (it's a baseline).
+  - Water readings only accepted when the property's `waterBillingMethod = Metered` (Flat properties reject `utilityType=Water` here with `422`).
+
+#### US-METER-02 — Record monthly readings and calculate consumption
+- **Endpoint:** `POST /api/v1/rooms/:roomId/meter-readings/calculate`
+- **Auth:** Landlord, must own room's property
+- **Request:** `{ billingPeriod, electricityReading, waterReading? }` (waterReading required only if property is `Metered`)
+- **Response:** `{ data: { electricity: { consumption, rate, amount }, water: { consumption?, rate/flatAmount, amount }, previousReadings: {...} } }`
+- **Business rules (algorithm):**
+  1. Fetch the immediately preceding reading for `(roomId, "Electricity")` ordered by billing period; if `electricityReading < previous.value` → `422 { field: "electricityReading", message: "Reading cannot be lower than the previous reading." }`.
+  2. `electricityConsumption = electricityReading - previous.value`.
+  3. Resolve the **effective electricity rate**: latest `utility_rate_history` row for the property with `effectiveFrom <= billingPeriod start date`; if none exists, fall back to `regulatory_rate_defaults` matching `(utilityType=Electricity, locality=property.locality, effectiveFrom <= period <= effectiveTo|open)`. If neither a landlord rate nor a matching, non-expired, correct-locality default exists → `422 { code: "NO_APPLICABLE_RATE" }` (never silently apply an unrelated/expired default).
+  4. `electricityAmount = roundVnd(electricityConsumption * rate)`.
+  5. If property `waterBillingMethod = Metered`: repeat steps 1–4 for water using `waterReading`.
+     If `waterBillingMethod = Flat`: `waterAmount = roundVnd(flatAmountPerTenant * activeTenantCount)` where `activeTenantCount` = count of distinct tenants on the room's currently `Active` lease (MVP: 1, since one lease = one tenant_info, but keep the multiplier explicit for future multi-occupant leases); **no water meter reading is required or stored**.
+  6. Persist both readings (new rows, `isInitial=false`), and return the computed breakdown for the landlord to review before invoice generation picks it up.
+  7. Store on the reading/line-item enough to reproduce the calculation later: the rate value used, its source (`utility_rate_history` row id or `regulatory_rate_defaults` row id), locality, and effective date.
+
+#### US-METER-03 — Correct a reading used for billing
+- **Endpoint:** `PATCH /api/v1/meter-readings/:id/correct`
+- **Auth:** Landlord, must own the room
+- **Request:** `{ correctedValue }`
+- **Business rules:**
+  1. Look up the reading's related invoice via `(roomId, billingPeriod)`. Allowed only if that invoice's `status = Draft`; `Sent`/`Paid` → `422 { code: "INVOICE_NOT_DRAFT" }`.
+  2. Insert a **new** `meter_readings` row with `correctionOf = original.id`, mark the original `supersededAt = now()` (never overwrite in place — preserves "original value, corrected value, change time, responsible landlord," satisfied jointly by the row itself plus an `audit_events` entry).
+  3. Re-run the same calculation as US-METER-02 with the corrected value; re-validate ordering against the *previous period's* reading (unaffected).
+  4. Recalculate and overwrite the `Draft` invoice's affected `invoice_line_items` (delete-and-reinsert the Electricity/Water lines, recompute `totalAmount`) — exactly one invoice must exist for the room/lease/period after this (upsert, not append).
+  5. Response returns the updated draft invoice for landlord review before sending (US-INVOICE-04).
+
+### F-06 — Billing and Invoice Generation
+
+#### US-INVOICE-01 — Generate a monthly invoice
+- **Trigger:** scheduled job `generateMonthlyInvoices` (architecture §8); also exposable as `POST /api/v1/admin/invoices/generate?period=YYYY-MM` for manual/test triggering (Landlord-only, or system/dev-only in MVP).
+- **Business rules (algorithm), per active lease whose `billingPeriod` isn't yet invoiced:**
+  1. Determine required readings from the property's utility config: Electricity always required; Water required only if `Metered`.
+  2. If any required reading is missing for `(roomId, billingPeriod)` → skip this room, insert an `invoice_generation_skips` row with a human-readable reason, continue to the next room. **Do not create a partial invoice.**
+  3. Otherwise compute line items: `Rent` (from `lease.agreedRent`), `Electricity` (from the stored calculation), `Water` (from the stored calculation or flat formula), and one `Surcharge` line per active surcharge on the property covering this billing period (snapshot `name`/`monthlyAmount` at generation time into `description`/`amount`).
+  4. `totalAmount = sum(line item amounts)` using `roundVnd` per line, then integer sum (no re-rounding of the sum).
+  5. Insert `invoices` (`status=Draft`, `issueDate=today`, `dueDate` = per team-configured offset, e.g. issueDate + 5 days) + `invoice_line_items`, all in one transaction.
+  6. Idempotency: `UNIQUE(leaseId, billingPeriod)` active rows — if violated (job re-run), skip silently, no error surfaced to any user.
+  7. Draft invoices are **not** visible to the tenant (enforced in US-INVOICE-02, not here).
+
+#### US-INVOICE-02 — View an invoice
+- **Endpoints:** `GET /api/v1/invoices` (list, scoped), `GET /api/v1/invoices/:id`
+- **Auth:** Landlord (all statuses, owned properties only) or Tenant (only `Sent`/`Paid`, only their own lease's invoices)
+- **Business rules:** a tenant requesting a `Draft` invoice, or any invoice not linked to their lease, gets `404`. Response includes `billingPeriod`, line items, `totalAmount`, `dueDate`, `status`.
+
+#### US-INVOICE-03 — Download an invoice document
+- **Endpoint:** `GET /api/v1/invoices/:id/pdf`
+- **Auth:** same visibility rule as US-INVOICE-02 (tenant only after `Sent`)
+- **Response:** `200`, `Content-Type: application/pdf`, streamed via `generateInvoicePdf` (architecture §10) using the exact same service-layer data as the JSON view.
+
+#### US-INVOICE-04 — Review and send a draft invoice
+- **Endpoint:** `POST /api/v1/invoices/:id/send`
+- **Auth:** Landlord, must own the invoice's property
+- **Business rules:**
+  - Allowed only when `status = Draft` and all required fields (line items present, `totalAmount` computed) are populated → `422` otherwise.
+  - Sets `status = Sent`, `sentBy = req.user.id`, `sentAt = now()`, in a transaction with an `audit_events` row. This transition happens **exactly once** — calling send again on an already-`Sent` invoice returns `422 { code: "ALREADY_SENT" }` (idempotent-safe: does not re-notify or duplicate state).
+  - After commit, fires `NotificationService.send(tenantUserId, "invoice.sent", ..., linkRef: "invoice:{id}")`.
+  - Sending never sets `Paid` — that only happens via US-PAYMENT-02.
+
+### F-07 — VietQR Payment Integration
+
+#### US-VIETQR-01 — Configure landlord payment details
+- **Endpoints:** `GET /api/v1/payment-config`, `PUT /api/v1/payment-config`
+- **Auth:** Landlord (own config only — 1:1 with `landlord_payment_configs`)
+- **Request:** `{ bankCode, accountNumber, accountHolderName }`
+- **Business rules:** all fields required and format-validated (bank code against the supported VietQR bank list); never returned/logged to any user other than the owning landlord; never included in any other user's API response.
+
+#### US-VIETQR-02 — Generate and display an invoice VietQR code
+- **Endpoint:** `GET /api/v1/invoices/:id/vietqr`
+- **Auth:** whoever is authorized to view the invoice (US-INVOICE-02 rule), and only for a "payable" invoice (`status = Sent`; a `Draft` invoice has no visible tenant view, a `Paid` invoice may still return the QR read-only but the app should hide the "pay" CTA)
+- **Response:** `{ data: { payload, imageUrl, amount, description } }`
+- **Business rules:** payload built exactly per architecture §7 from the invoice's `totalAmount` and the landlord's current `landlord_payment_configs`; `amount`/`description` in the response **must equal** the values encoded in `payload` (single source of truth — compute once, embed in both). Purely read-only: no state change on any call.
+
+### F-08 — Payment Verification and Tracking
+
+#### US-PAYMENT-01 — Upload payment proof
+- **Endpoint:** `POST /api/v1/invoices/:id/payment-proofs` (multipart)
+- **Auth:** Tenant, must be the invoice's assigned tenant, invoice must be accessible (`Sent`) and unpaid
+- **Business rules:** file type/size validated per architecture §9 before any storage write; reject with `422` and no attachment created for anything invalid. On success: insert `payment_proofs` (`status=Pending`), then `NotificationService.send(landlordId, "payment.proofUploaded", ..., linkRef: "invoice:{id}")`.
+- **Edge cases:** a second upload for the same invoice is allowed (tenant might need to correct a bad screenshot) — list view for the landlord (US-PAYMENT-02) shows all pending proofs for the invoice, most recent first.
+
+#### US-PAYMENT-02 — Verify payment manually
+- **Endpoints:** `GET /api/v1/payment-proofs?status=Pending` (landlord's pending queue, scoped to owned properties), `POST /api/v1/invoices/:id/confirm-payment`
+- **Auth:** Landlord, must own the invoice's property
+- **Business rules:**
+  - If `payments` row already exists for this `invoiceId` (already `Paid`) → return the existing record, `200`, **no duplicate created** (idempotent per architecture §4.5) rather than erroring, so a double-tap in the UI is harmless.
+  - Otherwise: transaction — insert `payments` (`amount = invoice.totalAmount`, `verifiedBy`, `verifiedAt`), update `invoices.status = Paid`, mark the related `payment_proofs.status = Verified`.
+  - The UI/response must never claim automated bank verification — this is explicitly a manual landlord confirmation.
+
+#### US-PAYMENT-03 — View payment history and outstanding balances
+- **Endpoint:** `GET /api/v1/payments/history` (Landlord: all owned properties; Tenant: own invoices only — same handler, scope resolved from `req.user`)
+- **Response:** `{ data: { entries: [{ invoiceId, amount, billingPeriod, status, verifiedAt? }], outstandingTotal } }`
+- **Business rules:** `outstandingTotal` = sum of `totalAmount` for invoices with `status != Paid` in scope; excludes `Draft` invoices from a tenant's view (not yet visible to them) but a landlord's outstanding total may reasonably include `Sent`-but-unpaid + optionally `Draft` — recommend: **outstanding total counts `Sent` invoices only** (a `Draft` isn't a confirmed obligation yet); document this choice in the endpoint's response shape (`outstandingSent`, and optionally `draftPending` as a separate, clearly-labeled figure) so the number displayed can't be misread as "money owed" when it isn't yet.
+
+### F-09 — Rent Payment Reminders
+
+#### US-REMINDER-01 — Receive an automatic overdue-payment reminder
+- **Trigger:** job `sendOverdueReminders` (architecture §8), daily
+- **Business rules:**
+  1. Query: `invoices WHERE status='Sent' AND dueDate < today AND NOT EXISTS (payments WHERE invoiceId = invoices.id)`.
+  2. For each, `NotificationService.send(tenantUserId, "payment.overdue", ..., dedupeKey: "overdue:{invoiceId}:{today}")` — one per configured frequency (default: once/day while overdue, or per landlord's configured schedule — see next bullet).
+  3. Landlord-configurable schedule: extend `lease_reminder_configs` or a similar `property`-level setting for overdue-reminder frequency (e.g. daily vs. every 3 days); if unspecified, default to daily.
+  4. A `Paid` invoice is excluded by the `NOT EXISTS (payments...)` clause automatically — no separate check needed.
+
+#### US-REMINDER-02 — Send a manual payment reminder
+- **Endpoint:** `POST /api/v1/invoices/:id/remind`
+- **Auth:** Landlord, must own the invoice's property
+- **Business rules:** allowed only if `status = Sent` and unpaid → `422` if already `Paid` or not owned. Sends the same notification type as the automatic reminder (reuse `NotificationService`), records trigger time + `req.user.id` via `audit_events`.
+
+---
+
+## EPIC 4 — Lease Management and Maintenance Tracking
+
+### F-10 — Digital Lease Tracking
+
+#### US-LEASE-01 — Create a digital lease
+- **Endpoint:** `POST /api/v1/leases`
+- **Auth:** Landlord, must own the target room
+- **Request:** `{ roomId, tenant: { fullName, phone, idNumber, email }, startDate, endDate, agreedRent, deposit }`
+- **Response:** `201 { data: { lease, tenantAccountProvisioned: true } }`
+- **Business rules (this is the highest-risk transaction in the system — implement carefully):**
+  1. Validate `roomId` belongs to the authenticated landlord → `404` otherwise.
+  2. Validate tenant fields: `email`/`phone`/`idNumber` format; check uniqueness against **active** `tenant_info`/`users` records — but note a returning tenant (already has an account) should reuse their existing `tenant_info` rather than erroring (match by `idNumber` first; if found and active, reuse it and skip re-provisioning per US-TENANT-02's idempotency guard).
+  3. `endDate > startDate`; `agreedRent >= 0`; `deposit >= 0`.
+  4. No overlapping **Active** lease exists for `roomId` in `[startDate, endDate]` → `409 CONFLICT` otherwise.
+  5. In one transaction: create/reuse `tenant_info`, create `leases` (`status=Active`), call `provisionTenantAccount` (US-TENANT-02, only if not already provisioned).
+  6. On commit, the room's derived `status` becomes `Occupied` automatically (no write needed — derived field, architecture §4.6).
+  7. Legally-binding e-signature is explicitly out of scope — this endpoint only stores the record.
+
+#### US-LEASE-02 — View lease information
+- **Endpoints:** `GET /api/v1/leases`, `GET /api/v1/leases/:id`
+- **Auth:** Landlord (owned properties) or Tenant (own `tenant_info` link) — `404` for anyone else.
+- **Response:** room, period, `agreedRent`, `deposit`, `status`.
+
+#### US-LEASE-03 — Update or renew a lease
+- **Endpoint:** `PATCH /api/v1/leases/:id`
+- **Auth:** Landlord, owns the lease's room
+- **Request:** `{ endDate?, agreedRent?, deposit? }` for edits; `{ renewalStartDate, renewalEndDate, agreedRent?, deposit? }` for a renewal (implement renewal as: end the current lease's period and create a new `Active` lease row linked to the same `tenant_info`+`room`, preserving history — do not mutate the original row's dates in place, so historical invoices still resolve to the correct lease period).
+- **Business rules:** same date/monetary validation as creation; same overlap check against other leases on the room; updates `updatedAt`/audit event with responsible landlord.
+
+#### US-LEASE-04 — End a lease and release a room
+- **Endpoint:** `POST /api/v1/leases/:id/end`
+- **Auth:** Landlord, owns the lease
+- **Request:** `{ actualEndDate }`
+- **Business rules:** sets `status = Ended`, `actualEndDate`, `endedBy`, `endedAt`. Room's derived status flips to `Vacant` automatically once no other `Active` lease references it (a room could theoretically have a queued future lease — only the *currently active* one matters for occupancy). Never deletes invoices/payments/readings/maintenance history tied to the lease.
+
+### F-11 — Automated Lease Renewal Reminders
+
+#### US-LEASE-05 — Receive a lease-expiration reminder
+- **Trigger:** job `sendLeaseExpirationReminders` (architecture §8), daily; configuration via `PATCH /api/v1/properties/:propertyId/lease-reminder-config` (`{ remindAt7Days, remindAt3Days, remindAt1Day }`)
+- **Business rules:** for each property with at least one flag enabled, find `Active` leases where `endDate - today` exactly equals an enabled offset; notify **both** the owning landlord and the assigned tenant, deduped by `(leaseId, offsetDays)` (architecture §4.5); an `Ended`/`Expired` lease is excluded by the `status='Active'` filter.
+
+#### US-LEASE-06 — View upcoming lease expirations
+- **Endpoint:** `GET /api/v1/leases/upcoming-expirations`
+- **Auth:** Landlord
+- **Response:** active leases with `endDate` within the team's approved window (recommend: next 30 days, configurable constant `UPCOMING_EXPIRATION_WINDOW_DAYS`), each with property/room, tenant, `endDate`, and a link to the lease.
+- **Business rules:** scoped to owned properties only; `Ended` leases excluded by `status='Active'` filter — this endpoint and US-DASH-04 must call the **same underlying service function** so their results never diverge.
+
+### F-12 — Maintenance Request Submission
+
+#### US-MAINT-01 — Submit a maintenance request
+- **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)
+- **Auth:** Tenant, must have an active lease on the target `roomId`
+- **Request:** `{ roomId, title, description, photos[] }`
+- **Business rules:** `title`/`description` required; 0–3 photos, each validated per architecture §9 before storage write (invalid file → reject whole request, no orphaned attachments — validate all files first, then persist). Insert `maintenance_requests` (`status=Pending`) + `maintenance_photos` in one transaction; notify the owning landlord (`NotificationService`, `linkRef: "maintenance:{id}"`).
+
+#### US-MAINT-02 — View submitted maintenance requests
+- **Endpoint:** `GET /api/v1/maintenance-requests` (Tenant: own submissions only)
+- **Response:** title, room, submission date, current `status`, photos.
+
+### F-13 — Maintenance Status Tracking
+
+#### US-MAINT-03 — Review maintenance requests
+- **Endpoint:** `GET /api/v1/maintenance-requests?propertyId=&status=` (Landlord: owned properties, filterable/groupable by status)
+- **Business rules:** merely viewing never changes `status`.
+
+#### US-MAINT-04 — Update maintenance status
+- **Endpoint:** `PATCH /api/v1/maintenance-requests/:id/status`
+- **Auth:** Landlord, owns the request's room
+- **Request:** `{ status: "Pending"|"InProgress"|"Completed" }`
+- **Business rules:**
+  - Allowed transitions: `Pending → InProgress`, `InProgress → Completed`, `Pending → Completed` (direct close allowed); reject a no-op transition to the **same** status with `422` (prevents "misleading duplicate history entries or notifications" per the acceptance criteria) — the endpoint is not simply idempotent-retry-safe here, a repeated identical call is explicitly rejected, unlike payment confirmation.
+  - On a real transition: insert `maintenance_status_history` row, update `maintenance_requests.status` (+`completedAt` if transitioning to `Completed`), notify the tenant.
+
+#### US-MAINT-05 — View maintenance history by room
+- **Endpoint:** `GET /api/v1/rooms/:roomId/maintenance-requests`
+- **Auth:** Landlord, owns the room
+- **Response:** each request with title, requester, submission date, current status, and its full `maintenance_status_history`. Completed requests remain listed (no default status filter that hides them).
+
+---
+
+## EPIC 5 — Portfolio Performance Monitoring
+
+### F-14 — Centralized Business Dashboard
+
+All dashboard endpoints are `GET`, Landlord-only, scoped to owned properties, and read-only (no side effects). Recommend a single aggregate endpoint plus focused sub-endpoints so the mobile app can lazy-load sections:
+
+#### US-DASH-01 — View occupied room count
+- **Endpoint:** `GET /api/v1/dashboard/occupancy`
+- **Response:** `{ data: { occupiedRooms, totalRooms } }`
+- **Business rules:** `totalRooms` = count of active (`deletedAt IS NULL`) rooms in owned properties; `occupiedRooms` = subset with a currently `Active` lease. No percentage field in the response (explicitly excluded per acceptance criteria — don't add one "for convenience"). `0 rooms` → `{ occupiedRooms: 0, totalRooms: 0 }`, no division performed at all here (there's no division in this metric, but keep it consistent with the report's occupancy-rate guard in US-REPORT-03).
+
+#### US-DASH-02 — View monthly revenue summary
+- **Endpoint:** `GET /api/v1/dashboard/revenue?month=YYYY-MM`
+- **Response:** `{ data: { expectedRevenue, collectedRevenue, month } }`
+- **Business rules:** "reporting-date rule" (also used in US-REPORT-02) = **expected** revenue sums `invoice_line_items` for invoices whose `billingPeriod = month`; **collected** revenue sums `payments.amount` whose `payments.verifiedAt` falls within that calendar month (collection can lag the billing period, so this is a different date field than `billingPeriod` — implement as one shared function `getRevenueSummary(landlordId, period)` used by both the dashboard and the report, so the two never disagree).
+
+#### US-DASH-03 — View outstanding and overdue invoices
+- **Endpoint:** `GET /api/v1/dashboard/outstanding`
+- **Response:** `{ data: { outstandingTotal, overdueInvoices: [{ invoiceId, tenant, room, dueDate, amount }] } }`
+- **Business rules:** `status != Paid` (i.e. `Sent`, unpaid) contributes to `outstandingTotal`; `overdueInvoices` additionally filters `dueDate < today`. Shares logic with US-PAYMENT-03 — same underlying query function.
+
+#### US-DASH-04 — View upcoming lease expirations on the dashboard
+- **Endpoint:** `GET /api/v1/dashboard/upcoming-expirations`
+- **Business rules:** calls the exact same service function as US-LEASE-06 — do not re-implement the window/eligibility logic a second time.
+
+### F-15 — Monthly Business Report and Analytics
+
+#### US-REPORT-01 — Select a reporting period and generate a report
+- **Endpoint:** `POST /api/v1/reports/generate`
+- **Auth:** Landlord
+- **Request:** `{ periodType: "month" | "custom", month?: "YYYY-MM", startDate?, endDate? }`
+- **Response:** `{ data: { reportId, period: {...}, generatedAt, timezone, landlordId, financial: {...}, occupancy: {...}, maintenance: {...} } }` (sub-objects from US-REPORT-02/03/04 below, assembled by one orchestrating service call)
+- **Business rules:** `startDate <= endDate` → `422` otherwise; a valid period with zero matching activity still returns `200` with all metrics present as zero/`N/A` (never `404`/error for "no data"). Persist the generated report (recommend a `reports` table storing the resolved period + a snapshot of the computed JSON) so US-REPORT-05's PDF export re-uses exactly this stored result rather than recomputing (avoids drift between the on-screen report and its PDF).
+
+#### US-REPORT-02 — Analyze financial performance and debt
+- **Business rules (computed as part of US-REPORT-01's response, `financial` object):**
+  - `expectedRevenue` / `actualCollectedRevenue`, each broken down into `{ rent, electricity, water, surcharges }` — sum `invoice_line_items` by `type`, using the same reporting-date rule as US-DASH-02 (`billingPeriod` within the selected period for expected; `payments.verifiedAt` within the selected period for collected).
+  - `totalOutstandingDebt` + `overdueInvoices: [{ invoiceId, tenant, room, dueDate, amount }]` — identical query to US-DASH-03, filtered additionally to the report's period where applicable (recommend: outstanding debt is a point-in-time figure as of `generatedAt`, not period-bound, matching the dashboard's semantics — state this explicitly in the API doc so a coding agent doesn't accidentally filter it by the report's date range).
+  - Paid invoices excluded from debt; cross-landlord data excluded via the standard ownership scope.
+
+#### US-REPORT-03 — Analyze occupancy, churn, and lease expirations
+- **Business rules (`occupancy` object):**
+  - `averageOccupancyRate = occupiedRoomDays / availableActiveRoomDays * 100`, computed by summing, for each active room, the number of days within the period it had an `Active` lease overlapping that day, divided by the number of days within the period the room existed and was active (not soft-deleted). If `availableActiveRoomDays = 0` → `"N/A"` (never divide by zero).
+  - `moveIns` = leases whose `startDate` falls within the period; `moveOuts` = leases whose `actualEndDate` falls within the period.
+  - `upcomingExpirations` = same service function as US-LEASE-06/US-DASH-04.
+  - All scoped to the authenticated landlord's properties.
+
+#### US-REPORT-04 — Analyze maintenance efficiency
+- **Business rules (`maintenance` object):**
+  - `newRequests` = count where `submittedAt` within period; `completedRequests` = count where `completedAt` within period (**regardless of when submitted** — a request submitted before the period but completed inside it still counts as completed-in-period; do not use current `status` alone, always use the timestamp fields).
+  - `resolutionRate = completedRequests / newRequests` (or a cohort-based rate — pick one and document it in code comments) when enough data exists; otherwise `"N/A"`.
+  - `averageResolutionTime` = mean of `(completedAt - submittedAt)` over requests completed in the period; `"N/A"` if no completed requests in the period.
+
+#### US-REPORT-05 — Export a business report as PDF
+- **Endpoint:** `GET /api/v1/reports/:reportId/pdf`
+- **Auth:** Landlord, owns the report (`reports.landlordId = req.user.id`)
+- **Business rules:** `generateReportPdf` (architecture §10) renders from the **stored** report snapshot (from US-REPORT-01), not a fresh recomputation — guarantees the PDF always matches what the landlord saw on screen. PDF header includes landlord identity, period, generation time, currency. Empty/`N/A` metrics render as `"N/A"`/`"—"`, never break layout (e.g. a table with zero rows still renders its headers).
+
+---
+
+## Appendix — Endpoint Index (for quick reference)
+
+| Method | Path | Story |
 |---|---|---|
-| POST | `/v1/properties` | landlord |
-| GET | `/v1/properties` | landlord, owner-scoped (list own) |
-| GET | `/v1/properties/:propertyId` | landlord, owner-scoped |
-| PATCH | `/v1/properties/:propertyId` | landlord, owner-scoped |
-| DELETE | `/v1/properties/:propertyId` | landlord, owner-scoped — reject `CONFLICT` if any room has an active lease |
-| POST | `/v1/properties/:propertyId/rooms` | landlord, owner-scoped |
-| GET | `/v1/properties/:propertyId/rooms` | landlord, owner-scoped |
-| PATCH | `/v1/rooms/:roomId` | landlord, owner-scoped |
-| DELETE | `/v1/rooms/:roomId` | landlord, owner-scoped — reject if room has an active lease |
-
-### Request bodies
-```ts
-// POST /v1/properties
-{ name: string, address: string, description?: string,
-  defaultElectricityRate?: number, defaultWaterRate?: number,
-  waterBillingMethod?: 'per_m3' | 'per_person' }
-
-// POST /v1/properties/:propertyId/rooms
-{ name: string, baseRent: number,
-  electricityRateOverride?: number, waterRateOverride?: number }
-```
-
-### Rules (from AC)
-- `rooms.status` is **never** set directly by the client; it is derived. It flips to `'occupied'` only as a side effect of `leases.service.createLease()`, and back to `'vacant'` as a side effect of ending/terminating the lease (see F-10). The room update endpoint must reject any attempt to set `status` in the body (`VALIDATION_ERROR`).
-- `(property_id, name)` unique — duplicate room name in the same property → `CONFLICT`.
-- Property list view response includes each room's current `status` for the "clearly displayed" AC.
-
-### Tests
-- Create property/room, list shows correct occupancy status, duplicate room name rejected, status field immutable via API, delete blocked while occupied.
-
----
-
-## F-03 · Tenant Profile Management
-**Module:** `modules/tenants/` · **Tables:** `tenant_profiles`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/tenant-profiles` | landlord |
-| GET | `/v1/tenant-profiles` | landlord, owner-scoped |
-| GET | `/v1/tenant-profiles/:id` | landlord (owner-scoped) or tenant (self-scoped via `user_id`) |
-| PATCH | `/v1/tenant-profiles/:id` | landlord, owner-scoped |
-| POST | `/v1/tenant-profiles/:id/link-account` | landlord or tenant | `{ userId? }` — see below |
-
-### Request body
-```ts
-{ fullName: string, phone: string, idCardNumber: string, email?: string }
-```
-
-### Rules (from AC)
-- Unique `(landlord_id, id_card_number)` — duplicate → `CONFLICT` with message referencing the existing profile's name (helps landlord recognize the duplicate).
-- Linking flow: either (a) landlord invites by generating a one-time link/code the tenant redeems at signup, setting `tenant_profiles.user_id`, or (b) an already-registered tenant enters an invite code shared by the landlord. MVP implementation: landlord's `POST /v1/tenant-profiles/:id/link-account` generates an invite code (short random string, stored in a small `invite_codes` table or reused `password_reset_tokens`-style table with `type='tenant_link'`); tenant redeems via `POST /v1/tenant-profiles/redeem-invite { code }` which sets `user_id` on the matching profile. Once linked, the tenant account gains dashboard access to that profile's leases/invoices/maintenance requests.
-- A `tenant_profile_id` can only ever be linked to one `user_id` (enforced by the `unique` constraint on `tenant_profiles.user_id`).
-
-### Tests
-- Create profile, duplicate ID card rejected, invite/redeem flow links account, tenant can then see own data, tenant cannot see another tenant's profile.
-
----
-
-## F-04 · Utility Pricing Configuration
-**Module:** part of `modules/properties/` and `modules/rooms/` (no separate module — rates live on `properties`/`rooms`, see schema §5.3/§5.4)
-
-### Endpoints
-Rates are set via the existing `PATCH /v1/properties/:propertyId` and `PATCH /v1/rooms/:roomId` bodies (`defaultElectricityRate`, `defaultWaterRate`, `electricityRateOverride`, `waterRateOverride`).
-
-### Rules (from AC)
-- Effective rate resolution order used by billing (F-05): `room.electricityRateOverride ?? property.defaultElectricityRate`, same pattern for water.
-- Reject negative or zero rates (`VALIDATION_ERROR`).
-- `waterBillingMethod` on the property determines whether F-05's water calculation multiplies consumption (m³) or headcount (per person); if `'per_person'`, the "reading" workflow for water is skipped and the landlord instead confirms occupant count on the lease (`leases.occupant_count`, add this nullable int column to `leases` to support per-person billing).
-
-### Tests
-- Rate resolution fallback (room override present/absent), reject non-positive rate, per-person vs per-m3 method selection affects invoice calculation (covered jointly with F-05 tests).
-
----
-
-## F-05 · Utility Meter Reading & Calculation
-**Module:** `modules/utilities/` · **Tables:** `meter_readings`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/rooms/:roomId/meter-readings` | landlord, owner-scoped |
-| GET | `/v1/rooms/:roomId/meter-readings?period=YYYY-MM` | landlord, owner-scoped |
-
-### Request body
-```ts
-{ period: string /* 'YYYY-MM-01' */, electricityReading: number, waterReading: number }
-```
-
-### Response includes calculated preview
-```ts
-{
-  id, period, electricityReading, waterReading,
-  previousElectricityReading: number | null,
-  previousWaterReading: number | null,
-  electricityConsumption: number,   // current - previous, 0 if no previous
-  waterConsumption: number,
-  electricityAmount: number,        // consumption * effective rate
-  waterAmount: number
-}
-```
-
-### Rules (from AC)
-- Service fetches the prior period's row (`period` one calendar month earlier for the same `room_id`) and returns it for reference; if none exists, treat previous reading as `0` for consumption calc (first-month behavior) and flag `isFirstReading: true` in the response so the frontend can show a warning instead of a false consumption spike.
-- Validation: `electricityReading >= previousElectricityReading` and `waterReading >= previousWaterReading`, else `VALIDATION_ERROR` with `field` set so the frontend can show an inline error exactly on the offending input.
-- `(room_id, period)` unique — resubmitting the same period is an **update** (`PUT` semantics via the same POST endpoint, upsert) not a duplicate error, so landlords can correct entry mistakes before invoicing.
-- Calculation is a pure function `calculateUtilityCharge(consumption, rate)` in `lib/`, unit tested directly with table-driven cases.
-
-### Tests
-- First reading (no previous) doesn't error, subsequent reading below previous rejected with correct field, correct amount calculation for both electricity and water, per-person water method bypasses reading requirement.
-
----
-
-## F-06 · Billing and Invoice Generation
-**Module:** `modules/invoices/` · **Tables:** `invoices`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/leases/:leaseId/invoices/generate` | landlord, owner-scoped — manual trigger (also called internally by the daily cron, §9 of Architecture) |
-| GET | `/v1/invoices` | landlord (owner-scoped, filterable by `roomId`, `status`, `period`) or tenant (self-scoped to own leases) |
-| GET | `/v1/invoices/:id` | landlord (owner-scoped) or tenant (owner-scoped via lease) |
-| GET | `/v1/invoices/:id/pdf` | landlord or tenant, owner-scoped — streams a generated PDF |
-
-### Response body
-```ts
-{
-  id, leaseId, roomId, period, dueDate, status,
-  breakdown: { rent: number, electricity: number, water: number, otherFees: number, otherFeesNote?: string },
-  totalAmount: number,
-  vietQrUrl: string,      // see Architecture §8
-  paymentStatus: 'pending_proof' | 'pending_verification' | 'verified'
-}
-```
-
-### Rules (from AC)
-- Generation requires: an active lease, a meter reading for the target period already recorded (unless `waterBillingMethod = 'per_person'` for the water leg), and the landlord's bank fields (`bankId`, `bankAccountNo`, `bankAccountName`) populated — otherwise return `VALIDATION_ERROR` listing exactly what's missing (frontend surfaces this as an actionable checklist).
-- `totalAmount = rent_amount + electricity_amount + water_amount + other_fees_amount`, computed server-side only, never trusted from client input.
-- `due_date` default: `period + configurable grace days` (default 10 days after period start) — expose as a landlord setting later; hardcode 10 for MVP.
-- Both landlord and tenant can `GET`/PDF the invoice, but only the tenant who owns the lease or the owning landlord — enforced in service layer.
-- PDF generation: server-side HTML→PDF (e.g. `puppeteer` or a lightweight template lib) rendering the same `breakdown` fields plus the VietQR image.
-
-### Tests
-- Generation blocked with clear validation errors when prerequisites missing, correct total calculation, tenant can view own invoice, tenant cannot view another tenant's invoice (403), PDF endpoint returns `application/pdf`.
-
----
-
-## F-07 · VietQR Payment Integration
-**Module:** `lib/vietqr.ts`, consumed by `modules/invoices/`
-
-### Contract
-```ts
-function buildVietQrUrl(params: {
-  bankId: string; accountNo: string; accountName: string;
-  amount: number; roomName: string; period: string; // 'YYYY-MM'
-}): string
-```
-Returns the `img.vietqr.io` URL described in Architecture §8. `addInfo` message format: `` `RH ${roomName} T${MM}${YYYY}` `` — deterministic, no special characters, ASCII only (strip diacritics from `roomName` if needed since VietQR message fields are typically ASCII-safe).
-
-### Rules (from AC)
-- `vietQrUrl` is embedded directly in the `GET /v1/invoices/:id` response (§F-06) — there is no separate `/qr` endpoint, since the QR is just an image URL derived deterministically from invoice + landlord bank data, nothing to store.
-- Amount and message must exactly match `invoice.totalAmount` and the room/period — covered by a unit test asserting URL query params.
-- If landlord bank fields are missing, invoice generation itself is blocked (see F-06) rather than generating a QR-less invoice.
-
-### Tests
-- URL construction unit tests (happy path, diacritic stripping, amount formatting as integer VND with no thousands separators since VietQR expects a raw number).
-
----
-
-## F-08 · Payment Verification and Tracking
-**Module:** `modules/payments/` · **Tables:** `payments`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/invoices/:invoiceId/payment-proof` | tenant, owner-scoped — `multipart/form-data`, field `proofImage` |
-| GET | `/v1/invoices/:invoiceId/payment` | landlord or tenant, owner-scoped |
-| POST | `/v1/invoices/:invoiceId/payment/verify` | landlord, owner-scoped |
-
-### Rules (from AC)
-- File constraints enforced by `upload.middleware.ts`: `.png/.jpg/.jpeg` only, ≤5MB, else `VALIDATION_ERROR`.
-- On successful upload: create `payments` row if absent (`status='pending_verification'`, `proof_image_url`, `proof_uploaded_at`) or update existing; trigger `notifications.service.createNotification` to the landlord (`type: 'payment_proof_uploaded'`).
-- `POST .../verify` (landlord only): sets `payments.status='verified'`, `verified_by`, `verified_at`; cascades to `invoices.status='paid'`, `invoices.paid_at=now()`. This is a manual action — never automatic — per the explicit "RosiHome never verifies payments automatically" assumption.
-- Re-uploading a proof after verification is blocked (`CONFLICT`) — landlord must be contacted to reverse verification manually via a future admin action (out of MVP scope to auto-support un-verify).
-- Payment history endpoint (`GET /v1/invoices?status=paid` combined with existing invoice list, no separate "payment history" table needed — it's a filtered view of invoices+payments) — document this explicitly so the AI agent doesn't build a redundant table.
-
-### Tests
-- Upload rejects wrong mime/oversize, upload triggers landlord notification, verify flips invoice to paid, verify is landlord-only (tenant attempt → 403), double-verify blocked.
-
----
-
-## F-09 · Rent Payment Reminders
-**Module:** `modules/notifications/` + `jobs/payment-reminder.job.ts` · **Tables:** `notifications`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/invoices/:invoiceId/remind` | landlord, owner-scoped — manual trigger |
-| GET | `/v1/notifications` | authenticated, self-scoped |
-| PATCH | `/v1/notifications/:id/read` | authenticated, self-scoped |
-
-### Rules (from AC)
-- Cron job (Architecture §9) finds `invoices` where `status='unpaid' AND due_date < today`, flips `status='overdue'`, and creates a `notifications` row (`channel='both'`) for the tenant on the lease.
-- Manual trigger endpoint creates the same notification shape without waiting for the cron, usable on any `unpaid` or `overdue` invoice; rate-limit to once per hour per invoice to avoid spam (`CONFLICT` if triggered again within the window — store `last_reminded_at` on `invoices`, add this nullable timestamptz column).
-
-### Tests
-- Cron flips overdue status correctly for exactly-due-date boundary, manual trigger creates notification, manual trigger rate-limited.
-
----
-
-## F-10 · Digital Lease Tracking
-**Module:** `modules/leases/` · **Tables:** `leases`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/leases` | landlord, owner-scoped (room must belong to landlord) |
-| GET | `/v1/leases` | landlord (owner-scoped) or tenant (self-scoped) |
-| GET | `/v1/leases/:id` | landlord or tenant, owner-scoped |
-| PATCH | `/v1/leases/:id` | landlord, owner-scoped — for corrections before it's relied upon; restrict which fields are editable once invoices exist against it (rent_amount edits should not retroactively change past invoices) |
-| POST | `/v1/leases/:id/end` | landlord, owner-scoped | `{ endDate?, reason: 'ended' \| 'terminated' }` |
-
-### Request body (create)
-```ts
-{ roomId: string, tenantProfileId: string, startDate: string, endDate: string,
-  rentAmount: number, depositAmount?: number, occupantCount?: number }
-```
-
-### Rules (from AC)
-- Reject creation if the room already has a `status='active'` lease (`CONFLICT`) — this is the DB-less uniqueness rule noted in Architecture §5.6.
-- On successful create: set `rooms.status='occupied'` in the same transaction.
-- On `POST .../end`: set `leases.status` to the given reason, and if no other active lease exists for the room, set `rooms.status='vacant'`. Both writes happen in one DB transaction to avoid inconsistent state.
-- Lease is visible to both the owning landlord and the linked tenant (`tenant_profiles.user_id` match) — enforced in service layer's ownership check.
-
-### Tests
-- Create sets room occupied, duplicate active lease rejected, end sets room vacant, end with another active lease present keeps room occupied (edge case for multi-tenant rooms — unlikely in MVP but guard anyway), tenant can view own lease, tenant cannot view another's.
-
----
-
-## F-11 · Automated Lease Renewal Reminders
-**Module:** `jobs/lease-renewal-reminder.job.ts` · **Tables:** `leases`, `notifications`
-
-### Rules (from AC)
-- Daily job (cron spec in Architecture §9): `WHERE status='active' AND end_date = today + 30 AND renewal_reminder_sent_at IS NULL`.
-- For each match: create notifications for both the landlord and the linked tenant user (skip tenant notification if `tenant_profiles.user_id IS NULL`), `channel='both'`, then stamp `renewal_reminder_sent_at=now()` so the job is idempotent even if it runs twice in a day.
-- Dashboard "upcoming expirations" widget (F-14) queries `leases WHERE status='active' AND end_date BETWEEN today AND today+30` directly — independent of whether the reminder has fired, so it's always accurate even before the 30-day mark.
-
-### Tests
-- Exactly-30-days-out lease triggers reminder once, re-running job same day doesn't double-send, tenant without linked account doesn't crash the job (graceful skip), dashboard widget shows leases inside the window regardless of reminder state.
-
----
-
-## F-12 · Maintenance Request Submission
-**Module:** `modules/maintenance/` · **Tables:** `maintenance_requests`, `maintenance_status_logs`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| POST | `/v1/maintenance-requests` | tenant, owner-scoped (must own the lease/room) — `multipart/form-data`, up to 3 files under field `photos` |
-| GET | `/v1/maintenance-requests` | landlord (owner-scoped across their rooms) or tenant (self-scoped) |
-| GET | `/v1/maintenance-requests/:id` | landlord or tenant, owner-scoped |
-
-### Request body
-```ts
-{ roomId: string, title: string, description: string } // + up to 3 files
-```
-
-### Rules (from AC)
-- Reject >3 photos (`VALIDATION_ERROR`), same mime/size constraints as F-08 (png/jpg/jpeg, 5MB each).
-- On create: initial `maintenance_status_logs` row with `status='pending'`; notify the landlord (`type: 'maintenance_update'`) immediately.
-- Tenant list view filters to requests raised from their own `tenant_profile_id`.
-
-### Tests
-- Create with 3 photos succeeds, 4th photo rejected, landlord gets notified immediately, tenant sees only their own requests.
-
----
-
-## F-13 · Maintenance Status Tracking
-**Module:** `modules/maintenance/` (same module as F-12) · **Tables:** `maintenance_requests`, `maintenance_status_logs`
-
-### Endpoints
-| Method | Path | Auth |
-|---|---|---|
-| PATCH | `/v1/maintenance-requests/:id/status` | landlord, owner-scoped | `{ status: 'pending' \| 'in_progress' \| 'completed' }` |
-| GET | `/v1/rooms/:roomId/maintenance-history` | landlord, owner-scoped |
-
-### Rules (from AC)
-- Any status transition is allowed (dropdown, not a strict state machine per the AC's wording) but every transition appends a new `maintenance_status_logs` row — never mutate history, only append.
-- Every status change triggers a tenant notification (`type: 'maintenance_update'`), skipped only if the request has no linked tenant user account (still visible in-app once they link later, via the persisted log).
-- History endpoint returns `maintenance_requests` joined with their full `maintenance_status_logs` ordered by `changed_at`, scoped to a room, for the landlord's per-room history view.
-
-### Tests
-- Status update appends log row (not overwrite), tenant notified on each change, history endpoint returns full chronological log, landlord-only access enforced.
-
----
-
-## F-14 · Centralized Business Dashboard
-**Module:** `modules/dashboard/` · **Tables:** reads across `rooms`, `invoices`, `leases`, `payments` (read-only aggregation, no new tables)
-
-### Endpoint
-| Method | Path | Auth |
-|---|---|---|
-| GET | `/v1/dashboard` | landlord, owner-scoped | optional `?propertyId=` to scope to one property |
-
-### Response body
-```ts
-{
-  occupancyRate: number,              // occupiedRooms / totalRooms, 0 if no rooms
-  totalRooms: number,
-  occupiedRooms: number,
-  revenue: { expected: number, collected: number, period: string }, // current month
-  outstandingTotal: number,           // sum of unpaid + overdue invoice totalAmount
-  overdueInvoices: Array<{ id, roomName, tenantName, amount, dueDate }>,
-  upcomingLeaseExpirations: Array<{ leaseId, roomName, tenantName, endDate }>
-}
-```
-
-### Rules (from AC)
-- `revenue.expected` = sum of `totalAmount` for all invoices in the current period regardless of status; `revenue.collected` = sum where `status='paid'`.
-- `overdueInvoices` and `upcomingLeaseExpirations` are capped (e.g. top 10 by due date / end date ascending) with a `total` count in `meta` so the frontend can offer a "view all" link to the filtered invoices/leases list views rather than duplicating full list logic in the dashboard endpoint.
-- All aggregation queries are scoped to `landlord_id` via a join from `rooms → properties.landlord_id` — never trust a client-supplied landlord id.
-- This endpoint should be implemented as a handful of targeted SQL aggregate queries (via Drizzle) rather than loading full row sets into memory and reducing in JS, to keep it fast as portfolios grow toward the 30-unit ceiling mentioned in the project assumptions.
-
-### Tests
-- Occupancy rate calculation with mixed vacant/occupied, revenue expected vs collected split correctly, outstanding total matches sum of unpaid+overdue, capped lists respect the limit, cross-landlord data never leaks into another landlord's dashboard.
-
----
-
-## Cross-Cutting Notification Matrix
-
-| Trigger | Recipient(s) | Type |
-|---|---|---|
-| Invoice generated | tenant | `invoice_generated` |
-| Invoice overdue (cron) | tenant | `payment_reminder` |
-| Manual reminder (F-09) | tenant | `payment_reminder` |
-| Payment proof uploaded (F-08) | landlord | `payment_proof_uploaded` |
-| Lease 30 days from expiry (F-11) | landlord + tenant | `lease_renewal` |
-| Maintenance request created (F-12) | landlord | `maintenance_update` |
-| Maintenance status changed (F-13) | tenant | `maintenance_update` |
-
-This table is the single source of truth for wiring `notifications.service.createNotification(...)` calls — every row here should correspond to exactly one call site in the codebase, referenced by the feature's own module rather than centralized, so ownership stays with the module that knows the business context.
+| POST | /auth/register | US-AUTH-01 |
+| POST | /auth/login | US-AUTH-02 |
+| POST | /auth/logout | US-AUTH-03 |
+| POST | /auth/change-password | US-AUTH-05 |
+| POST | /auth/forgot-password | US-AUTH-06 |
+| POST | /auth/reset-password | US-AUTH-06 |
+| GET/PATCH | /profile | US-PROFILE-01 |
+| POST/GET/PATCH | /properties[/:id] | US-PROPERTY-01/02 |
+| POST/GET/PATCH | /properties/:id/rooms[/:id] | US-ROOM-01/02 |
+| POST | /properties/:id/rooms/bulk | US-ROOM-03 |
+| GET/PATCH | /tenants[/:id] | US-TENANT-01 |
+| POST/GET | /properties/:id/utility-rates | US-UTILITY-01/02 |
+| POST/GET/PATCH/DELETE | /properties/:id/surcharges[/:id] | US-CHARGE-01 |
+| POST | /rooms/:id/meter-readings | US-METER-01 |
+| POST | /rooms/:id/meter-readings/calculate | US-METER-02 |
+| PATCH | /meter-readings/:id/correct | US-METER-03 |
+| (job) / POST | /admin/invoices/generate | US-INVOICE-01 |
+| GET | /invoices[/:id] | US-INVOICE-02 |
+| GET | /invoices/:id/pdf | US-INVOICE-03 |
+| POST | /invoices/:id/send | US-INVOICE-04 |
+| GET/PUT | /payment-config | US-VIETQR-01 |
+| GET | /invoices/:id/vietqr | US-VIETQR-02 |
+| POST | /invoices/:id/payment-proofs | US-PAYMENT-01 |
+| GET/POST | /payment-proofs, /invoices/:id/confirm-payment | US-PAYMENT-02 |
+| GET | /payments/history | US-PAYMENT-03 |
+| (job) | — | US-REMINDER-01 |
+| POST | /invoices/:id/remind | US-REMINDER-02 |
+| POST/GET/PATCH | /leases[/:id] | US-LEASE-01/02/03 |
+| POST | /leases/:id/end | US-LEASE-04 |
+| (job) / PATCH | /properties/:id/lease-reminder-config | US-LEASE-05 |
+| GET | /leases/upcoming-expirations | US-LEASE-06 |
+| POST | /maintenance-requests | US-MAINT-01 |
+| GET | /maintenance-requests | US-MAINT-02/03 |
+| PATCH | /maintenance-requests/:id/status | US-MAINT-04 |
+| GET | /rooms/:id/maintenance-requests | US-MAINT-05 |
+| GET | /dashboard/occupancy | US-DASH-01 |
+| GET | /dashboard/revenue | US-DASH-02 |
+| GET | /dashboard/outstanding | US-DASH-03 |
+| GET | /dashboard/upcoming-expirations | US-DASH-04 |
+| POST | /reports/generate | US-REPORT-01/02/03/04 |
+| GET | /reports/:id/pdf | US-REPORT-05 |

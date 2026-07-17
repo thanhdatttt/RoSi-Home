@@ -1,399 +1,589 @@
-# RosiHome — Technical Architecture Specification (AI-Agent Ready)
+# RosiHome — Architecture & Engineering Conventions
+
+**Audience:** AI coding agents and human developers implementing RosiHome.
+**Status:** Approved for implementation. This document is the single source of truth for cross-cutting technical decisions. Feature-level behavior lives in `02-FEATURE-SPECS.md`; do not duplicate business rules here — reference the story ID (e.g. `US-INVOICE-01`) instead.
+
+**How to use this document (for coding agents):** Before implementing any story, read Sections 1–9 once (they apply to every story). Then read the specific feature section in `02-FEATURE-SPECS.md`. Do not invent conventions (error shapes, table names, status enums, rounding, auth checks) that are already defined here — use exactly what is specified so the codebase stays consistent across stories implemented by different agents/sessions.
 
 ---
 
-## 1. Stack Recap & Versions
+## 1. System Architecture
 
-| Layer | Choice | Notes for codegen |
+RosiHome is a **monolithic 3-layer client-server system**: one Node.js/Express REST API backend serving a React web app and a React Native mobile app, backed by PostgreSQL + Supabase Storage. See `architecture.md` (source doc) for the rationale (student team, 8–10 week MVP, no microservices, no GraphQL).
+
+> **Delivery-surface note:** Per PD-07 in the product backlog, the *current* implementation scope is **Mobile only** (React Native). The Web frontend is architected for but not required by any story in this cycle. Do not block backend work on a web client; do not skip mobile-specific rules (push notifications, mobile screens) because "web could do it later."
+
+```mermaid
+flowchart LR
+    subgraph Presentation
+        MOB["Mobile App (React Native)"]
+        WEB["Web App (React) — future"]
+    end
+    subgraph Application
+        API["REST API (Node.js/Express)"]
+        JOBS["Scheduled Jobs (node-cron)"]
+    end
+    subgraph Data["Supabase"]
+        DB[("PostgreSQL Database")]
+        ST[("Supabase Storage")]
+    end
+    subgraph External
+        FCM["Push Notifications (FCM)"]
+        MAIL["Transactional Email"]
+        QR["VietQR Generator (in-process)"]
+    end
+    MOB -->|HTTPS/REST + JWT| API
+    WEB -.->|HTTPS/REST + JWT| API
+    API --> DB
+    API --> ST
+    API --> FCM
+    API --> MAIL
+    API --> QR
+    JOBS --> DB
+    JOBS --> FCM
+```
+
+### 1.1 Tech stack (fixed — do not substitute without updating this doc)
+
+| Concern | Choice |
+|---|---|
+| Backend runtime | Node.js (LTS) + Express |
+| Language | TypeScript (strict mode) |
+| ORM | Drizzle ORM |
+| Database | PostgreSQL, hosted and managed on **Supabase** (Supabase project = the single database for all environments unless a separate staging project is provisioned) |
+| File storage | Supabase Storage (same Supabase project as the database; buckets: `payment-proofs`, `maintenance-photos`) |
+| Auth | JWT (access token only, no refresh-token rotation in MVP), via `jsonwebtoken`, password hashing via `bcrypt` |
+| Scheduled jobs | `node-cron` in-process (no external queue in MVP) |
+| Push notifications | Firebase Cloud Messaging (FCM) |
+| Transactional email | Any SMTP-compatible provider behind an `EmailProvider` interface (e.g. Resend/SendGrid) |
+| PDF generation | `pdfkit` (server-side, no headless browser) |
+| QR generation | VietQR EMVCo payload built in-process + `qrcode` npm package to render the PNG/SVG |
+| Validation | `zod` schemas shared between route handlers and (optionally) the client |
+| Web frontend | React (future) |
+| Mobile frontend | React Native (Expo recommended for push-notification and camera/file-picker simplicity) |
+| CI/CD | GitHub Actions |
+| Hosting | Render/Railway (API server only), **Supabase (Postgres database + file storage)**, EAS/Expo (mobile builds) |
+
+### 1.2 Repository / folder structure
+
+```
+/backend
+  /src
+    /modules
+      /auth            # US-AUTH-*, US-PROFILE-01
+      /properties       # US-PROPERTY-*, US-ROOM-*
+      /tenants          # US-TENANT-*
+      /utilities        # US-UTILITY-*, US-CHARGE-01
+      /meters           # US-METER-*
+      /invoices         # US-INVOICE-*
+      /payments         # US-VIETQR-*, US-PAYMENT-*
+      /leases           # US-LEASE-*
+      /maintenance       # US-MAINT-*
+      /dashboard         # US-DASH-*
+      /reports           # US-REPORT-*
+      /notifications      # cross-cutting push/email delivery
+    /jobs               # cron job entry points (one file per job)
+    /db
+      schema.ts         # Drizzle schema (single source of truth for tables)
+      /migrations
+      seeds/             # regulatory rate seed data (PD-03)
+    /lib                # cross-cutting: jwt, hashing, money, audit, qr, pdf, storage client
+    /middleware          # requireAuth, requireRole, requireOwnership, errorHandler, validate(zod)
+    app.ts
+    server.ts
+  /tests
+    /unit
+    /integration
+/mobile                 # React Native app
+/web                    # React app (future / stub)
+```
+
+Each `modules/<name>` folder follows: `router.ts`, `controller.ts`, `service.ts` (business logic — this is what unit tests target), `repository.ts` (Drizzle queries), `schema.ts` (zod request/response schemas), `types.ts`.
+
+**Rule for agents:** business logic (calculations, validation beyond shape, authorization decisions) belongs in `service.ts`, never in `router.ts`/`controller.ts`. This keeps logic testable without spinning up HTTP.
+
+---
+
+## 2. API Conventions
+
+- Base path: `/api/v1`.
+- JSON only. `Content-Type: application/json` except file uploads (`multipart/form-data`).
+- Resource-oriented REST; plural nouns; nested resources reflect ownership (e.g. `/properties/:propertyId/rooms`).
+- Standard verbs: `GET` (read), `POST` (create/action), `PATCH` (partial update), `DELETE` (soft-delete only — see §6).
+- Pagination on all list endpoints: query params `?page=1&pageSize=20` (default 20, max 100); response wraps list in `{ data: [...], meta: { page, pageSize, total } }`.
+- Dates: ISO-8601 (`YYYY-MM-DD` for date-only fields like `startDate`; full `YYYY-MM-DDTHH:mm:ssZ` for timestamps). Billing periods use `YYYY-MM`.
+- Money: integers, minor-unit-free VND (see §7). Never floats over the wire.
+
+### 2.1 Standard success envelope
+
+```json
+{ "data": { ... } }
+```
+or for lists:
+```json
+{ "data": [ ... ], "meta": { "page": 1, "pageSize": 20, "total": 57 } }
+```
+
+### 2.2 Standard error envelope
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "One or more fields are invalid.",
+    "fields": [
+      { "field": "email", "message": "Email is already registered." }
+    ]
+  }
+}
+```
+
+| HTTP status | `code` | Used when |
 |---|---|---|
-| Backend | Node.js 20 LTS + Express 4 | REST only, no GraphQL |
-| Language | TypeScript (strict mode) | Both backend and frontend/mobile |
-| Web frontend | React 18 + Vite | No Next.js — plain SPA + REST API |
-| Mobile | React Native + Expo | Shares types/DTOs with web via a shared package |
-| ORM | Drizzle ORM | `drizzle-kit` for migrations |
-| Database | PostgreSQL 15 (hosted on Supabase) | |
-| File storage | Supabase Storage (S3-compatible buckets) | |
-| Auth | JWT (access + refresh) via `jsonwebtoken`, hashing via `bcrypt` | Not Passport — hand-rolled is simpler for this scope, see §6 |
-| Validation | `zod` | Every request body/query is parsed through a zod schema before hitting a controller |
-| Testing | Vitest (unit), Supertest (API/integration), Playwright (E2E web) | Team member preference includes testing/QA — cover this seriously |
-| CI/CD | GitHub Actions | Lint → typecheck → test → build → deploy |
-| Hosting | Backend: Render/Railway. Web: Vercel. DB/Storage: Supabase | |
+| 400 | `VALIDATION_ERROR` | Request shape/field validation fails (zod) |
+| 401 | `UNAUTHENTICATED` | Missing/invalid/expired JWT |
+| 403 | `FORBIDDEN` | Authenticated but wrong role or not the owner of the resource |
+| 404 | `NOT_FOUND` | Resource doesn't exist **or** exists but belongs to another user (never leak existence — see §5.3) |
+| 409 | `CONFLICT` | Uniqueness violation, overlapping lease, duplicate invoice, etc. |
+| 422 | `UNPROCESSABLE` | Valid shape, but violates a business rule (e.g. reading lower than previous, invoice not in `Draft`) |
+| 500 | `INTERNAL_ERROR` | Unhandled |
+
+**Rule:** never return raw database/ORM error messages, stack traces, or another user's data in any error payload (Global DoD requirement).
 
 ---
 
-## 2. Monorepo Structure
+## 3. Authentication & Authorization
 
-```
-rosihome/
-├── apps/
-│   ├── api/                      # Node/Express backend
-│   │   ├── src/
-│   │   │   ├── config/           # env loading, db client, storage client
-│   │   │   ├── db/
-│   │   │   │   ├── schema/       # drizzle table definitions, one file per domain
-│   │   │   │   ├── migrations/   # drizzle-kit generated SQL
-│   │   │   │   └── seed.ts
-│   │   │   ├── modules/          # one folder per feature/domain (see below)
-│   │   │   │   ├── auth/
-│   │   │   │   ├── properties/
-│   │   │   │   ├── rooms/
-│   │   │   │   ├── tenants/
-│   │   │   │   ├── leases/
-│   │   │   │   ├── utilities/
-│   │   │   │   ├── invoices/
-│   │   │   │   ├── payments/
-│   │   │   │   ├── maintenance/
-│   │   │   │   ├── dashboard/
-│   │   │   │   └── notifications/
-│   │   │   ├── middleware/       # auth.middleware, error.middleware, rbac.middleware, upload.middleware
-│   │   │   ├── jobs/             # cron jobs (lease reminders, invoice generation, payment reminders)
-│   │   │   ├── lib/              # vietqr generator, pdf generator, mailer
-│   │   │   ├── app.ts            # express app assembly
-│   │   │   └── server.ts         # entrypoint
-│   │   └── tests/
-│   │       ├── unit/
-│   │       └── integration/
-│   ├── web/                      # React web app
-│   └── mobile/                   # React Native (Expo) app
-├── packages/
-│   └── shared/                   # shared TS types, zod schemas, DTOs, constants (imported by api, web, mobile)
-├── .github/workflows/
-└── docker-compose.yml            # local Postgres for dev
-```
+### 3.1 Identity model
 
-Each `modules/<name>/` folder inside the API follows the same internal shape — an AI agent should replicate this pattern for every new module:
+- One `users` row = one account = exactly **one role** (`landlord` | `tenant`). A role can never be added to an existing account of the other role (US-AUTH-01, US-TENANT-02).
+- **Landlord**: self-registers with email as username (US-AUTH-01).
+- **Tenant**: never self-registers. Provisioned automatically when a landlord creates a lease (US-TENANT-02); username = phone number; temporary password emailed.
+- `users.mustChangePassword` boolean forces password replacement before any other protected action succeeds (checked in `requireAuth` middleware, not just the client) — enforces US-AUTH-05's "tenant must set new password before accessing other functions."
 
-```
-modules/<name>/
-├── <name>.routes.ts       # Express Router, wires paths to controller fns, applies zod validation + rbac middleware
-├── <name>.controller.ts   # thin: parses req, calls service, shapes response
-├── <name>.service.ts      # business logic, orchestrates repository + other services
-├── <name>.repository.ts   # Drizzle queries only, no business logic
-├── <name>.schema.ts       # zod request/response schemas (re-exported from packages/shared if shared with frontend)
-└── <name>.types.ts        # module-local TS types not needed by frontend
-```
+### 3.2 JWT
 
-**Rule for the AI agent:** never put Drizzle queries in a controller, and never put business logic (validation beyond shape, calculations, status transitions) in a repository. This keeps every module unit-testable in isolation.
+- Claims: `{ sub: userId, role: "landlord"|"tenant", iat, exp }`. Do not put PII (email, name) in the token.
+- Expiry: 24h. No refresh-token flow in MVP — the mobile app simply prompts re-login on 401.
+- Token delivered in `Authorization: Bearer <token>` header. Never in query strings (would leak in logs).
+- On logout (US-AUTH-03), the API has no server-side session to invalidate (stateless JWT) — the mobile app **must** delete the stored token client-side. Document this explicitly in the mobile app so "logout" is real: clear token from secure storage and clear any cached protected data from memory/view.
+
+### 3.3 Authorization middleware chain
+
+Every protected route composes, in order:
+1. `requireAuth` — verifies JWT, loads `req.user = { id, role }`, rejects if `mustChangePassword` is true and the route isn't the change-password route itself.
+2. `requireRole('landlord')` or `requireRole('tenant')` — rejects with 403 if role doesn't match.
+3. **Ownership check inside the service layer** (not just middleware) — every query that fetches a landlord-scoped resource must filter `WHERE landlordId = req.user.id` (directly or via join); every tenant-scoped resource must filter through the tenant's own `tenantInfoId`/`leaseId`. A resource that exists but belongs to someone else returns `404 NOT_FOUND`, not `403`, so identifier-guessing cannot distinguish "doesn't exist" from "not yours" (US-AUTH-04, US-LEASE-02, US-INVOICE-02, etc. all state this pattern).
+
+**Agent rule:** never trust a `landlordId`/`tenantId`/`propertyId` supplied in a request body to decide ownership. Always derive the owner from `req.user` and re-verify the resource chain in the database (e.g. room → property → `property.landlordId === req.user.id`).
+
+### 3.4 Password policy (applies to US-AUTH-01, US-AUTH-05, US-AUTH-06, US-TENANT-02)
+
+- Minimum 8 characters, at least one letter and one digit.
+- Hashed with bcrypt (cost factor 10+). Never stored or logged in plaintext.
+- Temporary passwords (tenant provisioning, password reset) are cryptographically random, single-purpose, and never written to application logs (use a redaction rule in the logger for any field named `password`, `tempPassword`, `token`).
 
 ---
 
-## 3. Naming Conventions
+## 4. Cross-Cutting Business Rules
 
-- Database: `snake_case` table and column names, plural table names (`properties`, `rooms`, `invoices`).
-- TypeScript: `camelCase` for variables/functions, `PascalCase` for types/interfaces/React components.
-- REST paths: `kebab-case`, plural nouns, nested under parent resource where ownership is strict: `/properties/:propertyId/rooms`.
-- Drizzle schema files: singular file name matching table, e.g. `db/schema/room.ts` exports `rooms`.
-- Environment variables: `SCREAMING_SNAKE_CASE`.
-- Branch naming (GitHub): `feature/F-XX-short-name`, `fix/short-name` — ties directly to backlog IDs in `product_backlog.md`.
+### 4.1 Monetary rounding rule (referenced by every calculation story)
+
+All VND amounts are stored and returned as **integers** (VND has no minor unit). Any calculated amount (consumption × rate, flat × tenant count) is rounded using **round-half-up to the nearest whole VND** before being persisted as a line item. Implement as a single shared function `roundVnd(amount: number): number` in `/lib/money.ts` and use it everywhere — do not re-implement rounding per module.
+
+### 4.2 Billing period
+
+A billing period is the string `YYYY-MM` representing a calendar month. All meter readings, invoices, and reports that reference "the period" use this value for matching/uniqueness (e.g. `UNIQUE(roomId, utilityType, billingPeriod)` on meter readings; `UNIQUE(leaseId, billingPeriod)` on invoices).
+
+### 4.3 Soft deletion & audit (applies to every business entity: properties, rooms, leases, tenant info, utility configs, surcharges, invoices status transitions, maintenance requests)
+
+Per the backlog's global cross-cutting rule (Section 1.5):
+
+- Every soft-deletable table has `deletedAt TIMESTAMPTZ NULL` and `deletedBy UUID NULL REFERENCES users(id)`.
+- No API route ever issues a SQL `DELETE`. "Delete"/"archive"/"deactivate" operations set `deletedAt`/`deletedBy` and are exposed as `DELETE /resource/:id` at the API level (REST convention) but implemented as an `UPDATE` in the repository layer.
+- All "list"/"get" queries default to `WHERE deletedAt IS NULL` unless the endpoint is explicitly a history/audit view.
+- Uniqueness constraints that must not be broken by archived rows use **partial unique indexes** scoped to `deletedAt IS NULL`, e.g.:
+  ```sql
+  CREATE UNIQUE INDEX rooms_property_name_active
+    ON rooms (property_id, name) WHERE deleted_at IS NULL;
+  ```
+  This lets a landlord reuse a room name after archiving the old room, per the backlog's requirement that archived data must not cause "accidental conflicts."
+
+**Audit events** (separate `audit_events` table, append-only, never updated or deleted):
+
+```
+audit_events(
+  id, actorUserId, action,            -- e.g. "invoice.sent", "reading.corrected"
+  entityType, entityId,
+  beforeValue JSONB NULL, afterValue JSONB NULL,
+  createdAt
+)
+```
+
+- Never store passwords, tokens, or full payment-proof binary data in `beforeValue`/`afterValue`.
+- Write an audit event inside the same DB transaction as the state change it records (see §4.4) — never as a fire-and-forget side effect that could be lost on failure.
+- Every story tagged "records the responsible landlord/user and time" or "records previous/new value" is satisfied by writing to `audit_events`, not by adding ad-hoc `updatedBy` columns to every table (exception: high-traffic status fields like `invoices.sentBy/sentAt` and `leases.endedBy/endedAt` are also denormalized onto the row itself for fast reads, in addition to the audit event).
+
+### 4.4 Transactional integrity
+
+Any operation that touches more than one table as a single logical unit (e.g. lease creation + tenant provisioning + user creation; invoice generation + line items; payment verification + invoice status change) **must** run inside a single Drizzle/Postgres transaction. If any step fails, the whole operation rolls back — this is how "atomic" and "does not create a duplicate account/lease on retry" requirements (US-LEASE-01, US-TENANT-02) are satisfied.
+
+### 4.5 Idempotency for scheduled/repeatable actions
+
+- Invoice generation (US-INVOICE-01): before creating, check for an existing non-deleted invoice with the same `(leaseId, billingPeriod)`; if found, skip. The DB also enforces this via a unique constraint as a second line of defense.
+- Reminders (US-REMINDER-01, US-LEASE-05): a `notifications` row (or a dedicated `reminder_log`) keyed by `(subjectType, subjectId, reminderRule, periodKey)` prevents the same reminder firing twice if the cron job re-runs.
+- Payment confirmation (US-PAYMENT-02): confirming an already-`Paid` invoice is a no-op that returns the existing payment record rather than creating a second one — enforced by `UNIQUE(invoiceId)` on `payments`.
+
+### 4.6 Status enums (fixed vocabulary — use exactly these string values across API, DB, and UI)
+
+| Entity | Status values |
+|---|---|
+| Room (derived, not stored) | `Vacant`, `Occupied` |
+| Lease | `Active`, `Ended`, `Expired` |
+| Invoice | `Draft`, `Sent`, `Paid` |
+| Payment proof | `Pending`, `Verified` |
+| Maintenance request | `Pending`, `InProgress`, `Completed` |
+| Water billing method | `Metered`, `Flat` |
+| User role | `Landlord`, `Tenant` |
+
+Room occupancy is **never** a stored column — it is derived at query time (`EXISTS (SELECT 1 FROM leases WHERE roomId = room.id AND status = 'Active' AND deletedAt IS NULL)`), so it can never drift out of sync with the lease it depends on (US-ROOM-02 explicitly forbids directly overriding it).
 
 ---
 
-## 4. Environment Variables
+## 5. Data Model
 
+### 5.1 Entity-relationship overview
+
+```mermaid
+erDiagram
+    USERS ||--o| LANDLORD_PAYMENT_CONFIGS : has
+    USERS ||--o{ PROPERTIES : owns
+    USERS ||--o| TENANT_INFO : "linked to (tenant)"
+    PROPERTIES ||--o{ ROOMS : contains
+    PROPERTIES ||--o{ UTILITY_RATE_HISTORY : configures
+    PROPERTIES ||--o{ SURCHARGES : configures
+    PROPERTIES ||--o{ LEASE_REMINDER_CONFIGS : configures
+    ROOMS ||--o{ LEASES : "has (over time)"
+    TENANT_INFO ||--o{ LEASES : party_to
+    LEASES ||--o{ METER_READINGS : has
+    LEASES ||--o{ INVOICES : billed_as
+    INVOICES ||--o{ INVOICE_LINE_ITEMS : contains
+    INVOICES ||--o| PAYMENTS : settled_by
+    INVOICES ||--o{ PAYMENT_PROOFS : evidenced_by
+    TENANT_INFO ||--o{ MAINTENANCE_REQUESTS : submits
+    ROOMS ||--o{ MAINTENANCE_REQUESTS : concerns
+    MAINTENANCE_REQUESTS ||--o{ MAINTENANCE_PHOTOS : has
+    MAINTENANCE_REQUESTS ||--o{ MAINTENANCE_STATUS_HISTORY : has
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ AUDIT_EVENTS : "acts (actor)"
 ```
-# API
-PORT=4000
-NODE_ENV=development|production|test
-DATABASE_URL=postgres://...
-JWT_ACCESS_SECRET=...
-JWT_REFRESH_SECRET=...
-JWT_ACCESS_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=30d
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-SUPABASE_STORAGE_BUCKET_PROOFS=payment-proofs
-SUPABASE_STORAGE_BUCKET_MAINTENANCE=maintenance-photos
-SUPABASE_STORAGE_BUCKET_METERS=meter-photos
-VIETQR_API_BASE=https://api.vietqr.io/v2
-SMTP_HOST=...
-SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASS=...
-FRONTEND_URL=https://app.rosihome.dev
-```
 
-`packages/shared` exports a zod-validated `env.ts` that both loads and type-checks `process.env` at boot; the server must fail fast if a required var is missing.
+### 5.2 Table specifications
 
----
+> Types shown are Postgres types as they'd appear in Drizzle. All tables include `createdAt TIMESTAMPTZ NOT NULL DEFAULT now()`, `updatedAt TIMESTAMPTZ NOT NULL DEFAULT now()` unless noted. Soft-deletable tables additionally include `deletedAt`, `deletedBy` (see §4.3).
 
-## 5. Database Schema (Drizzle, PostgreSQL)
-
-All tables use `id uuid primary key default gen_random_uuid()` and `created_at timestamptz default now()` / `updated_at timestamptz default now()` unless noted. Foreign keys use `on delete cascade` for child records owned exclusively by the parent (e.g. rooms→property), and `on delete restrict` where deletion should be blocked while related business records exist (e.g. a room with an active lease).
-
-### 5.1 `users`
+**users**
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| full_name | text not null | |
-| email | text unique | nullable if phone-only signup |
-| phone | text unique | nullable if email-only signup |
-| password_hash | text not null | bcrypt |
-| role | enum('landlord','tenant') not null | |
-| avatar_url | text | nullable |
-| is_active | boolean default true | |
-| created_at / updated_at | timestamptz | |
+| role | enum(`Landlord`,`Tenant`) | immutable after creation |
+| username | text UNIQUE | email for landlords, phone for tenants |
+| passwordHash | text | bcrypt |
+| mustChangePassword | boolean default false | true for freshly-provisioned tenants |
+| status | enum(`Active`,`Inactive`) default `Active` | |
 
-Constraint: `CHECK (email IS NOT NULL OR phone IS NOT NULL)`.
-
-### 5.2 `password_reset_tokens`
-| Column | Type |
-|---|---|
-| id | uuid PK |
-| user_id | uuid FK → users.id, cascade |
-| token_hash | text not null |
-| expires_at | timestamptz not null |
-| used_at | timestamptz nullable |
-
-### 5.3 `properties`
+**landlord_profiles** (1:1 with `users` where role=Landlord)
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| landlord_id | uuid FK → users.id, cascade |
-| name | text not null |
-| address | text not null |
-| description | text nullable |
-| default_electricity_rate | numeric(12,2) nullable | VND per kWh, overridable at room level |
-| default_water_rate | numeric(12,2) nullable | VND per m³ or per person, see `water_billing_method` |
-| water_billing_method | enum('per_m3','per_person') default 'per_m3' |
+| userId | uuid PK, FK users | |
+| fullName | text | |
+| email | text UNIQUE | = username for landlords |
+| phone | text nullable | |
 
-### 5.4 `rooms`
+**landlord_payment_configs** (1:1, US-VIETQR-01)
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| property_id | uuid FK → properties.id, cascade |
-| name | text not null | e.g. "Room 101" |
-| base_rent | numeric(12,2) not null |
-| electricity_rate_override | numeric(12,2) nullable |
-| water_rate_override | numeric(12,2) nullable |
-| status | enum('vacant','occupied') default 'vacant' | derived/kept in sync by lease lifecycle triggers (see §5.6) |
+| landlordId | uuid PK, FK users | |
+| bankCode | text | VietQR bank BIN/code |
+| accountNumber | text | |
+| accountHolderName | text | |
+| updatedAt | timestamptz | |
 
-Unique constraint: `(property_id, name)`.
-
-### 5.5 `tenant_profiles`
-> Business-facing tenant record managed by the landlord. Distinct from `users` — a tenant_profile may or may not be linked to a login account yet.
-
+**tenant_info** (US-TENANT-01, US-TENANT-02) — *soft-deletable*
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| landlord_id | uuid FK → users.id, cascade |
-| user_id | uuid FK → users.id, nullable, unique | set once tenant links/creates a login |
-| full_name | text not null |
-| phone | text not null |
-| id_card_number | text not null |
-| email | text nullable |
+| id | uuid PK | |
+| fullName | text | |
+| phone | text UNIQUE (active rows) | = username on provisioned account |
+| email | text UNIQUE (active rows) | required, used for credential delivery |
+| idNumber | text UNIQUE (active rows) | |
+| userId | uuid nullable, FK users UNIQUE | set once account is provisioned |
+| createdByLandlordId | uuid, FK users | who created it (via lease flow) |
 
-Unique constraint: `(landlord_id, id_card_number)` — enforces "no duplicate tenant within the same landlord portfolio" (F-03 AC).
-
-### 5.6 `leases`
+**properties** (US-PROPERTY-01/02) — *soft-deletable*
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| room_id | uuid FK → rooms.id, restrict |
-| tenant_profile_id | uuid FK → tenant_profiles.id, restrict |
-| start_date | date not null |
-| end_date | date not null |
-| rent_amount | numeric(12,2) not null | snapshot of agreed rent, may differ from room.base_rent |
-| deposit_amount | numeric(12,2) default 0 |
-| status | enum('active','ended','terminated') default 'active' |
-| renewal_reminder_sent_at | timestamptz nullable |
+| id | uuid PK | |
+| landlordId | uuid, FK users | |
+| name | text | UNIQUE(landlordId, name) active rows |
+| address | text | UNIQUE(landlordId, address) active rows |
 
-Business rule enforced in `leases.service.ts` (not DB-level, since Postgres exclusion constraints on date ranges add complexity out of scope for MVP): a room may have at most one lease with `status = 'active'` at a time. On lease creation, service sets `rooms.status = 'occupied'`; on lease end/termination, service sets `rooms.status = 'vacant'` if no other active lease exists.
-
-### 5.7 `meter_readings`
+**rooms** (US-ROOM-01/02/03) — *soft-deletable*
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| room_id | uuid FK → rooms.id, cascade |
-| period | date not null | normalized to first day of month, e.g. `2026-07-01` |
-| electricity_reading | numeric(12,2) not null |
-| water_reading | numeric(12,2) not null |
-| recorded_by | uuid FK → users.id | landlord who entered it |
+| id | uuid PK | |
+| propertyId | uuid, FK properties | |
+| name | text | UNIQUE(propertyId, name) active rows |
+| baseRent | integer (VND) | ≥ 0 |
 
-Unique constraint: `(room_id, period)`.
-
-### 5.8 `invoices`
+**utility_rate_history** (US-UTILITY-01/02) — append rows, never update in place; "current" = latest row with `effectiveFrom <= today` and no later row
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| lease_id | uuid FK → leases.id, restrict |
-| room_id | uuid FK → rooms.id, restrict | denormalized for query convenience |
-| period | date not null | billing month |
-| rent_amount | numeric(12,2) not null |
-| electricity_amount | numeric(12,2) not null default 0 |
-| water_amount | numeric(12,2) not null default 0 |
-| other_fees_amount | numeric(12,2) not null default 0 |
-| other_fees_note | text nullable |
-| total_amount | numeric(12,2) not null | = sum of above, computed in service layer on write |
-| due_date | date not null |
-| status | enum('unpaid','paid','overdue') default 'unpaid' |
-| paid_at | timestamptz nullable |
+| id | uuid PK | |
+| propertyId | uuid, FK properties | |
+| electricityRatePerKwh | integer (VND) | |
+| waterBillingMethod | enum(`Metered`,`Flat`) | |
+| waterRatePerM3 | integer nullable | required if Metered |
+| waterFlatAmountPerTenant | integer nullable | required if Flat |
+| effectiveFrom | date | |
+| createdBy | uuid, FK users | |
 
-Unique constraint: `(lease_id, period)`.
-
-### 5.9 `invoice_items` *(optional normalization — MVP may keep amounts flat on `invoices` per above; use this table only if the team wants a fully itemized, extensible line-item model)*
-| Column | Type |
-|---|---|
-| id | uuid PK |
-| invoice_id | uuid FK → invoices.id, cascade |
-| label | text not null |
-| amount | numeric(12,2) not null |
-
-> Recommendation: start with the flat columns on `invoices` (§5.8) for MVP speed; introduce `invoice_items` only if "additional fees" need to become multi-line.
-
-### 5.10 `payments`
+**regulatory_rate_defaults** (PD-03, seed data) — read-only reference table
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| invoice_id | uuid FK → invoices.id, cascade, unique | one payment record per invoice in MVP |
-| proof_image_url | text nullable | Supabase Storage URL |
-| proof_uploaded_at | timestamptz nullable |
-| verified_by | uuid FK → users.id, nullable | landlord who confirmed |
-| verified_at | timestamptz nullable |
-| status | enum('pending_proof','pending_verification','verified') default 'pending_proof' |
+| id | uuid PK | |
+| utilityType | enum(`Electricity`,`Water`) | |
+| locality | text | province/city code |
+| method | enum(`Metered`,`Flat`) | |
+| ratePerUnit | integer (VND) | |
+| sourceReference | text | official document URL/citation |
+| effectiveFrom | date | |
+| effectiveTo | date nullable | |
 
-### 5.11 `maintenance_requests`
+**surcharges** (US-CHARGE-01) — *soft-deletable*
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| room_id | uuid FK → rooms.id, restrict |
-| tenant_profile_id | uuid FK → tenant_profiles.id, restrict |
-| title | text not null |
-| description | text not null |
-| photo_urls | text[] | max 3 enforced in service layer |
-| status | enum('pending','in_progress','completed') default 'pending' |
+| id | uuid PK | |
+| propertyId | uuid, FK properties | |
+| name | text | UNIQUE(propertyId, name, active + overlapping period) |
+| monthlyAmount | integer (VND) | ≥ 0 |
+| effectiveFrom | date | |
+| effectiveTo | date nullable | |
+| active | boolean default true | deactivated prospectively without deleting |
+| createdBy | uuid, FK users | |
 
-### 5.12 `maintenance_status_logs`
-| Column | Type |
-|---|---|
-| id | uuid PK |
-| maintenance_request_id | uuid FK → maintenance_requests.id, cascade |
-| status | enum('pending','in_progress','completed') |
-| changed_by | uuid FK → users.id |
-| changed_at | timestamptz default now() |
-
-### 5.13 `notifications`
+**leases** (US-LEASE-01..06) — *soft-deletable (archival only, not for Ended/Expired)*
 | Column | Type | Notes |
 |---|---|---|
-| id | uuid PK |
-| user_id | uuid FK → users.id, cascade |
-| type | enum('payment_reminder','lease_renewal','maintenance_update','payment_proof_uploaded','invoice_generated') |
-| title | text not null |
-| body | text not null |
-| entity_type | text nullable | e.g. `'invoice'`, `'lease'`, `'maintenance_request'` |
-| entity_id | uuid nullable | id of related record, for deep-linking |
-| is_read | boolean default false |
-| channel | enum('in_app','email','both') default 'in_app' |
+| id | uuid PK | |
+| roomId | uuid, FK rooms | |
+| tenantInfoId | uuid, FK tenant_info | |
+| startDate | date | |
+| endDate | date | planned end; > startDate |
+| actualEndDate | date nullable | set when lease is ended early/on schedule |
+| agreedRent | integer (VND) | |
+| deposit | integer (VND) | |
+| status | enum(`Active`,`Ended`,`Expired`) | |
+| createdBy | uuid, FK users | |
+| endedBy | uuid nullable, FK users | |
+| endedAt | timestamptz nullable | |
 
-### 5.14 Entity Relationship Summary
+No two `Active` leases for the same `roomId` may have overlapping `[startDate, endDate]` ranges — enforced at the service layer with an explicit overlap query inside the creation/renewal transaction (Postgres exclusion constraints are an acceptable alternative if the team is comfortable with `btree_gist`).
 
-```
-users (landlord) 1──* properties 1──* rooms 1──* leases *──1 tenant_profiles
-rooms 1──* meter_readings
-leases 1──* invoices 1──1 payments
-rooms 1──* maintenance_requests 1──* maintenance_status_logs
-tenant_profiles ?──1 users (tenant login, nullable link)
-users 1──* notifications
-```
+**lease_reminder_configs** (US-LEASE-05)
+| Column | Type | Notes |
+|---|---|---|
+| propertyId | uuid PK, FK properties | |
+| remindAt7Days | boolean default false | |
+| remindAt3Days | boolean default false | |
+| remindAt1Day | boolean default false | |
+
+**meter_readings** (US-METER-01/02/03)
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| roomId | uuid, FK rooms | |
+| utilityType | enum(`Electricity`,`Water`) | |
+| billingPeriod | text (`YYYY-MM`) | UNIQUE(roomId, utilityType, billingPeriod) |
+| value | numeric | current reading, ≥ 0, ≥ previous reading |
+| isInitial | boolean default false | true for the first-ever reading of a room+utility |
+| correctionOf | uuid nullable, FK meter_readings(id) | self-reference to the reading this replaces |
+| recordedBy | uuid, FK users | |
+
+Corrections (US-METER-03) never overwrite a row; they insert a new row with `correctionOf` pointing at the original, and the original is marked superseded (e.g. `supersededAt`). The "current" reading for a period is the latest non-superseded row.
+
+**invoices** (US-INVOICE-01..04) — *soft-deletable (rare/admin only)*
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| leaseId | uuid, FK leases | |
+| roomId | uuid, FK rooms | denormalized for query convenience |
+| billingPeriod | text (`YYYY-MM`) | UNIQUE(leaseId, billingPeriod) active rows |
+| status | enum(`Draft`,`Sent`,`Paid`) | |
+| issueDate | date | |
+| dueDate | date | |
+| totalAmount | integer (VND) | = sum of line items |
+| skipReason | text nullable | populated only on skipped-room log, not on the invoice itself (see US-INVOICE-01 skip log below) |
+| sentBy | uuid nullable, FK users | |
+| sentAt | timestamptz nullable | |
+
+**invoice_generation_skips** (audit trail for US-INVOICE-01's "skip reason recorded")
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| leaseId | uuid, FK leases | |
+| billingPeriod | text | |
+| reason | text | e.g. "missing electricity reading" |
+| createdAt | timestamptz | |
+
+**invoice_line_items**
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| invoiceId | uuid, FK invoices | |
+| type | enum(`Rent`,`Electricity`,`Water`,`Surcharge`) | |
+| description | text | e.g. surcharge name, or "Electricity (120 kWh × 3,500₫)" |
+| quantity | numeric nullable | consumption or tenant count, when applicable |
+| unitRate | integer nullable (VND) | rate/price used, snapshotted |
+| amount | integer (VND) | line total, after `roundVnd` |
+| sourceRateId | uuid nullable | FK to `utility_rate_history` / `regulatory_rate_defaults` / `surcharges` used, for reproducibility |
+
+**payment_proofs** (US-PAYMENT-01)
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| invoiceId | uuid, FK invoices | |
+| tenantInfoId | uuid, FK tenant_info | |
+| fileUrl | text | Supabase Storage path |
+| status | enum(`Pending`,`Verified`) default `Pending` | |
+| uploadedAt | timestamptz | |
+
+**payments** (US-PAYMENT-02) — one row per invoice, ever
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| invoiceId | uuid UNIQUE, FK invoices | |
+| proofId | uuid nullable, FK payment_proofs | |
+| amount | integer (VND) | = invoice.totalAmount at verification time |
+| verifiedBy | uuid, FK users | |
+| verifiedAt | timestamptz | |
+
+**maintenance_requests** (US-MAINT-01..05) — *soft-deletable*
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| roomId | uuid, FK rooms | |
+| tenantInfoId | uuid, FK tenant_info | requester |
+| title | text | |
+| description | text | |
+| status | enum(`Pending`,`InProgress`,`Completed`) default `Pending` | |
+| submittedAt | timestamptz | |
+| completedAt | timestamptz nullable | set on transition to `Completed` |
+
+**maintenance_photos**
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| requestId | uuid, FK maintenance_requests | |
+| fileUrl | text | max 3 per request, enforced at service layer |
+
+**maintenance_status_history**
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| requestId | uuid, FK maintenance_requests | |
+| fromStatus | text | |
+| toStatus | text | |
+| changedBy | uuid, FK users | |
+| changedAt | timestamptz | |
+
+**notifications** (cross-cutting; backs US-REMINDER-*, US-LEASE-05, and every "sends a push notification" acceptance criterion)
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| userId | uuid, FK users | recipient |
+| type | text | e.g. `invoice.sent`, `payment.overdue`, `lease.expiring`, `maintenance.statusChanged` |
+| title | text | |
+| body | text | |
+| linkRef | text | deep-link target (e.g. `invoice:{id}`) |
+| channel | enum(`Push`) | push-only for MVP (PD-05) |
+| deliveryStatus | enum(`Sent`,`Failed`) | |
+| dedupeKey | text | e.g. `overdue:{invoiceId}:{YYYY-MM-DD}` — used to enforce §4.5 idempotency |
+| createdAt | timestamptz | |
+
+**device_tokens** (technical baseline, not a numbered story but required for push notifications)
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| userId | uuid, FK users | |
+| fcmToken | text UNIQUE | |
+| platform | enum(`ios`,`android`) | |
+| createdAt | timestamptz | |
+
+**audit_events** — see §4.3.
 
 ---
 
-## 6. Authentication & Authorization
+## 6. Notification Delivery
 
-- **Signup/login** issue an **access token** (15 min, JWT, contains `sub`, `role`, `email/phone`) and a **refresh token** (30 days, stored hashed in a `refresh_tokens` table so it can be revoked on logout).
-- Access token sent as `Authorization: Bearer <token>`; refresh token delivered as an `httpOnly` cookie (web) or secure storage (mobile).
-- `middleware/auth.middleware.ts` verifies the access token and attaches `req.user = { id, role }`.
-- `middleware/rbac.middleware.ts` takes an allowed-roles array, e.g. `requireRole('landlord')`, and is applied per-route.
-- **Ownership checks** (a landlord can only touch their own properties; a tenant can only touch their own lease/invoices) happen in the **service layer**, not just RBAC — RBAC only checks role, not resource ownership. Every service function that loads a resource by id must also verify `resource.landlordId === req.user.id` (or the tenant equivalent) and throw a `ForbiddenError` (mapped to HTTP 403) otherwise.
-- Password reset: generate a random token, store its SHA-256 hash + 1-hour expiry in `password_reset_tokens`, email/SMS a link containing the raw token, verify by re-hashing on submit.
+Single internal service `NotificationService.send(userId, type, title, body, linkRef, dedupeKey?)`:
+1. If `dedupeKey` is provided and a `notifications` row with that key already exists, no-op (idempotency, §4.5).
+2. Insert the `notifications` row.
+3. Look up the user's `device_tokens`; send via FCM to each; set `deliveryStatus` based on the FCM response.
+4. Never throw out of the caller's transaction — notification delivery failures must not roll back the business operation that triggered them (e.g. an invoice must stay `Sent` even if the push fails). Log failures for later inspection.
 
----
-
-## 7. API Design Conventions
-
-### 7.1 Base URL & versioning
-`https://api.rosihome.dev/v1/...` — all routes prefixed `/v1`.
-
-### 7.2 Response envelope
-
-Success:
-```json
-{ "success": true, "data": { ... }, "meta": { "page": 1, "pageSize": 20, "total": 42 } }
-```
-`meta` only present on paginated list endpoints.
-
-Error:
-```json
-{ "success": false, "error": { "code": "VALIDATION_ERROR", "message": "email is invalid", "details": [ { "field": "email", "issue": "Invalid email" } ] } }
-```
-
-### 7.3 Standard error codes → HTTP status
-
-| code | status |
-|---|---|
-| VALIDATION_ERROR | 400 |
-| UNAUTHENTICATED | 401 |
-| FORBIDDEN | 403 |
-| NOT_FOUND | 404 |
-| CONFLICT | 409 |
-| INTERNAL_ERROR | 500 |
-
-`middleware/error.middleware.ts` is the single place that maps thrown error classes (`ValidationError`, `UnauthenticatedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`) to this envelope. Controllers/services just `throw new NotFoundError('Room not found')`.
-
-### 7.4 Pagination
-
-List endpoints accept `?page=1&pageSize=20` (defaults shown), return `meta.total` for client-side pagination controls.
-
-### 7.5 File uploads
-
-`multipart/form-data`, handled by `multer` in memory storage, then streamed to the relevant Supabase Storage bucket. Validation (file type, size) happens in `middleware/upload.middleware.ts` before hitting the controller — reject anything other than `image/png`, `image/jpeg`, `image/jpg`; enforce 5MB max for payment proofs, no explicit cap stated for maintenance/meter photos so default to the same 5MB/file limit for consistency.
+All "sends a mobile push notification" acceptance criteria call this one service — do not build a second notification pathway.
 
 ---
 
-## 8. VietQR Generation
+## 7. VietQR Integration
 
-Use the public VietQR quick-link image API (no merchant account required, matches "RosiHome never touches tenant money" constraint):
-
-```
-GET https://img.vietqr.io/image/{BANK_ID}-{ACCOUNT_NO}-{TEMPLATE}.png?amount={AMOUNT}&addInfo={MESSAGE}&accountName={ACCOUNT_NAME}
-```
-
-- `BANK_ID`: landlord's bank BIN/short code, stored on the `users` table (landlord) as `bank_id`, `bank_account_no`, `bank_account_name` — **add these three columns to `users`**, nullable, required only before the first invoice can be generated (validate in `invoices.service.ts`).
-- `TEMPLATE`: fixed value `compact2`.
-- `AMOUNT`: `invoices.total_amount`.
-- `MESSAGE` (`addInfo`): generated as `RH {roomName} T{MM}{YYYY}` (e.g. `RH P101 T072026`) — must be deterministic and parseable in case of future reconciliation automation.
-
-`lib/vietqr.ts` exports `buildVietQrUrl(invoice, room, landlord): string`, pure function, unit-tested with fixed inputs/outputs.
+- RosiHome **never** touches or holds money (Assumption in vision doc). It only renders a QR code.
+- Payload built server-side per the VietQR (EMVCo QR) spec using: landlord's `bankCode`, `accountNumber`, `accountHolderName` (from `landlord_payment_configs`), the invoice's exact `totalAmount`, and a **deterministic transfer description**: `RH {roomName} {billingPeriod}` (sanitized to the character set VietQR/bank apps accept, no diacritics, max length per spec).
+- Render as PNG/SVG server-side (`qrcode` package) or return the raw payload string and let the mobile app render it — either is acceptable; document the choice in the endpoint response (`GET /invoices/:id/vietqr` returns `{ payload, imageUrl }`).
+- Before marking US-VIETQR-02 done, validate the payload against at least one real VietQR-compatible banking app or the VietQR public sandbox (see acceptance criteria).
+- QR generation/display never changes invoice or payment state (read-only, idempotent, can be called any number of times).
 
 ---
 
-## 9. Scheduled Jobs (`apps/api/src/jobs/`)
+## 8. Scheduled Jobs
 
-| Job | Schedule | Responsibility |
-|---|---|---|
-| `generate-monthly-invoices.job.ts` | Daily 00:10, filters leases whose billing day matches today | For each active lease due for billing, requires a meter reading for the current period to already exist; if missing, creates an in-app notification to the landlord instead of an invoice |
-| `lease-renewal-reminder.job.ts` | Daily 06:00 | Leases where `end_date - today = 30` and `renewal_reminder_sent_at IS NULL` → notify landlord + tenant, stamp `renewal_reminder_sent_at` |
-| `payment-reminder.job.ts` | Daily 08:00 | Invoices `status = 'unpaid'` and `due_date < today` → mark `status = 'overdue'`, send reminder notification |
+All jobs live in `/backend/src/jobs`, one file each, registered in `server.ts` via `node-cron`. Each job is also exposed as an internal function callable directly (for tests / manual trigger), not only as a cron callback.
 
-All jobs are plain functions callable both by `node-cron` in-process scheduling and by an npm script (`npm run job:invoices`) so they can alternatively run as external cron triggers (e.g. Render Cron Jobs) if in-process scheduling proves unreliable on the chosen free-tier host.
-
----
-
-## 10. Testing Strategy
-
-- **Unit tests** (Vitest): every `*.service.ts` function, and pure helpers (`vietqr.ts`, utility calculation, invoice total calculation). Repositories are mocked.
-- **Integration tests** (Supertest + a disposable test Postgres schema): one test file per module hitting real routes end-to-end through the DB, covering the Acceptance Criteria in `02-FEATURE-SPECS.md` directly — each AC should map to at least one assertion.
-- **E2E tests** (Playwright, web only for MVP): critical paths — landlord onboarding → create property/room/tenant/lease → generate invoice → tenant views invoice; tenant uploads proof → landlord verifies.
-- CI runs unit + integration on every PR; E2E runs on merge to `main`.
+| Job | Schedule | Story | Behavior summary |
+|---|---|---|---|
+| `generateMonthlyInvoices` | Daily (checks each property's configured billing day) | US-INVOICE-01 | For each active lease whose billing period isn't yet invoiced, checks required readings exist; creates `Draft` invoice + line items, or logs a skip. Idempotent per §4.5. |
+| `sendOverdueReminders` | Daily | US-REMINDER-01 | Finds `Sent` invoices past `dueDate` with no `payments` row; sends a deduped push per invoice per day (or per configured frequency). |
+| `sendLeaseExpirationReminders` | Daily | US-LEASE-05 | For each property with `lease_reminder_configs`, finds active leases whose `endDate` is exactly 7/3/1 days out (per enabled flags) and notifies landlord + tenant, deduped by `(leaseId, ruleDay)`. |
 
 ---
 
-## 11. CI/CD (GitHub Actions)
+## 9. File Uploads
 
-`.github/workflows/ci.yml`: on PR — install → `tsc --noEmit` → `eslint` → `vitest run` (unit + integration against a Postgres service container) → build.
-`.github/workflows/deploy.yml`: on push to `main` — build → run `drizzle-kit migrate` against production DB → deploy API to Render/Railway → deploy web to Vercel.
+- Accepted image types: `.png`, `.jpg`, `.jpeg` only, validated by both extension and actual MIME sniffing (not just the client-supplied `Content-Type`).
+- Size limits: payment proof ≤ 5 MB (US-PAYMENT-01); maintenance photos use the team-selected limit, recommend 5 MB each, max 3 per request (US-MAINT-01).
+- Upload flow: multipart POST to the backend → backend validates → backend streams to the appropriate Supabase Storage bucket → backend stores only the storage path/URL in Postgres, never the binary.
+- Access to a stored file is always mediated by the API (short-lived signed URL or an authenticated proxy endpoint) — never a public bucket — so ownership checks (§3.3) apply to file access too.
+- Rejected uploads must not leave orphaned files in storage: validate before upload, or delete-on-failure if the storage write happens first.
 
 ---
 
-## 12. Notification Delivery
+## 10. PDF Generation (US-INVOICE-03, US-REPORT-05)
 
-`notifications.service.ts` exposes `createNotification(userId, type, title, body, entity?)` which always writes an in-app row, and — if `channel` includes `'email'` — enqueues an email via `lib/mailer.ts` (Nodemailer + SMTP). Keep delivery synchronous for MVP (no queue infra); wrap in try/catch so an email failure never blocks the triggering request/job.
+- Library: `pdfkit`. One generator function per document type: `generateInvoicePdf(invoice)`, `generateReportPdf(report)`.
+- Content must mirror exactly what the corresponding JSON/API view shows (billing identity, line items, total, due date, status for invoices; all report metrics for reports) — generate the PDF from the same service-layer data object used for the JSON response, not from a separately re-fetched/re-computed source, to avoid drift.
+- PDFs are generated on-demand (not pre-rendered/stored) and streamed back with `Content-Type: application/pdf`.
+
+---
+
+## 11. Testing Strategy
+
+**Deferred.** Automated testing (unit/integration) is out of scope for the current build phase and will be added in a future iteration of this document. Coding agents should **not** scaffold test files, test runners, or CI test steps unless explicitly asked. Structure code so it *remains* testable later (business logic isolated in `service.ts`, no logic embedded in route handlers — see §1.2) even though tests aren't being written now.
+
+---
+
+## 12. Configuration & Environments
+
+- `.env` (never committed) drives: `DATABASE_URL` (Supabase Postgres connection string — pooled connection recommended for the API, direct connection for migrations), `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (used for Supabase Storage access), `FCM_SERVER_KEY`, `EMAIL_PROVIDER_API_KEY`, `NODE_ENV`.
+- The Supabase project is the database for every environment: use a **separate Supabase project per environment** (development / staging-integration / production) rather than separate databases within one project, so storage buckets and auth-adjacent settings don't leak across environments.
+- Database migrations are managed with Drizzle Kit against the Supabase Postgres instance; every schema change ships as a migration file committed to `/backend/src/db/migrations` and applied via `drizzle-kit push`/`migrate` — never hand-edit the schema through the Supabase dashboard (Global DoD: "reproducible" migrations).
