@@ -1,0 +1,23 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env (never commit)
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+dist/
+build/
+node_modules/
+.expo/
+ios/
+android/
+web-build/

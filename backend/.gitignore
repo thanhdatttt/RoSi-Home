@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Env / secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Firebase service-account JSON (defense-in-depth; .env already ignored)
+firebase-service-account.json
+firebase-*.json
+
+# Coverage / OS
+coverage/
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
