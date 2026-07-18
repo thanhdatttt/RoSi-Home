@@ -2,6 +2,11 @@ import "dotenv/config";
 import express from "express";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./modules/auth/router.js";
+import { propertiesRouter } from "./modules/properties/router.js";
+import { roomsRouter } from "./modules/rooms/router.js";
+import { tenantsRouter } from "./modules/tenants/router.js";
+import { utilitiesRouter } from "./modules/utilities/router.js";
+import { chargesRouter } from "./modules/charges/router.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -13,6 +18,11 @@ export function createApp(): express.Express {
   });
 
   app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/properties", propertiesRouter);
+  app.use("/api/v1/tenants", tenantsRouter);
+  app.use("/api/v1", roomsRouter);
+  app.use("/api/v1", utilitiesRouter);
+  app.use("/api/v1", chargesRouter);
 
   app.use(errorHandler);
   return app;
