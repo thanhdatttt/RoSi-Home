@@ -2,6 +2,8 @@ import {
   boolean,
   date,
   decimal,
+  index,
+  jsonb,
   pgEnum,
   integer,
   pgTable,
@@ -192,7 +194,7 @@ export const surcharges = pgTable(
     ...softDelete,
   },
   (t) => ({
-    uniqueNameActive: uniqueIndex("surcharges_name_active")
+    activeNameLookup: index("surcharges_name_active")
       .on(t.propertyId, t.name)
       .where(sql`${t.deletedAt} IS NULL AND ${t.active} = true`),
   }),
@@ -429,8 +431,8 @@ export const auditEvents = pgTable("audit_events", {
   action: text("action").notNull(),
   entityType: text("entity_type").notNull(),
   entityId: uuid("entity_id").notNull(),
-  beforeValue: text("before_value"),
-  afterValue: text("after_value"),
+  beforeValue: jsonb("before_value"),
+  afterValue: jsonb("after_value"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

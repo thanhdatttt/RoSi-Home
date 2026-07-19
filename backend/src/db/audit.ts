@@ -13,14 +13,17 @@ export type AuditEntry = {
   afterValue?: unknown;
 };
 
-export async function writeAudit(entry: AuditEntry): Promise<void> {
-  await db.insert(auditEvents).values({
+export async function writeAudit(
+  entry: AuditEntry,
+  executor: typeof db = db,
+): Promise<void> {
+  await executor.insert(auditEvents).values({
     actorUserId: entry.actorUserId ?? null,
     action: entry.action,
     entityType: entry.entityType,
     entityId: entry.entityId,
-    beforeValue: entry.beforeValue === undefined ? null : JSON.stringify(entry.beforeValue),
-    afterValue: entry.afterValue === undefined ? null : JSON.stringify(entry.afterValue),
+    beforeValue: entry.beforeValue ?? null,
+    afterValue: entry.afterValue ?? null,
   });
 }
 

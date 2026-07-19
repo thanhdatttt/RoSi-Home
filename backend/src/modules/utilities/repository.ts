@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { utilityRateHistory } from "../../db/schema.js";
 import { findProperty } from "../properties/repository.js";
@@ -19,8 +19,9 @@ export async function createUtilityRate(
   propertyId: string,
   createdBy: string,
   input: UtilityRateInput,
+  executor: typeof db = db,
 ): Promise<UtilityRateRow> {
-  const [row] = await db
+  const [row] = await executor
     .insert(utilityRateHistory)
     .values({
       propertyId,
@@ -48,7 +49,11 @@ export async function getCurrentRate(
         sql`${utilityRateHistory.effectiveFrom} <= ${today}`,
       ),
     )
-    .orderBy(desc(utilityRateHistory.effectiveFrom))
+    .orderBy(
+      desc(utilityRateHistory.effectiveFrom),
+      desc(utilityRateHistory.createdAt),
+      desc(utilityRateHistory.id),
+    )
     .limit(1);
   return row ?? null;
 }

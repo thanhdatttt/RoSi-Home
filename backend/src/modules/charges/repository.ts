@@ -1,4 +1,4 @@
-import { and, asc, eq, getTableColumns, isNull } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { properties, surcharges } from "../../db/schema.js";
 import { findProperty } from "../properties/repository.js";
@@ -19,8 +19,9 @@ export async function createSurcharge(
   propertyId: string,
   createdBy: string,
   input: CreateSurchargeInput,
+  executor: typeof db = db,
 ): Promise<SurchargeRow> {
-  const [row] = await db
+  const [row] = await executor
     .insert(surcharges)
     .values({
       propertyId,
@@ -51,8 +52,9 @@ export async function listActiveSurcharges(propertyId: string): Promise<Surcharg
 export async function findActiveSurchargesByName(
   propertyId: string,
   name: string,
+  executor: typeof db = db,
 ): Promise<SurchargeRow[]> {
-  return db
+  return executor
     .select()
     .from(surcharges)
     .where(
@@ -65,11 +67,23 @@ export async function findActiveSurchargesByName(
     );
 }
 
+export async function lockSurchargeName(
+  propertyId: string,
+  name: string,
+  executor: typeof db = db,
+): Promise<void> {
+  const lockKey = `${propertyId}:${name}`;
+  await executor.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`,
+  );
+}
+
 export async function findSurchargeScoped(
   id: string,
   landlordId: string,
+  executor: typeof db = db,
 ): Promise<SurchargeRow | null> {
-  const [row] = await db
+  const [row] = await executor
     .select({ ...getTableColumns(surcharges) })
     .from(surcharges)
     .innerJoin(properties, eq(surcharges.propertyId, properties.id))
@@ -87,10 +101,11 @@ export async function findSurchargeScoped(
 export async function updateSurcharge(
   id: string,
   input: UpdateSurchargeInput,
+  executor: typeof db = db,
 ): Promise<SurchargeRow | null> {
-  const [row] = await db
+  const [row] = await executor
     .update(surcharges)
-    .set(input)
+    .set({ ...input, updatedAt: new Date() })
     .where(and(eq(surcharges.id, id), isNull(surcharges.deletedAt)))
     .returning();
   return row ?? null;
@@ -99,9 +114,15 @@ export async function updateSurcharge(
 export async function softDeleteSurcharge(
   id: string,
   deletedBy: string,
+  executor: typeof db = db,
 ): Promise<void> {
-  await db
+  await executor
     .update(surcharges)
-    .set({ active: false, deletedAt: new Date(), deletedBy })
+    .set({
+      active: false,
+      deletedAt: new Date(),
+      deletedBy,
+      updatedAt: new Date(),
+    })
     .where(and(eq(surcharges.id, id), isNull(surcharges.deletedAt)));
 }
