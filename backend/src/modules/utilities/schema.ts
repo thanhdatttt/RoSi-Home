@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+const dateStr = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "effectiveFrom must be YYYY-MM-DD.")
+  .refine(
+    (value) => {
+      const parsed = new Date(`${value}T00:00:00.000Z`);
+      return (
+        !Number.isNaN(parsed.getTime()) &&
+        parsed.toISOString().slice(0, 10) === value
+      );
+    },
+    { message: "effectiveFrom must be a valid calendar date." },
+  );
+
 export const utilityRateSchema = z
   .object({
     electricityRatePerKwh: z
@@ -19,43 +33,8 @@ export const utilityRateSchema = z
       .min(0, "Amount cannot be negative.")
       .nullable()
       .optional(),
-    effectiveFrom: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "effectiveFrom must be YYYY-MM-DD."),
+    effectiveFrom: dateStr,
   })
-  .strict()
-  .superRefine((val, ctx) => {
-    if (val.waterBillingMethod === "Metered") {
-      if (val.waterRatePerM3 === undefined || val.waterRatePerM3 === null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["waterRatePerM3"],
-          message: "waterRatePerM3 is required when method is Metered.",
-        });
-      }
-      if (val.waterFlatAmountPerTenant !== undefined && val.waterFlatAmountPerTenant !== null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["waterFlatAmountPerTenant"],
-          message: "waterFlatAmountPerTenant must be omitted for Metered.",
-        });
-      }
-    } else {
-      if (val.waterFlatAmountPerTenant === undefined || val.waterFlatAmountPerTenant === null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["waterFlatAmountPerTenant"],
-          message: "waterFlatAmountPerTenant is required when method is Flat.",
-        });
-      }
-      if (val.waterRatePerM3 !== undefined && val.waterRatePerM3 !== null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["waterRatePerM3"],
-          message: "waterRatePerM3 must be omitted for Flat.",
-        });
-      }
-    }
-  });
+  .strict();
 
 export type UtilityRateInput = z.infer<typeof utilityRateSchema>;

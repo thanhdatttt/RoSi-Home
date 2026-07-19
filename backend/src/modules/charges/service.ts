@@ -1,17 +1,23 @@
-import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import {
+  ConflictError,
+  NotFoundError,
+} from "../../lib/errors.js";
 import { type Paginated, type Pagination, paginate } from "../../lib/pagination.js";
 import { writeAudit } from "../../db/audit.js";
+import { db } from "../../db/index.js";
 import {
   assertPropertyOwned,
   createSurcharge,
   findActiveSurchargesByName,
   findSurchargeScoped,
+  lockSurchargeName,
   listActiveSurcharges,
   softDeleteSurcharge,
   updateSurcharge,
   type SurchargeRow,
 } from "./repository.js";
 import type { CreateSurchargeInput, UpdateSurchargeInput } from "./schema.js";
+import { assertSurchargePeriod, rangesOverlap } from "./rules.js";
 
 export type SurchargeView = {
   id: string;
@@ -30,19 +36,6 @@ function toDateStr(d: Date | string | null | undefined): string | null {
   if (d === null || d === undefined) return null;
   if (typeof d === "string") return d;
   return d.toISOString().slice(0, 10);
-}
-
-// Two [start, end] ranges overlap when each starts before or on the other's end.
-// A null end means "+infinity".
-function rangesOverlap(
-  s1: string,
-  e1: string | null,
-  s2: string,
-  e2: string | null,
-): boolean {
-  const end1 = e1 ?? "9999-12-31";
-  const end2 = e2 ?? "9999-12-31";
-  return s1 <= end2 && s2 <= end1;
 }
 
 function serialize(row: SurchargeRow): SurchargeView {
@@ -66,29 +59,43 @@ export async function createSurchargeService(
   input: CreateSurchargeInput,
 ): Promise<SurchargeView> {
   await assertPropertyOwned(propertyId, landlordId);
-  const sameName = await findActiveSurchargesByName(propertyId, input.name);
-  for (const s of sameName) {
-    if (
-      rangesOverlap(
-        input.effectiveFrom,
-        input.effectiveTo ?? null,
-        toDateStr(s.effectiveFrom)!,
-        toDateStr(s.effectiveTo),
-      )
-    ) {
-      throw new ConflictError(
-        "An active surcharge with this name already covers an overlapping period.",
-      );
+  assertSurchargePeriod(input.effectiveFrom, input.effectiveTo ?? null);
+
+  return db.transaction(async (rawTrx) => {
+    const trx = rawTrx as unknown as typeof db;
+    await lockSurchargeName(propertyId, input.name, trx);
+    const sameName = await findActiveSurchargesByName(
+      propertyId,
+      input.name,
+      trx,
+    );
+    for (const surcharge of sameName) {
+      if (
+        rangesOverlap(
+          input.effectiveFrom,
+          input.effectiveTo ?? null,
+          toDateStr(surcharge.effectiveFrom)!,
+          toDateStr(surcharge.effectiveTo),
+        )
+      ) {
+        throw new ConflictError(
+          "An active surcharge with this name already covers an overlapping period.",
+        );
+      }
     }
-  }
-  const row = await createSurcharge(propertyId, landlordId, input);
-  await writeAudit({
-    actorUserId: landlordId,
-    action: "surcharge.created",
-    entityType: "surcharges",
-    entityId: row.id,
+
+    const row = await createSurcharge(propertyId, landlordId, input, trx);
+    await writeAudit(
+      {
+        actorUserId: landlordId,
+        action: "surcharge.created",
+        entityType: "surcharges",
+        entityId: row.id,
+      },
+      trx,
+    );
+    return serialize(row);
   });
-  return serialize(row);
 }
 
 export async function listSurchargesService(
@@ -109,63 +116,88 @@ export async function updateSurchargeService(
   id: string,
   input: UpdateSurchargeInput,
 ): Promise<SurchargeView> {
-  const existing = await findSurchargeScoped(id, landlordId);
-  if (!existing) throw new NotFoundError("Surcharge not found.");
+  return db.transaction(async (rawTrx) => {
+    const trx = rawTrx as unknown as typeof db;
+    const existing = await findSurchargeScoped(id, landlordId, trx);
+    if (!existing) throw new NotFoundError("Surcharge not found.");
 
-  const newName = input.name ?? existing.name;
-  const newFrom = input.effectiveFrom ?? toDateStr(existing.effectiveFrom)!;
-  const newTo = input.effectiveTo !== undefined ? input.effectiveTo : toDateStr(existing.effectiveTo);
+    const newName = input.name ?? existing.name;
+    const newFrom = input.effectiveFrom ?? toDateStr(existing.effectiveFrom)!;
+    const newTo =
+      input.effectiveTo !== undefined
+        ? input.effectiveTo
+        : toDateStr(existing.effectiveTo);
+    assertSurchargePeriod(newFrom, newTo);
 
-  // Re-validate uniqueness only when the name or period actually changes.
-  if (
-    input.name !== undefined ||
-    input.effectiveFrom !== undefined ||
-    input.effectiveTo !== undefined
-  ) {
-    const sameName = await findActiveSurchargesByName(existing.propertyId, newName);
-    for (const s of sameName) {
-      if (s.id === id) continue;
-      if (
-        rangesOverlap(newFrom, newTo ?? null, toDateStr(s.effectiveFrom)!, toDateStr(s.effectiveTo))
-      ) {
-        throw new ConflictError(
-          "An active surcharge with this name already covers an overlapping period.",
-        );
+    if (
+      input.name !== undefined ||
+      input.effectiveFrom !== undefined ||
+      input.effectiveTo !== undefined
+    ) {
+      await lockSurchargeName(existing.propertyId, newName, trx);
+      const sameName = await findActiveSurchargesByName(
+        existing.propertyId,
+        newName,
+        trx,
+      );
+      for (const surcharge of sameName) {
+        if (surcharge.id === id) continue;
+        if (
+          rangesOverlap(
+            newFrom,
+            newTo,
+            toDateStr(surcharge.effectiveFrom)!,
+            toDateStr(surcharge.effectiveTo),
+          )
+        ) {
+          throw new ConflictError(
+            "An active surcharge with this name already covers an overlapping period.",
+          );
+        }
       }
     }
-  }
 
-  const updated = await updateSurcharge(id, input);
-  if (!updated) throw new NotFoundError("Surcharge not found.");
-  await writeAudit({
-    actorUserId: landlordId,
-    action: "surcharge.updated",
-    entityType: "surcharges",
-    entityId: id,
-    beforeValue: {
-      name: existing.name,
-      monthlyAmount: existing.monthlyAmount,
-      effectiveFrom: toDateStr(existing.effectiveFrom),
-      effectiveTo: toDateStr(existing.effectiveTo),
-    },
-    afterValue: input,
+    const updated = await updateSurcharge(id, input, trx);
+    if (!updated) throw new NotFoundError("Surcharge not found.");
+    await writeAudit(
+      {
+        actorUserId: landlordId,
+        action: "surcharge.updated",
+        entityType: "surcharges",
+        entityId: id,
+        beforeValue: {
+          name: existing.name,
+          monthlyAmount: existing.monthlyAmount,
+          effectiveFrom: toDateStr(existing.effectiveFrom),
+          effectiveTo: toDateStr(existing.effectiveTo),
+        },
+        afterValue: input,
+      },
+      trx,
+    );
+    return serialize(updated);
   });
-  return serialize(updated);
 }
 
 export async function deleteSurchargeService(
   landlordId: string,
   id: string,
 ): Promise<{ success: true }> {
-  const existing = await findSurchargeScoped(id, landlordId);
-  if (!existing) throw new NotFoundError("Surcharge not found.");
-  // Soft delete (prospective deactivation) + audit of responsible landlord/time.
-  await softDeleteSurcharge(id, landlordId);
-  await writeAudit({
-    actorUserId: landlordId,
-    action: "surcharge.deleted",
-    entityType: "surcharges",
-    entityId: id,
+  return db.transaction(async (rawTrx) => {
+    const trx = rawTrx as unknown as typeof db;
+    const existing = await findSurchargeScoped(id, landlordId, trx);
+    if (!existing) throw new NotFoundError("Surcharge not found.");
+
+    await softDeleteSurcharge(id, landlordId, trx);
+    await writeAudit(
+      {
+        actorUserId: landlordId,
+        action: "surcharge.deleted",
+        entityType: "surcharges",
+        entityId: id,
+      },
+      trx,
+    );
+    return { success: true };
   });
-  return { success: true };
 }
