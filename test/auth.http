@@ -1,0 +1,135 @@
+### ============================================================
+### US-AUTH-01 — Register a landlord
+### ============================================================
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "{{fullName}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "passwordConfirmation": "{{password}}"
+}
+
+###
+
+### Duplicate registration (expect 409 CONFLICT, generic message)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "{{fullName}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "passwordConfirmation": "{{password}}"
+}
+
+###
+
+### Invalid registration (short password, mismatch) — expect 400 VALIDATION_ERROR
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Bad",
+  "email": "bad@x.com",
+  "password": "123",
+  "passwordConfirmation": "999"
+}
+
+###
+
+### ============================================================
+### US-AUTH-02 — Log in (returns accessToken + refreshToken)
+### ============================================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+
+### Login with wrong password (expect 401 UNAUTHENTICATED, generic)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "wrong-password"
+}
+###
+
+### ============================================================
+### US-AUTH-07 — Refresh access token
+### ============================================================
+# Uses the refreshToken captured from the login response below.
+# After a successful login, REST Client stores `refreshToken` automatically
+# via the script block in this file's login request.
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###
+
+### Refresh with an invalid/expired token (expect 401)
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "deadbeefdeadbeef"
+}
+
+###
+
+### ============================================================
+### US-AUTH-03 — Log out (revokes refresh token server-side)
+### ============================================================
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###
+
+### ============================================================
+### US-AUTH-05 — Change password (forces re-login; no new token)
+### ============================================================
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{password}}",
+  "newPassword": "NewPassword1",
+  "newPasswordConfirmation": "NewPassword1"
+}
+
+###
+
+### ============================================================
+### US-AUTH-06 — Recover a forgotten password
+### ============================================================
+# Always returns 200 (no enumeration). The backend generates a NEW random
+# password, stores its hash, emails it to the account, and revokes all sessions.
+# The user can then log in immediately with the emailed password.
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+###

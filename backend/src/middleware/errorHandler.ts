@@ -2,8 +2,38 @@ import type { ErrorRequestHandler, NextFunction, Request, Response } from "expre
 import { ZodError } from "zod";
 import { HttpError } from "../lib/errors.js";
 
-function redact(message: unknown): unknown {
-  return message;
+const SENSITIVE_KEYS = [
+  "password",
+  "passwordhash",
+  "passwordconfirmation",
+  "currentpassword",
+  "newpassword",
+  "newpasswordconfirmation",
+  "token",
+  "refreshtoken",
+  "temptoken",
+  "temppassword",
+  "authorization",
+];
+
+function redact(value: unknown, seen = new WeakSet<object>()): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (seen.has(value as object)) return "[circular]";
+  seen.add(value as object);
+
+  if (Array.isArray(value)) {
+    return value.map((item) => redact(item, seen));
+  }
+
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+    if (SENSITIVE_KEYS.includes(key.toLowerCase())) {
+      out[key] = "[redacted]";
+    } else {
+      out[key] = redact(val, seen);
+    }
+  }
+  return out;
 }
 
 export const errorHandler: ErrorRequestHandler = (

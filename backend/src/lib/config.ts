@@ -36,7 +36,10 @@ export const config = {
     return getEnv("JWT_SECRET");
   },
   get jwtExpirySeconds() {
-    return Number(getEnv("JWT_EXPIRY_SECONDS", "86400"));
+    return Number(getEnv("JWT_EXPIRY_SECONDS", "900"));
+  },
+  get jwtRefreshExpirySeconds() {
+    return Number(getEnv("JWT_REFRESH_EXPIRY_SECONDS", "604800"));
   },
   get supabaseUrl() {
     return getEnv("SUPABASE_URL", "");
@@ -49,6 +52,16 @@ export const config = {
   },
   get emailProviderApiKey() {
     return getEnv("EMAIL_PROVIDER_API_KEY", "");
+  },
+  get emailSmtp() {
+    return {
+      host: getEnv("EMAIL_HOST", "smtp.gmail.com"),
+      port: Number(getEnv("EMAIL_PORT", "465")),
+      secure: getEnv("EMAIL_SECURE", "true") === "true",
+      user: getEnv("EMAIL_USER", ""),
+      password: getEnv("EMAIL_PASSWORD", ""),
+      from: getEnv("EMAIL_FROM", "RosiHome <noreply@rosihome.app>"),
+    };
   },
   get appPublicUrl() {
     return getEnv("APP_PUBLIC_URL", "https://rosihome.app");

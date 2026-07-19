@@ -1,0 +1,52 @@
+### ============================================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+### ============================================================
+### US-PROFILE-01 — View own profile
+### Requires a valid accessToken (run auth.http → login first, or set it
+### manually in the environment via REST Client's "Set Environment Variable").
+### ============================================================
+GET {{baseUrl}}/profile
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-PROFILE-01 — Update own profile (landlord: fullName / phone)
+### ============================================================
+PATCH {{baseUrl}}/profile
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fullName": "{{fullName}} Updated",
+  "phone": "0901234567"
+}
+
+###
+
+### Update with no body / invalid (expect 400 VALIDATION_ERROR)
+PATCH {{baseUrl}}/profile
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "role": "Tenant"
+}
+
+###
+
+### Unauthenticated request (expect 401 UNAUTHENTICATED)
+GET {{baseUrl}}/profile
+
+###

@@ -24,6 +24,18 @@ export const loginSchema = z
   })
   .strict();
 
+export const refreshSchema = z
+  .object({
+    refreshToken: z.string().min(1, "Refresh token is required."),
+  })
+  .strict();
+
+export const logoutSchema = z
+  .object({
+    refreshToken: z.string().optional(),
+  })
+  .strict();
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required."),
@@ -39,3 +51,11 @@ export const changePasswordSchema = z
     message: "Passwords do not match.",
     path: ["newPasswordConfirmation"],
   });
+
+export const forgotPasswordSchema = z
+  .object({
+    email: z.string().email("Invalid email."),
+  })
+  .strict();
+
+
