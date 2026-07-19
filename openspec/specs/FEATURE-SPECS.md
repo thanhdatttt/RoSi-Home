@@ -26,16 +26,17 @@
 - **Endpoint:** `POST /api/v1/auth/login`
 - **Auth:** none
 - **Request:** `{ username, password }` (username = email for landlord, phone for tenant)
-- **Response:** `200 { data: { token, user: { id, role, fullName, mustChangePassword } } }`
+- **Response:** `200 { data: { accessToken, refreshToken, user: { id, role, fullName, mustChangePassword } } }`
 - **Business rules:**
   - Look up by `username`; compare bcrypt hash; on any failure return `401 UNAUTHENTICATED` with a generic message — never reveal whether the username exists.
-  - On success, issue JWT (§3.2) and return `mustChangePassword` so the mobile app can route straight to the forced password-change screen for first-time tenants.
+  - On success, issue an access token (15 min, §3.2) **and** a refresh token (7-day, rotated per use). Return `mustChangePassword` so the mobile app can route straight to the forced password-change screen for first-time tenants.
 
 #### US-AUTH-03 — Log out
 - **Endpoint:** `POST /api/v1/auth/logout`
 - **Auth:** required (any role)
+- **Request:** `{ refreshToken }` (optional but recommended)
 - **Response:** `200 { data: { success: true } }`
-- **Business rules:** Stateless JWT — this endpoint is a no-op on the server (nothing to invalidate) but exists for symmetry/analytics. The mobile app is responsible for deleting the token from secure storage and clearing in-memory cached protected data on this call.
+- **Business rules:** On this call the server **revokes the presented refresh token** (sets `revokedAt` in `refresh_tokens`) so it can no longer be used at `/auth/refresh`. The mobile app is additionally responsible for deleting both tokens from secure storage and clearing in-memory cached protected data.
 
 #### US-AUTH-04 — Enforce role and data ownership
 - **Not a standalone endpoint** — this is the `requireAuth` + `requireRole` + service-layer ownership pattern described in architecture §3.3, applied to *every* protected route in this document. Implement it once as middleware/helpers and reuse; do not special-case it per module.
@@ -49,7 +50,16 @@
 - **Business rules:**
   - Verify `currentPassword` against stored hash → `401` if wrong.
   - `newPassword === newPasswordConfirmation`, satisfies password policy, and **must differ** from `currentPassword` → `422` otherwise.
-  - On success: update `passwordHash`, set `mustChangePassword=false`, write an `audit_events` row (`action="password.changed"`, no password values stored).
+  - On success: update `passwordHash`, set `mustChangePassword=false`, write an `audit_events` row (`action="password.changed"`, no password values stored). **No new token is issued** — the response is `{success:true}` only and the mobile app must redirect the user to login (the old access token remains valid until its 15-min expiry but the user is forced to re-authenticate).
+
+#### US-AUTH-07 — Refresh access token
+- **Endpoint:** `POST /api/v1/auth/refresh`
+- **Auth:** none (requires a valid refresh token in body)
+- **Request:** `{ refreshToken }`
+- **Response:** `200 { data: { accessToken, refreshToken, user } }` (a brand-new pair)
+- **Business rules:**
+  - Lookup the hashed refresh token; reject (`401`) if not found, already `revokedAt`, or past `expiresAt` (>7 days). The mobile app then forces re-login.
+  - On success: **revoke the presented refresh token** and issue a new access+refresh pair (rotation). `user` reflects current `mustChangePassword`/role.
 
 #### US-PROFILE-01 — View and update a user profile
 - **Endpoints:** `GET /api/v1/profile`, `PATCH /api/v1/profile`
@@ -59,15 +69,15 @@
 - **Business rules:** `role` is never accepted in the request body (reject/ignore silently — do not let the client attempt privilege escalation). Uniqueness re-validated on any identifier change.
 
 #### US-AUTH-06 — Recover a forgotten password
-- **Endpoints:** `POST /api/v1/auth/forgot-password` (request), `POST /api/v1/auth/reset-password` (confirm)
+- **Endpoint:** `POST /api/v1/auth/forgot-password`
 - **Auth:** none
 - **Request (forgot):** `{ email }` → always `200 { data: { success: true } }` regardless of whether the email exists (no enumeration).
-- **Request (reset):** `{ token, newPassword, newPasswordConfirmation }`
 - **Business rules:**
-  - Recovery token: random, single-use, stored hashed with an expiry (recommend 30 min), table `password_reset_tokens(id, userId, tokenHash, expiresAt, usedAt)`.
-  - Email delivery only, to the account's registered email (landlords have one directly; tenants use `tenant_info.email`).
-  - On successful reset: mark token `usedAt`, update `passwordHash`, invalidate any other outstanding tokens for that user.
-  - Expired/used/invalid token → `422 UNPROCESSABLE`.
+  - The backend **generates a new random password** (satisfies the password policy, §3.4), stores its bcrypt hash, sets `mustChangePassword=false`, **revokes all outstanding refresh tokens** for the user (forces re-login on every device), and writes an `audit_events` row (`action="password.reset"`).
+  - Email delivery only, via Gmail SMTP (`nodemailer`, see architecture §1.1), to the account's registered email (landlords have one directly; tenants use `tenant_info.email`). The email contains the **new temporary password in plaintext** plus a prompt to change it after logging in.
+  - The user can log in immediately with the emailed password — no reset link, no second step.
+  - The previous password no longer authenticates the user.
+  - To avoid leaking the new password through logs, never log the response body or email body; the email body is treated as sensitive (redaction rule applies to `password`/`tempPassword` fields, architecture §3.4).
 
 ---
 
@@ -431,7 +441,6 @@ All dashboard endpoints are `GET`, Landlord-only, scoped to owned properties, an
 | POST | /auth/logout | US-AUTH-03 |
 | POST | /auth/change-password | US-AUTH-05 |
 | POST | /auth/forgot-password | US-AUTH-06 |
-| POST | /auth/reset-password | US-AUTH-06 |
 | GET/PATCH | /profile | US-PROFILE-01 |
 | POST/GET/PATCH | /properties[/:id] | US-PROPERTY-01/02 |
 | POST/GET/PATCH | /properties/:id/rooms[/:id] | US-ROOM-01/02 |

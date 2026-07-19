@@ -75,7 +75,7 @@ The team has resolved the following cross-cutting product decisions. Their outco
 | Decision                          | Approved outcome                                                                                                                                                                                                                                                                                                                                                                        | Affected stories                                                                                                 |
 | :-------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
 | **PD-01 Account onboarding**      | Landlords use self-registration. A landlord does not create a separate tenant profile before leasing; the landlord enters tenant identity/contact information while creating the lease. The system creates the tenant record and provisions a Tenant account using the phone number as username, then emails a temporary password and mobile-app link. An account has exactly one role. | US-AUTH-01, US-TENANT-01, US-TENANT-02, US-LEASE-01                                                              |
-| **PD-02 Password recovery**       | Password recovery is included and uses email only.                                                                                                                                                                                                                                                                                                                                      | US-AUTH-06                                                                                                       |
+| **PD-02 Password recovery**       | Password recovery is included and uses email only. The backend generates a new random password, emails it to the account's registered address, and revokes all active sessions so the user can log in immediately. | US-AUTH-06                                                                                                       |
 | **PD-03 Utility pricing**         | Utility configuration is property-level. Electricity is metered per kWh. For water, each property selects either metered pricing per cubic metre or a configurable flat monthly amount per tenant. Developer-seeded defaults must be versioned by source, locality, and effective date rather than hard-coded as one permanent national value.                                          | US-UTILITY-01, US-UTILITY-02, US-METER-02                                                                        |
 | **PD-04 Invoice creation**        | A scheduled job generates a draft invoice only when all new readings required by the property's utility methods exist for the billing period; otherwise it skips that room. Flat per-tenant water billing does not require a water reading. PDF export is required.                                                                                                                     | US-INVOICE-01, US-INVOICE-03                                                                                     |
 | **PD-05 Notification channels**   | Notifications are mobile push notifications only. For each property, a landlord can enable any combination of lease-expiry reminders at 7, 3, and 1 day before expiration.                                                                                                                                                                                                              | US-REMINDER-01, US-REMINDER-02, US-LEASE-05, notification acceptance criteria in payment and maintenance stories |
@@ -181,16 +181,17 @@ The team has resolved the following cross-cutting product decisions. Their outco
 
 - **Status:** Refined
 - **Priority:** Should Have
-- **User story:** As a registered user who forgot my password, I want to reset it through email so that I can regain access.
+- **User story:** As a registered user who forgot my password, I want to receive a new password by email so that I can regain access immediately.
 - **Dependencies:** US-AUTH-01 and an approved transactional-email provider.
 
 **Acceptance criteria:**
 
 - [ ] The recovery request does not reveal whether a submitted identifier belongs to an account.
-- [ ] A time-limited, single-use recovery credential is delivered only to the email address associated with the account.
-- [ ] A valid recovery credential allows the user to set and confirm a new password that meets the password rules.
-- [ ] Expired, reused, or invalid recovery credentials are rejected.
-- [ ] The previous password no longer authenticates the user after a successful reset.
+- [ ] The backend generates a new random password that satisfies the approved password policy, stores its hash, and delivers it only to the email address associated with the account.
+- [ ] The user can log in immediately with the emailed password (no reset link / second step required).
+- [ ] All outstanding sessions (refresh tokens) for the account are revoked, forcing re-login on every device.
+- [ ] The previous password no longer authenticates the user after the new password is issued.
+- [ ] The new password is never written to application logs.
 
 ---
 

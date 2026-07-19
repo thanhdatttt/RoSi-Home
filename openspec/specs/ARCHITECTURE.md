@@ -52,10 +52,10 @@ flowchart LR
 | ORM | Drizzle ORM |
 | Database | PostgreSQL, hosted and managed on **Supabase** (Supabase project = the single database for all environments unless a separate staging project is provisioned) |
 | File storage | Supabase Storage (same Supabase project as the database; buckets: `payment-proofs`, `maintenance-photos`) |
-| Auth | JWT (access token only, no refresh-token rotation in MVP), via `jsonwebtoken`, password hashing via `bcrypt` |
+| Auth | JWT access token (15 min) + rotating refresh token (7-day sliding); refresh token hashed in `refresh_tokens` table, revoked on logout |
 | Scheduled jobs | `node-cron` in-process (no external queue in MVP) |
 | Push notifications | Firebase Cloud Messaging (FCM) |
-| Transactional email | Any SMTP-compatible provider behind an `EmailProvider` interface (e.g. Resend/SendGrid) |
+| Transactional email | Gmail SMTP via `nodemailer` (configured through `EMAIL_HOST`/`EMAIL_PORT`/`EMAIL_USER`/`EMAIL_PASSWORD`/`EMAIL_FROM`); sits behind an `EmailProvider` interface so other SMTP providers can be swapped in. On send failure the message is enqueued to `email_send_queue` for retry rather than throwing. |
 | PDF generation | `pdfkit` (server-side, no headless browser) |
 | QR generation | VietQR EMVCo payload built in-process + `qrcode` npm package to render the PNG/SVG |
 | Validation | `zod` schemas shared between route handlers and (optionally) the client |
@@ -161,12 +161,12 @@ or for lists:
 - **Tenant**: never self-registers. Provisioned automatically when a landlord creates a lease (US-TENANT-02); username = phone number; temporary password emailed.
 - `users.mustChangePassword` boolean forces password replacement before any other protected action succeeds (checked in `requireAuth` middleware, not just the client) — enforces US-AUTH-05's "tenant must set new password before accessing other functions."
 
-### 3.2 JWT
+### 3.2 JWT + Refresh tokens
 
-- Claims: `{ sub: userId, role: "landlord"|"tenant", iat, exp }`. Do not put PII (email, name) in the token.
-- Expiry: 24h. No refresh-token flow in MVP — the mobile app simply prompts re-login on 401.
-- Token delivered in `Authorization: Bearer <token>` header. Never in query strings (would leak in logs).
-- On logout (US-AUTH-03), the API has no server-side session to invalidate (stateless JWT) — the mobile app **must** delete the stored token client-side. Document this explicitly in the mobile app so "logout" is real: clear token from secure storage and clear any cached protected data from memory/view.
+- **Access token** claims: `{ sub: userId, role: "landlord"|"tenant", mustChangePassword: boolean, iat, exp }`. Do not put PII (email, name) in the token. Expiry: **15 minutes** (`JWT_EXPIRY_SECONDS`, default 900).
+- **Refresh token**: an opaque random string (not a JWT), stored hashed (`sha256`) in the `refresh_tokens` table with a **7-day absolute expiry** (`JWT_REFRESH_EXPIRY_SECONDS`, default 604800). The refresh token is **rotated on every use** — when the mobile app presents a refresh token to `POST /api/v1/auth/refresh`, the presented token is immediately revoked and a brand-new access+refresh pair is returned. Because rotation extends the lifetime on each use, a landlord who opens the app at least once every 7 days keeps a live session indefinitely; a user offline longer than 7 days must log in again.
+- Token delivered in `Authorization: Bearer <accessToken>` header. Never in query strings (would leak in logs). The refresh token is only ever sent in the body of `/auth/login`, `/auth/refresh`, and `/auth/logout`.
+- On logout (US-AUTH-03), the API **revokes the presented refresh token server-side** (sets `revokedAt`); the mobile app must additionally delete both tokens from secure storage and clear any cached protected data from memory/view. (Originally MVP was access-token-only with client-side-only logout; this refresh-token flow replaces that decision.)
 
 ### 3.3 Authorization middleware chain
 
@@ -181,7 +181,7 @@ Every protected route composes, in order:
 
 - Minimum 8 characters, at least one letter and one digit.
 - Hashed with bcrypt (cost factor 10+). Never stored or logged in plaintext.
-- Temporary passwords (tenant provisioning, password reset) are cryptographically random, single-purpose, and never written to application logs (use a redaction rule in the logger for any field named `password`, `tempPassword`, `token`).
+- Temporary / recovery passwords (tenant provisioning, password recovery) are cryptographically random, single-purpose, and never written to application logs (use a redaction rule in the logger for any field named `password`, `tempPassword`, `token`). Password recovery (US-AUTH-06) has the backend generate a new random password, store its bcrypt hash, email it to the account's registered address, revoke all outstanding refresh tokens, and force a re-login on all devices — there is no reset-link/token flow.
 
 ---
 
