@@ -49,6 +49,29 @@ export async function listActiveSurcharges(propertyId: string): Promise<Surcharg
     .orderBy(asc(surcharges.name));
 }
 
+// Active surcharges whose effective window overlaps the billing period
+// (inclusive range; null effectiveTo means open-ended).
+export async function findActiveSurchargesForPropertyPeriod(
+  propertyId: string,
+  periodStart: string,
+  periodEnd: string,
+  executor: typeof db = db,
+): Promise<SurchargeRow[]> {
+  return executor
+    .select()
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+        sql`${surcharges.effectiveFrom} <= ${periodEnd}`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${periodStart})`,
+      ),
+    )
+    .orderBy(asc(surcharges.name));
+}
+
 export async function findActiveSurchargesByName(
   propertyId: string,
   name: string,
