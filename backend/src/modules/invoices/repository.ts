@@ -7,12 +7,12 @@ import {
   leases,
   properties,
   rooms,
-  surcharges,
   tenantInfo,
 } from "../../db/schema.js";
 import { getTableColumns } from "drizzle-orm";
 import { findProperty, type PropertyRow } from "../properties/repository.js";
-import type { SurchargeRow } from "../charges/repository.js";
+export { findActiveSurchargesForPropertyPeriod } from "../charges/repository.js";
+export type { SurchargeRow } from "../charges/repository.js";
 import { NotFoundError } from "../../lib/errors.js";
 
 export type InvoiceRow = typeof invoices.$inferSelect;
@@ -120,26 +120,6 @@ export async function findInvoiceLineItems(
     .from(invoiceLineItems)
     .where(eq(invoiceLineItems.invoiceId, invoiceId))
     .orderBy(sql`${invoiceLineItems.type}`);
-}
-
-export async function findActiveSurchargesForPropertyPeriod(
-  propertyId: string,
-  periodStart: string,
-  periodEnd: string,
-  executor: typeof db = db,
-): Promise<SurchargeRow[]> {
-  return executor
-    .select()
-    .from(surcharges)
-    .where(
-      and(
-        eq(surcharges.propertyId, propertyId),
-        eq(surcharges.active, true),
-        isNull(surcharges.deletedAt),
-        sql`${surcharges.effectiveFrom} <= ${periodEnd}`,
-        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${periodStart})`,
-      ),
-    );
 }
 
 export async function createInvoiceWithLineItems(

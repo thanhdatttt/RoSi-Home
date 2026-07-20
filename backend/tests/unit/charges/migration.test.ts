@@ -17,55 +17,30 @@ async function journal(): Promise<MigrationJournal> {
   return JSON.parse(content) as MigrationJournal;
 }
 
-describe("Billing Foundation migration chain", () => {
-  it("captures the former unique surcharge index in the baseline", async () => {
+describe("Billing Foundation migration", () => {
+  it("establishes a non-unique partial lookup index on surcharges", async () => {
     const metadata = await journal();
     const baselineEntry = metadata.entries.find((entry) => entry.idx === 0);
 
-    expect(baselineEntry?.tag).toBe("0000_loose_nehzno");
+    expect(baselineEntry?.tag).toBe("0000_polite_the_hand");
     const baseline = await migration(`${baselineEntry!.tag}.sql`);
 
     expect(baseline).toContain(
-      'CREATE UNIQUE INDEX IF NOT EXISTS "surcharges_name_active"',
-    );
-  });
-
-  it("replaces that index with a non-unique partial lookup index", async () => {
-    const metadata = await journal();
-    const changes = await Promise.all(
-      metadata.entries
-        .filter((entry) => entry.idx > 0)
-        .map((entry) => migration(`${entry.tag}.sql`)),
-    );
-    const change = changes.join("\n");
-
-    expect(change).toContain(
-      'DROP INDEX IF EXISTS "surcharges_name_active"',
-    );
-    expect(change).toContain(
       'CREATE INDEX IF NOT EXISTS "surcharges_name_active"',
     );
-    expect(change).not.toContain(
+    expect(baseline).not.toContain(
       'CREATE UNIQUE INDEX IF NOT EXISTS "surcharges_name_active"',
     );
-    expect(change).toContain('"deleted_at" IS NULL');
-    expect(change).toContain('"active" = true');
+    expect(baseline).toContain('"deleted_at" IS NULL');
+    expect(baseline).toContain('"active" = true');
   });
 
-  it("migrates existing audit JSON strings to JSONB with an explicit cast", async () => {
+  it("stores audit snapshots as JSONB", async () => {
     const metadata = await journal();
-    const changes = await Promise.all(
-      metadata.entries
-        .filter((entry) => entry.idx > 0)
-        .map((entry) => migration(`${entry.tag}.sql`)),
-    );
-    const change = changes.join("\n");
+    const baselineEntry = metadata.entries.find((entry) => entry.idx === 0);
+    const baseline = await migration(`${baselineEntry!.tag}.sql`);
 
-    expect(change).toContain(
-      'SET DATA TYPE jsonb USING "before_value"::jsonb',
-    );
-    expect(change).toContain(
-      'SET DATA TYPE jsonb USING "after_value"::jsonb',
-    );
+    expect(baseline).toContain('"before_value" jsonb');
+    expect(baseline).toContain('"after_value" jsonb');
   });
 });
