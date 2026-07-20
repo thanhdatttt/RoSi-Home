@@ -265,7 +265,7 @@ Content-Type: application/json
 
 {
   "username": "0905556677",
-  "password": "{{{{tempPassword}}}}"
+  "password": "NewTenant123"
 }
 
 ###
