@@ -9,6 +9,8 @@ import { tenantsRouter } from "./modules/tenants/router.js";
 import { utilitiesRouter } from "./modules/utilities/router.js";
 import { chargesRouter } from "./modules/charges/router.js";
 import { leasesRouter } from "./modules/leases/router.js";
+import { metersRouter } from "./modules/meters/router.js";
+import { invoicesRouter } from "./modules/invoices/router.js";
 import { notificationsRouter } from "./modules/notifications/router.js";
 
 export function createApp(): express.Express {
@@ -28,6 +30,11 @@ export function createApp(): express.Express {
   app.use("/api/v1/utilities", utilitiesRouter);
   app.use("/api/v1/charges", chargesRouter);
   app.use("/api/v1/leases", leasesRouter);
+  // meters & invoices routers encode their full path (e.g. /rooms/:id/meter-readings,
+  // /invoices/:id) and do not collide with the prefixed routers above, so they mount
+  // at the bare /api/v1 prefix.
+  app.use("/api/v1", metersRouter);
+  app.use("/api/v1", invoicesRouter);
   app.use("/api/v1/notifications", notificationsRouter);
 
   app.use(errorHandler);

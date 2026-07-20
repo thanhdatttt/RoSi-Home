@@ -1,6 +1,6 @@
 {
-  "id": "390b3900-bd25-4076-872d-90781208ccd9",
-  "prevId": "8de5dcbd-ba8a-429a-8235-494020e16466",
+  "id": "8eebfc68-4177-48ad-aeeb-1165a578f121",
+  "prevId": "390b3900-bd25-4076-872d-90781208ccd9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1253,6 +1253,12 @@
         "rate_source": {
           "name": "rate_source",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_source_id": {
+          "name": "rate_source_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },

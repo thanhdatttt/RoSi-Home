@@ -116,6 +116,7 @@ export const properties = pgTable(
       .references(() => users.id),
     name: text("name").notNull(),
     address: text("address").notNull(),
+    locality: text("locality"),
     ...timestamps,
     ...softDelete,
   },
@@ -251,6 +252,18 @@ export const meterReadings = pgTable(
     billingPeriod: text("billing_period").notNull(),
     value: decimal("value", { precision: 18, scale: 4 }).notNull(),
     isInitial: boolean("is_initial").notNull().default(false),
+    // Calculation result retained for reproducibility (US-METER-02). Null for
+    // initial baseline readings, which create no consumption or charge.
+    previousValue: decimal("previous_value", { precision: 18, scale: 4 }),
+    consumption: decimal("consumption", { precision: 18, scale: 4 }),
+    unitRate: integer("unit_rate"),
+    amount: integer("amount").notNull().default(0),
+    rateSource: text("rate_source"),
+    rateSourceId: uuid("rate_source_id"),
+    rateSourceReference: text("rate_source_reference"),
+    rateEffectiveFrom: date("rate_effective_from"),
+    locality: text("locality"),
+    tenantCount: integer("tenant_count"),
     correctionOf: uuid("correction_of"), // self-reference to a superseded reading (added as FK in migration)
     supersededAt: timestamp("superseded_at", { withTimezone: true }),
     recordedBy: uuid("recorded_by")
