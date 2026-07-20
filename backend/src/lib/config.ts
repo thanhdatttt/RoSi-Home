@@ -69,6 +69,15 @@ export const config = {
   get port() {
     return Number(getEnv("PORT", "3000"));
   },
+  // Invoice calendar (US-INVOICE-01/04). Billing period is `YYYY-MM`. The
+  // scheduled job targets the previous calendar month; issue/due days are the
+  // day-of-month within the billing month.
+  get invoiceIssueDay() {
+    return Number(getEnv("INVOICE_ISSUE_DAY", "1"));
+  },
+  get invoiceDueDay() {
+    return Number(getEnv("INVOICE_DUE_DAY", "5"));
+  },
 };
 
 export type { Request };

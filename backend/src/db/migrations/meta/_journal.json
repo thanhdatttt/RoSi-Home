@@ -15,6 +15,20 @@
       "when": 1784452713271,
       "tag": "0001_thin_agent_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784464855710,
+      "tag": "0002_damp_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784465280619,
+      "tag": "0003_lovely_jubilee",
+      "breakpoints": true
     }
   ]
 }

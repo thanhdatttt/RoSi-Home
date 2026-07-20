@@ -36,6 +36,31 @@ Billing Foundation has automated coverage for:
 - Shared transaction executors for billing mutations and audit writes.
 - Surcharge `updatedAt` and soft-delete metadata.
 
+Meters (US-METER-01/02/03) has automated coverage for:
+
+- Initial baseline readings (no consumption/charge) and duplicate-reading `409`s.
+- Flat-water properties rejecting a water meter reading.
+- Missing-previous-reading and reading-lower-than-previous `422`s.
+- Electricity and metered-water consumption/charge calculation from the
+  effective rate.
+- Correction: supersedes (not overwrites) the original reading, blocks
+  corrections once the linked invoice is `Sent`/`Paid`, and triggers draft
+  invoice recalculation.
+- Room-ownership authorization for both recording and correcting readings.
+
+Invoices (US-INVOICE-01/02/03/04) has automated coverage for:
+
+- Draft generation: itemized rent/electricity/water/surcharge line items,
+  idempotent re-generation, skip-with-reason when a required reading is
+  missing, and the flat-per-tenant-water exemption from needing a reading.
+- The scheduled monthly job evaluating every property with an active lease.
+- View authorization: landlord ownership, tenant-own-invoice-only, and
+  `Draft` invoices being landlord-only.
+- PDF download reusing the same authorization and headers.
+- Send: `Draft` → `Sent` exactly once, rejecting a non-`Draft` send, and the
+  tenant push notification.
+- Recalculation on correction, and no-op once the invoice has left `Draft`.
+
 ## API Automation Layers
 
 ### Contract tests — available now
