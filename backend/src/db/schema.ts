@@ -236,9 +236,9 @@ export const leaseReminderConfigs = pgTable("lease_reminder_configs", {
   propertyId: uuid("property_id")
     .primaryKey()
     .references(() => properties.id),
+  remindAt30Days: boolean("remind_at_30_days").notNull().default(false),
+  remindAt15Days: boolean("remind_at_15_days").notNull().default(false),
   remindAt7Days: boolean("remind_at_7_days").notNull().default(false),
-  remindAt3Days: boolean("remind_at_3_days").notNull().default(false),
-  remindAt1Day: boolean("remind_at_1_day").notNull().default(false),
 });
 
 export const meterReadings = pgTable(
@@ -429,12 +429,15 @@ export const deviceTokens = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id),
-    fcmToken: text("fcm_token").notNull().unique(),
+    // Expo push token, e.g. "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]".
+    // Column kept generic (not fcm_token) because RosiHome uses Expo's push
+    // service instead of calling FCM/APNs directly (see lib/expoPush.ts).
+    pushToken: text("push_token").notNull().unique(),
     platform: platformEnum("platform").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqueToken: uniqueIndex("device_tokens_user_token").on(t.userId, t.fcmToken),
+    uniqueToken: uniqueIndex("device_tokens_user_token").on(t.userId, t.pushToken),
   }),
 );
 

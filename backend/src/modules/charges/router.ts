@@ -10,7 +10,7 @@ export const chargesRouter = Router();
 
 // NOTE: requireRole is applied per-route, not as a blanket router.use();
 // see the comment in meters/router.ts for why a router-level role check
-// is unsafe when multiple routers share the bare "/api/v1" prefix.
+// is unsafe when multiple routers share the same prefix.
 chargesRouter.use(requireAuth);
 
 chargesRouter.post(
@@ -26,13 +26,9 @@ chargesRouter.get(
   asyncHandler(list),
 );
 chargesRouter.patch(
-  "/surcharges/:id",
+  "/:id",
   requireRole("Landlord"),
   validate(updateSurchargeSchema),
   asyncHandler(update),
 );
-chargesRouter.delete(
-  "/surcharges/:id",
-  requireRole("Landlord"),
-  asyncHandler(remove),
-);
+chargesRouter.delete("/:id", requireRole("Landlord"), asyncHandler(remove));

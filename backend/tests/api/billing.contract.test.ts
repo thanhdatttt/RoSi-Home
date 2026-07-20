@@ -108,7 +108,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("returns 401 when a protected endpoint has no bearer token", async () => {
     const response = await request(app)
-      .get(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .get(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .expect(401);
 
     expect(response.body).toEqual({
@@ -121,7 +121,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("returns 403 when a Tenant calls a Landlord-only endpoint", async () => {
     const response = await request(app)
-      .get(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .get(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${tenantToken}`)
       .expect(403);
 
@@ -132,7 +132,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("returns 400 for malformed utility input before calling the service", async () => {
     const response = await request(app)
-      .post(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .post(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send({
         electricityRatePerKwh: -1,
@@ -157,7 +157,7 @@ describe("Billing Foundation HTTP contract", () => {
     };
 
     const response = await request(app)
-      .post(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .post(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send(body)
       .expect(201);
@@ -184,7 +184,7 @@ describe("Billing Foundation HTTP contract", () => {
     );
 
     const response = await request(app)
-      .post(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .post(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send({
         electricityRatePerKwh: 3500,
@@ -201,7 +201,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("returns the current utility rate", async () => {
     const response = await request(app)
-      .get(`/api/v1/properties/${PROPERTY_ID}/utility-rates`)
+      .get(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .expect(200);
 
@@ -220,7 +220,7 @@ describe("Billing Foundation HTTP contract", () => {
     };
 
     const response = await request(app)
-      .post(`/api/v1/properties/${PROPERTY_ID}/surcharges`)
+      .post(`/api/v1/charges/properties/${PROPERTY_ID}/surcharges`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send(body)
       .expect(201);
@@ -235,7 +235,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("lists surcharges with default pagination metadata", async () => {
     const response = await request(app)
-      .get(`/api/v1/properties/${PROPERTY_ID}/surcharges`)
+      .get(`/api/v1/charges/properties/${PROPERTY_ID}/surcharges`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .expect(200);
 
@@ -252,7 +252,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("rejects an empty surcharge PATCH body", async () => {
     const response = await request(app)
-      .patch(`/api/v1/surcharges/${SURCHARGE_ID}`)
+      .patch(`/api/v1/charges/${SURCHARGE_ID}`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send({})
       .expect(400);
@@ -265,7 +265,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("updates a surcharge through the standard success envelope", async () => {
     const response = await request(app)
-      .patch(`/api/v1/surcharges/${SURCHARGE_ID}`)
+      .patch(`/api/v1/charges/${SURCHARGE_ID}`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .send({ monthlyAmount: 120000 })
       .expect(200);
@@ -280,7 +280,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   it("soft-deletes a surcharge through the API action", async () => {
     const response = await request(app)
-      .delete(`/api/v1/surcharges/${SURCHARGE_ID}`)
+      .delete(`/api/v1/charges/${SURCHARGE_ID}`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .expect(200);
 

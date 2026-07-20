@@ -1,6 +1,5 @@
-import { eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { deviceTokens, notifications } from "../../db/schema.js";
+import { notifications } from "../../db/schema.js";
 import { writeAudit } from "../../db/audit.js";
 import {
   NotFoundError,
@@ -13,7 +12,7 @@ import {
   periodBounds,
   previousMonthPeriod,
 } from "../../lib/billingPeriod.js";
-import { sendToToken } from "../../lib/fcm.js";
+import { sendNotification } from "../notifications/service.js";
 import {
   findActiveLeaseForRoomPeriod,
   findActiveLeasesForPropertyPeriod,
@@ -142,17 +141,14 @@ async function notifyTenantOfInvoice(
     })
     .returning();
 
-  const tokens = await db
-    .select()
-    .from(deviceTokens)
-    .where(eq(deviceTokens.userId, tenantUserId));
-  for (const token of tokens) {
-    await sendToToken(token.fcmToken, {
-      title: notif.title,
-      body: notif.body,
-      data: { invoiceId, linkRef: notif.linkRef ?? "" },
-    });
-  }
+  await sendNotification({
+    userId: tenantUserId,
+    type: "invoice.sent",
+    title: notif.title,
+    body: notif.body,
+    linkRef: notif.linkRef ?? "",
+    dedupeKey,
+  });
 }
 
 type LineItemInput = Omit<NewInvoiceLineItem, "invoiceId">;

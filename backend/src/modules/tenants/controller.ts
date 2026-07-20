@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { type Pagination } from "../../lib/pagination.js";
 import {
+  archiveTenantService,
   getTenantService,
   listTenantsService,
   updateTenantService,
@@ -21,4 +22,9 @@ async function update(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: view });
 }
 
-export { list, get, update };
+async function archive(req: Request, res: Response): Promise<void> {
+  const result = await archiveTenantService(req.user!.id, req.params.id);
+  res.status(200).json({ data: result });
+}
+
+export { list, get, update, archive };

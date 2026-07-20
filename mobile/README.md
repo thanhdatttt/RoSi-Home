@@ -48,8 +48,35 @@ To learn more about developing your project with Expo, look at the following res
 - [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
 - [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
+## Testing push notifications (Expo push, not FCM)
 
+The "Push" tab (`src/app/push-test.tsx`) is a minimal harness for end-to-end
+testing: log in, register this device's Expo push token with the backend,
+then send yourself a test notification.
+
+Before it will work:
+
+1. **Set your EAS project id.** In `app.json`, replace
+   `expo.extra.eas.projectId` with your real EAS project id
+   (`npx eas init` if you don't have one yet). Without it,
+   `getExpoPushTokenAsync` cannot run.
+2. **Point at your backend.** Set `expo.extra.apiUrl` in `app.json` (or the
+   `EXPO_PUBLIC_API_URL` env var) to your backend's URL. If you're testing on
+   a physical device, use your machine's LAN IP — not `localhost`.
+3. **Use a development build, not Expo Go, on Android.** As of Expo SDK 53+,
+   remote push notifications don't work in Expo Go on Android — build with
+   `npx expo run:android` or an EAS development build. iOS Expo Go still
+   supports push.
+4. **Use a physical device.** Push tokens can't be obtained on
+   simulators/emulators.
+
+Once logged in and registered, tap "Send test notification" — it calls
+`POST /api/v1/notifications/test` on the backend, which pushes to every
+device token registered for your account. This same `NotificationService` is
+what the lease-expiration reminder job (US-LEASE-05) uses, so this screen
+also verifies that pipeline is wired correctly.
+
+## Join the community
 Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.

@@ -14,30 +14,30 @@ export const roomsRouter = Router();
 
 // NOTE: requireRole is applied per-route, not as a blanket router.use();
 // see the comment in meters/router.ts for why a router-level role check
-// is unsafe when multiple routers share the bare "/api/v1" prefix.
+// is unsafe when multiple routers could match the same prefix.
 roomsRouter.use(requireAuth);
 
 roomsRouter.post(
-  "/properties/:propertyId/rooms",
+  "/properties/:propertyId",
   requireRole("Landlord"),
   validate(createRoomSchema),
   asyncHandler(create),
 );
 roomsRouter.post(
-  "/properties/:propertyId/rooms/bulk",
+  "/properties/:propertyId/bulk",
   requireRole("Landlord"),
   validate(bulkRoomsSchema),
   asyncHandler(bulk),
 );
 roomsRouter.get(
-  "/properties/:propertyId/rooms",
+  "/properties/:propertyId",
   requireRole("Landlord"),
   validate(paginationQuerySchema, "query"),
   asyncHandler(list),
 );
-roomsRouter.get("/rooms/:id", requireRole("Landlord"), asyncHandler(get));
+roomsRouter.get("/:id", requireRole("Landlord"), asyncHandler(get));
 roomsRouter.patch(
-  "/rooms/:id",
+  "/:id",
   requireRole("Landlord"),
   validate(updateRoomSchema),
   asyncHandler(update),
