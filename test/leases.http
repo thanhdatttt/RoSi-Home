@@ -1,0 +1,289 @@
+### ============================================================
+### US-LEASE-01 → US-LEASE-06 — Lease lifecycle (landlord)
+### ------------------------------------------------------------
+### Prereq: run auth.http → login first so REST Client captures
+### `accessToken` + `refreshToken`. Then run this file in the
+### "local" (or "device") environment.
+###
+### ID chaining: this file logs in, fetches the landlord's first
+### property, then its first room, so you do NOT need to hard-code
+### roomId. US-TENANT-02 (tenant account provisioning) fires
+### automatically when the lease is created.
+### ============================================================
+
+### ------------------------------------------------------------
+### Log in as landlord (captures tokens — same pattern as auth.http)
+### ------------------------------------------------------------
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+###
+
+### ------------------------------------------------------------
+### Helpers: resolve a room to lease against (US-LEASE-01 needs a
+### room owned by this landlord). Fetch first property + first room.
+### ------------------------------------------------------------
+# @name firstProperty
+GET {{baseUrl}}/properties?pageSize=2
+Authorization: Bearer {{accessToken}}
+
+@propertyId = {{firstProperty.response.body.data.[1].id}}
+
+###
+
+# @name firstRoom
+GET {{baseUrl}}/properties/{{propertyId}}/rooms?pageSize=1
+Authorization: Bearer {{accessToken}}
+
+###
+@roomId = {{firstRoom.response.body.data.[0].id}}
+
+###
+
+### ============================================================
+### US-LEASE-01 — Create a digital lease (tenant captured inline)
+### Also triggers US-TENANT-02 (tenant account provisioning).
+### Expect 201 { data: { lease:{...}, tenantAccountProvisioned:true } }
+### Validation: end>start; no overlapping active lease for room;
+### email/phone/idNumber format + uniqueness.
+### ============================================================
+# @name createLease
+POST {{baseUrl}}/leases
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "roomId": "{{roomId}}",
+  "tenant": {
+    "fullName": "Tran Thi B",
+    "phone": "0905556677",
+    "idNumber": "07912304567",
+    "email": "tkchi23@clc.fitus.edu.vn"
+  },
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "agreedRent": 3500000,
+  "deposit": 3500000
+}
+
+###
+@leaseId = {{createLease.response.body.data.id}}
+@tenantInfoId = {{createLease.response.body.data.tenantId}}
+
+###
+
+### Create with end-date before start-date (expect 422 UNPROCESSABLE)
+POST {{baseUrl}}/leases
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "roomId": "{{roomId}}",
+  "tenant": {
+    "fullName": "Bad Lease",
+    "phone": "0900000000",
+    "idNumber": "0000000000",
+    "email": "badlease@example.com"
+  },
+  "startDate": "2026-12-31",
+  "endDate": "2026-07-01",
+  "agreedRent": 1000000,
+  "deposit": 1000000
+}
+
+###
+
+### Create overlapping lease for the same room (expect 409 CONFLICT)
+POST {{baseUrl}}/leases
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "roomId": "{{roomId}}",
+  "tenant": {
+    "fullName": "Overlap Tenant",
+    "phone": "0907778889",
+    "idNumber": "0799999999",
+    "email": "overlap@example.com"
+  },
+  "startDate": "2026-08-01",
+  "endDate": "2026-09-30",
+  "agreedRent": 3000000,
+  "deposit": 3000000
+}
+
+###
+
+### ============================================================
+### US-LEASE-02 — View lease information (landlord)
+### Expect 200 { data: { ... room, tenant, period, status } }
+### ============================================================
+# @name getLease
+GET {{baseUrl}}/leases/{{leaseId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-LEASE-02 — List leases (landlord sees all in portfolio)
+### Expect 200 paginated; the created lease appears in `data`.
+### ============================================================
+# @name listLeases
+GET {{baseUrl}}/leases
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-LEASE-03 — Update or renew a lease
+### (a) Plain edit: change endDate / agreedRent / deposit
+### Expect 200 with updated values.
+### ============================================================
+# @name updateLease
+PATCH {{baseUrl}}/leases/{{leaseId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "endDate": "2027-01-31",
+  "agreedRent": 3600000,
+  "deposit": 3600000
+}
+
+###
+
+### (b) Renewal: end current + create a new Active lease
+### Expect 200 with a new lease id for the renewed period.
+### (Run only after the plain edit above if you want a clean sequence.)
+# @name renew
+PATCH {{baseUrl}}/leases/{{leaseId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "renewalStartDate": "2027-02-01",
+  "renewalEndDate": "2027-07-31",
+  "agreedRent": 3700000,
+  "deposit": 3700000
+}
+
+###
+
+### Update a non-Active lease (expect 422 UNPROCESSABLE)
+PATCH {{baseUrl}}/leases/{{leaseId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "agreedRent": -5
+}
+
+###
+
+### ============================================================
+### US-LEASE-06 — View upcoming lease expirations
+### Expect 200 { data: [ { leaseId, propertyName, roomName,
+### tenantFullName, endDate } ] } for the configured window.
+### ============================================================
+# @name upcoming
+GET {{baseUrl}}/leases/upcoming-expirations
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-LEASE-05 — Lease-expiration reminder config (per property)
+### GET current config, then enable 7/3/1-day reminders.
+### Expect 200; enabled flags reflected in response.
+### ============================================================
+# @name getReminderConfig
+GET {{baseUrl}}/properties/{{propertyId}}/lease-reminder-config
+Authorization: Bearer {{accessToken}}
+
+###
+
+# @name setReminderConfig
+PATCH {{baseUrl}}/properties/{{propertyId}}/lease-reminder-config
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "remindAt30Days": true,
+  "remindAt15Days": true,
+  "remindAt7Days": true
+}
+
+###
+
+### ============================================================
+### US-LEASE-04 — End a lease and release the room
+### Expect 200 with status "Ended" + actualEndDate set.
+### After this, the room shows Vacant (derived) and history is kept.
+### ============================================================
+# @name endLease
+POST {{baseUrl}}/leases/{{leaseId}}/end
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "actualEndDate": "2027-03-31"
+}
+
+###
+
+### End again (expect 422 UNPROCESSABLE — only Active can be ended)
+POST {{baseUrl}}/leases/{{leaseId}}/end
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "actualEndDate": "2027-02-01"
+}
+
+###
+
+### ============================================================
+### US-TENANT-02 + US-AUTH-05 — Tenant provisioned by US-LEASE-01
+### can now log in (username = phone) with the emailed TEMP password
+### and MUST change it before other actions. Replace {{tempPassword}}
+### with the emailed value to exercise the tenant flow.
+@tempPassword =91c34620d9fa7f31b8
+### ============================================================
+# @name tenantLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "0905556677",
+  "password": "{{{{tempPassword}}}}"
+}
+
+###
+@tenantAccessToken = {{tenantLogin.response.body.data.accessToken}}
+
+### Tenant views their own lease (US-LEASE-02, tenant scope)
+GET {{baseUrl}}/leases/{{leaseId}}
+Authorization: Bearer {{tenantAccessToken}}
+
+### Tenant must change temp password (US-AUTH-05)
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{tenantAccessToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{tempPassword}}",
+  "newPassword": "NewTenant123",
+  "newPasswordConfirmation": "NewTenant123"
+}
+
+###

@@ -33,8 +33,20 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-notifications",
+      "expo-font",
+      "expo-image",
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
+    "extra": {
+      "apiUrl": "http://localhost:3000",
+      "eas": {
+        "projectId": "2bd46abb-07f1-49ad-9b4f-d2e51bb2d48d"
+      }
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

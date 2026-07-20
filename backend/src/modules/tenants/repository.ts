@@ -1,5 +1,5 @@
 import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
-import { db } from "../../db/index.js";
+import { db, type Db } from "../../db/index.js";
 import { leases, properties, rooms, tenantInfo, users } from "../../db/schema.js";
 import type { Pagination } from "../../lib/pagination.js";
 import type { UpdateTenantInput } from "./schema.js";
@@ -54,8 +54,8 @@ export async function getTenantScoped(
   return row ?? null;
 }
 
-export async function findTenantById(id: string): Promise<TenantRow | null> {
-  const [row] = await db
+export async function findTenantById(id: string, executor: Db = db): Promise<TenantRow | null> {
+  const [row] = await executor
     .select()
     .from(tenantInfo)
     .where(eq(tenantInfo.id, id));
@@ -90,6 +90,18 @@ export async function updateTenant(
   const [row] = await db
     .update(tenantInfo)
     .set(fields)
+    .where(and(eq(tenantInfo.id, id), isNull(tenantInfo.deletedAt)))
+    .returning();
+  return row ?? null;
+}
+
+export async function softDeleteTenant(
+  id: string,
+  deletedBy: string,
+): Promise<TenantRow | null> {
+  const [row] = await db
+    .update(tenantInfo)
+    .set({ deletedAt: new Date(), deletedBy })
     .where(and(eq(tenantInfo.id, id), isNull(tenantInfo.deletedAt)))
     .returning();
   return row ?? null;

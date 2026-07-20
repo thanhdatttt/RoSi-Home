@@ -1,0 +1,85 @@
+### ============================================================
+### Push notifications — endpoint smoke tests
+### ------------------------------------------------------------
+### These hit the same endpoints the mobile Push screen calls. Use
+### them to confirm the backend wiring WITHOUT a device:
+###   1. Register a (real or placeholder) Expo push token.
+###   2. Send the test notification.
+###   3. Read the in-app `notifications` row back.
+###
+### For REAL device delivery, register the token from the mobile
+### Push screen (it calls POST /device-tokens). The token must match
+### `^(ExponentPushToken|ExpoPushToken)\[.+\]$`.
+###
+### Run in the "local" (or "device") environment from
+### rest-client.env.json. The login block below captures
+### @accessToken / @refreshToken for every request that follows.
+### ============================================================
+### ============================================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+### ------------------------------------------------------------
+### Register a device token for the current user
+### Use the real Expo token from the mobile Push screen, or a
+### placeholder Expo-format token for backend-only smoke testing.
+### Expect 201 { data:{ id, platform } }
+### ------------------------------------------------------------
+# @name registerToken
+POST {{baseUrl}}/notifications/device-tokens
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "pushToken": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+  "platform": "android"
+}
+
+###
+
+### Register with a malformed token (expect 400 VALIDATION_ERROR)
+POST {{baseUrl}}/notifications/device-tokens
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "pushToken": "not-a-real-token",
+  "platform": "android"
+}
+
+###
+
+### ------------------------------------------------------------
+### Send a test push to the current user's registered device(s)
+### Expect 200 { data:{ sent:true, deduped:false } }
+### On a real device the notification arrives via Expo → FCM/APNs.
+### ------------------------------------------------------------
+# @name sendTest
+POST {{baseUrl}}/notifications/test
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ------------------------------------------------------------
+### Unregister the device token
+### Expect 200 { data:{ success:true } }
+### ------------------------------------------------------------
+DELETE {{baseUrl}}/notifications/device-tokens
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "pushToken": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+}
+
+###

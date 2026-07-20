@@ -1,0 +1,127 @@
+### ============================================================
+### US-PROPERTY-01 / US-PROPERTY-02 — Property create, list, view, update
+### (Landlord only; ownership enforced — cross-landlord fetch → 404)
+### ------------------------------------------------------------
+### Run in the "local" (or "device") environment from
+### rest-client.env.json. The login block below captures
+### @accessToken / @refreshToken for every request that follows.
+### ============================================================
+### ============================================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+### ============================================================
+### US-PROPERTY-01 — Create a property
+### Expect 201 { data: { id, name, address, landlordId, ... } }
+### Validation: name + address required (unique per landlord).
+### ============================================================
+# @name createProperty
+POST {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Sunshine Apartments",
+  "address": "123 Le Loi, District 1, HCMC"
+}
+
+###
+@propertyId = {{createProperty.response.body.data.id}}
+
+###
+
+### Create with missing fields (expect 400 VALIDATION_ERROR)
+POST {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+###
+
+### Create duplicate name for same landlord (expect 409 CONFLICT)
+POST {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Sunshine Apartments",
+  "address": "456 Nguyen Hue, District 1, HCMC"
+}
+
+###
+
+### ============================================================
+### US-PROPERTY-02 — List owned properties
+### Expect 200 paginated { data:[...], meta:{...} }
+### ============================================================
+# @name listProperties
+GET {{baseUrl}}/properties
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-PROPERTY-02 — View a single owned property
+### Expect 200 { data: { id, name, address, ... } }
+### ============================================================
+# @name getProperty
+GET {{baseUrl}}/properties/{{propertyId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ============================================================
+### US-PROPERTY-02 — Update property details
+### Expect 200 with updated values. Invalid update rejected
+### without changing the stored row.
+### ============================================================
+# @name updateProperty
+PATCH {{baseUrl}}/properties/{{propertyId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Sunshine Apartments (Renamed)",
+  "address": "789 Dong Khoi, District 1, HCMC"
+}
+
+###
+
+### Update with empty name (expect 400 VALIDATION_ERROR)
+PATCH {{baseUrl}}/properties/{{propertyId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+###
+
+### ============================================================
+### US-AUTH-04 — Cross-ownership: a property owned by another
+### landlord is not visible. Replace {{otherLandlordPropertyId}}
+### with an id owned by a different landlord to expect 404.
+### ============================================================
+GET {{baseUrl}}/properties/{{otherLandlordPropertyId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### Unauthenticated request (expect 401 UNAUTHENTICATED)
+GET {{baseUrl}}/properties
+
+###

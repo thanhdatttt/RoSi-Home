@@ -18,6 +18,7 @@ import {
   getTenantScoped,
   hasConflictingField,
   listTenants,
+  softDeleteTenant,
   type TenantRow,
 } from "./repository.js";
 
@@ -135,6 +136,28 @@ export async function updateTenantService(
   }
 }
 
+// Archiving a tenant relationship soft-deletes the tenant_info row only.
+// Historical leases/invoices/payments/audit events keep referencing the row
+// via FK and are unaffected by deletedAt (US-TENANT-01).
+export async function archiveTenantService(
+  landlordId: string,
+  id: string,
+): Promise<{ success: true }> {
+  const tenant = await getTenantScoped(landlordId, id);
+  if (!tenant) throw new NotFoundError("Tenant not found.");
+
+  const archived = await softDeleteTenant(id, landlordId);
+  if (!archived) throw new NotFoundError("Tenant not found.");
+
+  await writeAudit({
+    actorUserId: landlordId,
+    action: "tenant.archived",
+    entityType: "tenant_info",
+    entityId: id,
+  });
+  return { success: true };
+}
+
 // US-TENANT-02 — invoked inside the POST /leases transaction (US-LEASE-01).
 // `tx` lets the caller run this within their open transaction for atomicity.
 export async function provisionTenantAccount(
@@ -142,7 +165,7 @@ export async function provisionTenantAccount(
   tx: Db = db,
 ): Promise<{ userId: string; provisioned: boolean }> {
   // Idempotency guard: a returning tenant already has an account; do not re-provision.
-  const info = await findTenantById(tenant.id);
+  const info = await findTenantById(tenant.id, tx);
   if (!info) throw new NotFoundError("Tenant not found.");
   if (info.userId) {
     return { userId: info.userId, provisioned: false };
@@ -166,13 +189,16 @@ export async function provisionTenantAccount(
     .set({ userId: user.id })
     .where(eq(tenantInfo.id, tenant.id));
 
-  await writeAudit({
-    actorUserId: info.createdByLandlordId,
-    action: "tenant.accountProvisioned",
-    entityType: "tenant_info",
-    entityId: tenant.id,
-    afterValue: { userId: user.id },
-  });
+  await writeAudit(
+    {
+      actorUserId: info.createdByLandlordId,
+      action: "tenant.accountProvisioned",
+      entityType: "tenant_info",
+      entityId: tenant.id,
+      afterValue: { userId: user.id },
+    },
+    tx,
+  );
 
   // Credential delivery is best-effort and must not roll back the account/lease
   // on email-provider failure (US-TENANT-02 retry safety).

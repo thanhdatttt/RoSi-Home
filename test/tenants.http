@@ -1,0 +1,127 @@
+### ============================================================
+### US-TENANT-01 — View and update tenant information (landlord)
+### US-TENANT-02 — Tenant account provisioning is triggered by
+###                US-LEASE-01 (see leases.http). This file verifies
+###                the landlord-side tenant read/update/archive flows.
+### ------------------------------------------------------------
+### Run in the "local" (or "device") environment from
+### rest-client.env.json. The login block below captures
+### @accessToken / @refreshToken for every request that follows.
+### ============================================================
+### ============================================================
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### capture tokens
+@accessToken = {{login.response.body.data.accessToken}}
+@refreshToken = {{login.response.body.data.refreshToken}}
+
+### ------------------------------------------------------------
+### US-TENANT-01 — List tenants derived from this landlord's leases
+### Expect 200, paginated envelope { data:[...], meta:{...} }
+### --------------------------------------------------------------
+# @name tenantList
+GET {{baseUrl}}/tenants
+Authorization: Bearer {{accessToken}}
+
+###
+@tenantId = {{tenantList.response.body.data[0].id}}
+### ------------------------------------------------------------
+### US-TENANT-01 — Get a single tenant by id
+### Expect 200 { data: { id, fullName, phone, email, idNumber, ... } }
+### (Replace {{tenantId}} with a real id from the list above — or the
+###  one returned by the lease creation in leases.http via @tenantInfoId)
+### ------------------------------------------------------------
+# @name tenantGet
+GET {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ------------------------------------------------------------
+### US-TENANT-01 — Update approved tenant fields (landlord)
+### Expect 200, returns the updated view.
+### Validation: email/phone/idNumber uniqueness + format enforced.
+### ------------------------------------------------------------
+# @name tenantUpdate
+PATCH {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Nguyen Van A Updated",
+  "phone": "0901112223",
+  "email": "nguyenvana.updated@example.com",
+  "idNumber": "0123456789"
+}
+
+### capture updated id for chaining
+@tenantInfoId = {{tenantUpdate.response.body.data.id}}
+
+###
+
+### Update with a duplicate phone (expect 409 CONFLICT)
+PATCH {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "phone": "0901112223"
+}
+
+###
+
+### Update with an invalid email (expect 400 VALIDATION_ERROR)
+PATCH {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "not-an-email"
+}
+
+###
+
+### ------------------------------------------------------------
+### US-TENANT-01 — Soft-archive a tenant relationship
+### Expect 200. Preserves lease/invoice/payment/audit history
+### (soft delete → cannot be listed again; 404 if re-fetched).
+### ------------------------------------------------------------
+# @name tenantArchive
+DELETE {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ------------------------------------------------------------
+### US-TENANT-01 — Archived tenant is no longer visible (expect 404)
+### ------------------------------------------------------------
+GET {{baseUrl}}/tenants/{{tenantId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ------------------------------------------------------------
+### US-AUTH-04 — Landlord cannot access another landlord's tenant
+### (Cross-ownership uses 404 NOT_FOUND, not 403, by design.)
+### Replace {{otherLandlordTenantId}} with a tenant owned by another
+### landlord to confirm the 404 envelope.
+### ------------------------------------------------------------
+GET {{baseUrl}}/tenants/{{otherLandlordTenantId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### ------------------------------------------------------------
+### US-TENANT-02 — Tenant account is auto-provisioned on lease
+### creation. To confirm: log in as the tenant (username = phone
+### used in leases.http) with the emailed temporary password, then
+### change it (US-AUTH-05). This is exercised end-to-end in
+### leases.http (create lease → tenant login → change password).
+### ------------------------------------------------------------

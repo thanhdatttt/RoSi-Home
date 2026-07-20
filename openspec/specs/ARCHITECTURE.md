@@ -28,7 +28,7 @@ flowchart LR
         ST[("Supabase Storage")]
     end
     subgraph External
-        FCM["Push Notifications (FCM)"]
+        EXPOPUSH["Push Notifications (Expo)"]
         MAIL["Transactional Email"]
         QR["VietQR Generator (in-process)"]
     end
@@ -36,11 +36,11 @@ flowchart LR
     WEB -.->|HTTPS/REST + JWT| API
     API --> DB
     API --> ST
-    API --> FCM
+    API --> EXPOPUSH
     API --> MAIL
     API --> QR
     JOBS --> DB
-    JOBS --> FCM
+    JOBS --> EXPOPUSH
 ```
 
 ### 1.1 Tech stack (fixed — do not substitute without updating this doc)
@@ -52,9 +52,9 @@ flowchart LR
 | ORM | Drizzle ORM |
 | Database | PostgreSQL, hosted and managed on **Supabase** (Supabase project = the single database for all environments unless a separate staging project is provisioned) |
 | File storage | Supabase Storage (same Supabase project as the database; buckets: `payment-proofs`, `maintenance-photos`) |
-| Auth | JWT access token (15 min) + rotating refresh token (7-day sliding); refresh token hashed in `refresh_tokens` table, revoked on logout |
+| Auth | JWT access token (15 min) + rotating refresh token (7-day sliding); refresh token hashed in `rosihome_refresh_tokens` table, revoked on logout |
 | Scheduled jobs | `node-cron` in-process (no external queue in MVP) |
-| Push notifications | Firebase Cloud Messaging (FCM) |
+| Push notifications | Expo Push (Expo's push service; the Expo SDK on the mobile app obtains an Expo push token and Expo fans out to FCM/APNs) |
 | Transactional email | Gmail SMTP via `nodemailer` (configured through `EMAIL_HOST`/`EMAIL_PORT`/`EMAIL_USER`/`EMAIL_PASSWORD`/`EMAIL_FROM`); sits behind an `EmailProvider` interface so other SMTP providers can be swapped in. On send failure the message is enqueued to `email_send_queue` for retry rather than throwing. |
 | PDF generation | `pdfkit` (server-side, no headless browser) |
 | QR generation | VietQR EMVCo payload built in-process + `qrcode` npm package to render the PNG/SVG |
@@ -74,7 +74,6 @@ flowchart LR
       /properties       # US-PROPERTY-*, US-ROOM-*
       /tenants          # US-TENANT-*
       /utilities        # US-UTILITY-*, US-CHARGE-01
-      /meters           # US-METER-*
       /invoices         # US-INVOICE-*
       /payments         # US-VIETQR-*, US-PAYMENT-*
       /leases           # US-LEASE-*
@@ -82,6 +81,9 @@ flowchart LR
       /dashboard         # US-DASH-*
       /reports           # US-REPORT-*
       /notifications      # cross-cutting push/email delivery
+    # NOTE: US-METER-* (meter readings) are not yet implemented as a module;
+    # the meter_readings table exists in db/schema.ts but there is no /meters
+    # router/service/repository yet.
     /jobs               # cron job entry points (one file per job)
     /db
       schema.ts         # Drizzle schema (single source of truth for tables)
@@ -164,7 +166,7 @@ or for lists:
 ### 3.2 JWT + Refresh tokens
 
 - **Access token** claims: `{ sub: userId, role: "landlord"|"tenant", mustChangePassword: boolean, iat, exp }`. Do not put PII (email, name) in the token. Expiry: **15 minutes** (`JWT_EXPIRY_SECONDS`, default 900).
-- **Refresh token**: an opaque random string (not a JWT), stored hashed (`sha256`) in the `refresh_tokens` table with a **7-day absolute expiry** (`JWT_REFRESH_EXPIRY_SECONDS`, default 604800). The refresh token is **rotated on every use** — when the mobile app presents a refresh token to `POST /api/v1/auth/refresh`, the presented token is immediately revoked and a brand-new access+refresh pair is returned. Because rotation extends the lifetime on each use, a landlord who opens the app at least once every 7 days keeps a live session indefinitely; a user offline longer than 7 days must log in again.
+- **Refresh token**: an opaque random string (not a JWT), stored hashed (`sha256`) in the `rosihome_refresh_tokens` table with a **7-day absolute expiry** (`JWT_REFRESH_EXPIRY_SECONDS`, default 604800). The refresh token is **rotated on every use** — when the mobile app presents a refresh token to `POST /api/v1/auth/refresh`, the presented token is immediately revoked and a brand-new access+refresh pair is returned. Because rotation extends the lifetime on each use, a landlord who opens the app at least once every 7 days keeps a live session indefinitely; a user offline longer than 7 days must log in again.
 - Token delivered in `Authorization: Bearer <accessToken>` header. Never in query strings (would leak in logs). The refresh token is only ever sent in the body of `/auth/login`, `/auth/refresh`, and `/auth/logout`.
 - On logout (US-AUTH-03), the API **revokes the presented refresh token server-side** (sets `revokedAt`); the mobile app must additionally delete both tokens from secure storage and clear any cached protected data from memory/view. (Originally MVP was access-token-only with client-side-only logout; this refresh-token flow replaces that decision.)
 
@@ -394,9 +396,9 @@ No two `Active` leases for the same `roomId` may have overlapping `[startDate, e
 | Column | Type | Notes |
 |---|---|---|
 | propertyId | uuid PK, FK properties | |
+| remindAt30Days | boolean default false | |
+| remindAt15Days | boolean default false | |
 | remindAt7Days | boolean default false | |
-| remindAt3Days | boolean default false | |
-| remindAt1Day | boolean default false | |
 
 **meter_readings** (US-METER-01/02/03)
 | Column | Type | Notes |
@@ -516,7 +518,7 @@ Corrections (US-METER-03) never overwrite a row; they insert a new row with `cor
 |---|---|---|
 | id | uuid PK | |
 | userId | uuid, FK users | |
-| fcmToken | text UNIQUE | |
+| pushToken | text UNIQUE | Expo push token (e.g. ExponentPushToken[...]) |
 | platform | enum(`ios`,`android`) | |
 | createdAt | timestamptz | |
 
@@ -529,7 +531,7 @@ Corrections (US-METER-03) never overwrite a row; they insert a new row with `cor
 Single internal service `NotificationService.send(userId, type, title, body, linkRef, dedupeKey?)`:
 1. If `dedupeKey` is provided and a `notifications` row with that key already exists, no-op (idempotency, §4.5).
 2. Insert the `notifications` row.
-3. Look up the user's `device_tokens`; send via FCM to each; set `deliveryStatus` based on the FCM response.
+3. Look up the user's `device_tokens`; send via Expo to each; set `deliveryStatus` based on the Expo response.
 4. Never throw out of the caller's transaction — notification delivery failures must not roll back the business operation that triggered them (e.g. an invoice must stay `Sent` even if the push fails). Log failures for later inspection.
 
 All "sends a mobile push notification" acceptance criteria call this one service — do not build a second notification pathway.
@@ -554,7 +556,7 @@ All jobs live in `/backend/src/jobs`, one file each, registered in `server.ts` v
 |---|---|---|---|
 | `generateMonthlyInvoices` | Daily (checks each property's configured billing day) | US-INVOICE-01 | For each active lease whose billing period isn't yet invoiced, checks required readings exist; creates `Draft` invoice + line items, or logs a skip. Idempotent per §4.5. |
 | `sendOverdueReminders` | Daily | US-REMINDER-01 | Finds `Sent` invoices past `dueDate` with no `payments` row; sends a deduped push per invoice per day (or per configured frequency). |
-| `sendLeaseExpirationReminders` | Daily | US-LEASE-05 | For each property with `lease_reminder_configs`, finds active leases whose `endDate` is exactly 7/3/1 days out (per enabled flags) and notifies landlord + tenant, deduped by `(leaseId, ruleDay)`. |
+| `sendLeaseExpirationReminders` | Daily | US-LEASE-05 | For each property with `lease_reminder_configs`, finds active leases whose `endDate` is exactly 30/15/7 days out (per enabled flags) and notifies landlord + tenant, deduped by `(leaseId, ruleDay)`. |
 
 ---
 
@@ -584,6 +586,6 @@ All jobs live in `/backend/src/jobs`, one file each, registered in `server.ts` v
 
 ## 12. Configuration & Environments
 
-- `.env` (never committed) drives: `DATABASE_URL` (Supabase Postgres connection string — pooled connection recommended for the API, direct connection for migrations), `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (used for Supabase Storage access), `FCM_SERVER_KEY`, `EMAIL_PROVIDER_API_KEY`, `NODE_ENV`.
+- `.env` (never committed) drives: `DATABASE_URL` (Supabase Postgres connection string — pooled connection recommended for the API, direct connection for migrations), `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (used for Supabase Storage access), `EXPO_ACCESS_TOKEN` (optional — enables Expo's Enhanced Security for Push Notifications), `EMAIL_PROVIDER_API_KEY`, `NODE_ENV`.
 - The Supabase project is the database for every environment: use a **separate Supabase project per environment** (development / staging-integration / production) rather than separate databases within one project, so storage buckets and auth-adjacent settings don't leak across environments.
 - Database migrations are managed with Drizzle Kit against the Supabase Postgres instance; every schema change ships as a migration file committed to `/backend/src/db/migrations` and applied via `drizzle-kit push`/`migrate` — never hand-edit the schema through the Supabase dashboard (Global DoD: "reproducible" migrations).

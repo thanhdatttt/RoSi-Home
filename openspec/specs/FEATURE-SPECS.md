@@ -36,7 +36,7 @@
 - **Auth:** required (any role)
 - **Request:** `{ refreshToken }` (optional but recommended)
 - **Response:** `200 { data: { success: true } }`
-- **Business rules:** On this call the server **revokes the presented refresh token** (sets `revokedAt` in `refresh_tokens`) so it can no longer be used at `/auth/refresh`. The mobile app is additionally responsible for deleting both tokens from secure storage and clearing in-memory cached protected data.
+- **Business rules:** On this call the server **revokes the presented refresh token** (sets `revokedAt` in `rosihome_refresh_tokens`) so it can no longer be used at `/auth/refresh`. The mobile app is additionally responsible for deleting both tokens from secure storage and clearing in-memory cached protected data.
 
 #### US-AUTH-04 — Enforce role and data ownership
 - **Not a standalone endpoint** — this is the `requireAuth` + `requireRole` + service-layer ownership pattern described in architecture §3.3, applied to *every* protected route in this document. Implement it once as middleware/helpers and reuse; do not special-case it per module.
@@ -330,8 +330,8 @@
 ### F-11 — Automated Lease Renewal Reminders
 
 #### US-LEASE-05 — Receive a lease-expiration reminder
-- **Trigger:** job `sendLeaseExpirationReminders` (architecture §8), daily; configuration via `PATCH /api/v1/properties/:propertyId/lease-reminder-config` (`{ remindAt7Days, remindAt3Days, remindAt1Day }`)
-- **Business rules:** for each property with at least one flag enabled, find `Active` leases where `endDate - today` exactly equals an enabled offset; notify **both** the owning landlord and the assigned tenant, deduped by `(leaseId, offsetDays)` (architecture §4.5); an `Ended`/`Expired` lease is excluded by the `status='Active'` filter.
+- **Trigger:** job `sendLeaseExpirationReminders` (architecture §8), daily; configuration via `PATCH /api/v1/properties/:propertyId/lease-reminder-config` (`{ remindAt30Days, remindAt15Days, remindAt7Days }`)
+- **Business rules:** for each property with at least one flag enabled, find `Active` leases where `endDate - today` exactly equals an enabled offset (30, 15, or 7 days); notify **both** the owning landlord and the assigned tenant, deduped by `(leaseId, offsetDays)` (architecture §4.5); an `Ended`/`Expired` lease is excluded by the `status='Active'` filter.
 
 #### US-LEASE-06 — View upcoming lease expirations
 - **Endpoint:** `GET /api/v1/leases/upcoming-expirations`

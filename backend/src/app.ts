@@ -8,6 +8,8 @@ import { roomsRouter } from "./modules/rooms/router.js";
 import { tenantsRouter } from "./modules/tenants/router.js";
 import { utilitiesRouter } from "./modules/utilities/router.js";
 import { chargesRouter } from "./modules/charges/router.js";
+import { leasesRouter } from "./modules/leases/router.js";
+import { notificationsRouter } from "./modules/notifications/router.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -25,6 +27,8 @@ export function createApp(): express.Express {
   app.use("/api/v1", roomsRouter);
   app.use("/api/v1", utilitiesRouter);
   app.use("/api/v1", chargesRouter);
+  app.use("/api/v1", leasesRouter);
+  app.use("/api/v1/notifications", notificationsRouter);
 
   app.use(errorHandler);
   return app;

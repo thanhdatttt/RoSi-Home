@@ -47,8 +47,10 @@ export const config = {
   get supabaseServiceKey() {
     return getEnv("SUPABASE_SERVICE_KEY", "");
   },
-  get firebaseServiceAccountJson() {
-    return getEnv("FIREBASE_SERVICE_ACCOUNT_JSON", "");
+  // Optional: enables Expo's "Enhanced Security for Push Notifications".
+  // Not required to send push notifications via Expo's push service.
+  get expoAccessToken() {
+    return getEnv("EXPO_ACCESS_TOKEN", "");
   },
   get emailProviderApiKey() {
     return getEnv("EMAIL_PROVIDER_API_KEY", "");
