@@ -43,7 +43,7 @@ Content-Type: application/json
 
 ### US-CHARGE-01 — Create a recurring surcharge
 ### Expect 201 { data:{ id, name, monthlyAmount, effectiveFrom, ... } }
-POST {{baseUrl}}/properties/{{propertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -59,14 +59,14 @@ Content-Type: application/json
 
 ### US-CHARGE-01 — List surcharges for the property
 ### Expect 200 paginated; the Internet surcharge appears.
-GET {{baseUrl}}/properties/{{propertyId}}/surcharges
+GET {{baseUrl}}/charges/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 
 ###
 
 ### US-CHARGE-01 — Update the surcharge (prospective change)
 ### Expect 200 with updated values.
-PATCH {{baseUrl}}/surcharges/{{surchargeId}}
+PATCH {{baseUrl}}/charges/{{surchargeId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -79,7 +79,7 @@ Content-Type: application/json
 
 ### US-CHARGE-01 — Deactivate the surcharge (soft delete)
 ### Expect 200 { data:{ success:true } } or updated view.
-DELETE {{baseUrl}}/surcharges/{{surchargeId}}
+DELETE {{baseUrl}}/charges/{{surchargeId}}
 Authorization: Bearer {{accessToken}}
 
 ###
@@ -89,7 +89,7 @@ Authorization: Bearer {{accessToken}}
 ### ============================================================
 
 ### Create with missing name (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -101,7 +101,7 @@ Content-Type: application/json
 ###
 
 ### Create with negative monthlyAmount (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -114,7 +114,7 @@ Content-Type: application/json
 ###
 
 ### Create with malformed effectiveFrom (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -127,7 +127,7 @@ Content-Type: application/json
 ###
 
 ### Update with empty body (expect 400 — at least one field required)
-PATCH {{baseUrl}}/surcharges/{{surchargeId}}
+PATCH {{baseUrl}}/charges/{{surchargeId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -136,7 +136,7 @@ Content-Type: application/json
 ###
 
 ### Create surcharge on another landlord's property (expect 404)
-POST {{baseUrl}}/properties/{{otherLandlordPropertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{otherLandlordPropertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -149,7 +149,7 @@ Content-Type: application/json
 ###
 
 ### Unauthenticated create (expect 401 UNAUTHENTICATED)
-POST {{baseUrl}}/properties/{{propertyId}}/surcharges
+POST {{baseUrl}}/charges/properties/{{propertyId}}
 Content-Type: application/json
 
 {

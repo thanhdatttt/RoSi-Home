@@ -28,6 +28,7 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
 
 export function requireRole(role: "Landlord" | "Tenant") {
   return (req: Request, _res: Response, next: NextFunction): void => {
+    console.error("[requireRole] needed=", role, "path=", req.path, "userRole=", req.user?.role, "user=", req.user?.id);
     if (!req.user) return next(new UnauthenticatedError());
     if (req.user.role !== role) return next(new ForbiddenError());
     next();

@@ -20,5 +20,5 @@ chargesRouter.get(
   validate(paginationQuerySchema, "query"),
   asyncHandler(list),
 );
-chargesRouter.patch("/surcharges/:id", validate(updateSurchargeSchema), asyncHandler(update));
-chargesRouter.delete("/surcharges/:id", asyncHandler(remove));
+chargesRouter.patch("/:id", validate(updateSurchargeSchema), asyncHandler(update));
+chargesRouter.delete("/:id", asyncHandler(remove));

@@ -43,7 +43,7 @@ Content-Type: application/json
 
 ### US-UTILITY-01 — Configure Metered water rates
 ### Expect 201 { data:{ id, electricityRatePerKwh, waterBillingMethod, ... } }
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -57,7 +57,7 @@ Content-Type: application/json
 ###
 
 ### US-UTILITY-01 — Configure Flat water rates (no waterRatePerM3)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -72,7 +72,7 @@ Content-Type: application/json
 
 ### US-UTILITY-02 — View effective utility rates for the property
 ### Expect 200 { data:{ ... current electricity + water rates ... } }
-GET {{baseUrl}}/properties/{{propertyId}}/utility-rates
+GET {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 
 ###
@@ -82,7 +82,7 @@ Authorization: Bearer {{accessToken}}
 ### ============================================================
 
 ### Missing electricityRatePerKwh (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -95,7 +95,7 @@ Content-Type: application/json
 ###
 
 ### Negative rate (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -109,7 +109,7 @@ Content-Type: application/json
 ###
 
 ### Invalid waterBillingMethod enum (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -122,7 +122,7 @@ Content-Type: application/json
 ###
 
 ### Metered without waterRatePerM3 (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -135,7 +135,7 @@ Content-Type: application/json
 ###
 
 ### Malformed effectiveFrom date (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -149,7 +149,7 @@ Content-Type: application/json
 ###
 
 ### Configure rates on another landlord's property (expect 404)
-POST {{baseUrl}}/properties/{{otherLandlordPropertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{otherLandlordPropertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -163,7 +163,7 @@ Content-Type: application/json
 ###
 
 ### Unauthenticated configure (expect 401 UNAUTHENTICATED)
-POST {{baseUrl}}/properties/{{propertyId}}/utility-rates
+POST {{baseUrl}}/utilities/properties/{{propertyId}}
 Content-Type: application/json
 
 {

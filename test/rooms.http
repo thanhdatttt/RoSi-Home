@@ -45,7 +45,7 @@ Content-Type: application/json
 ### US-ROOM-01 — Create a single room
 ### Expect 201 { data:{ id, name, baseRent, propertyId, ... } }
 # @name createRoom 
-POST {{baseUrl}}/properties/{{propertyId}}/rooms
+POST {{baseUrl}}/rooms/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -61,7 +61,7 @@ Content-Type: application/json
 
 ### US-ROOM-03 — Bulk create rooms (auto-numbering friendly)
 ### Expect 201; every row created atomically.
-POST {{baseUrl}}/properties/{{propertyId}}/rooms/bulk
+POST {{baseUrl}}/rooms/properties/{{propertyId}}/bulk
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -76,7 +76,7 @@ Content-Type: application/json
 
 ### US-ROOM-02 — List rooms for the property
 ### Expect 200 paginated; Room A/B/C appear.
-GET {{baseUrl}}/properties/{{propertyId}}/rooms
+GET {{baseUrl}}/rooms/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 
 ###
@@ -106,7 +106,7 @@ Content-Type: application/json
 ### ============================================================
 
 ### Create room with missing name (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/rooms
+POST {{baseUrl}}/rooms/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -117,7 +117,7 @@ Content-Type: application/json
 ###
 
 ### Create room with negative baseRent (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/rooms
+POST {{baseUrl}}/rooms/properties/{{propertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -140,7 +140,7 @@ Content-Type: application/json
 ###
 
 ### Bulk with empty rooms array (expect 400 VALIDATION_ERROR)
-POST {{baseUrl}}/properties/{{propertyId}}/rooms/bulk
+POST {{baseUrl}}/rooms/properties/{{propertyId}}/bulk
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -151,7 +151,7 @@ Content-Type: application/json
 ###
 
 ### Create room on a property owned by another landlord (expect 404)
-POST {{baseUrl}}/properties/{{otherLandlordPropertyId}}/rooms
+POST {{baseUrl}}/rooms/properties/{{otherLandlordPropertyId}}
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
@@ -163,6 +163,6 @@ Content-Type: application/json
 ###
 
 ### Unauthenticated room list (expect 401 UNAUTHENTICATED)
-GET {{baseUrl}}/properties/{{propertyId}}/rooms
+GET {{baseUrl}}/rooms/properties/{{propertyId}}
 
 ###

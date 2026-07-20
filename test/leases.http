@@ -42,7 +42,7 @@ Authorization: Bearer {{accessToken}}
 ###
 
 # @name firstRoom
-GET {{baseUrl}}/properties/{{propertyId}}/rooms?pageSize=1
+GET {{baseUrl}}/rooms/properties/{{propertyId}}?pageSize=1
 Authorization: Bearer {{accessToken}}
 
 ###

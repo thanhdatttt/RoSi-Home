@@ -15,19 +15,19 @@ export const roomsRouter = Router();
 roomsRouter.use(requireAuth, requireRole("Landlord"));
 
 roomsRouter.post(
-  "/properties/:propertyId/rooms",
+  "/properties/:propertyId",
   validate(createRoomSchema),
   asyncHandler(create),
 );
 roomsRouter.post(
-  "/properties/:propertyId/rooms/bulk",
+  "/properties/:propertyId/bulk",
   validate(bulkRoomsSchema),
   asyncHandler(bulk),
 );
 roomsRouter.get(
-  "/properties/:propertyId/rooms",
+  "/properties/:propertyId",
   validate(paginationQuerySchema, "query"),
   asyncHandler(list),
 );
-roomsRouter.get("/rooms/:id", asyncHandler(get));
-roomsRouter.patch("/rooms/:id", validate(updateRoomSchema), asyncHandler(update));
+roomsRouter.get("/:id", asyncHandler(get));
+roomsRouter.patch("/:id", validate(updateRoomSchema), asyncHandler(update));

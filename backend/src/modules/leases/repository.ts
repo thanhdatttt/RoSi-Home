@@ -201,6 +201,7 @@ export async function findLeaseForTenantUser(
   const [row] = await detailBaseQuery(executor).where(
     and(eq(leases.id, leaseId), isNull(leases.deletedAt), eq(tenantInfo.userId, tenantUserId)),
   );
+  console.log(row);
   return (row as LeaseDetailRow) ?? null;
 }
 

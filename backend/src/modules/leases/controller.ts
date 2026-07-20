@@ -17,6 +17,7 @@ async function create(req: Request, res: Response): Promise<void> {
 }
 
 async function list(req: Request, res: Response): Promise<void> {
+  console.error("[list] reached, role=", req.user?.role, "path=", req.path);
   const { propertyId, ...pagination } = req.query as unknown as Pagination & { propertyId?: string };
   const result = await listLeasesService(req.user!, pagination, propertyId);
   res.status(200).json(result);

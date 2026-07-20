@@ -24,10 +24,10 @@ export function createApp(): express.Express {
   app.use("/api/v1/profile", profileRouter);
   app.use("/api/v1/properties", propertiesRouter);
   app.use("/api/v1/tenants", tenantsRouter);
-  app.use("/api/v1", roomsRouter);
-  app.use("/api/v1", utilitiesRouter);
-  app.use("/api/v1", chargesRouter);
-  app.use("/api/v1", leasesRouter);
+  app.use("/api/v1/rooms", roomsRouter);
+  app.use("/api/v1/utilities", utilitiesRouter);
+  app.use("/api/v1/charges", chargesRouter);
+  app.use("/api/v1/leases", leasesRouter);
   app.use("/api/v1/notifications", notificationsRouter);
 
   app.use(errorHandler);
