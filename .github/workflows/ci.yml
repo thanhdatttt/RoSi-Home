@@ -38,9 +38,18 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Run unit & contract tests
+      - name: Run unit tests
         run: npm test
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run API tests
+        run: npm run test:api
 
       - name: Build
         run: npm run build
+
+      - name: Intentional fail
+        run: exit 1
         
