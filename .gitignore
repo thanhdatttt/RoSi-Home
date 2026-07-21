@@ -23,3 +23,8 @@ android/
 web-build/
 
 .opencode/
+
+# Codex telemetry setup — kept out of git entirely (per project requirement).
+# Telemetry data, reports and scripts must never be committed.
+codex-telemetry/
+codex-telemetry.zip
