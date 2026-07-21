@@ -78,7 +78,4 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Intentional fail
-        run: exit 1
         
