@@ -16,18 +16,18 @@ CREATE TABLE IF NOT EXISTS "audit_events" (
 	"action" text NOT NULL,
 	"entity_type" text NOT NULL,
 	"entity_id" uuid NOT NULL,
-	"before_value" text,
-	"after_value" text,
+	"before_value" jsonb,
+	"after_value" jsonb,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "device_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
-	"fcm_token" text NOT NULL,
+	"push_token" text NOT NULL,
 	"platform" "platform" NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "device_tokens_fcm_token_unique" UNIQUE("fcm_token")
+	CONSTRAINT "device_tokens_push_token_unique" UNIQUE("push_token")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "email_send_queue" (
@@ -94,9 +94,9 @@ CREATE TABLE IF NOT EXISTS "landlord_profiles" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "lease_reminder_configs" (
 	"property_id" uuid PRIMARY KEY NOT NULL,
-	"remind_at_7_days" boolean DEFAULT false NOT NULL,
-	"remind_at_3_days" boolean DEFAULT false NOT NULL,
-	"remind_at_1_day" boolean DEFAULT false NOT NULL
+	"remind_at_30_days" boolean DEFAULT false NOT NULL,
+	"remind_at_15_days" boolean DEFAULT false NOT NULL,
+	"remind_at_7_days" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "leases" (
@@ -155,6 +155,16 @@ CREATE TABLE IF NOT EXISTS "meter_readings" (
 	"billing_period" text NOT NULL,
 	"value" numeric(18, 4) NOT NULL,
 	"is_initial" boolean DEFAULT false NOT NULL,
+	"previous_value" numeric(18, 4),
+	"consumption" numeric(18, 4),
+	"unit_rate" integer,
+	"amount" integer DEFAULT 0 NOT NULL,
+	"rate_source" text,
+	"rate_source_id" uuid,
+	"rate_source_reference" text,
+	"rate_effective_from" date,
+	"locality" text,
+	"tenant_count" integer,
 	"correction_of" uuid,
 	"superseded_at" timestamp with time zone,
 	"recorded_by" uuid NOT NULL,
@@ -172,14 +182,6 @@ CREATE TABLE IF NOT EXISTS "notifications" (
 	"delivery_status" "delivery_status" DEFAULT 'Sent' NOT NULL,
 	"dedupe_key" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
-	"token_hash" text NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL,
-	"used_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "payment_proofs" (
@@ -206,6 +208,7 @@ CREATE TABLE IF NOT EXISTS "properties" (
 	"landlord_id" uuid NOT NULL,
 	"name" text NOT NULL,
 	"address" text NOT NULL,
+	"locality" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"deleted_at" timestamp with time zone,
@@ -453,13 +456,13 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "meter_readings" ADD CONSTRAINT "meter_readings_correction_of_meter_readings_id_fk" FOREIGN KEY ("correction_of") REFERENCES "public"."meter_readings"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -578,7 +581,7 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "device_tokens_user_token" ON "device_tokens" USING btree ("user_id","fcm_token");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "device_tokens_user_token" ON "device_tokens" USING btree ("user_id","push_token");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "invoices_lease_period_active" ON "invoices" USING btree ("lease_id","billing_period") WHERE "invoices"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "landlord_profiles_email_active" ON "landlord_profiles" USING btree ("email");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "leases_tenant_active" ON "leases" USING btree ("tenant_info_id") WHERE "leases"."deleted_at" IS NULL AND "leases"."status" = 'Active';--> statement-breakpoint
@@ -587,7 +590,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "payments_invoice_unique" ON "payments" USING 
 CREATE UNIQUE INDEX IF NOT EXISTS "properties_name_active" ON "properties" USING btree ("landlord_id","name") WHERE "properties"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "properties_address_active" ON "properties" USING btree ("landlord_id","address") WHERE "properties"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "rooms_name_active" ON "rooms" USING btree ("property_id","name") WHERE "rooms"."deleted_at" IS NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "surcharges_name_active" ON "surcharges" USING btree ("property_id","name") WHERE "surcharges"."deleted_at" IS NULL AND "surcharges"."active" = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "surcharges_name_active" ON "surcharges" USING btree ("property_id","name") WHERE "surcharges"."deleted_at" IS NULL AND "surcharges"."active" = true;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tenant_info_phone_active" ON "tenant_info" USING btree ("phone") WHERE "tenant_info"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tenant_info_email_active" ON "tenant_info" USING btree ("email") WHERE "tenant_info"."deleted_at" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "tenant_info_id_active" ON "tenant_info" USING btree ("id_number") WHERE "tenant_info"."deleted_at" IS NULL;

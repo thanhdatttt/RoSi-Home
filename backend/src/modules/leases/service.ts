@@ -4,6 +4,7 @@ import { ConflictError, NotFoundError, UnprocessableError } from "../../lib/erro
 import { isUniqueViolation } from "../../lib/pgErrors.js";
 import { businessDate } from "../../lib/businessDate.js";
 import { type Paginated, type Pagination, paginate } from "../../lib/pagination.js";
+import { toDateStr } from "../../lib/serialize.js";
 import { provisionTenantAccount } from "../tenants/service.js";
 import {
   assertLeasePeriod,
@@ -79,12 +80,6 @@ export type LeaseReminderConfigView = {
   remindAt15Days: boolean;
   remindAt7Days: boolean;
 };
-
-function toDateStr(d: Date | string | null | undefined): string | null {
-  if (d === null || d === undefined) return null;
-  if (typeof d === "string") return d;
-  return d.toISOString().slice(0, 10);
-}
 
 function serialize(row: LeaseDetailRow): LeaseView {
   return {

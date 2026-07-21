@@ -1,1 +1,0 @@
-ALTER TABLE "meter_readings" ADD COLUMN "rate_source_id" uuid;
