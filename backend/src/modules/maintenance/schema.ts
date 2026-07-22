@@ -26,6 +26,12 @@ export const maintenanceRequestParamsSchema = z
   })
   .strict();
 
+export const roomMaintenanceHistoryParamsSchema = z
+  .object({
+    roomId: z.string().uuid("roomId must be a valid room id."),
+  })
+  .strict();
+
 export const maintenanceRequestListQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),

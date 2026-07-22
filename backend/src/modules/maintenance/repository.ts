@@ -35,6 +35,14 @@ export type LandlordMaintenanceRequestRow = MaintenanceRequestRow & {
   tenantFullName: string;
   tenantUserId: string | null;
 };
+export type RoomMaintenanceRequestRow = MaintenanceRequestRow & {
+  tenantFullName: string;
+};
+export type MaintenanceRoomContext = {
+  id: string;
+  name: string;
+  propertyId: string;
+};
 export type LandlordMaintenanceRequestFilters = {
   propertyId?: string;
   status?: MaintenanceRequestRow["status"];
@@ -235,6 +243,92 @@ export async function findMaintenanceRequestForLandlord(
     ),
   );
   return (row as LandlordMaintenanceRequestRow | undefined) ?? null;
+}
+
+export async function findOwnedMaintenanceRoom(
+  landlordId: string,
+  roomId: string,
+  executor: Db = db,
+): Promise<MaintenanceRoomContext | null> {
+  const [row] = await executor
+    .select({
+      id: rooms.id,
+      name: rooms.name,
+      propertyId: properties.id,
+    })
+    .from(rooms)
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(
+      and(
+        eq(rooms.id, roomId),
+        eq(properties.landlordId, landlordId),
+        isNull(rooms.deletedAt),
+        isNull(properties.deletedAt),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+function roomMaintenanceHistoryScope(landlordId: string, roomId: string) {
+  return and(
+    eq(maintenanceRequests.roomId, roomId),
+    eq(properties.landlordId, landlordId),
+    isNull(maintenanceRequests.deletedAt),
+    isNull(rooms.deletedAt),
+    isNull(properties.deletedAt),
+  );
+}
+
+export async function listMaintenanceRequestsForOwnedRoom(
+  landlordId: string,
+  roomId: string,
+  pagination: Pagination,
+  executor: Db = db,
+): Promise<RoomMaintenanceRequestRow[]> {
+  const rows = await executor
+    .select({
+      ...getTableColumns(maintenanceRequests),
+      tenantFullName: tenantInfo.fullName,
+    })
+    .from(maintenanceRequests)
+    .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
+    .innerJoin(rooms, eq(maintenanceRequests.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(roomMaintenanceHistoryScope(landlordId, roomId))
+    .orderBy(desc(maintenanceRequests.submittedAt), desc(maintenanceRequests.id))
+    .limit(pagination.pageSize)
+    .offset((pagination.page - 1) * pagination.pageSize);
+  return rows as RoomMaintenanceRequestRow[];
+}
+
+export async function countMaintenanceRequestsForOwnedRoom(
+  landlordId: string,
+  roomId: string,
+  executor: Db = db,
+): Promise<number> {
+  const [row] = await executor
+    .select({ value: count() })
+    .from(maintenanceRequests)
+    .innerJoin(rooms, eq(maintenanceRequests.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(roomMaintenanceHistoryScope(landlordId, roomId));
+  return Number(row?.value ?? 0);
+}
+
+export async function findMaintenanceStatusHistoryByRequestIds(
+  requestIds: readonly string[],
+  executor: Db = db,
+): Promise<MaintenanceStatusHistoryRow[]> {
+  if (requestIds.length === 0) return [];
+  return executor
+    .select()
+    .from(maintenanceStatusHistory)
+    .where(inArray(maintenanceStatusHistory.requestId, [...requestIds]))
+    .orderBy(
+      asc(maintenanceStatusHistory.changedAt),
+      asc(maintenanceStatusHistory.id),
+    );
 }
 
 export async function findMaintenancePhotosByRequestIds(

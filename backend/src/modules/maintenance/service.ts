@@ -25,16 +25,22 @@ import {
   findMaintenancePhotosByRequestIds,
   findMaintenanceRequestForLandlord,
   findMaintenanceRequestForTenantUser,
+  findMaintenanceStatusHistoryByRequestIds,
+  findOwnedMaintenanceRoom,
   insertMaintenancePhotos,
   insertMaintenanceRequest,
   insertMaintenanceStatusHistory,
   listMaintenanceRequestsForLandlord,
+  listMaintenanceRequestsForOwnedRoom,
   listMaintenanceRequestsForTenantUser,
+  countMaintenanceRequestsForOwnedRoom,
   updateMaintenanceRequestStatus,
   type LandlordMaintenanceRequestFilters,
   type LandlordMaintenanceRequestRow,
   type MaintenancePhotoRow,
   type MaintenanceRequestRow,
+  type MaintenanceStatusHistoryRow,
+  type RoomMaintenanceRequestRow,
   type TenantMaintenanceRequestRow,
 } from "./repository.js";
 import { assertMaintenanceStatusTransition } from "./rules.js";
@@ -82,6 +88,21 @@ export type MaintenanceStatusUpdateView = {
   status: "Pending" | "InProgress" | "Completed";
   completedAt: string | null;
   updatedAt: string;
+};
+
+export type RoomMaintenanceHistoryItemView = {
+  id: string;
+  title: string;
+  requester: { id: string; fullName: string };
+  submittedAt: string;
+  status: "Pending" | "InProgress" | "Completed";
+  statusHistory: {
+    id: string;
+    fromStatus: string;
+    toStatus: string;
+    changedBy: string;
+    changedAt: string;
+  }[];
 };
 
 type MaintenanceActor = { id: string; role: "Landlord" | "Tenant" };
@@ -156,6 +177,41 @@ function groupPhotosByRequest(
     grouped.set(photo.requestId, requestPhotos);
   }
   return grouped;
+}
+
+function groupStatusHistoryByRequest(
+  historyRows: readonly MaintenanceStatusHistoryRow[],
+): Map<string, MaintenanceStatusHistoryRow[]> {
+  const grouped = new Map<string, MaintenanceStatusHistoryRow[]>();
+  for (const history of historyRows) {
+    const requestHistory = grouped.get(history.requestId) ?? [];
+    requestHistory.push(history);
+    grouped.set(history.requestId, requestHistory);
+  }
+  return grouped;
+}
+
+function serializeRoomMaintenanceHistoryItem(
+  request: RoomMaintenanceRequestRow,
+  historyRows: readonly MaintenanceStatusHistoryRow[],
+): RoomMaintenanceHistoryItemView {
+  return {
+    id: request.id,
+    title: request.title,
+    requester: {
+      id: request.tenantInfoId,
+      fullName: request.tenantFullName,
+    },
+    submittedAt: request.submittedAt.toISOString(),
+    status: request.status,
+    statusHistory: historyRows.map((history) => ({
+      id: history.id,
+      fromStatus: history.fromStatus,
+      toStatus: history.toStatus,
+      changedBy: history.changedBy,
+      changedAt: history.changedAt.toISOString(),
+    })),
+  };
 }
 
 async function cleanupUploadedPhotos(
@@ -344,6 +400,35 @@ export async function getMaintenanceRequestService(
   if (!request) throw new NotFoundError("Maintenance request not found.");
   const photos = await findMaintenancePhotosByRequestIds([request.id]);
   return serializeLandlordRequest(request, photos);
+}
+
+export async function listRoomMaintenanceHistoryService(
+  landlordId: string,
+  roomId: string,
+  pagination: Pagination,
+): Promise<Paginated<RoomMaintenanceHistoryItemView>> {
+  const room = await findOwnedMaintenanceRoom(landlordId, roomId);
+  if (!room) throw new NotFoundError("Room not found.");
+
+  const [requests, total] = await Promise.all([
+    listMaintenanceRequestsForOwnedRoom(landlordId, roomId, pagination),
+    countMaintenanceRequestsForOwnedRoom(landlordId, roomId),
+  ]);
+  const historyRows = await findMaintenanceStatusHistoryByRequestIds(
+    requests.map((request) => request.id),
+  );
+  const historyByRequest = groupStatusHistoryByRequest(historyRows);
+
+  return paginate(
+    requests.map((request) =>
+      serializeRoomMaintenanceHistoryItem(
+        request,
+        historyByRequest.get(request.id) ?? [],
+      ),
+    ),
+    total,
+    pagination,
+  );
 }
 
 export async function updateMaintenanceStatusService(

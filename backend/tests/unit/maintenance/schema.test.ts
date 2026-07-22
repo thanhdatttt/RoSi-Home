@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   maintenanceRequestListQuerySchema,
+  roomMaintenanceHistoryParamsSchema,
   submitMaintenanceRequestSchema,
   updateMaintenanceStatusSchema,
 } from "../../../src/modules/maintenance/schema.js";
@@ -97,6 +98,26 @@ describe("updateMaintenanceStatusSchema", () => {
       updateMaintenanceStatusSchema.safeParse({
         status: "Completed",
         completedAt: "2026-07-22T03:00:00.000Z",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("roomMaintenanceHistoryParamsSchema", () => {
+  it("US-MAINT-05: accepts a UUID roomId and rejects malformed or extra params", () => {
+    expect(
+      roomMaintenanceHistoryParamsSchema.parse({
+        roomId: "66666666-6666-4666-8666-666666666666",
+      }),
+    ).toEqual({ roomId: "66666666-6666-4666-8666-666666666666" });
+    expect(
+      roomMaintenanceHistoryParamsSchema.safeParse({ roomId: "room-101" })
+        .success,
+    ).toBe(false);
+    expect(
+      roomMaintenanceHistoryParamsSchema.safeParse({
+        roomId: "66666666-6666-4666-8666-666666666666",
+        propertyId: "22222222-2222-4222-8222-222222222222",
       }).success,
     ).toBe(false);
   });

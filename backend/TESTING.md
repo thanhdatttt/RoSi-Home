@@ -96,6 +96,14 @@ Maintenance status updates (US-MAINT-04) have automated coverage for:
 - Tenant-visible status after the update and Push-only tenant notification after transaction commit.
 - Compare-and-set concurrency behavior so duplicate updates create one history/audit/notification set.
 
+Room maintenance history (US-MAINT-05) has automated coverage for:
+
+- Landlord-only `GET /api/v1/rooms/:roomId/maintenance-requests` with standard pagination.
+- SQL-level room/property ownership scoping and indistinguishable `404` responses for missing or foreign rooms.
+- Request title, requester identity/name, submission timestamp, current status, and complete chronological status history.
+- Completed requests remaining visible and historical requester names surviving tenant archival.
+- Empty owned rooms returning an empty `200` list and tenant access returning `403`.
+
 ## API Automation Layers
 
 ### Contract tests — available now
@@ -175,6 +183,8 @@ The integration suite covers:
   request/attachment isolation, and mutation-free list/detail review behavior.
 - maintenance status transition/history/completion/audit persistence, scoped owner updates,
   Push-only tenant notification, and concurrent duplicate suppression.
+- room maintenance-history pagination, full chronological transition reads, completed-request
+  visibility, archived-requester retention, empty-room behavior, and cross-landlord isolation.
 
 ## Coverage Gate
 

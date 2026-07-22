@@ -21,6 +21,10 @@ const mocks = vi.hoisted(() => {
     listMaintenanceRequestsForLandlord: vi.fn(),
     countMaintenanceRequestsForLandlord: vi.fn(),
     findMaintenanceRequestForLandlord: vi.fn(),
+    findOwnedMaintenanceRoom: vi.fn(),
+    listMaintenanceRequestsForOwnedRoom: vi.fn(),
+    countMaintenanceRequestsForOwnedRoom: vi.fn(),
+    findMaintenanceStatusHistoryByRequestIds: vi.fn(),
     findMaintenancePhotosByRequestIds: vi.fn(),
     updateMaintenanceRequestStatus: vi.fn(),
     insertMaintenanceStatusHistory: vi.fn(),
@@ -48,6 +52,11 @@ vi.mock("../../../src/modules/maintenance/repository.js", () => ({
   listMaintenanceRequestsForLandlord: mocks.listMaintenanceRequestsForLandlord,
   countMaintenanceRequestsForLandlord: mocks.countMaintenanceRequestsForLandlord,
   findMaintenanceRequestForLandlord: mocks.findMaintenanceRequestForLandlord,
+  findOwnedMaintenanceRoom: mocks.findOwnedMaintenanceRoom,
+  listMaintenanceRequestsForOwnedRoom: mocks.listMaintenanceRequestsForOwnedRoom,
+  countMaintenanceRequestsForOwnedRoom: mocks.countMaintenanceRequestsForOwnedRoom,
+  findMaintenanceStatusHistoryByRequestIds:
+    mocks.findMaintenanceStatusHistoryByRequestIds,
   findMaintenancePhotosByRequestIds: mocks.findMaintenancePhotosByRequestIds,
   updateMaintenanceRequestStatus: mocks.updateMaintenanceRequestStatus,
   insertMaintenanceStatusHistory: mocks.insertMaintenanceStatusHistory,
@@ -67,6 +76,7 @@ import {
   getMaintenanceRequestService,
   getTenantMaintenanceRequestService,
   listMaintenanceRequestsService,
+  listRoomMaintenanceHistoryService,
   listTenantMaintenanceRequestsService,
   submitMaintenanceRequestService,
   updateMaintenanceStatusService,
@@ -735,5 +745,142 @@ describe("updateMaintenanceStatusService (US-MAINT-04)", () => {
     expect(mocks.insertMaintenanceStatusHistory).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
     expect(mocks.sendNotification).not.toHaveBeenCalled();
+  });
+});
+
+describe("listRoomMaintenanceHistoryService (US-MAINT-05)", () => {
+  const COMPLETED_REQUEST_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.findOwnedMaintenanceRoom.mockResolvedValue({
+      id: ROOM_ID,
+      name: "Room 101",
+      propertyId: "22222222-2222-4222-8222-222222222222",
+    });
+    mocks.listMaintenanceRequestsForOwnedRoom.mockResolvedValue([]);
+    mocks.countMaintenanceRequestsForOwnedRoom.mockResolvedValue(0);
+    mocks.findMaintenanceStatusHistoryByRequestIds.mockResolvedValue([]);
+  });
+
+  it("returns every paginated room request, including Completed, with requester and full status history", async () => {
+    const pending = {
+      ...requestRow(),
+      tenantFullName: "Tran Thi B",
+    };
+    const completed = {
+      ...requestRow({
+        id: COMPLETED_REQUEST_ID,
+        title: "Broken light",
+        status: "Completed",
+        submittedAt: new Date("2026-07-21T02:00:00.000Z"),
+        completedAt: new Date("2026-07-22T04:00:00.000Z"),
+      }),
+      tenantFullName: "Tran Thi B",
+    };
+    mocks.listMaintenanceRequestsForOwnedRoom.mockResolvedValue([
+      pending,
+      completed,
+    ]);
+    mocks.countMaintenanceRequestsForOwnedRoom.mockResolvedValue(2);
+    mocks.findMaintenanceStatusHistoryByRequestIds.mockResolvedValue([
+      {
+        id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        requestId: COMPLETED_REQUEST_ID,
+        fromStatus: "Pending",
+        toStatus: "InProgress",
+        changedBy: LANDLORD_ID,
+        changedAt: new Date("2026-07-22T03:00:00.000Z"),
+      },
+      {
+        id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+        requestId: COMPLETED_REQUEST_ID,
+        fromStatus: "InProgress",
+        toStatus: "Completed",
+        changedBy: LANDLORD_ID,
+        changedAt: new Date("2026-07-22T04:00:00.000Z"),
+      },
+    ]);
+
+    const result = await listRoomMaintenanceHistoryService(
+      LANDLORD_ID,
+      ROOM_ID,
+      { page: 1, pageSize: 20 },
+    );
+
+    expect(result).toEqual({
+      data: [
+        {
+          id: pending.id,
+          title: pending.title,
+          requester: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+          submittedAt: "2026-07-22T02:00:00.000Z",
+          status: "Pending",
+          statusHistory: [],
+        },
+        {
+          id: COMPLETED_REQUEST_ID,
+          title: "Broken light",
+          requester: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+          submittedAt: "2026-07-21T02:00:00.000Z",
+          status: "Completed",
+          statusHistory: [
+            {
+              id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+              fromStatus: "Pending",
+              toStatus: "InProgress",
+              changedBy: LANDLORD_ID,
+              changedAt: "2026-07-22T03:00:00.000Z",
+            },
+            {
+              id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+              fromStatus: "InProgress",
+              toStatus: "Completed",
+              changedBy: LANDLORD_ID,
+              changedAt: "2026-07-22T04:00:00.000Z",
+            },
+          ],
+        },
+      ],
+      meta: { page: 1, pageSize: 20, total: 2 },
+    });
+    expect(mocks.listMaintenanceRequestsForOwnedRoom).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      ROOM_ID,
+      { page: 1, pageSize: 20 },
+    );
+    expect(mocks.findMaintenanceStatusHistoryByRequestIds).toHaveBeenCalledWith([
+      pending.id,
+      COMPLETED_REQUEST_ID,
+    ]);
+  });
+
+  it("returns a scoped 404 before reading any requests for a foreign room", async () => {
+    mocks.findOwnedMaintenanceRoom.mockResolvedValue(null);
+
+    await expect(
+      listRoomMaintenanceHistoryService(LANDLORD_ID, ROOM_ID, {
+        page: 1,
+        pageSize: 20,
+      }),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+
+    expect(mocks.listMaintenanceRequestsForOwnedRoom).not.toHaveBeenCalled();
+    expect(mocks.countMaintenanceRequestsForOwnedRoom).not.toHaveBeenCalled();
+    expect(mocks.findMaintenanceStatusHistoryByRequestIds).not.toHaveBeenCalled();
+  });
+
+  it("returns an empty paginated history for an owned room without requests", async () => {
+    const result = await listRoomMaintenanceHistoryService(
+      LANDLORD_ID,
+      ROOM_ID,
+      { page: 2, pageSize: 5 },
+    );
+
+    expect(result).toEqual({
+      data: [],
+      meta: { page: 2, pageSize: 5, total: 0 },
+    });
+    expect(mocks.findMaintenanceStatusHistoryByRequestIds).toHaveBeenCalledWith([]);
   });
 });

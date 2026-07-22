@@ -727,3 +727,107 @@ describe("Maintenance status updates (US-MAINT-04)", () => {
     expect(notifications.rows).toHaveLength(1);
   });
 });
+
+describe("Room maintenance history (US-MAINT-05)", () => {
+  it("returns owned-room requests with requester, current status, and complete chronological status history", async () => {
+    await seedSubmittedRequests();
+    await dbPool.query(
+      `UPDATE maintenance_requests
+       SET status = 'Completed', completed_at = '2026-07-22T05:00:00.000Z'
+       WHERE id = $1`,
+      [OWN_REQUEST_2_ID],
+    );
+    await dbPool.query(
+      `INSERT INTO maintenance_status_history
+         (id, request_id, from_status, to_status, changed_by, changed_at)
+       VALUES
+         ('11111111-1111-4111-8111-111111111111', $1, 'Pending', 'InProgress', $3, '2026-07-22T02:30:00.000Z'),
+         ('11111111-1111-4111-8111-111111111112', $2, 'Pending', 'InProgress', $3, '2026-07-22T03:30:00.000Z'),
+         ('11111111-1111-4111-8111-111111111113', $2, 'InProgress', 'Completed', $3, '2026-07-22T05:00:00.000Z')`,
+      [OWN_REQUEST_ID, OWN_REQUEST_2_ID, LANDLORD_ID],
+    );
+    // Archiving a former requester must not erase the room's historical record.
+    await dbPool.query(
+      "UPDATE tenant_info SET deleted_at = NOW(), deleted_by = $1 WHERE id = $2",
+      [LANDLORD_ID, TENANT_INFO_ID],
+    );
+
+    const response = await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests?page=1&pageSize=20`)
+      .set(auth(landlordToken))
+      .expect(200);
+
+    expect(response.body.meta).toEqual({ page: 1, pageSize: 20, total: 2 });
+    expect(response.body.data.map((item: { id: string }) => item.id)).toEqual([
+      OWN_REQUEST_2_ID,
+      OWN_REQUEST_ID,
+    ]);
+    expect(response.body.data[0]).toEqual({
+      id: OWN_REQUEST_2_ID,
+      title: "Broken light",
+      requester: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+      submittedAt: "2026-07-22T03:00:00.000Z",
+      status: "Completed",
+      statusHistory: [
+        {
+          id: "11111111-1111-4111-8111-111111111112",
+          fromStatus: "Pending",
+          toStatus: "InProgress",
+          changedBy: LANDLORD_ID,
+          changedAt: "2026-07-22T03:30:00.000Z",
+        },
+        {
+          id: "11111111-1111-4111-8111-111111111113",
+          fromStatus: "InProgress",
+          toStatus: "Completed",
+          changedBy: LANDLORD_ID,
+          changedAt: "2026-07-22T05:00:00.000Z",
+        },
+      ],
+    });
+    expect(response.body.data[1]).toMatchObject({
+      id: OWN_REQUEST_ID,
+      status: "InProgress",
+      statusHistory: [
+        {
+          fromStatus: "Pending",
+          toStatus: "InProgress",
+          changedBy: LANDLORD_ID,
+        },
+      ],
+    });
+    expect(JSON.stringify(response.body)).not.toContain("Other tenant secret");
+  });
+
+  it("returns an empty paginated list for an owned room without requests", async () => {
+    const response = await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests`)
+      .set(auth(landlordToken))
+      .expect(200);
+
+    expect(response.body).toEqual({
+      data: [],
+      meta: { page: 1, pageSize: 20, total: 0 },
+    });
+  });
+
+  it("uses a scoped 404 for another landlord's room and forbids tenant access", async () => {
+    await seedSubmittedRequests();
+
+    const foreignRoom = await request(app)
+      .get(`/api/v1/rooms/${OTHER_ROOM_ID}/maintenance-requests`)
+      .set(auth(landlordToken))
+      .expect(404);
+    expect(foreignRoom.body.error).toMatchObject({ code: "NOT_FOUND" });
+    expect(JSON.stringify(foreignRoom.body)).not.toContain("Other tenant secret");
+
+    await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests`)
+      .set(auth(otherLandlordToken))
+      .expect(404);
+    await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests`)
+      .set(auth(tenantToken))
+      .expect(403);
+  });
+});

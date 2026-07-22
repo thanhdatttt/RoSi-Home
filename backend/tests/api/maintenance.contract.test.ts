@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   submitMaintenanceRequestService: vi.fn(),
   listMaintenanceRequestsService: vi.fn(),
   getMaintenanceRequestService: vi.fn(),
+  listRoomMaintenanceHistoryService: vi.fn(),
   updateMaintenanceStatusService: vi.fn(),
 }));
 
@@ -22,6 +23,7 @@ vi.mock("../../src/modules/maintenance/service.js", () => ({
   submitMaintenanceRequestService: mocks.submitMaintenanceRequestService,
   listMaintenanceRequestsService: mocks.listMaintenanceRequestsService,
   getMaintenanceRequestService: mocks.getMaintenanceRequestService,
+  listRoomMaintenanceHistoryService: mocks.listRoomMaintenanceHistoryService,
   updateMaintenanceStatusService: mocks.updateMaintenanceStatusService,
 }));
 
@@ -105,6 +107,31 @@ const statusUpdateView = {
   updatedAt: "2026-07-22T03:00:00.000Z",
 };
 
+const roomHistoryList = {
+  data: [
+    {
+      id: REQUEST_ID,
+      title: "Leaking sink",
+      requester: {
+        id: "77777777-7777-4777-8777-777777777777",
+        fullName: "Tran Thi B",
+      },
+      submittedAt: "2026-07-22T02:00:00.000Z",
+      status: "Completed" as const,
+      statusHistory: [
+        {
+          id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+          fromStatus: "Pending",
+          toStatus: "Completed",
+          changedBy: LANDLORD_ID,
+          changedAt: "2026-07-22T03:00:00.000Z",
+        },
+      ],
+    },
+  ],
+  meta: { page: 1, pageSize: 10, total: 1 },
+};
+
 describe("Maintenance request HTTP contract", () => {
   let app: Express;
   let tenantToken: string;
@@ -123,6 +150,9 @@ describe("Maintenance request HTTP contract", () => {
     mocks.submitMaintenanceRequestService.mockReset().mockResolvedValue(view);
     mocks.listMaintenanceRequestsService.mockReset().mockResolvedValue(tenantList);
     mocks.getMaintenanceRequestService.mockReset().mockResolvedValue(tenantView);
+    mocks.listRoomMaintenanceHistoryService
+      .mockReset()
+      .mockResolvedValue(roomHistoryList);
     mocks.updateMaintenanceStatusService
       .mockReset()
       .mockResolvedValue(statusUpdateView);
@@ -237,6 +267,73 @@ describe("Maintenance request HTTP contract", () => {
 
     expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
     expect(mocks.listMaintenanceRequestsService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-05: lists an owned room's maintenance history in the standard paginated envelope", async () => {
+    const response = await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests?page=1&pageSize=10`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(roomHistoryList);
+    expect(response.body.data[0]).toMatchObject({
+      status: "Completed",
+      requester: { fullName: "Tran Thi B" },
+      statusHistory: [
+        {
+          fromStatus: "Pending",
+          toStatus: "Completed",
+          changedBy: LANDLORD_ID,
+        },
+      ],
+    });
+    expect(mocks.listRoomMaintenanceHistoryService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      ROOM_ID,
+      { page: 1, pageSize: 10 },
+    );
+  });
+
+  it("US-MAINT-05: requires authentication and the Landlord role", async () => {
+    await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests`)
+      .expect(401);
+
+    await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests`)
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(403);
+
+    expect(mocks.listRoomMaintenanceHistoryService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-05: rejects malformed room ids and pagination before calling the service", async () => {
+    await request(app)
+      .get("/api/v1/rooms/not-a-uuid/maintenance-requests")
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(400);
+
+    await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/maintenance-requests?page=0&pageSize=101`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(400);
+
+    expect(mocks.listRoomMaintenanceHistoryService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-05: preserves a scoped 404 for another landlord's room", async () => {
+    mocks.listRoomMaintenanceHistoryService.mockRejectedValue(
+      new NotFoundError("Room not found."),
+    );
+
+    const response = await request(app)
+      .get(
+        "/api/v1/rooms/66666666-6666-4666-8666-666666666668/maintenance-requests",
+      )
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(404);
+
+    expect(response.body.error).toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("US-MAINT-04: updates status for a landlord through the standard envelope", async () => {

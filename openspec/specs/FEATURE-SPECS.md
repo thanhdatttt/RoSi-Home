@@ -341,7 +341,7 @@
 
 ### F-12 — Maintenance Request Submission
 
-> **Status: US-MAINT-01 and US-MAINT-02 IMPLEMENTED.** The backend supports tenant submission, validated private photo storage, atomic request/photo persistence, landlord push notification, and tenant-scoped paginated list/detail reads with short-lived signed photo URLs. US-MAINT-03 through US-MAINT-05 remain not yet implemented.
+> **Status: US-MAINT-01 through US-MAINT-05 IMPLEMENTED (backend).** The backend supports tenant submission and reads, landlord triage and status transitions, private signed photo access, push notifications, and owner-scoped paginated room maintenance history with full status-change history.
 
 #### US-MAINT-01 — Submit a maintenance request
 - **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)

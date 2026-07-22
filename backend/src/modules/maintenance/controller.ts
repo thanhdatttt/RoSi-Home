@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { Pagination } from "../../lib/pagination.js";
 import {
   getMaintenanceRequestService,
+  listRoomMaintenanceHistoryService,
   listMaintenanceRequestsService,
   submitMaintenanceRequestService,
   updateMaintenanceStatusService,
@@ -53,4 +54,13 @@ async function updateStatus(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: view });
 }
 
-export { get, list, submit, updateStatus };
+async function listRoomHistory(req: Request, res: Response): Promise<void> {
+  const result = await listRoomMaintenanceHistoryService(
+    req.user!.id,
+    req.params.roomId,
+    req.query as unknown as Pagination,
+  );
+  res.status(200).json(result);
+}
+
+export { get, list, listRoomHistory, submit, updateStatus };
