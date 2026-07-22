@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "workspace": "poc-local",
+  "startedAt": "2026-07-22T17:31:54.677Z",
+  "completedAt": "2026-07-22T17:32:45.413Z",
+  "passed": true,
+  "checks": [
+    {
+      "id": "tests",
+      "title": "Automated API and hard-problem tests",
+      "command": "npm test",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 23556,
+      "outputTail": "   ✓ persists an owned property after closing and reopening PGlite  4385ms\n ✓ tests/billing.test.ts (8 tests) 2730ms\n   ✓ billing and VietQR hard-problem slice > sends exactly once and generates deterministic locally validated VietQR  314ms\n ✓ tests/api.test.ts (9 tests) 2637ms\n   ✓ local API > resets mutable data and restores seeded login  369ms\n ✓ tests/config.test.ts (3 tests) 5ms\n ✓ tests/vietqr.test.ts (3 tests) 4ms\n\n Test Files  6 passed (6)\n      Tests  25 passed (25)\n   Start at  00:31:56\n   Duration  22.04s (transform 237ms, setup 0ms, collect 4.99s, tests 15.10s, environment 1ms, prepare 844ms)"
+    },
+    {
+      "id": "typecheck",
+      "title": "Strict TypeScript checks",
+      "command": "npm run typecheck",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 5234,
+      "outputTail": "> poc-local@0.1.0 typecheck\n> npm run typecheck --workspace @rosi-home-poc/api && npm run typecheck --workspace @rosi-home-poc/mobile\n\n\n> @rosi-home-poc/api@0.1.0 typecheck\n> tsc --noEmit\n\n\n> @rosi-home-poc/mobile@0.1.0 typecheck\n> tsc --noEmit"
+    },
+    {
+      "id": "build",
+      "title": "API build and Expo Web export",
+      "command": "npm run build",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 19551,
+      "outputTail": "Web apps\\mobile\\index.ts ▓▓▓▓░░░░░░░░░░░░ 27.3% (23/44)\nWeb apps\\mobile\\index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.0% (204/205)\nWeb Bundled 7700ms apps\\mobile\\index.ts (209 modules)\n\n› web bundles (1):\n_expo/static/js/web/index-7dc0591f413b3437fe9f1bb5e375bf53.js (412 kB)\n\n› Files (2):\nindex.html (1.19 kB)\nmetadata.json (49 B)\n\nExported: dist"
+    },
+    {
+      "id": "audit-high",
+      "title": "Production dependency audit (high or critical)",
+      "command": "npm audit --omit=dev --audit-level=high",
+      "passed": true,
+      "exitCode": 0,
+      "durationMs": 2394,
+      "outputTail": "      @expo/prebuild-config  *\n      Depends on vulnerable versions of @expo/config\n      Depends on vulnerable versions of @expo/config-plugins\n      node_modules/@expo/prebuild-config\n\n11 moderate severity vulnerabilities\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force"
+    }
+  ],
+  "boundaries": [
+    "No deployed backend, Supabase, payment gateway, or banking API is required.",
+    "Expo Web does not prove native app-store packaging.",
+    "PGlite does not prove production PostgreSQL operations or concurrency.",
+    "VietQR structural validity does not prove that money moved or payment was verified."
+  ]
+}
