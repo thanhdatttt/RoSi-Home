@@ -13,6 +13,10 @@ import { metersRouter } from "./modules/meters/router.js";
 import { invoicesRouter } from "./modules/invoices/router.js";
 import { notificationsRouter } from "./modules/notifications/router.js";
 import { dashboardRouter } from "./modules/dashboard/router.js";
+import {
+  maintenanceRouter,
+  roomMaintenanceRouter,
+} from "./modules/maintenance/router.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -28,6 +32,7 @@ export function createApp(): express.Express {
   app.use("/api/v1/properties", propertiesRouter);
   app.use("/api/v1/tenants", tenantsRouter);
   app.use("/api/v1/rooms", roomsRouter);
+  app.use("/api/v1/rooms", roomMaintenanceRouter);
   app.use("/api/v1/utilities", utilitiesRouter);
   app.use("/api/v1/charges", chargesRouter);
   app.use("/api/v1/leases", leasesRouter);
@@ -37,6 +42,7 @@ export function createApp(): express.Express {
   app.use("/api/v1", metersRouter);
   app.use("/api/v1", invoicesRouter);
   app.use("/api/v1/notifications", notificationsRouter);
+  app.use("/api/v1/maintenance-requests", maintenanceRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
 
   app.use(errorHandler);

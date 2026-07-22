@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/{unit,api}/**/*.test.ts"],
+    // Coverage instrumentation makes the contract suites' dynamic app import
+    // noticeably slower on constrained CI runners.
+    hookTimeout: 30_000,
     clearMocks: true,
     restoreMocks: true,
     coverage: {
@@ -12,6 +15,11 @@ export default defineConfig({
       include: [
         "src/modules/utilities/**/*.ts",
         "src/modules/charges/**/*.ts",
+        "src/modules/maintenance/service.ts",
+        "src/modules/maintenance/photos.ts",
+        "src/modules/maintenance/schema.ts",
+        "src/modules/maintenance/upload.ts",
+        "src/lib/storage.ts",
       ],
       exclude: ["**/controller.ts", "**/router.ts"],
       thresholds: {

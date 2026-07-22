@@ -2,7 +2,7 @@ import "dotenv/config";
 import { hashPassword } from "../../src/lib/auth.js";
 import { Pool } from "pg";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   auth,
   LANDLORD_ID,
@@ -15,6 +15,17 @@ import {
   teardownIntegrationDatabase,
   type IntegrationHandles,
 } from "./helpers/db.js";
+
+const emailMocks = vi.hoisted(() => ({
+  sendEmail: vi.fn(),
+}));
+
+// Integration coverage verifies that provisioning requests credential
+// delivery without making the database suite depend on an external SMTP
+// server. SMTP behavior itself belongs to the email adapter's test boundary.
+vi.mock("../../src/lib/email.js", () => ({
+  sendEmail: emailMocks.sendEmail,
+}));
 
 const FIXTURE_PASSWORD = "Landlord123";
 
@@ -56,6 +67,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  emailMocks.sendEmail.mockReset().mockResolvedValue(undefined);
   const passwordHash = await hashPassword(FIXTURE_PASSWORD);
   await resetCommonFixtures(dbPool);
   await dbPool.query(
@@ -108,6 +120,12 @@ describe("Leases (US-LEASE-01/02/03/04/05/06)", () => {
     );
     expect(userRow.rows).toHaveLength(1);
     expect(userRow.rows[0]!.must_change_password).toBe(true);
+    expect(emailMocks.sendEmail).toHaveBeenCalledOnce();
+    expect(emailMocks.sendEmail).toHaveBeenCalledWith(
+      "lease-tenant@example.com",
+      "Your RosiHome tenant account",
+      expect.stringContaining("Username (phone): 0905556677"),
+    );
   });
 
   it("US-LEASE-01: rejects an overlapping active lease for the same room with 409", async () => {

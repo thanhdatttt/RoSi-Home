@@ -73,7 +73,7 @@ The project aims to:
 # 5. Stakeholder Analysis
 
 Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the work they actually perform), and how the team communicates with them and manages the associated risks. It also captures **accountability** (who is ultimately answerable if that work is not done or not done correctly — normally one person/role per item, not a group), **access** (how directly they can reach project information/decisions), and **level of influence** (how much power they have to change the direction, scope, or outcome of the project).
- 
+
 | Stakeholder | Role in Project | Responsibilities | Accountability (answerable for the outcome) | Access to Project Information/Decisions | Level of Influence | Communication Method | Risks Associated |
 |---|---|---|---|---|---|---|---|
 | **Project Supervisor / Lecturer** | Project Sponsor | Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met. | **Accountable** for certifying the project meets academic requirements and for the final grade decision | Full — receives all deliverables, attends milestone reviews | **High** — can require rework, reject milestones, or fail the deliverable | Weekly meetings, Email | Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions. |
@@ -85,7 +85,7 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 | **GitHub** | Development Platform | Source code repository, version control, collaboration, issue tracking, continuous integration. | Accountable only for platform availability, not project outcomes | No access to project decision-making | **Low** — service-level constraint only | GitHub platform | Repository access issues, merge conflicts, accidental code deletion, service interruption. |
 | **Banking System (VietQR Standard)** | External Integration | Generates standardized QR codes for bank transfers between tenants and landlords. | Accountable only for the correctness of the standard it publishes, not for RosiHome's implementation | No access to project artifacts | **Medium** — RosiHome's payment workflow must conform to VietQR's format, so changes to the standard can force a design change, even though the bank has no direct involvement in the project | Banking applications, VietQR standard documentation | QR generation format changes, incorrect bank information entered by landlords, manual payment verification required. |
 | **University** | Academic Stakeholder | Provides project environment, computing resources, academic supervision, and evaluation. | **Accountable** for setting and enforcing the academic requirements the project must satisfy | Access limited to official reporting/evaluation channels | **High** — sets the non-negotiable constraints (deadlines, assessment criteria) the whole project must operate within | Official university communication channels, meetings | Changes to assessment requirements or project deadlines may affect planning. |
- 
+
 
 # 6. Project Facilities and Resources
 
