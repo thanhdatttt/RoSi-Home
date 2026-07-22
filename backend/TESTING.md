@@ -61,6 +61,15 @@ Invoices (US-INVOICE-01/02/03/04) has automated coverage for:
   tenant push notification.
 - Recalculation on correction, and no-op once the invoice has left `Draft`.
 
+Maintenance submission (US-MAINT-01) has automated coverage for:
+
+- Tenant-only multipart submission with required room, title, and description.
+- An applicable active lease on the submitted room, including cross-owner `404` behavior.
+- Zero to three PNG/JPG/JPEG photos, 5 MB per-file limits, extension checks, and magic-byte MIME sniffing.
+- Whole-batch validation before storage, plus compensating object cleanup on storage or database failure.
+- Atomic request, photo metadata, and audit persistence in PostgreSQL.
+- Initial `Pending` status and an owning-landlord push notification with a maintenance deep link.
+
 ## API Automation Layers
 
 ### Contract tests — available now
@@ -123,6 +132,8 @@ The integration suite covers:
 - generated migration behavior for `surcharges_name_active`;
 - real-service cross-landlord `404`;
 - same-name, non-overlapping surcharge persistence.
+- maintenance request/photo/audit transaction rollback and storage compensation;
+- maintenance active-lease authorization and owner-only notification persistence.
 
 ## Coverage Gate
 

@@ -129,6 +129,6 @@ export async function teardownIntegrationDatabase(
 // through foreign keys, so each test starts from a clean slate.
 export async function resetCommonFixtures(dbPool: Pool): Promise<void> {
   await dbPool.query(
-    "TRUNCATE audit_events, notifications, device_tokens, invoice_line_items, invoice_generation_skips, invoices, meter_readings, leases, tenant_info, utility_rate_history, rooms, properties, users RESTART IDENTITY CASCADE",
+    "TRUNCATE audit_events, notifications, device_tokens, maintenance_status_history, maintenance_photos, maintenance_requests, invoice_line_items, invoice_generation_skips, invoices, meter_readings, leases, tenant_info, utility_rate_history, rooms, properties, users RESTART IDENTITY CASCADE",
   );
 }

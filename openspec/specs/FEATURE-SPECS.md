@@ -341,7 +341,7 @@
 
 ### F-12 — Maintenance Request Submission
 
-> **Status: NOT YET IMPLEMENTED.** No `maintenance` module/router exists in the backend (`maintenanceRequests`, `maintenancePhotos`, `maintenanceStatusHistory` tables exist but are unused). Spec below describes intended behavior.
+> **Status: US-MAINT-01 IMPLEMENTED.** The backend supports tenant submission, validated private photo storage, atomic request/photo persistence, and landlord push notification. US-MAINT-02 through US-MAINT-05 remain not yet implemented.
 
 #### US-MAINT-01 — Submit a maintenance request
 - **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)
