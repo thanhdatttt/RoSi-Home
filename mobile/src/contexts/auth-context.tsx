@@ -1,5 +1,29 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+
+const isWeb = Platform.OS === 'web';
+
+const Storage = {
+  getItemAsync: async (key: string) => {
+    if (isWeb) return localStorage.getItem(key);
+    return SecureStore.getItemAsync(key);
+  },
+  setItemAsync: async (key: string, value: string) => {
+    if (isWeb) {
+      localStorage.setItem(key, value);
+      return;
+    }
+    return SecureStore.setItemAsync(key, value);
+  },
+  deleteItemAsync: async (key: string) => {
+    if (isWeb) {
+      localStorage.removeItem(key);
+      return;
+    }
+    return SecureStore.deleteItemAsync(key);
+  },
+};
 
 import { apiRequest } from '@/lib/api';
 
@@ -37,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+      const storedToken = await Storage.getItemAsync(TOKEN_KEY);
       if (storedToken && !cancelled) {
         setToken(storedToken);
         // The API exposes the current user via GET /profile; for the push
@@ -50,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) setUser(me);
         } catch {
           // Stored token is no longer valid — drop it.
-          await SecureStore.deleteItemAsync(TOKEN_KEY);
+          await Storage.deleteItemAsync(TOKEN_KEY);
           if (!cancelled) setToken(null);
         }
       }
@@ -67,8 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: { username, password },
       });
-      await SecureStore.setItemAsync(TOKEN_KEY, result.accessToken);
-      await SecureStore.setItemAsync(REFRESH_KEY, result.refreshToken);
+      await Storage.setItemAsync(TOKEN_KEY, result.accessToken);
+      await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
       setToken(result.accessToken);
       setUser(result.user);
     } finally {
@@ -79,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function logout() {
     try {
       if (token) {
-        const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
+        const refresh = await Storage.getItemAsync(REFRESH_KEY);
         await apiRequest('/auth/logout', {
           method: 'POST',
           token,
@@ -89,8 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Best-effort server logout; always clear local state.
     } finally {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_KEY);
+      await Storage.deleteItemAsync(TOKEN_KEY);
+      await Storage.deleteItemAsync(REFRESH_KEY);
       setToken(null);
       setUser(null);
     }

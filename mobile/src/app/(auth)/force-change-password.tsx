@@ -1,0 +1,90 @@
+import React, { useState } from "react";
+import { View, Text, ScrollView } from "react-native";
+import { useRouter } from "expo-router";
+import { MobileFrame } from "../../components/MobileFrame";
+import { Field } from "../../components/ui/Field";
+import { PrimaryButton } from "../../components/ui/PrimaryButton";
+import { Lock, ShieldAlert, Check } from "lucide-react-native";
+
+export default function ForceChangePassword() {
+  const router = useRouter();
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const rules = [
+    { label: "At least 8 characters", ok: next.length >= 8 },
+    { label: "At least 1 uppercase letter", ok: /[A-Z]/.test(next) },
+    { label: "At least 1 number", ok: /\\d/.test(next) },
+  ];
+
+  function submit() {
+    const errs: Record<string, string> = {};
+    if (!rules.every((r) => r.ok)) errs.next = "Password doesn't meet the policy";
+    if (confirm !== next) errs.confirm = "Passwords don't match";
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+    router.push("/tenant");
+  }
+
+  return (
+    <MobileFrame>
+      <View className="flex-1 flex-col bg-background pb-8">
+        <View className="px-6 pt-14 pb-4">
+          <View className="h-14 w-14 rounded-2xl bg-[#5FD8A8]/20 items-center justify-center mb-4">
+            <ShieldAlert size={24} color="#022A1A" />
+          </View>
+          <Text className="text-[11px] uppercase tracking-widest text-[#5FD8A8] font-semibold">First-time sign-in</Text>
+          <Text className="text-2xl font-extrabold leading-tight">Set your password</Text>
+          <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            You signed in with a temporary password from your landlord. Choose a new one to continue.
+          </Text>
+        </View>
+
+        <ScrollView className="flex-1 px-6 pb-6">
+          <Field 
+            label="New password" 
+            type="password" 
+            secureTextEntry 
+            placeholder="Choose a new password" 
+            icon={<Lock size={16} color="gray" />} 
+            value={next} 
+            onChangeText={setNext} 
+            error={errors.next} 
+          />
+          <Field 
+            label="Confirm new password" 
+            type="password" 
+            secureTextEntry 
+            placeholder="Re-enter new password" 
+            icon={<Lock size={16} color="gray" />} 
+            value={confirm} 
+            onChangeText={setConfirm} 
+            error={errors.confirm} 
+          />
+
+          <View className="rounded-xl border border-border bg-surface p-3.5 mb-4 mt-2">
+            <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Password policy</Text>
+            <View className="gap-1.5">
+              {rules.map((r) => (
+                <View key={r.label} className="flex-row items-center gap-2">
+                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#5FD8A8]" : "bg-secondary"}`}>
+                    <Check size={10} color={r.ok ? "#022A1A" : "gray"} />
+                  </View>
+                  <Text className={r.ok ? "text-foreground text-xs" : "text-muted-foreground text-xs"}>{r.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <PrimaryButton variant="mint" onPress={submit}>
+            Set password & continue
+          </PrimaryButton>
+          <Text className="text-center text-[11px] text-muted-foreground mt-4">
+            The temporary password will stop working after this step.
+          </Text>
+        </ScrollView>
+      </View>
+    </MobileFrame>
+  );
+}
