@@ -17,7 +17,7 @@ export default function Welcome() {
         We've left the blobs as colored views, but they won't be blurred. 
       */}
       <LinearGradient
-        colors={['#073F28', '#022114', '#01170E']} /* Approximations of the oklch colors */
+        colors={['#0c1a3a', '#0a1228', '#060d1e']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -28,29 +28,28 @@ export default function Welcome() {
         <View style={{
           position: 'absolute', top: -96, right: -64,
           height: 256, width: 256, borderRadius: 128,
-          backgroundColor: 'rgba(95, 216, 168, 0.25)',
-          // Simulate blur with shadow on web
-          shadowColor: '#5FD8A8', shadowRadius: 80, shadowOpacity: 0.4,
+          backgroundColor: 'rgba(37, 99, 235, 0.25)',
+          shadowColor: '#2563eb', shadowRadius: 80, shadowOpacity: 0.4,
           elevation: 0,
         }} />
         <View style={{
           position: 'absolute', bottom: 128, left: -80,
           height: 256, width: 256, borderRadius: 128,
-          backgroundColor: 'rgba(95, 216, 168, 0.12)',
-          shadowColor: '#5FD8A8', shadowRadius: 80, shadowOpacity: 0.3,
+          backgroundColor: 'rgba(37, 99, 235, 0.12)',
+          shadowColor: '#2563eb', shadowRadius: 80, shadowOpacity: 0.3,
           elevation: 0,
         }} />
 
         <View className="flex-1 flex-col px-7 pt-16">
           <View className="flex-row items-center gap-2">
-            <View className="h-9 w-9 rounded-xl bg-[#5FD8A8] items-center justify-center">
-              <Home size={20} color="#022A1A" />
+            <View className="h-9 w-9 rounded-xl bg-[#2563eb] items-center justify-center">
+              <Home size={20} color="#ffffff" />
             </View>
             <Text className="font-bold tracking-tight text-lg text-white">RosiHome</Text>
           </View>
 
           <View className="mt-auto mb-10">
-            <Text className="text-[#5FD8A8] text-xs uppercase tracking-[4px] mb-4">Rentals, simplified</Text>
+            <Text className="text-[#60a5fa] text-xs uppercase tracking-[4px] mb-4">Rentals, simplified</Text>
             <Text className="font-extrabold text-[38px] leading-[40px] text-white">
               Manage rentals from your pocket.
             </Text>
@@ -70,7 +69,7 @@ export default function Welcome() {
           gap: 12,
         }}>
           <Link href="/register" asChild>
-            <PrimaryButton variant="mint">
+            <PrimaryButton variant="primary">
               Create landlord account
             </PrimaryButton>
           </Link>
@@ -79,12 +78,12 @@ export default function Welcome() {
             <PrimaryButton variant="outline">
               <View className="flex-row items-center justify-center gap-2">
                 <KeyRound size={16} color="black" />
-                <Text style={{ color: '#0b3b2e', fontWeight: '600', fontSize: 14 }}>Sign in</Text>
+                <Text style={{ color: '#101828', fontWeight: '600', fontSize: 14 }}>Sign in</Text>
               </View>
             </PrimaryButton>
           </Link>
 
-          <Text style={{ textAlign: 'center', fontSize: 11, color: '#5a7d6e', paddingTop: 4 }}>
+          <Text style={{ textAlign: 'center', fontSize: 11, color: '#667085', paddingTop: 4 }}>
             Tenants: use the credentials sent by your landlord.
           </Text>
         </View>

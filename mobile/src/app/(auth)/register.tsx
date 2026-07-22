@@ -37,15 +37,15 @@ export default function Register() {
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#5FD8A8] font-semibold">Landlord sign-up</Text>
+            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Landlord sign-up</Text>
             <Text className="text-2xl font-extrabold leading-tight">Create your account</Text>
           </View>
         </View>
 
         <ScrollView className="flex-1 px-6 pb-6">
-          <View className="rounded-xl border border-[#5FD8A8]/40 bg-[#5FD8A8]/10 p-3.5 flex-row items-start gap-3 mb-4">
-            <View className="h-9 w-9 rounded-lg bg-[#5FD8A8] items-center justify-center shrink-0">
-              <Building2 size={16} color="#022A1A" />
+          <View className="rounded-xl border border-[#2563eb]/30 bg-[#2563eb]/10 p-3.5 flex-row items-start gap-3 mb-4">
+            <View className="h-9 w-9 rounded-lg bg-[#2563eb] items-center justify-center shrink-0">
+              <Building2 size={16} color="#ffffff" />
             </View>
             <Text className="text-xs text-foreground/80 leading-relaxed flex-1">
               This creates a <Text className="font-bold">Landlord</Text> account. Tenant accounts are created by their landlord — tenants can't self-register.
@@ -91,7 +91,7 @@ export default function Register() {
           />
 
           <View className="pt-2">
-            <PrimaryButton variant="mint" onPress={submit}>
+            <PrimaryButton variant="primary" onPress={submit}>
               Create landlord account
             </PrimaryButton>
           </View>

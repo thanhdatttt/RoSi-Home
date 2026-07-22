@@ -26,7 +26,7 @@ export default function Forgot() {
         </View>
 
         <View className="px-6 pb-4">
-          <View className="h-14 w-14 rounded-2xl bg-[#5FD8A8]/20 items-center justify-center mb-4">
+          <View className="h-14 w-14 rounded-2xl bg-[#2563eb]/15 items-center justify-center mb-4">
             <Mail size={24} color="black" />
           </View>
           <Text className="text-2xl font-extrabold">Forgot password?</Text>
@@ -46,7 +46,7 @@ export default function Forgot() {
             onChangeText={setEmail} 
           />
           <View className="mb-4" />
-          <PrimaryButton variant="mint" onPress={submit}>
+          <PrimaryButton variant="primary" onPress={submit}>
             Send reset link
           </PrimaryButton>
           

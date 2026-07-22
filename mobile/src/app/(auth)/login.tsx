@@ -38,7 +38,7 @@ export default function Login() {
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#5FD8A8] font-semibold">Welcome back</Text>
+            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Welcome back</Text>
             <Text className="text-2xl font-extrabold leading-tight">Sign in to RosiHome</Text>
           </View>
         </View>
@@ -67,7 +67,7 @@ export default function Login() {
               <Switch 
                 value={rememberMe} 
                 onValueChange={setRememberMe}
-                trackColor={{ true: "#5FD8A8", false: "#ccc" }}
+                trackColor={{ true: "#2563eb", false: "#ccc" }}
               />
               <Text className="text-muted-foreground text-xs">Remember me</Text>
             </View>
@@ -84,7 +84,7 @@ export default function Login() {
             </View>
           )}
 
-          <PrimaryButton variant="mint" onPress={submit}>
+          <PrimaryButton variant="primary" onPress={submit}>
             Sign in
           </PrimaryButton>
 

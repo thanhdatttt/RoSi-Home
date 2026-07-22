@@ -40,7 +40,7 @@ export default function ChangePassword() {
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#5FD8A8] font-semibold">Security</Text>
+            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Security</Text>
             <Text className="text-2xl font-extrabold leading-tight">Change password</Text>
           </View>
         </View>
@@ -82,8 +82,8 @@ export default function ChangePassword() {
             <View className="gap-1.5">
               {rules.map((r) => (
                 <View key={r.label} className="flex-row items-center gap-2">
-                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#5FD8A8]" : "bg-secondary"}`}>
-                    <Check size={10} color={r.ok ? "#022A1A" : "gray"} />
+                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#2563eb]" : "bg-secondary"}`}>
+                    <Check size={10} color={r.ok ? "#ffffff" : "gray"} />
                   </View>
                   <Text className={r.ok ? "text-foreground text-xs" : "text-muted-foreground text-xs"}>{r.label}</Text>
                 </View>
@@ -91,7 +91,7 @@ export default function ChangePassword() {
             </View>
           </View>
 
-          <PrimaryButton variant="mint" onPress={submit}>
+          <PrimaryButton variant="primary" onPress={submit}>
             Update password
           </PrimaryButton>
         </ScrollView>

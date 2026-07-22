@@ -12,15 +12,15 @@ interface Props extends TouchableOpacityProps {
 }
 
 const buttonStyles: Record<Variant, string> = {
-  primary: "bg-primary active:opacity-90",
-  mint: "bg-[#5FD8A8] shadow-lg shadow-[#5FD8A8]/30 active:opacity-90",
+  primary: "bg-[#2563eb] shadow-lg shadow-[#2563eb]/30 active:opacity-90",
+  mint: "bg-[#2563eb] shadow-lg shadow-[#2563eb]/30 active:opacity-90",
   ghost: "bg-transparent active:bg-secondary/50",
   outline: "bg-transparent border border-border active:bg-secondary/50",
 };
 
 const textStyles: Record<Variant, string> = {
-  primary: "text-primary-foreground",
-  mint: "text-[#022A1A]",
+  primary: "text-white",
+  mint: "text-white",
   ghost: "text-foreground",
   outline: "text-foreground",
 };

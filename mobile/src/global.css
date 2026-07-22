@@ -3,37 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --radius: 1rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+  --radius-3xl: 36px;
+  --radius-pill: 9999px;
 
-  /* Fresh Mint palette — converted from oklch to hex for React Native compatibility */
-  --background: #f5faf7;
-  --foreground: #0b3b2e;
+  /* Blue palette */
+  --background: #f5f8ff;
+  --foreground: #101828;
   --surface: #ffffff;
+  --surface-warm: #eaf1ff;
   --card: #ffffff;
-  --card-foreground: #0b3b2e;
+  --card-foreground: #101828;
   --popover: #ffffff;
-  --popover-foreground: #0b3b2e;
-  --primary: #0b3b2e;
-  --primary-foreground: #f5faf7;
-  --mint: #3ddc97;
-  --mint-foreground: #0a3524;
-  --secondary: #e0f0e8;
-  --secondary-foreground: #143d2e;
-  --muted: #e8f2ec;
-  --muted-foreground: #5a7d6e;
-  --accent: #d4eddf;
-  --accent-foreground: #143d2e;
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --border: #d1e5da;
-  --input: #cce3d4;
-  --ring: #3ddc97;
+  --popover-foreground: #101828;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf1ff;
+  --secondary-foreground: #344054;
+  --muted: #edf2f8;
+  --muted-foreground: #667085;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --warn: #f59e0b;
+  --border: #d7e0ef;
+  --border-soft: #edf2f8;
+  --input: #d7e0ef;
+  --ring: rgba(37, 99, 235, 0.22);
+  --meta: #2563eb;
+  --fg-2: #344054;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -55,37 +60,38 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-surface: var(--surface);
-  --color-mint: var(--mint);
-  --color-mint-foreground: var(--mint-foreground);
 
-  --font-display: "Sora", "Spline Sans", Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-rounded: "SF Pro Rounded", "Hiragino Maru Gothic ProN", Meiryo, "MS PGothic", sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-display: Inter, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --font-body: Inter, system-ui, sans-serif;
 }
 
 .dark {
-  --background: #1a2e25;
-  --foreground: #f0f8f4;
-  --surface: #213d32;
-  --card: #213d32;
-  --card-foreground: #f0f8f4;
-  --popover: #213d32;
-  --popover-foreground: #f0f8f4;
-  --primary: #3ddc97;
-  --primary-foreground: #112e22;
-  --mint: #3ddc97;
-  --mint-foreground: #112e22;
-  --secondary: #263e33;
-  --secondary-foreground: #f0f8f4;
-  --muted: #263e33;
-  --muted-foreground: #9dbfad;
-  --accent: #2d4a3c;
-  --accent-foreground: #f0f8f4;
+  --background: #0c1222;
+  --foreground: #f0f4fa;
+  --surface: #162036;
+  --surface-warm: #1a2744;
+  --card: #162036;
+  --card-foreground: #f0f4fa;
+  --popover: #162036;
+  --popover-foreground: #f0f4fa;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1e2d4a;
+  --secondary-foreground: #f0f4fa;
+  --muted: #1e2d4a;
+  --muted-foreground: #94a3b8;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
   --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --warn: #f59e0b;
   --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #3ddc97;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: rgba(59, 130, 246, 0.3);
+  --meta: #3b82f6;
+  --fg-2: #94a3b8;
 }

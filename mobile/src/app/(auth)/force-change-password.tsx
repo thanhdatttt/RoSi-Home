@@ -31,10 +31,10 @@ export default function ForceChangePassword() {
     <MobileFrame>
       <View className="flex-1 flex-col bg-background pb-8">
         <View className="px-6 pt-14 pb-4">
-          <View className="h-14 w-14 rounded-2xl bg-[#5FD8A8]/20 items-center justify-center mb-4">
-            <ShieldAlert size={24} color="#022A1A" />
+          <View className="h-14 w-14 rounded-2xl bg-[#2563eb]/15 items-center justify-center mb-4">
+            <ShieldAlert size={24} color="#2563eb" />
           </View>
-          <Text className="text-[11px] uppercase tracking-widest text-[#5FD8A8] font-semibold">First-time sign-in</Text>
+          <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">First-time sign-in</Text>
           <Text className="text-2xl font-extrabold leading-tight">Set your password</Text>
           <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
             You signed in with a temporary password from your landlord. Choose a new one to continue.
@@ -68,8 +68,8 @@ export default function ForceChangePassword() {
             <View className="gap-1.5">
               {rules.map((r) => (
                 <View key={r.label} className="flex-row items-center gap-2">
-                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#5FD8A8]" : "bg-secondary"}`}>
-                    <Check size={10} color={r.ok ? "#022A1A" : "gray"} />
+                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#2563eb]" : "bg-secondary"}`}>
+                    <Check size={10} color={r.ok ? "#ffffff" : "gray"} />
                   </View>
                   <Text className={r.ok ? "text-foreground text-xs" : "text-muted-foreground text-xs"}>{r.label}</Text>
                 </View>
@@ -77,7 +77,7 @@ export default function ForceChangePassword() {
             </View>
           </View>
 
-          <PrimaryButton variant="mint" onPress={submit}>
+          <PrimaryButton variant="primary" onPress={submit}>
             Set password & continue
           </PrimaryButton>
           <Text className="text-center text-[11px] text-muted-foreground mt-4">
