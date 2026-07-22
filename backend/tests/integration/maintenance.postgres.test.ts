@@ -465,3 +465,265 @@ describe("Landlord maintenance request reviews (US-MAINT-03)", () => {
     expect(audits.rows).toEqual([]);
   });
 });
+
+describe("Maintenance status updates (US-MAINT-04)", () => {
+  it("persists each forward transition, responsible landlord, completion time, audit, push notification, and tenant-visible status", async () => {
+    await seedSubmittedRequests();
+
+    const inProgress = await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "InProgress" })
+      .expect(200);
+
+    expect(inProgress.body.data).toMatchObject({
+      id: OWN_REQUEST_2_ID,
+      previousStatus: "Pending",
+      status: "InProgress",
+      completedAt: null,
+    });
+
+    const completed = await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "Completed" })
+      .expect(200);
+
+    expect(completed.body.data).toMatchObject({
+      id: OWN_REQUEST_2_ID,
+      previousStatus: "InProgress",
+      status: "Completed",
+    });
+    expect(completed.body.data.completedAt).not.toBeNull();
+
+    const persisted = await dbPool.query(
+      `SELECT status, completed_at, updated_at
+       FROM maintenance_requests WHERE id = $1`,
+      [OWN_REQUEST_2_ID],
+    );
+    expect(persisted.rows[0]).toMatchObject({ status: "Completed" });
+    expect(persisted.rows[0]!.completed_at).not.toBeNull();
+
+    const history = await dbPool.query(
+      `SELECT from_status, to_status, changed_by, changed_at
+       FROM maintenance_status_history
+       WHERE request_id = $1 ORDER BY changed_at, id`,
+      [OWN_REQUEST_2_ID],
+    );
+    expect(history.rows).toHaveLength(2);
+    expect(history.rows.map(({ from_status, to_status, changed_by }) => ({
+      from_status,
+      to_status,
+      changed_by,
+    }))).toEqual([
+      {
+        from_status: "Pending",
+        to_status: "InProgress",
+        changed_by: LANDLORD_ID,
+      },
+      {
+        from_status: "InProgress",
+        to_status: "Completed",
+        changed_by: LANDLORD_ID,
+      },
+    ]);
+    expect(history.rows.every((row) => row.changed_at != null)).toBe(true);
+
+    const audits = await dbPool.query(
+      `SELECT actor_user_id, action, before_value, after_value
+       FROM audit_events WHERE entity_id = $1 ORDER BY created_at, id`,
+      [OWN_REQUEST_2_ID],
+    );
+    expect(audits.rows).toHaveLength(2);
+    expect(audits.rows[0]).toMatchObject({
+      actor_user_id: LANDLORD_ID,
+      action: "maintenance_request.status_changed",
+      before_value: { status: "Pending", completedAt: null },
+      after_value: { status: "InProgress", completedAt: null },
+    });
+
+    const notifications = await dbPool.query(
+      `SELECT user_id, type, channel, link_ref, dedupe_key
+       FROM notifications ORDER BY created_at, id`,
+    );
+    expect(notifications.rows).toEqual([
+      {
+        user_id: TENANT_USER_ID,
+        type: "maintenance.status_changed",
+        channel: "Push",
+        link_ref: `maintenance:${OWN_REQUEST_2_ID}`,
+        dedupe_key: `maintenance.status_changed:${OWN_REQUEST_2_ID}:InProgress`,
+      },
+      {
+        user_id: TENANT_USER_ID,
+        type: "maintenance.status_changed",
+        channel: "Push",
+        link_ref: `maintenance:${OWN_REQUEST_2_ID}`,
+        dedupe_key: `maintenance.status_changed:${OWN_REQUEST_2_ID}:Completed`,
+      },
+    ]);
+
+    const tenantView = await request(app)
+      .get(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}`)
+      .set(auth(tenantToken))
+      .expect(200);
+    expect(tenantView.body.data.status).toBe("Completed");
+  });
+
+  it("allows Pending to transition directly to Completed", async () => {
+    await seedSubmittedRequests();
+
+    const response = await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "Completed" })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      previousStatus: "Pending",
+      status: "Completed",
+    });
+    expect(response.body.data.completedAt).not.toBeNull();
+  });
+
+  it("rolls back the status and audit when status-history persistence fails", async () => {
+    await seedSubmittedRequests();
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    await dbPool.query(`
+      CREATE FUNCTION fail_maintenance_history_insert() RETURNS trigger AS $$
+      BEGIN
+        RAISE EXCEPTION 'forced maintenance history failure';
+      END;
+      $$ LANGUAGE plpgsql;
+      CREATE TRIGGER maintenance_history_failure
+      BEFORE INSERT ON maintenance_status_history
+      FOR EACH ROW EXECUTE FUNCTION fail_maintenance_history_insert();
+    `);
+
+    try {
+      await request(app)
+        .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+        .set(auth(landlordToken))
+        .send({ status: "InProgress" })
+        .expect(500);
+
+      const [requestRows, history, audits, notifications] = await Promise.all([
+        dbPool.query(
+          "SELECT status, completed_at FROM maintenance_requests WHERE id = $1",
+          [OWN_REQUEST_2_ID],
+        ),
+        dbPool.query(
+          "SELECT id FROM maintenance_status_history WHERE request_id = $1",
+          [OWN_REQUEST_2_ID],
+        ),
+        dbPool.query("SELECT id FROM audit_events WHERE entity_id = $1", [
+          OWN_REQUEST_2_ID,
+        ]),
+        dbPool.query("SELECT id FROM notifications"),
+      ]);
+      expect(requestRows.rows[0]).toMatchObject({
+        status: "Pending",
+        completed_at: null,
+      });
+      expect(history.rows).toEqual([]);
+      expect(audits.rows).toEqual([]);
+      expect(notifications.rows).toEqual([]);
+    } finally {
+      await dbPool.query(
+        "DROP TRIGGER maintenance_history_failure ON maintenance_status_history",
+      );
+      await dbPool.query("DROP FUNCTION fail_maintenance_history_insert()");
+      consoleSpy.mockRestore();
+    }
+  });
+
+  it("rejects same-status and backward transitions without side effects", async () => {
+    await seedSubmittedRequests();
+
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "InProgress" })
+      .expect(422);
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "Pending" })
+      .expect(422);
+
+    const [requestRows, history, audits, notifications] = await Promise.all([
+      dbPool.query(
+        "SELECT status, completed_at FROM maintenance_requests WHERE id = $1",
+        [OWN_REQUEST_ID],
+      ),
+      dbPool.query(
+        "SELECT id FROM maintenance_status_history WHERE request_id = $1",
+        [OWN_REQUEST_ID],
+      ),
+      dbPool.query("SELECT id FROM audit_events WHERE entity_id = $1", [
+        OWN_REQUEST_ID,
+      ]),
+      dbPool.query("SELECT id FROM notifications"),
+    ]);
+    expect(requestRows.rows[0]).toMatchObject({
+      status: "InProgress",
+      completed_at: null,
+    });
+    expect(history.rows).toEqual([]);
+    expect(audits.rows).toEqual([]);
+    expect(notifications.rows).toEqual([]);
+  });
+
+  it("returns scoped 404 for a foreign landlord and forbids tenants", async () => {
+    await seedSubmittedRequests();
+
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${OTHER_REQUEST_ID}/status`)
+      .set(auth(landlordToken))
+      .send({ status: "Completed" })
+      .expect(404);
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+      .set(auth(tenantToken))
+      .send({ status: "Completed" })
+      .expect(403);
+
+    const rows = await dbPool.query(
+      "SELECT id FROM maintenance_status_history",
+    );
+    expect(rows.rows).toEqual([]);
+  });
+
+  it("allows only one of two concurrent duplicate transitions to commit", async () => {
+    await seedSubmittedRequests();
+
+    const calls = [1, 2].map(() =>
+      request(app)
+        .patch(`/api/v1/maintenance-requests/${OWN_REQUEST_2_ID}/status`)
+        .set(auth(landlordToken))
+        .send({ status: "InProgress" }),
+    );
+    const responses = await Promise.all(calls);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      200,
+      422,
+    ]);
+    const [history, audits, notifications] = await Promise.all([
+      dbPool.query(
+        "SELECT id FROM maintenance_status_history WHERE request_id = $1",
+        [OWN_REQUEST_2_ID],
+      ),
+      dbPool.query("SELECT id FROM audit_events WHERE entity_id = $1", [
+        OWN_REQUEST_2_ID,
+      ]),
+      dbPool.query(
+        "SELECT id FROM notifications WHERE dedupe_key = $1",
+        [`maintenance.status_changed:${OWN_REQUEST_2_ID}:InProgress`],
+      ),
+    ]);
+    expect(history.rows).toHaveLength(1);
+    expect(audits.rows).toHaveLength(1);
+    expect(notifications.rows).toHaveLength(1);
+  });
+});

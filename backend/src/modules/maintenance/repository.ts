@@ -14,6 +14,7 @@ import {
   leases,
   maintenancePhotos,
   maintenanceRequests,
+  maintenanceStatusHistory,
   properties,
   rooms,
   tenantInfo,
@@ -22,6 +23,8 @@ import type { Pagination } from "../../lib/pagination.js";
 
 export type MaintenanceRequestRow = typeof maintenanceRequests.$inferSelect;
 export type MaintenancePhotoRow = typeof maintenancePhotos.$inferSelect;
+export type MaintenanceStatusHistoryRow =
+  typeof maintenanceStatusHistory.$inferSelect;
 export type TenantMaintenanceRequestRow = MaintenanceRequestRow & {
   roomName: string;
 };
@@ -30,6 +33,7 @@ export type LandlordMaintenanceRequestRow = MaintenanceRequestRow & {
   propertyName: string;
   roomName: string;
   tenantFullName: string;
+  tenantUserId: string | null;
 };
 export type LandlordMaintenanceRequestFilters = {
   propertyId?: string;
@@ -167,6 +171,7 @@ function landlordRequestBaseQuery(executor: Db) {
       propertyName: properties.name,
       roomName: rooms.name,
       tenantFullName: tenantInfo.fullName,
+      tenantUserId: tenantInfo.userId,
     })
     .from(maintenanceRequests)
     .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
@@ -242,4 +247,49 @@ export async function findMaintenancePhotosByRequestIds(
     .from(maintenancePhotos)
     .where(inArray(maintenancePhotos.requestId, [...requestIds]))
     .orderBy(asc(maintenancePhotos.requestId), asc(maintenancePhotos.id));
+}
+
+export async function updateMaintenanceRequestStatus(
+  input: {
+    requestId: string;
+    fromStatus: MaintenanceRequestRow["status"];
+    toStatus: MaintenanceRequestRow["status"];
+    completedAt: Date | null;
+    changedAt: Date;
+  },
+  executor: Db = db,
+): Promise<MaintenanceRequestRow | null> {
+  const [row] = await executor
+    .update(maintenanceRequests)
+    .set({
+      status: input.toStatus,
+      completedAt: input.completedAt,
+      updatedAt: input.changedAt,
+    })
+    .where(
+      and(
+        eq(maintenanceRequests.id, input.requestId),
+        eq(maintenanceRequests.status, input.fromStatus),
+        isNull(maintenanceRequests.deletedAt),
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function insertMaintenanceStatusHistory(
+  input: {
+    requestId: string;
+    fromStatus: MaintenanceRequestRow["status"];
+    toStatus: MaintenanceRequestRow["status"];
+    changedBy: string;
+    changedAt: Date;
+  },
+  executor: Db = db,
+): Promise<MaintenanceStatusHistoryRow> {
+  const [row] = await executor
+    .insert(maintenanceStatusHistory)
+    .values(input)
+    .returning();
+  return row;
 }

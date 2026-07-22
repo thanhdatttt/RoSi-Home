@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => {
     countMaintenanceRequestsForLandlord: vi.fn(),
     findMaintenanceRequestForLandlord: vi.fn(),
     findMaintenancePhotosByRequestIds: vi.fn(),
+    updateMaintenanceRequestStatus: vi.fn(),
+    insertMaintenanceStatusHistory: vi.fn(),
     writeAudit: vi.fn(),
     uploadMaintenancePhoto: vi.fn(),
     deleteMaintenancePhoto: vi.fn(),
@@ -47,6 +49,8 @@ vi.mock("../../../src/modules/maintenance/repository.js", () => ({
   countMaintenanceRequestsForLandlord: mocks.countMaintenanceRequestsForLandlord,
   findMaintenanceRequestForLandlord: mocks.findMaintenanceRequestForLandlord,
   findMaintenancePhotosByRequestIds: mocks.findMaintenancePhotosByRequestIds,
+  updateMaintenanceRequestStatus: mocks.updateMaintenanceRequestStatus,
+  insertMaintenanceStatusHistory: mocks.insertMaintenanceStatusHistory,
 }));
 
 vi.mock("../../../src/lib/storage.js", () => ({
@@ -65,6 +69,7 @@ import {
   listMaintenanceRequestsService,
   listTenantMaintenanceRequestsService,
   submitMaintenanceRequestService,
+  updateMaintenanceStatusService,
 } from "../../../src/modules/maintenance/service.js";
 
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -516,5 +521,219 @@ describe("landlord maintenance request reviews (US-MAINT-03)", () => {
 
     expect(mocks.findMaintenancePhotosByRequestIds).not.toHaveBeenCalled();
     expect(mocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateMaintenanceStatusService (US-MAINT-04)", () => {
+  const trx = mocks.trx;
+
+  function ownedRequest(overrides: Record<string, unknown> = {}) {
+    return {
+      ...requestRow(),
+      propertyId: "22222222-2222-4222-8222-222222222222",
+      propertyName: "Sunrise House",
+      roomName: "Room 101",
+      tenantFullName: "Tran Thi B",
+      tenantUserId: TENANT_USER_ID,
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.transaction.mockImplementation(
+      async (callback: (executor: unknown) => unknown) => callback(trx),
+    );
+    mocks.sendNotification.mockResolvedValue({ sent: true, deduped: false });
+  });
+
+  it("atomically updates status, records history/audit, and notifies the tenant after commit", async () => {
+    const current = ownedRequest();
+    const updated = ownedRequest({
+      status: "InProgress",
+      updatedAt: new Date("2026-07-22T03:00:00.000Z"),
+    });
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+    mocks.updateMaintenanceRequestStatus.mockResolvedValue(updated);
+    mocks.insertMaintenanceStatusHistory.mockResolvedValue({
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      requestId: current.id,
+      fromStatus: "Pending",
+      toStatus: "InProgress",
+      changedBy: LANDLORD_ID,
+      changedAt: new Date("2026-07-22T03:00:00.000Z"),
+    });
+
+    const result = await updateMaintenanceStatusService(
+      LANDLORD_ID,
+      current.id,
+      { status: "InProgress" },
+    );
+
+    expect(result).toEqual({
+      id: current.id,
+      previousStatus: "Pending",
+      status: "InProgress",
+      completedAt: null,
+      updatedAt: "2026-07-22T03:00:00.000Z",
+    });
+    expect(mocks.findMaintenanceRequestForLandlord).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      current.id,
+      trx,
+    );
+    expect(mocks.updateMaintenanceRequestStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: current.id,
+        fromStatus: "Pending",
+        toStatus: "InProgress",
+        completedAt: null,
+        changedAt: expect.any(Date),
+      }),
+      trx,
+    );
+    expect(mocks.insertMaintenanceStatusHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: current.id,
+        fromStatus: "Pending",
+        toStatus: "InProgress",
+        changedBy: LANDLORD_ID,
+        changedAt: expect.any(Date),
+      }),
+      trx,
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorUserId: LANDLORD_ID,
+        action: "maintenance_request.status_changed",
+        entityId: current.id,
+        beforeValue: { status: "Pending", completedAt: null },
+        afterValue: { status: "InProgress", completedAt: null },
+      }),
+      trx,
+    );
+    expect(mocks.sendNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: TENANT_USER_ID,
+        type: "maintenance.status_changed",
+        linkRef: `maintenance:${current.id}`,
+        dedupeKey: `maintenance.status_changed:${current.id}:InProgress`,
+      }),
+    );
+    expect(
+      mocks.sendNotification.mock.invocationCallOrder[0],
+    ).toBeGreaterThan(mocks.transaction.mock.invocationCallOrder[0]);
+  });
+
+  it("sets completedAt when Pending is closed directly", async () => {
+    const current = ownedRequest();
+    const completedAt = new Date("2026-07-22T04:00:00.000Z");
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+    mocks.updateMaintenanceRequestStatus.mockImplementation(
+      async (input: { changedAt: Date }) =>
+        ownedRequest({
+          status: "Completed",
+          completedAt: input.changedAt,
+          updatedAt: completedAt,
+        }),
+    );
+
+    const result = await updateMaintenanceStatusService(
+      LANDLORD_ID,
+      current.id,
+      { status: "Completed" },
+    );
+
+    expect(result.status).toBe("Completed");
+    expect(result.completedAt).not.toBeNull();
+    expect(mocks.updateMaintenanceRequestStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromStatus: "Pending",
+        toStatus: "Completed",
+        completedAt: expect.any(Date),
+      }),
+      trx,
+    );
+  });
+
+  it("keeps a committed status update successful when push delivery throws", async () => {
+    const current = ownedRequest();
+    const updated = ownedRequest({
+      status: "InProgress",
+      updatedAt: new Date("2026-07-22T03:00:00.000Z"),
+    });
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+    mocks.updateMaintenanceRequestStatus.mockResolvedValue(updated);
+    mocks.sendNotification.mockRejectedValue(new Error("Expo unavailable"));
+
+    await expect(
+      updateMaintenanceStatusService(LANDLORD_ID, current.id, {
+        status: "InProgress",
+      }),
+    ).resolves.toMatchObject({ status: "InProgress" });
+
+    expect(mocks.insertMaintenanceStatusHistory).toHaveBeenCalledOnce();
+    expect(mocks.writeAudit).toHaveBeenCalledOnce();
+  });
+
+  it("rejects same-status retries with no history, audit, or notification", async () => {
+    const current = ownedRequest();
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+
+    await expect(
+      updateMaintenanceStatusService(LANDLORD_ID, current.id, {
+        status: "Pending",
+      }),
+    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+
+    expect(mocks.updateMaintenanceRequestStatus).not.toHaveBeenCalled();
+    expect(mocks.insertMaintenanceStatusHistory).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+    expect(mocks.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("rejects backward transitions with no side effects", async () => {
+    const current = ownedRequest({ status: "InProgress" });
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+
+    await expect(
+      updateMaintenanceStatusService(LANDLORD_ID, current.id, {
+        status: "Pending",
+      }),
+    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+
+    expect(mocks.updateMaintenanceRequestStatus).not.toHaveBeenCalled();
+    expect(mocks.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("uses a scoped 404 for a request outside the landlord portfolio", async () => {
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(null);
+
+    await expect(
+      updateMaintenanceStatusService(
+        LANDLORD_ID,
+        "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        { status: "Completed" },
+      ),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+
+    expect(mocks.updateMaintenanceRequestStatus).not.toHaveBeenCalled();
+    expect(mocks.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("rejects a concurrent stale transition without creating side effects", async () => {
+    const current = ownedRequest();
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(current);
+    mocks.updateMaintenanceRequestStatus.mockResolvedValue(null);
+
+    await expect(
+      updateMaintenanceStatusService(LANDLORD_ID, current.id, {
+        status: "InProgress",
+      }),
+    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+
+    expect(mocks.insertMaintenanceStatusHistory).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+    expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 });

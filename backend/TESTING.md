@@ -87,6 +87,15 @@ Landlord maintenance request reviews (US-MAINT-03) have automated coverage for:
 - Cross-landlord list/detail isolation, with scoped `404` detail responses and no foreign attachment signing.
 - Read-only review behavior: GET requests do not change status/completion timestamps or create status-history/audit rows.
 
+Maintenance status updates (US-MAINT-04) have automated coverage for:
+
+- Landlord-only `PATCH /api/v1/maintenance-requests/:id/status` with scoped owner authorization.
+- Allowed `Pending -> InProgress`, `InProgress -> Completed`, and direct `Pending -> Completed` transitions.
+- `422` responses for same-status retries and backward/disallowed transitions with no side effects.
+- Atomic request status/completion timestamp, status-history, responsible-landlord, and audit persistence.
+- Tenant-visible status after the update and Push-only tenant notification after transaction commit.
+- Compare-and-set concurrency behavior so duplicate updates create one history/audit/notification set.
+
 ## API Automation Layers
 
 ### Contract tests — available now
@@ -164,6 +173,8 @@ The integration suite covers:
   and cross-tenant request/attachment isolation.
 - maintenance landlord portfolio/status filtering, triage context, cross-landlord
   request/attachment isolation, and mutation-free list/detail review behavior.
+- maintenance status transition/history/completion/audit persistence, scoped owner updates,
+  Push-only tenant notification, and concurrent duplicate suppression.
 
 ## Coverage Gate
 

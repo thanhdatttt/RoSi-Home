@@ -2,7 +2,7 @@ import type { Express } from "express";
 import jwt from "jsonwebtoken";
 import request from "supertest";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "../../src/lib/errors.js";
+import { NotFoundError, UnprocessableError } from "../../src/lib/errors.js";
 
 const TEST_JWT_SECRET = "maintenance-api-contract-secret";
 const TENANT_USER_ID = "55555555-5555-4555-8555-555555555555";
@@ -15,12 +15,14 @@ const mocks = vi.hoisted(() => ({
   submitMaintenanceRequestService: vi.fn(),
   listMaintenanceRequestsService: vi.fn(),
   getMaintenanceRequestService: vi.fn(),
+  updateMaintenanceStatusService: vi.fn(),
 }));
 
 vi.mock("../../src/modules/maintenance/service.js", () => ({
   submitMaintenanceRequestService: mocks.submitMaintenanceRequestService,
   listMaintenanceRequestsService: mocks.listMaintenanceRequestsService,
   getMaintenanceRequestService: mocks.getMaintenanceRequestService,
+  updateMaintenanceStatusService: mocks.updateMaintenanceStatusService,
 }));
 
 function token(sub: string, role: "Landlord" | "Tenant"): string {
@@ -95,6 +97,14 @@ const landlordList = {
   meta: { page: 1, pageSize: 10, total: 1 },
 };
 
+const statusUpdateView = {
+  id: REQUEST_ID,
+  previousStatus: "Pending" as const,
+  status: "InProgress" as const,
+  completedAt: null,
+  updatedAt: "2026-07-22T03:00:00.000Z",
+};
+
 describe("Maintenance request HTTP contract", () => {
   let app: Express;
   let tenantToken: string;
@@ -113,6 +123,9 @@ describe("Maintenance request HTTP contract", () => {
     mocks.submitMaintenanceRequestService.mockReset().mockResolvedValue(view);
     mocks.listMaintenanceRequestsService.mockReset().mockResolvedValue(tenantList);
     mocks.getMaintenanceRequestService.mockReset().mockResolvedValue(tenantView);
+    mocks.updateMaintenanceStatusService
+      .mockReset()
+      .mockResolvedValue(statusUpdateView);
   });
 
   it("US-MAINT-02: lists only the authenticated tenant's submissions with pagination", async () => {
@@ -224,6 +237,86 @@ describe("Maintenance request HTTP contract", () => {
 
     expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
     expect(mocks.listMaintenanceRequestsService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-04: updates status for a landlord through the standard envelope", async () => {
+    const response = await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "InProgress" })
+      .expect(200);
+
+    expect(response.body).toEqual({ data: statusUpdateView });
+    expect(mocks.updateMaintenanceStatusService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      REQUEST_ID,
+      { status: "InProgress" },
+    );
+  });
+
+  it("US-MAINT-04: requires authentication and the Landlord role", async () => {
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .send({ status: "InProgress" })
+      .expect(401);
+
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .send({ status: "InProgress" })
+      .expect(403);
+
+    expect(mocks.updateMaintenanceStatusService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-04: rejects malformed ids, statuses, and extra fields", async () => {
+    await request(app)
+      .patch("/api/v1/maintenance-requests/not-a-uuid/status")
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "InProgress" })
+      .expect(400);
+
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "In Progress" })
+      .expect(400);
+
+    await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "Completed", completedAt: "2026-07-22" })
+      .expect(400);
+
+    expect(mocks.updateMaintenanceStatusService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-04: maps duplicate or disallowed transitions to 422", async () => {
+    mocks.updateMaintenanceStatusService.mockRejectedValue(
+      new UnprocessableError("Maintenance request is already Pending."),
+    );
+
+    const response = await request(app)
+      .patch(`/api/v1/maintenance-requests/${REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "Pending" })
+      .expect(422);
+
+    expect(response.body.error).toMatchObject({ code: "UNPROCESSABLE" });
+  });
+
+  it("US-MAINT-04: preserves scoped 404 responses for foreign requests", async () => {
+    mocks.updateMaintenanceStatusService.mockRejectedValue(
+      new NotFoundError("Maintenance request not found."),
+    );
+
+    const response = await request(app)
+      .patch(`/api/v1/maintenance-requests/${OTHER_REQUEST_ID}/status`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ status: "Completed" })
+      .expect(404);
+
+    expect(response.body.error).toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("US-MAINT-01: creates a request with a multipart photo and standard envelope", async () => {

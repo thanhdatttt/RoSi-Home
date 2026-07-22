@@ -4,8 +4,12 @@ import {
   getMaintenanceRequestService,
   listMaintenanceRequestsService,
   submitMaintenanceRequestService,
+  updateMaintenanceStatusService,
 } from "./service.js";
-import type { MaintenanceRequestListQuery } from "./schema.js";
+import type {
+  MaintenanceRequestListQuery,
+  UpdateMaintenanceStatusInput,
+} from "./schema.js";
 
 async function list(req: Request, res: Response): Promise<void> {
   const { propertyId, status, ...pagination } =
@@ -40,4 +44,13 @@ async function submit(req: Request, res: Response): Promise<void> {
   res.status(201).json({ data: view });
 }
 
-export { get, list, submit };
+async function updateStatus(req: Request, res: Response): Promise<void> {
+  const view = await updateMaintenanceStatusService(
+    req.user!.id,
+    req.params.id,
+    req.body as UpdateMaintenanceStatusInput,
+  );
+  res.status(200).json({ data: view });
+}
+
+export { get, list, submit, updateStatus };

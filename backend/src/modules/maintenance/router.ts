@@ -2,11 +2,12 @@ import { Router } from "express";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
-import { get, list, submit } from "./controller.js";
+import { get, list, submit, updateStatus } from "./controller.js";
 import {
   maintenanceRequestListQuerySchema,
   maintenanceRequestParamsSchema,
   submitMaintenanceRequestSchema,
+  updateMaintenanceStatusSchema,
 } from "./schema.js";
 import { uploadMaintenancePhotos } from "./upload.js";
 
@@ -24,6 +25,14 @@ maintenanceRouter.get(
   "/:id",
   validate(maintenanceRequestParamsSchema, "params"),
   asyncHandler(get),
+);
+
+maintenanceRouter.patch(
+  "/:id/status",
+  requireRole("Landlord"),
+  validate(maintenanceRequestParamsSchema, "params"),
+  validate(updateMaintenanceStatusSchema),
+  asyncHandler(updateStatus),
 );
 
 maintenanceRouter.post(

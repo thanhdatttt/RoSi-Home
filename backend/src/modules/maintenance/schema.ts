@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const maintenanceStatusSchema = z.enum([
+  "Pending",
+  "InProgress",
+  "Completed",
+]);
+
+export type MaintenanceStatus = z.infer<typeof maintenanceStatusSchema>;
+
 export const submitMaintenanceRequestSchema = z
   .object({
     roomId: z.string().uuid("roomId must be a valid id."),
@@ -23,10 +31,20 @@ export const maintenanceRequestListQuerySchema = z
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(20),
     propertyId: z.string().uuid("propertyId must be a valid id.").optional(),
-    status: z.enum(["Pending", "InProgress", "Completed"]).optional(),
+    status: maintenanceStatusSchema.optional(),
   })
   .strict();
 
 export type MaintenanceRequestListQuery = z.infer<
   typeof maintenanceRequestListQuerySchema
+>;
+
+export const updateMaintenanceStatusSchema = z
+  .object({
+    status: maintenanceStatusSchema,
+  })
+  .strict();
+
+export type UpdateMaintenanceStatusInput = z.infer<
+  typeof updateMaintenanceStatusSchema
 >;

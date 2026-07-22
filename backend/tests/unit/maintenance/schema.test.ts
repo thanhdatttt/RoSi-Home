@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   maintenanceRequestListQuerySchema,
   submitMaintenanceRequestSchema,
+  updateMaintenanceStatusSchema,
 } from "../../../src/modules/maintenance/schema.js";
 
 const valid = {
@@ -70,6 +71,33 @@ describe("maintenanceRequestListQuerySchema", () => {
     expect(
       maintenanceRequestListQuerySchema.safeParse({ propertyId: "property-1" })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe("updateMaintenanceStatusSchema", () => {
+  it.each(["Pending", "InProgress", "Completed"] as const)(
+    "US-MAINT-04: accepts the supported status %s",
+    (status) => {
+      expect(updateMaintenanceStatusSchema.parse({ status })).toEqual({ status });
+    },
+  );
+
+  it.each(["In Progress", "Draft", "completed", ""])(
+    "US-MAINT-04: rejects unsupported status %s",
+    (status) => {
+      expect(updateMaintenanceStatusSchema.safeParse({ status }).success).toBe(
+        false,
+      );
+    },
+  );
+
+  it("US-MAINT-04: rejects additional fields", () => {
+    expect(
+      updateMaintenanceStatusSchema.safeParse({
+        status: "Completed",
+        completedAt: "2026-07-22T03:00:00.000Z",
+      }).success,
     ).toBe(false);
   });
 });

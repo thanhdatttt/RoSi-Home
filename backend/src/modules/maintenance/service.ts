@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { writeAudit } from "../../db/audit.js";
 import { db, type Db } from "../../db/index.js";
-import { NotFoundError } from "../../lib/errors.js";
+import { NotFoundError, UnprocessableError } from "../../lib/errors.js";
 import {
   type Paginated,
   type Pagination,
@@ -27,15 +27,21 @@ import {
   findMaintenanceRequestForTenantUser,
   insertMaintenancePhotos,
   insertMaintenanceRequest,
+  insertMaintenanceStatusHistory,
   listMaintenanceRequestsForLandlord,
   listMaintenanceRequestsForTenantUser,
+  updateMaintenanceRequestStatus,
   type LandlordMaintenanceRequestFilters,
   type LandlordMaintenanceRequestRow,
   type MaintenancePhotoRow,
   type MaintenanceRequestRow,
   type TenantMaintenanceRequestRow,
 } from "./repository.js";
-import type { SubmitMaintenanceRequestInput } from "./schema.js";
+import { assertMaintenanceStatusTransition } from "./rules.js";
+import type {
+  SubmitMaintenanceRequestInput,
+  UpdateMaintenanceStatusInput,
+} from "./schema.js";
 
 export type MaintenanceRequestView = {
   id: string;
@@ -68,6 +74,14 @@ export type LandlordMaintenanceRequestView = {
   status: "Pending" | "InProgress" | "Completed";
   submittedAt: string;
   photos: { id: string; fileUrl: string }[];
+};
+
+export type MaintenanceStatusUpdateView = {
+  id: string;
+  previousStatus: "Pending" | "InProgress" | "Completed";
+  status: "Pending" | "InProgress" | "Completed";
+  completedAt: string | null;
+  updatedAt: string;
 };
 
 type MaintenanceActor = { id: string; role: "Landlord" | "Tenant" };
@@ -330,4 +344,95 @@ export async function getMaintenanceRequestService(
   if (!request) throw new NotFoundError("Maintenance request not found.");
   const photos = await findMaintenancePhotosByRequestIds([request.id]);
   return serializeLandlordRequest(request, photos);
+}
+
+export async function updateMaintenanceStatusService(
+  landlordId: string,
+  requestId: string,
+  input: UpdateMaintenanceStatusInput,
+): Promise<MaintenanceStatusUpdateView> {
+  const persisted = await db.transaction(async (rawTx) => {
+    const tx = rawTx as unknown as Db;
+    const current = await findMaintenanceRequestForLandlord(
+      landlordId,
+      requestId,
+      tx,
+    );
+    if (!current) throw new NotFoundError("Maintenance request not found.");
+
+    assertMaintenanceStatusTransition(current.status, input.status);
+
+    const changedAt = new Date();
+    const completedAt = input.status === "Completed" ? changedAt : null;
+    const updated = await updateMaintenanceRequestStatus(
+      {
+        requestId,
+        fromStatus: current.status,
+        toStatus: input.status,
+        completedAt,
+        changedAt,
+      },
+      tx,
+    );
+    if (!updated) {
+      // Another request won the compare-and-set update. Treat this stale
+      // transition as a business-rule failure and create no history/audit row.
+      throw new UnprocessableError(
+        "Maintenance status changed concurrently. Reload and try again.",
+        [{ field: "status", message: "The current status has changed." }],
+      );
+    }
+
+    await insertMaintenanceStatusHistory(
+      {
+        requestId,
+        fromStatus: current.status,
+        toStatus: input.status,
+        changedBy: landlordId,
+        changedAt,
+      },
+      tx,
+    );
+    await writeAudit(
+      {
+        actorUserId: landlordId,
+        action: "maintenance_request.status_changed",
+        entityType: "maintenance_requests",
+        entityId: requestId,
+        beforeValue: {
+          status: current.status,
+          completedAt: current.completedAt?.toISOString() ?? null,
+        },
+        afterValue: {
+          status: updated.status,
+          completedAt: updated.completedAt?.toISOString() ?? null,
+        },
+      },
+      tx,
+    );
+
+    return { current, updated };
+  });
+
+  // Push delivery stays outside the business transaction. There is no Web
+  // notification channel; sendNotification persists/delivers Push only.
+  if (persisted.current.tenantUserId) {
+    const label = input.status === "InProgress" ? "In Progress" : input.status;
+    await sendNotification({
+      userId: persisted.current.tenantUserId,
+      type: "maintenance.status_changed",
+      title: "Maintenance status updated",
+      body: `${persisted.current.title} is now ${label}.`,
+      linkRef: `maintenance:${requestId}`,
+      dedupeKey: `maintenance.status_changed:${requestId}:${input.status}`,
+    }).catch(() => undefined);
+  }
+
+  return {
+    id: persisted.updated.id,
+    previousStatus: persisted.current.status,
+    status: persisted.updated.status,
+    completedAt: persisted.updated.completedAt?.toISOString() ?? null,
+    updatedAt: persisted.updated.updatedAt.toISOString(),
+  };
 }
