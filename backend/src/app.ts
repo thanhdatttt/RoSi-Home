@@ -12,6 +12,7 @@ import { leasesRouter } from "./modules/leases/router.js";
 import { metersRouter } from "./modules/meters/router.js";
 import { invoicesRouter } from "./modules/invoices/router.js";
 import { notificationsRouter } from "./modules/notifications/router.js";
+import { dashboardRouter } from "./modules/dashboard/router.js";
 import {
   maintenanceRouter,
   roomMaintenanceRouter,
@@ -42,6 +43,7 @@ export function createApp(): express.Express {
   app.use("/api/v1", invoicesRouter);
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/maintenance-requests", maintenanceRouter);
+  app.use("/api/v1/dashboard", dashboardRouter);
 
   app.use(errorHandler);
   return app;
