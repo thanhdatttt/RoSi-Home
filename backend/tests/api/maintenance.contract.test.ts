@@ -9,11 +9,18 @@ const TENANT_USER_ID = "55555555-5555-4555-8555-555555555555";
 const LANDLORD_ID = "33333333-3333-4333-8333-333333333333";
 const ROOM_ID = "66666666-6666-4666-8666-666666666666";
 const REQUEST_ID = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
+const OTHER_REQUEST_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
-const mocks = vi.hoisted(() => ({ submitMaintenanceRequestService: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  submitMaintenanceRequestService: vi.fn(),
+  listTenantMaintenanceRequestsService: vi.fn(),
+  getTenantMaintenanceRequestService: vi.fn(),
+}));
 
 vi.mock("../../src/modules/maintenance/service.js", () => ({
   submitMaintenanceRequestService: mocks.submitMaintenanceRequestService,
+  listTenantMaintenanceRequestsService: mocks.listTenantMaintenanceRequestsService,
+  getTenantMaintenanceRequestService: mocks.getTenantMaintenanceRequestService,
 }));
 
 function token(sub: string, role: "Landlord" | "Tenant"): string {
@@ -40,6 +47,26 @@ const view = {
 
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
+const tenantView = {
+  id: REQUEST_ID,
+  title: "Leaking sink",
+  description: "Water is leaking continuously below the sink.",
+  room: { id: ROOM_ID, name: "Room 101" },
+  status: "InProgress" as const,
+  submittedAt: "2026-07-22T02:00:00.000Z",
+  photos: [
+    {
+      id: "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      fileUrl: "https://storage.test/signed-maintenance-photo",
+    },
+  ],
+};
+
+const tenantList = {
+  data: [tenantView],
+  meta: { page: 2, pageSize: 5, total: 6 },
+};
+
 describe("Maintenance request HTTP contract", () => {
   let app: Express;
   let tenantToken: string;
@@ -55,7 +82,80 @@ describe("Maintenance request HTTP contract", () => {
   });
 
   beforeEach(() => {
-    mocks.submitMaintenanceRequestService.mockResolvedValue(view);
+    mocks.submitMaintenanceRequestService.mockReset().mockResolvedValue(view);
+    mocks.listTenantMaintenanceRequestsService.mockReset().mockResolvedValue(tenantList);
+    mocks.getTenantMaintenanceRequestService.mockReset().mockResolvedValue(tenantView);
+  });
+
+  it("US-MAINT-02: lists only the authenticated tenant's submissions with pagination", async () => {
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests?page=2&pageSize=5")
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(tenantList);
+    expect(mocks.listTenantMaintenanceRequestsService).toHaveBeenCalledWith(
+      TENANT_USER_ID,
+      { page: 2, pageSize: 5 },
+    );
+  });
+
+  it("US-MAINT-02: opens an owned submission with room, current status, and photos", async () => {
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${REQUEST_ID}`)
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual({ data: tenantView });
+    expect(mocks.getTenantMaintenanceRequestService).toHaveBeenCalledWith(
+      TENANT_USER_ID,
+      REQUEST_ID,
+    );
+  });
+
+  it("US-MAINT-02: requires Tenant authentication for listing", async () => {
+    await request(app).get("/api/v1/maintenance-requests").expect(401);
+
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests")
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(403);
+
+    expect(response.body.error).toMatchObject({ code: "FORBIDDEN" });
+    expect(mocks.listTenantMaintenanceRequestsService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-02: rejects invalid pagination before calling the service", async () => {
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests?page=0&pageSize=101")
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(400);
+
+    expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listTenantMaintenanceRequestsService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-02: returns the same scoped 404 for another tenant's identifier", async () => {
+    mocks.getTenantMaintenanceRequestService.mockRejectedValue(
+      new NotFoundError("Maintenance request not found."),
+    );
+
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${OTHER_REQUEST_ID}`)
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(404);
+
+    expect(response.body.error).toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("US-MAINT-02: rejects a malformed request identifier", async () => {
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests/not-a-uuid")
+      .set("Authorization", `Bearer ${tenantToken}`)
+      .expect(400);
+
+    expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.getTenantMaintenanceRequestService).not.toHaveBeenCalled();
   });
 
   it("US-MAINT-01: creates a request with a multipart photo and standard envelope", async () => {

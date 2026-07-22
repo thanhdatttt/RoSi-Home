@@ -3,6 +3,12 @@ import { writeAudit } from "../../db/audit.js";
 import { db, type Db } from "../../db/index.js";
 import { NotFoundError } from "../../lib/errors.js";
 import {
+  type Paginated,
+  type Pagination,
+  paginate,
+} from "../../lib/pagination.js";
+import {
+  createSignedMaintenancePhotoUrl,
   deleteMaintenancePhoto,
   uploadMaintenancePhoto,
   type StoredMaintenancePhoto,
@@ -14,10 +20,15 @@ import {
 } from "./photos.js";
 import {
   findActiveLeaseForTenantRoom,
+  countMaintenanceRequestsForTenantUser,
+  findMaintenancePhotosByRequestIds,
+  findMaintenanceRequestForTenantUser,
   insertMaintenancePhotos,
   insertMaintenanceRequest,
+  listMaintenanceRequestsForTenantUser,
   type MaintenancePhotoRow,
   type MaintenanceRequestRow,
+  type TenantMaintenanceRequestRow,
 } from "./repository.js";
 import type { SubmitMaintenanceRequestInput } from "./schema.js";
 
@@ -32,7 +43,17 @@ export type MaintenanceRequestView = {
   photos: { id: string; fileUrl: string }[];
 };
 
-function serialize(
+export type TenantMaintenanceRequestView = {
+  id: string;
+  title: string;
+  description: string;
+  room: { id: string; name: string };
+  status: "Pending" | "InProgress" | "Completed";
+  submittedAt: string;
+  photos: { id: string; fileUrl: string }[];
+};
+
+function serializeSubmission(
   request: MaintenanceRequestRow,
   photos: MaintenancePhotoRow[],
 ): MaintenanceRequestView {
@@ -46,6 +67,39 @@ function serialize(
     submittedAt: request.submittedAt.toISOString(),
     photos: photos.map((photo) => ({ id: photo.id, fileUrl: photo.fileUrl })),
   };
+}
+
+async function serializeTenantRequest(
+  request: TenantMaintenanceRequestRow,
+  photos: readonly MaintenancePhotoRow[],
+): Promise<TenantMaintenanceRequestView> {
+  const signedPhotos = await Promise.all(
+    photos.map(async (photo) => ({
+      id: photo.id,
+      fileUrl: await createSignedMaintenancePhotoUrl(photo.fileUrl),
+    })),
+  );
+  return {
+    id: request.id,
+    title: request.title,
+    description: request.description,
+    room: { id: request.roomId, name: request.roomName },
+    status: request.status,
+    submittedAt: request.submittedAt.toISOString(),
+    photos: signedPhotos,
+  };
+}
+
+function groupPhotosByRequest(
+  photos: readonly MaintenancePhotoRow[],
+): Map<string, MaintenancePhotoRow[]> {
+  const grouped = new Map<string, MaintenancePhotoRow[]>();
+  for (const photo of photos) {
+    const requestPhotos = grouped.get(photo.requestId) ?? [];
+    requestPhotos.push(photo);
+    grouped.set(photo.requestId, requestPhotos);
+  }
+  return grouped;
 }
 
 async function cleanupUploadedPhotos(
@@ -155,9 +209,42 @@ export async function submitMaintenanceRequestService(
       dedupeKey: `maintenance.created:${persisted.request.id}`,
     }).catch(() => undefined);
 
-    return serialize(persisted.request, persisted.photoRows);
+    return serializeSubmission(persisted.request, persisted.photoRows);
   } catch (error) {
     if (!committed) await cleanupUploadedPhotos(uploaded);
     throw error;
   }
+}
+
+export async function listTenantMaintenanceRequestsService(
+  tenantUserId: string,
+  pagination: Pagination,
+): Promise<Paginated<TenantMaintenanceRequestView>> {
+  const [requests, total] = await Promise.all([
+    listMaintenanceRequestsForTenantUser(tenantUserId, pagination),
+    countMaintenanceRequestsForTenantUser(tenantUserId),
+  ]);
+  const photos = await findMaintenancePhotosByRequestIds(
+    requests.map((request) => request.id),
+  );
+  const photosByRequest = groupPhotosByRequest(photos);
+  const views = await Promise.all(
+    requests.map((request) =>
+      serializeTenantRequest(request, photosByRequest.get(request.id) ?? []),
+    ),
+  );
+  return paginate(views, total, pagination);
+}
+
+export async function getTenantMaintenanceRequestService(
+  tenantUserId: string,
+  requestId: string,
+): Promise<TenantMaintenanceRequestView> {
+  const request = await findMaintenanceRequestForTenantUser(
+    tenantUserId,
+    requestId,
+  );
+  if (!request) throw new NotFoundError("Maintenance request not found.");
+  const photos = await findMaintenancePhotosByRequestIds([request.id]);
+  return serializeTenantRequest(request, photos);
 }

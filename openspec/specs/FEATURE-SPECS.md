@@ -341,7 +341,7 @@
 
 ### F-12 — Maintenance Request Submission
 
-> **Status: US-MAINT-01 IMPLEMENTED.** The backend supports tenant submission, validated private photo storage, atomic request/photo persistence, and landlord push notification. US-MAINT-02 through US-MAINT-05 remain not yet implemented.
+> **Status: US-MAINT-01 and US-MAINT-02 IMPLEMENTED.** The backend supports tenant submission, validated private photo storage, atomic request/photo persistence, landlord push notification, and tenant-scoped paginated list/detail reads with short-lived signed photo URLs. US-MAINT-03 through US-MAINT-05 remain not yet implemented.
 
 #### US-MAINT-01 — Submit a maintenance request
 - **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)
@@ -351,7 +351,9 @@
 
 #### US-MAINT-02 — View submitted maintenance requests
 - **Endpoint:** `GET /api/v1/maintenance-requests` (Tenant: own submissions only)
+- **Detail endpoint:** `GET /api/v1/maintenance-requests/:id` (Tenant: own submission only; out-of-scope IDs return the same `404` as missing IDs)
 - **Response:** title, room, submission date, current `status`, photos.
+- **Photo access:** database paths remain private; list/detail responses replace them with five-minute Supabase signed URLs only after the tenant ownership query succeeds.
 
 ### F-13 — Maintenance Status Tracking
 

@@ -15,9 +15,14 @@ const mocks = vi.hoisted(() => {
     findActiveLeaseForTenantRoom: vi.fn(),
     insertMaintenanceRequest: vi.fn(),
     insertMaintenancePhotos: vi.fn(),
+    listMaintenanceRequestsForTenantUser: vi.fn(),
+    countMaintenanceRequestsForTenantUser: vi.fn(),
+    findMaintenanceRequestForTenantUser: vi.fn(),
+    findMaintenancePhotosByRequestIds: vi.fn(),
     writeAudit: vi.fn(),
     uploadMaintenancePhoto: vi.fn(),
     deleteMaintenancePhoto: vi.fn(),
+    createSignedMaintenancePhotoUrl: vi.fn(),
     sendNotification: vi.fn(),
   };
 });
@@ -32,18 +37,27 @@ vi.mock("../../../src/modules/maintenance/repository.js", () => ({
   findActiveLeaseForTenantRoom: mocks.findActiveLeaseForTenantRoom,
   insertMaintenanceRequest: mocks.insertMaintenanceRequest,
   insertMaintenancePhotos: mocks.insertMaintenancePhotos,
+  listMaintenanceRequestsForTenantUser: mocks.listMaintenanceRequestsForTenantUser,
+  countMaintenanceRequestsForTenantUser: mocks.countMaintenanceRequestsForTenantUser,
+  findMaintenanceRequestForTenantUser: mocks.findMaintenanceRequestForTenantUser,
+  findMaintenancePhotosByRequestIds: mocks.findMaintenancePhotosByRequestIds,
 }));
 
 vi.mock("../../../src/lib/storage.js", () => ({
   uploadMaintenancePhoto: mocks.uploadMaintenancePhoto,
   deleteMaintenancePhoto: mocks.deleteMaintenancePhoto,
+  createSignedMaintenancePhotoUrl: mocks.createSignedMaintenancePhotoUrl,
 }));
 
 vi.mock("../../../src/modules/notifications/service.js", () => ({
   sendNotification: mocks.sendNotification,
 }));
 
-import { submitMaintenanceRequestService } from "../../../src/modules/maintenance/service.js";
+import {
+  getTenantMaintenanceRequestService,
+  listTenantMaintenanceRequestsService,
+  submitMaintenanceRequestService,
+} from "../../../src/modules/maintenance/service.js";
 
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -90,6 +104,13 @@ describe("submitMaintenanceRequestService", () => {
       objectPath: "tenant/request/photo.png",
       fileUrl: "maintenance-photos/tenant/request/photo.png",
     });
+    mocks.listMaintenanceRequestsForTenantUser.mockResolvedValue([]);
+    mocks.countMaintenanceRequestsForTenantUser.mockResolvedValue(0);
+    mocks.findMaintenanceRequestForTenantUser.mockResolvedValue(null);
+    mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([]);
+    mocks.createSignedMaintenancePhotoUrl.mockImplementation(
+      async (fileUrl: string) => `https://storage.test/signed/${encodeURIComponent(fileUrl)}`,
+    );
     mocks.deleteMaintenancePhoto.mockResolvedValue(undefined);
     mocks.writeAudit.mockResolvedValue(undefined);
     mocks.sendNotification.mockResolvedValue({ sent: true, deduped: false });
@@ -279,5 +300,87 @@ describe("submitMaintenanceRequestService", () => {
     ).resolves.toMatchObject({ status: "Pending" });
 
     expect(mocks.insertMaintenanceRequest).toHaveBeenCalledOnce();
+  });
+
+  it("US-MAINT-02: lists tenant-scoped requests with the current status and signed photos", async () => {
+    const row = { ...requestRow({ status: "InProgress" }), roomName: "Room 101" };
+    const photoRow = {
+      id: "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      requestId: row.id,
+      fileUrl: "maintenance-photos/tenant/request/photo.png",
+    };
+    mocks.listMaintenanceRequestsForTenantUser.mockResolvedValue([row]);
+    mocks.countMaintenanceRequestsForTenantUser.mockResolvedValue(1);
+    mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([photoRow]);
+
+    const result = await listTenantMaintenanceRequestsService(TENANT_USER_ID, {
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result).toEqual({
+      data: [
+        {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          room: { id: ROOM_ID, name: "Room 101" },
+          status: "InProgress",
+          submittedAt: "2026-07-22T02:00:00.000Z",
+          photos: [
+            {
+              id: photoRow.id,
+              fileUrl:
+                "https://storage.test/signed/maintenance-photos%2Ftenant%2Frequest%2Fphoto.png",
+            },
+          ],
+        },
+      ],
+      meta: { page: 1, pageSize: 20, total: 1 },
+    });
+    expect(mocks.listMaintenanceRequestsForTenantUser).toHaveBeenCalledWith(
+      TENANT_USER_ID,
+      { page: 1, pageSize: 20 },
+    );
+    expect(mocks.findMaintenancePhotosByRequestIds).toHaveBeenCalledWith([row.id]);
+  });
+
+  it("US-MAINT-02: opens only an owned request and signs its available photos", async () => {
+    const row = { ...requestRow({ status: "Completed" }), roomName: "Room 101" };
+    const photoRow = {
+      id: "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      requestId: row.id,
+      fileUrl: "maintenance-photos/tenant/request/photo.png",
+    };
+    mocks.findMaintenanceRequestForTenantUser.mockResolvedValue(row);
+    mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([photoRow]);
+
+    const result = await getTenantMaintenanceRequestService(TENANT_USER_ID, row.id);
+
+    expect(result).toMatchObject({
+      id: row.id,
+      status: "Completed",
+      room: { id: ROOM_ID, name: "Room 101" },
+      photos: [{ id: photoRow.id }],
+    });
+    expect(mocks.findMaintenanceRequestForTenantUser).toHaveBeenCalledWith(
+      TENANT_USER_ID,
+      row.id,
+    );
+    expect(mocks.createSignedMaintenancePhotoUrl).toHaveBeenCalledWith(
+      photoRow.fileUrl,
+    );
+  });
+
+  it("US-MAINT-02: uses a scoped 404 and never reads photos for another tenant's id", async () => {
+    await expect(
+      getTenantMaintenanceRequestService(
+        TENANT_USER_ID,
+        "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      ),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+
+    expect(mocks.findMaintenancePhotosByRequestIds).not.toHaveBeenCalled();
+    expect(mocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
   });
 });

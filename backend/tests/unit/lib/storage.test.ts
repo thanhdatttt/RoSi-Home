@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createSignedMaintenancePhotoUrl,
   deleteMaintenancePhoto,
   uploadMaintenancePhoto,
 } from "../../../src/lib/storage.js";
@@ -106,5 +107,57 @@ describe("private maintenance photo storage", () => {
     await expect(
       deleteMaintenancePhoto("tenant/request/photo.png"),
     ).rejects.toThrow("storage status 500");
+  });
+
+  it("creates a short-lived URL for a private maintenance photo path", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({
+        signedURL: "/object/sign/maintenance-photos/tenant/request/photo.png?token=signed",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createSignedMaintenancePhotoUrl(
+      "maintenance-photos/tenant/request/photo.png",
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://project.supabase.co/storage/v1/object/sign/maintenance-photos/tenant/request/photo.png",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ expiresIn: 300 }),
+        headers: expect.objectContaining({
+          apikey: "service-secret",
+          Authorization: "Bearer service-secret",
+          "Content-Type": "application/json",
+        }),
+      }),
+    );
+    expect(result).toBe(
+      "https://project.supabase.co/storage/v1/object/sign/maintenance-photos/tenant/request/photo.png?token=signed",
+    );
+  });
+
+  it("refuses to sign a path outside the private maintenance bucket", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createSignedMaintenancePhotoUrl("other-bucket/secret.png"),
+    ).rejects.toThrow("Invalid maintenance photo storage path");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not hide a signed-URL storage failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 503 }),
+    );
+
+    await expect(
+      createSignedMaintenancePhotoUrl("maintenance-photos/tenant/request/photo.png"),
+    ).rejects.toThrow("storage status 503");
   });
 });

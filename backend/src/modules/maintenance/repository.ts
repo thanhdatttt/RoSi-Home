@@ -1,4 +1,14 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNull,
+  sql,
+} from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
 import {
   leases,
@@ -8,9 +18,13 @@ import {
   rooms,
   tenantInfo,
 } from "../../db/schema.js";
+import type { Pagination } from "../../lib/pagination.js";
 
 export type MaintenanceRequestRow = typeof maintenanceRequests.$inferSelect;
 export type MaintenancePhotoRow = typeof maintenancePhotos.$inferSelect;
+export type TenantMaintenanceRequestRow = MaintenanceRequestRow & {
+  roomName: string;
+};
 
 export type ActiveMaintenanceLeaseContext = {
   tenantInfoId: string;
@@ -75,4 +89,74 @@ export async function insertMaintenancePhotos(
 ): Promise<MaintenancePhotoRow[]> {
   if (input.length === 0) return [];
   return executor.insert(maintenancePhotos).values(input).returning();
+}
+
+function tenantRequestBaseQuery(executor: Db) {
+  return executor
+    .select({
+      ...getTableColumns(maintenanceRequests),
+      roomName: rooms.name,
+    })
+    .from(maintenanceRequests)
+    .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
+    .innerJoin(rooms, eq(maintenanceRequests.roomId, rooms.id));
+}
+
+function tenantRequestScope(tenantUserId: string) {
+  return and(
+    eq(tenantInfo.userId, tenantUserId),
+    isNull(tenantInfo.deletedAt),
+    isNull(maintenanceRequests.deletedAt),
+  );
+}
+
+export async function listMaintenanceRequestsForTenantUser(
+  tenantUserId: string,
+  pagination: Pagination,
+  executor: Db = db,
+): Promise<TenantMaintenanceRequestRow[]> {
+  const rows = await tenantRequestBaseQuery(executor)
+    .where(tenantRequestScope(tenantUserId))
+    .orderBy(desc(maintenanceRequests.submittedAt), desc(maintenanceRequests.id))
+    .limit(pagination.pageSize)
+    .offset((pagination.page - 1) * pagination.pageSize);
+  return rows as TenantMaintenanceRequestRow[];
+}
+
+export async function countMaintenanceRequestsForTenantUser(
+  tenantUserId: string,
+  executor: Db = db,
+): Promise<number> {
+  const [row] = await executor
+    .select({ value: count() })
+    .from(maintenanceRequests)
+    .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
+    .where(tenantRequestScope(tenantUserId));
+  return Number(row?.value ?? 0);
+}
+
+export async function findMaintenanceRequestForTenantUser(
+  tenantUserId: string,
+  requestId: string,
+  executor: Db = db,
+): Promise<TenantMaintenanceRequestRow | null> {
+  const [row] = await tenantRequestBaseQuery(executor).where(
+    and(
+      tenantRequestScope(tenantUserId),
+      eq(maintenanceRequests.id, requestId),
+    ),
+  );
+  return (row as TenantMaintenanceRequestRow | undefined) ?? null;
+}
+
+export async function findMaintenancePhotosByRequestIds(
+  requestIds: readonly string[],
+  executor: Db = db,
+): Promise<MaintenancePhotoRow[]> {
+  if (requestIds.length === 0) return [];
+  return executor
+    .select()
+    .from(maintenancePhotos)
+    .where(inArray(maintenancePhotos.requestId, [...requestIds]))
+    .orderBy(asc(maintenancePhotos.requestId), asc(maintenancePhotos.id));
 }

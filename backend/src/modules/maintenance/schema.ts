@@ -11,3 +11,9 @@ export const submitMaintenanceRequestSchema = z
 export type SubmitMaintenanceRequestInput = z.infer<
   typeof submitMaintenanceRequestSchema
 >;
+
+export const maintenanceRequestParamsSchema = z
+  .object({
+    id: z.string().uuid("id must be a valid maintenance request id."),
+  })
+  .strict();

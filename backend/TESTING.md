@@ -70,6 +70,14 @@ Maintenance submission (US-MAINT-01) has automated coverage for:
 - Atomic request, photo metadata, and audit persistence in PostgreSQL.
 - Initial `Pending` status and an owning-landlord push notification with a maintenance deep link.
 
+Tenant maintenance request reads (US-MAINT-02) have automated coverage for:
+
+- Tenant-only paginated list and detail contracts.
+- SQL scoping through the authenticated user's own `tenant_info` relationship.
+- Room identity/name, submission timestamp, and the current persisted status.
+- Private photo paths converted to five-minute signed URLs only after ownership succeeds.
+- Cross-tenant request-ID guessing returning scoped `404` without reading or signing attachments.
+
 ## API Automation Layers
 
 ### Contract tests — available now
@@ -134,6 +142,8 @@ The integration suite covers:
 - same-name, non-overlapping surcharge persistence.
 - maintenance request/photo/audit transaction rollback and storage compensation;
 - maintenance active-lease authorization and owner-only notification persistence.
+- maintenance tenant list/detail pagination, current-status reads, signed-photo responses,
+  and cross-tenant request/attachment isolation.
 
 ## Coverage Gate
 

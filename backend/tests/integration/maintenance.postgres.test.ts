@@ -20,16 +20,23 @@ import {
 
 const OTHER_PROPERTY_ID = "22222222-2222-4222-8222-222222222223";
 const OTHER_ROOM_ID = "66666666-6666-4666-8666-666666666668";
+const OTHER_TENANT_USER_ID = "55555555-5555-4555-8555-555555555556";
+const OTHER_TENANT_INFO_ID = "77777777-7777-4777-8777-777777777778";
+const OWN_REQUEST_ID = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa";
+const OWN_REQUEST_2_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const OTHER_REQUEST_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const storageMocks = vi.hoisted(() => ({
   uploadMaintenancePhoto: vi.fn(),
   deleteMaintenancePhoto: vi.fn(),
+  createSignedMaintenancePhotoUrl: vi.fn(),
 }));
 
 vi.mock("../../src/lib/storage.js", () => ({
   uploadMaintenancePhoto: storageMocks.uploadMaintenancePhoto,
   deleteMaintenancePhoto: storageMocks.deleteMaintenancePhoto,
+  createSignedMaintenancePhotoUrl: storageMocks.createSignedMaintenancePhotoUrl,
 }));
 
 let handles: IntegrationHandles;
@@ -65,14 +72,18 @@ beforeEach(async () => {
     }),
   );
   storageMocks.deleteMaintenancePhoto.mockResolvedValue(undefined);
+  storageMocks.createSignedMaintenancePhotoUrl.mockImplementation(
+    async (fileUrl: string) => `https://storage.test/signed/${encodeURIComponent(fileUrl)}`,
+  );
 
   await resetCommonFixtures(dbPool);
   await dbPool.query(
     `INSERT INTO users (id, role, username, password_hash)
      VALUES ($1, 'Landlord', 'landlord-a@test.dev', 'hash'),
             ($2, 'Landlord', 'landlord-b@test.dev', 'hash'),
-            ($3, 'Tenant', '0905556677', 'hash')`,
-    [LANDLORD_ID, OTHER_LANDLORD_ID, TENANT_USER_ID],
+            ($3, 'Tenant', '0905556677', 'hash'),
+            ($4, 'Tenant', '0905556688', 'hash')`,
+    [LANDLORD_ID, OTHER_LANDLORD_ID, TENANT_USER_ID, OTHER_TENANT_USER_ID],
   );
   await dbPool.query(
     `INSERT INTO properties (id, landlord_id, name, address)
@@ -89,8 +100,16 @@ beforeEach(async () => {
   await dbPool.query(
     `INSERT INTO tenant_info
        (id, full_name, phone, email, id_number, user_id, created_by_landlord_id)
-     VALUES ($1, 'Tran Thi B', '0905556677', 'tenant@test.dev', '07912304567', $2, $3)`,
-    [TENANT_INFO_ID, TENANT_USER_ID, LANDLORD_ID],
+     VALUES ($1, 'Tran Thi B', '0905556677', 'tenant@test.dev', '07912304567', $2, $3),
+            ($4, 'Nguyen Van C', '0905556688', 'other-tenant@test.dev', '07912304568', $5, $6)`,
+    [
+      TENANT_INFO_ID,
+      TENANT_USER_ID,
+      LANDLORD_ID,
+      OTHER_TENANT_INFO_ID,
+      OTHER_TENANT_USER_ID,
+      OTHER_LANDLORD_ID,
+    ],
   );
   await dbPool.query(
     `INSERT INTO leases
@@ -99,6 +118,33 @@ beforeEach(async () => {
     [LEASE_ID, ROOM_ID, TENANT_INFO_ID, LANDLORD_ID],
   );
 });
+
+async function seedSubmittedRequests(): Promise<void> {
+  await dbPool.query(
+    `INSERT INTO maintenance_requests
+       (id, room_id, tenant_info_id, title, description, status, submitted_at)
+     VALUES
+       ($1, $2, $3, 'Leaking sink', 'Water is leaking continuously.', 'InProgress', '2026-07-22T02:00:00.000Z'),
+       ($4, $2, $3, 'Broken light', 'The ceiling light no longer works.', 'Pending', '2026-07-22T03:00:00.000Z'),
+       ($5, $6, $7, 'Other tenant secret', 'Must not be exposed.', 'Completed', '2026-07-22T04:00:00.000Z')`,
+    [
+      OWN_REQUEST_ID,
+      ROOM_ID,
+      TENANT_INFO_ID,
+      OWN_REQUEST_2_ID,
+      OTHER_REQUEST_ID,
+      OTHER_ROOM_ID,
+      OTHER_TENANT_INFO_ID,
+    ],
+  );
+  await dbPool.query(
+    `INSERT INTO maintenance_photos (id, request_id, file_url)
+     VALUES
+       ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', $1, 'maintenance-photos/tenant/own-photo.png'),
+       ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', $2, 'maintenance-photos/other/secret-photo.png')`,
+    [OWN_REQUEST_ID, OTHER_REQUEST_ID],
+  );
+}
 
 describe("Maintenance submission (US-MAINT-01)", () => {
   it("persists the request, photos, audit, and owner notification", async () => {
@@ -218,5 +264,72 @@ describe("Maintenance submission (US-MAINT-01)", () => {
       await dbPool.query("DROP FUNCTION fail_maintenance_photo_insert()");
       consoleSpy.mockRestore();
     }
+  });
+});
+
+describe("Tenant maintenance request reads (US-MAINT-02)", () => {
+  it("lists only own submissions with room, latest status, signed photos, and pagination", async () => {
+    await seedSubmittedRequests();
+
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests?page=1&pageSize=20")
+      .set(auth(tenantToken))
+      .expect(200);
+
+    expect(response.body.meta).toEqual({ page: 1, pageSize: 20, total: 2 });
+    expect(response.body.data).toHaveLength(2);
+    expect(response.body.data.map((item: { id: string }) => item.id)).toEqual([
+      OWN_REQUEST_2_ID,
+      OWN_REQUEST_ID,
+    ]);
+    expect(response.body.data[1]).toMatchObject({
+      id: OWN_REQUEST_ID,
+      title: "Leaking sink",
+      room: { id: ROOM_ID, name: "Room 101" },
+      status: "InProgress",
+      submittedAt: "2026-07-22T02:00:00.000Z",
+      photos: [
+        {
+          id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+          fileUrl:
+            "https://storage.test/signed/maintenance-photos%2Ftenant%2Fown-photo.png",
+        },
+      ],
+    });
+    expect(JSON.stringify(response.body)).not.toContain("Other tenant secret");
+    expect(JSON.stringify(response.body)).not.toContain("secret-photo.png");
+    expect(storageMocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalledWith(
+      "maintenance-photos/other/secret-photo.png",
+    );
+  });
+
+  it("opens an owned request and returns the same current status and available photos", async () => {
+    await seedSubmittedRequests();
+
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}`)
+      .set(auth(tenantToken))
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      id: OWN_REQUEST_ID,
+      description: "Water is leaking continuously.",
+      room: { id: ROOM_ID, name: "Room 101" },
+      status: "InProgress",
+      photos: [{ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" }],
+    });
+  });
+
+  it("returns scoped 404 without signing an attachment when another tenant's id is guessed", async () => {
+    await seedSubmittedRequests();
+    storageMocks.createSignedMaintenancePhotoUrl.mockClear();
+
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${OTHER_REQUEST_ID}`)
+      .set(auth(tenantToken))
+      .expect(404);
+
+    expect(response.body.error).toMatchObject({ code: "NOT_FOUND" });
+    expect(storageMocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
   });
 });
