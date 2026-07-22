@@ -1,3 +1,4 @@
+
 # Vision and Scope Document
 
 # 1. Background, Context, and Overview
@@ -283,7 +284,41 @@ The landlord gains an up-to-date overview of the rental business without manuall
 
 ---
 
-# 8. Future Domain Model
+# 8. Business Process Comparison
+
+## 8.1 Business Process Comparison with Competitors
+
+The competitors identified in the Proposal (EasyTro, Resident, Quản lý trọ – CL Team) are not just alternative feature sets — they encode different business processes for the same rental-management activities. The table below compares the monthly billing process, the leading operational workflow for a landlord, at the process-step level.
+
+| Process Step | EasyTro (Zalo Mini App)| Quản lý trọ – CL Team (Android app) | RosiHome |
+|---|---|---|---|
+| Where the process runs | Inside Zalo, as a Mini App | Native Android app only | Mobile app (landlord) + mobile app (tenant), accessible cross-platform |
+| Meter reading capture | Manual entry inside Zalo Mini App | Manual entry in-app | Manual entry in-app |
+| Invoice generation & delivery | Automatic invoice with VietQR, delivered inside Zalo | Automatic invoice generated in-app, but no dedicated tenant delivery channel — landlord still has to relay it | Automatic invoice generated and delivered directly to the tenant's own account/app |
+| Payment confirmation | VietQR paid, but confirmation still generally relies on the landlord checking the bank side | Manual — landlord checks bank app/SMS and updates status themselves | Landlord confirms against invoice-linked bank reference inside RosiHome; both parties see the same status |
+| Tenant visibility into the process | Limited - no tenant miniapp| No tenant-facing surface; tenant is outside the system entirely | Tenant has a first-class account with visibility into invoices, payment history, lease, and maintenance status |
+| Process ownership if something goes wrong | Landlord must resolve inside Zalo's UI constraints | Landlord resolves manually outside the app (calls/Zalo), since the app has no bidirectional workflow | Both landlord and tenant can see and act on the same record inside RosiHome, reducing "he said / she said" disputes |
+
+**Interpretation.** EasyTro's process is efficient for the landlord but keeps the tenant outside the system. CL Team's process barely differs from a fully manual one because the app is a single-user record-keeper, not a workflow tool. RosiHome's business process is deliberately scoped between these two extremes: fully digital and two-sided like Resident, but with the reduced step-count and setup effort of a tool built specifically for small self-managing landlords.
+
+## 8.2 Business Process Comparison with Manual Combination of Existing Tools
+
+This compares RosiHome's future billing process (Section 7, Use Case 1) against the *current* manual process described in Section 2, Use Case 1 — i.e., what happens if a landlord keeps using notebook/Excel + calculator + Zalo + personal memory instead of adopting any product.
+
+| Process Step | Manual Combination (current state) | RosiHome (future state) |
+|---|---|---|
+| Number of tools/surfaces touched per billing cycle | At least four: notebook (readings), calculator (charges), Excel or memory (record), Zalo (communication) | One: RosiHome |
+| Who performs the calculation | Landlord, by hand or excel function, per room, per month | System, automatically, from stored rates and the previous reading |
+| Who propagates data between steps | Landlord manually re-types/re-reads values between notebook → calculator → Zalo message | System — a single stored record flows through invoice generation, QR payment, and history without re-entry |
+| Failure mode when a step is skipped or mistyped | Silent — an error is only caught if the tenant notices and disputes it | Reduced — the calculation is deterministic from a single source of the previous reading and rate configuration |
+| Where payment status "lives" | Landlord's memory + scattered bank/Zalo messages, not visible to the tenant | A shared invoice/payment record visible to both landlord and tenant |
+| Effort trend as the number of rooms grows | Scales roughly linearly with manual, per-room work each month | Scales with data entry (meter readings) only; calculation, invoicing, and history do not add manual effort per room |
+
+**Interpretation.** The manual process is not "worse" because any individual step is hard — recording a meter reading or typing a Zalo message is trivial in isolation. It is worse because the *landlord is the connective tissue between steps*, and that connective work (i) does not scale as rooms are added, (ii) is invisible to the tenant, and (iii) has no audit trail when a dispute happens. RosiHome's future business process removes the landlord from the role of manual data-router between tools; this is the same underlying finding as the feature-level comparison in Proposal Section 4.5, now shown at the process/workflow level as required for this document.
+
+---
+
+# 9. Future Domain Model
 
 After the implementation of RosiHome, all rental management information is centralized within a single integrated information system. Instead of relying on multiple disconnected tools, landlords and tenants interact with a unified platform that maintains consistent relationships between business entities.
 
@@ -307,7 +342,7 @@ Unlike the current domain model, the future domain centralizes all business info
 
 ---
 
-# 9. Assumptions
+# 10. Assumptions
 
 The successful implementation and operation of RosiHome depends on several assumptions made during project planning and development.
 
@@ -323,7 +358,7 @@ The successful implementation and operation of RosiHome depends on several assum
 
 These assumptions establish the operating environment for the MVP and define the conditions under which the proposed solution is expected to achieve its intended objectives.
 
-# 10. Risks
+# 11. Risks
 Although RosiHome has been designed to address the operational challenges of self-managing landlords, several risks may affect the successful development and adoption of the system. Identifying these risks early enables appropriate mitigation strategies throughout the project lifecycle.
 
 |Risk|Description|Mitigation Strategy|
@@ -341,7 +376,7 @@ Overall, the identified risks are considered manageable because they primarily r
 
 ---
 
-# 11. Conclusion
+# 12. Conclusion
 
 RosiHome addresses the operational challenges faced by self-managing landlords by replacing fragmented manual processes with a centralized property management platform. The current rental management workflow relies heavily on notebooks, spreadsheets, calculators, and messaging applications, resulting in repetitive administrative work, calculation errors, inconsistent record keeping, and limited visibility into business performance.
 
