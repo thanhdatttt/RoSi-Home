@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => {
     listMaintenanceRequestsForTenantUser: vi.fn(),
     countMaintenanceRequestsForTenantUser: vi.fn(),
     findMaintenanceRequestForTenantUser: vi.fn(),
+    listMaintenanceRequestsForLandlord: vi.fn(),
+    countMaintenanceRequestsForLandlord: vi.fn(),
+    findMaintenanceRequestForLandlord: vi.fn(),
     findMaintenancePhotosByRequestIds: vi.fn(),
     writeAudit: vi.fn(),
     uploadMaintenancePhoto: vi.fn(),
@@ -40,6 +43,9 @@ vi.mock("../../../src/modules/maintenance/repository.js", () => ({
   listMaintenanceRequestsForTenantUser: mocks.listMaintenanceRequestsForTenantUser,
   countMaintenanceRequestsForTenantUser: mocks.countMaintenanceRequestsForTenantUser,
   findMaintenanceRequestForTenantUser: mocks.findMaintenanceRequestForTenantUser,
+  listMaintenanceRequestsForLandlord: mocks.listMaintenanceRequestsForLandlord,
+  countMaintenanceRequestsForLandlord: mocks.countMaintenanceRequestsForLandlord,
+  findMaintenanceRequestForLandlord: mocks.findMaintenanceRequestForLandlord,
   findMaintenancePhotosByRequestIds: mocks.findMaintenancePhotosByRequestIds,
 }));
 
@@ -54,7 +60,9 @@ vi.mock("../../../src/modules/notifications/service.js", () => ({
 }));
 
 import {
+  getMaintenanceRequestService,
   getTenantMaintenanceRequestService,
+  listMaintenanceRequestsService,
   listTenantMaintenanceRequestsService,
   submitMaintenanceRequestService,
 } from "../../../src/modules/maintenance/service.js";
@@ -107,6 +115,9 @@ describe("submitMaintenanceRequestService", () => {
     mocks.listMaintenanceRequestsForTenantUser.mockResolvedValue([]);
     mocks.countMaintenanceRequestsForTenantUser.mockResolvedValue(0);
     mocks.findMaintenanceRequestForTenantUser.mockResolvedValue(null);
+    mocks.listMaintenanceRequestsForLandlord.mockResolvedValue([]);
+    mocks.countMaintenanceRequestsForLandlord.mockResolvedValue(0);
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(null);
     mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([]);
     mocks.createSignedMaintenancePhotoUrl.mockImplementation(
       async (fileUrl: string) => `https://storage.test/signed/${encodeURIComponent(fileUrl)}`,
@@ -376,6 +387,129 @@ describe("submitMaintenanceRequestService", () => {
     await expect(
       getTenantMaintenanceRequestService(
         TENANT_USER_ID,
+        "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      ),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+
+    expect(mocks.findMaintenancePhotosByRequestIds).not.toHaveBeenCalled();
+    expect(mocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe("landlord maintenance request reviews (US-MAINT-03)", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.listMaintenanceRequestsForLandlord.mockResolvedValue([]);
+    mocks.countMaintenanceRequestsForLandlord.mockResolvedValue(0);
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(null);
+    mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([]);
+    mocks.createSignedMaintenancePhotoUrl.mockImplementation(
+      async (fileUrl: string) =>
+        `https://storage.test/signed/${encodeURIComponent(fileUrl)}`,
+    );
+  });
+
+  function landlordRow(overrides: Record<string, unknown> = {}) {
+    return {
+      ...requestRow(),
+      propertyId: "22222222-2222-4222-8222-222222222222",
+      propertyName: "Sunrise House",
+      roomName: "Room 101",
+      tenantFullName: "Tran Thi B",
+      ...overrides,
+    };
+  }
+
+  it("lists only landlord-owned requests with property/status filters and signed photos", async () => {
+    const row = landlordRow({ status: "InProgress" });
+    const photoRow = {
+      id: "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      requestId: row.id,
+      fileUrl: "maintenance-photos/tenant/request/photo.png",
+    };
+    mocks.listMaintenanceRequestsForLandlord.mockResolvedValue([row]);
+    mocks.countMaintenanceRequestsForLandlord.mockResolvedValue(1);
+    mocks.findMaintenancePhotosByRequestIds.mockResolvedValue([photoRow]);
+
+    const result = await listMaintenanceRequestsService(
+      { id: LANDLORD_ID, role: "Landlord" },
+      { page: 1, pageSize: 20 },
+      {
+        propertyId: "22222222-2222-4222-8222-222222222222",
+        status: "InProgress",
+      },
+    );
+
+    expect(result).toEqual({
+      data: [
+        {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          property: {
+            id: "22222222-2222-4222-8222-222222222222",
+            name: "Sunrise House",
+          },
+          room: { id: ROOM_ID, name: "Room 101" },
+          tenant: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+          status: "InProgress",
+          submittedAt: "2026-07-22T02:00:00.000Z",
+          photos: [
+            {
+              id: photoRow.id,
+              fileUrl:
+                "https://storage.test/signed/maintenance-photos%2Ftenant%2Frequest%2Fphoto.png",
+            },
+          ],
+        },
+      ],
+      meta: { page: 1, pageSize: 20, total: 1 },
+    });
+    expect(mocks.listMaintenanceRequestsForLandlord).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      { page: 1, pageSize: 20 },
+      {
+        propertyId: "22222222-2222-4222-8222-222222222222",
+        status: "InProgress",
+      },
+    );
+    expect(mocks.countMaintenanceRequestsForLandlord).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      {
+        propertyId: "22222222-2222-4222-8222-222222222222",
+        status: "InProgress",
+      },
+    );
+  });
+
+  it("opens an owned request with property, room, tenant, description, time, and photos", async () => {
+    const row = landlordRow();
+    mocks.findMaintenanceRequestForLandlord.mockResolvedValue(row);
+
+    const result = await getMaintenanceRequestService(
+      { id: LANDLORD_ID, role: "Landlord" },
+      row.id,
+    );
+
+    expect(result).toMatchObject({
+      id: row.id,
+      description: row.description,
+      property: { name: "Sunrise House" },
+      room: { id: ROOM_ID, name: "Room 101" },
+      tenant: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+      submittedAt: "2026-07-22T02:00:00.000Z",
+      status: "Pending",
+    });
+    expect(mocks.findMaintenanceRequestForLandlord).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      row.id,
+    );
+  });
+
+  it("returns scoped 404 and never reads or signs photos for another landlord's request", async () => {
+    await expect(
+      getMaintenanceRequestService(
+        { id: LANDLORD_ID, role: "Landlord" },
         "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
       ),
     ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });

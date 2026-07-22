@@ -13,14 +13,14 @@ const OTHER_REQUEST_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
 const mocks = vi.hoisted(() => ({
   submitMaintenanceRequestService: vi.fn(),
-  listTenantMaintenanceRequestsService: vi.fn(),
-  getTenantMaintenanceRequestService: vi.fn(),
+  listMaintenanceRequestsService: vi.fn(),
+  getMaintenanceRequestService: vi.fn(),
 }));
 
 vi.mock("../../src/modules/maintenance/service.js", () => ({
   submitMaintenanceRequestService: mocks.submitMaintenanceRequestService,
-  listTenantMaintenanceRequestsService: mocks.listTenantMaintenanceRequestsService,
-  getTenantMaintenanceRequestService: mocks.getTenantMaintenanceRequestService,
+  listMaintenanceRequestsService: mocks.listMaintenanceRequestsService,
+  getMaintenanceRequestService: mocks.getMaintenanceRequestService,
 }));
 
 function token(sub: string, role: "Landlord" | "Tenant"): string {
@@ -67,6 +67,34 @@ const tenantList = {
   meta: { page: 2, pageSize: 5, total: 6 },
 };
 
+const landlordView = {
+  id: REQUEST_ID,
+  title: "Leaking sink",
+  description: "Water is leaking continuously below the sink.",
+  property: {
+    id: "22222222-2222-4222-8222-222222222222",
+    name: "Sunrise House",
+  },
+  room: { id: ROOM_ID, name: "Room 101" },
+  tenant: {
+    id: "77777777-7777-4777-8777-777777777777",
+    fullName: "Tran Thi B",
+  },
+  status: "InProgress" as const,
+  submittedAt: "2026-07-22T02:00:00.000Z",
+  photos: [
+    {
+      id: "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb",
+      fileUrl: "https://storage.test/signed-maintenance-photo",
+    },
+  ],
+};
+
+const landlordList = {
+  data: [landlordView],
+  meta: { page: 1, pageSize: 10, total: 1 },
+};
+
 describe("Maintenance request HTTP contract", () => {
   let app: Express;
   let tenantToken: string;
@@ -83,8 +111,8 @@ describe("Maintenance request HTTP contract", () => {
 
   beforeEach(() => {
     mocks.submitMaintenanceRequestService.mockReset().mockResolvedValue(view);
-    mocks.listTenantMaintenanceRequestsService.mockReset().mockResolvedValue(tenantList);
-    mocks.getTenantMaintenanceRequestService.mockReset().mockResolvedValue(tenantView);
+    mocks.listMaintenanceRequestsService.mockReset().mockResolvedValue(tenantList);
+    mocks.getMaintenanceRequestService.mockReset().mockResolvedValue(tenantView);
   });
 
   it("US-MAINT-02: lists only the authenticated tenant's submissions with pagination", async () => {
@@ -94,9 +122,10 @@ describe("Maintenance request HTTP contract", () => {
       .expect(200);
 
     expect(response.body).toEqual(tenantList);
-    expect(mocks.listTenantMaintenanceRequestsService).toHaveBeenCalledWith(
-      TENANT_USER_ID,
+    expect(mocks.listMaintenanceRequestsService).toHaveBeenCalledWith(
+      { id: TENANT_USER_ID, role: "Tenant" },
       { page: 2, pageSize: 5 },
+      {},
     );
   });
 
@@ -107,22 +136,15 @@ describe("Maintenance request HTTP contract", () => {
       .expect(200);
 
     expect(response.body).toEqual({ data: tenantView });
-    expect(mocks.getTenantMaintenanceRequestService).toHaveBeenCalledWith(
-      TENANT_USER_ID,
+    expect(mocks.getMaintenanceRequestService).toHaveBeenCalledWith(
+      { id: TENANT_USER_ID, role: "Tenant" },
       REQUEST_ID,
     );
   });
 
-  it("US-MAINT-02: requires Tenant authentication for listing", async () => {
+  it("US-MAINT-02/03: requires authentication for listing", async () => {
     await request(app).get("/api/v1/maintenance-requests").expect(401);
-
-    const response = await request(app)
-      .get("/api/v1/maintenance-requests")
-      .set("Authorization", `Bearer ${landlordToken}`)
-      .expect(403);
-
-    expect(response.body.error).toMatchObject({ code: "FORBIDDEN" });
-    expect(mocks.listTenantMaintenanceRequestsService).not.toHaveBeenCalled();
+    expect(mocks.listMaintenanceRequestsService).not.toHaveBeenCalled();
   });
 
   it("US-MAINT-02: rejects invalid pagination before calling the service", async () => {
@@ -132,11 +154,11 @@ describe("Maintenance request HTTP contract", () => {
       .expect(400);
 
     expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
-    expect(mocks.listTenantMaintenanceRequestsService).not.toHaveBeenCalled();
+    expect(mocks.listMaintenanceRequestsService).not.toHaveBeenCalled();
   });
 
   it("US-MAINT-02: returns the same scoped 404 for another tenant's identifier", async () => {
-    mocks.getTenantMaintenanceRequestService.mockRejectedValue(
+    mocks.getMaintenanceRequestService.mockRejectedValue(
       new NotFoundError("Maintenance request not found."),
     );
 
@@ -155,7 +177,53 @@ describe("Maintenance request HTTP contract", () => {
       .expect(400);
 
     expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
-    expect(mocks.getTenantMaintenanceRequestService).not.toHaveBeenCalled();
+    expect(mocks.getMaintenanceRequestService).not.toHaveBeenCalled();
+  });
+
+  it("US-MAINT-03: lists landlord-owned requests with property and status filters", async () => {
+    mocks.listMaintenanceRequestsService.mockResolvedValue(landlordList);
+
+    const response = await request(app)
+      .get(
+        "/api/v1/maintenance-requests?propertyId=22222222-2222-4222-8222-222222222222&status=InProgress&page=1&pageSize=10",
+      )
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(landlordList);
+    expect(mocks.listMaintenanceRequestsService).toHaveBeenCalledWith(
+      { id: LANDLORD_ID, role: "Landlord" },
+      { page: 1, pageSize: 10 },
+      {
+        propertyId: "22222222-2222-4222-8222-222222222222",
+        status: "InProgress",
+      },
+    );
+  });
+
+  it("US-MAINT-03: opens an owned request with triage context and accessible photos", async () => {
+    mocks.getMaintenanceRequestService.mockResolvedValue(landlordView);
+
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${REQUEST_ID}`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual({ data: landlordView });
+    expect(mocks.getMaintenanceRequestService).toHaveBeenCalledWith(
+      { id: LANDLORD_ID, role: "Landlord" },
+      REQUEST_ID,
+    );
+  });
+
+  it("US-MAINT-03: rejects invalid landlord filters before calling the service", async () => {
+    const response = await request(app)
+      .get("/api/v1/maintenance-requests?propertyId=not-a-uuid&status=Draft")
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(400);
+
+    expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.listMaintenanceRequestsService).not.toHaveBeenCalled();
   });
 
   it("US-MAINT-01: creates a request with a multipart photo and standard envelope", async () => {

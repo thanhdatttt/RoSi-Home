@@ -1,22 +1,26 @@
 import type { Request, Response } from "express";
 import type { Pagination } from "../../lib/pagination.js";
 import {
-  getTenantMaintenanceRequestService,
-  listTenantMaintenanceRequestsService,
+  getMaintenanceRequestService,
+  listMaintenanceRequestsService,
   submitMaintenanceRequestService,
 } from "./service.js";
+import type { MaintenanceRequestListQuery } from "./schema.js";
 
 async function list(req: Request, res: Response): Promise<void> {
-  const result = await listTenantMaintenanceRequestsService(
-    req.user!.id,
-    req.query as unknown as Pagination,
+  const { propertyId, status, ...pagination } =
+    req.query as unknown as MaintenanceRequestListQuery;
+  const result = await listMaintenanceRequestsService(
+    req.user!,
+    pagination as Pagination,
+    { propertyId, status },
   );
   res.status(200).json(result);
 }
 
 async function get(req: Request, res: Response): Promise<void> {
-  const view = await getTenantMaintenanceRequestService(
-    req.user!.id,
+  const view = await getMaintenanceRequestService(
+    req.user!,
     req.params.id,
   );
   res.status(200).json({ data: view });

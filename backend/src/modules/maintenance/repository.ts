@@ -25,6 +25,16 @@ export type MaintenancePhotoRow = typeof maintenancePhotos.$inferSelect;
 export type TenantMaintenanceRequestRow = MaintenanceRequestRow & {
   roomName: string;
 };
+export type LandlordMaintenanceRequestRow = MaintenanceRequestRow & {
+  propertyId: string;
+  propertyName: string;
+  roomName: string;
+  tenantFullName: string;
+};
+export type LandlordMaintenanceRequestFilters = {
+  propertyId?: string;
+  status?: MaintenanceRequestRow["status"];
+};
 
 export type ActiveMaintenanceLeaseContext = {
   tenantInfoId: string;
@@ -147,6 +157,79 @@ export async function findMaintenanceRequestForTenantUser(
     ),
   );
   return (row as TenantMaintenanceRequestRow | undefined) ?? null;
+}
+
+function landlordRequestBaseQuery(executor: Db) {
+  return executor
+    .select({
+      ...getTableColumns(maintenanceRequests),
+      propertyId: properties.id,
+      propertyName: properties.name,
+      roomName: rooms.name,
+      tenantFullName: tenantInfo.fullName,
+    })
+    .from(maintenanceRequests)
+    .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
+    .innerJoin(rooms, eq(maintenanceRequests.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id));
+}
+
+function landlordRequestScope(
+  landlordId: string,
+  filters: LandlordMaintenanceRequestFilters,
+) {
+  return and(
+    eq(properties.landlordId, landlordId),
+    filters.propertyId ? eq(properties.id, filters.propertyId) : undefined,
+    filters.status ? eq(maintenanceRequests.status, filters.status) : undefined,
+    isNull(maintenanceRequests.deletedAt),
+    isNull(tenantInfo.deletedAt),
+    isNull(rooms.deletedAt),
+    isNull(properties.deletedAt),
+  );
+}
+
+export async function listMaintenanceRequestsForLandlord(
+  landlordId: string,
+  pagination: Pagination,
+  filters: LandlordMaintenanceRequestFilters = {},
+  executor: Db = db,
+): Promise<LandlordMaintenanceRequestRow[]> {
+  const rows = await landlordRequestBaseQuery(executor)
+    .where(landlordRequestScope(landlordId, filters))
+    .orderBy(desc(maintenanceRequests.submittedAt), desc(maintenanceRequests.id))
+    .limit(pagination.pageSize)
+    .offset((pagination.page - 1) * pagination.pageSize);
+  return rows as LandlordMaintenanceRequestRow[];
+}
+
+export async function countMaintenanceRequestsForLandlord(
+  landlordId: string,
+  filters: LandlordMaintenanceRequestFilters = {},
+  executor: Db = db,
+): Promise<number> {
+  const [row] = await executor
+    .select({ value: count() })
+    .from(maintenanceRequests)
+    .innerJoin(tenantInfo, eq(maintenanceRequests.tenantInfoId, tenantInfo.id))
+    .innerJoin(rooms, eq(maintenanceRequests.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(landlordRequestScope(landlordId, filters));
+  return Number(row?.value ?? 0);
+}
+
+export async function findMaintenanceRequestForLandlord(
+  landlordId: string,
+  requestId: string,
+  executor: Db = db,
+): Promise<LandlordMaintenanceRequestRow | null> {
+  const [row] = await landlordRequestBaseQuery(executor).where(
+    and(
+      landlordRequestScope(landlordId, {}),
+      eq(maintenanceRequests.id, requestId),
+    ),
+  );
+  return (row as LandlordMaintenanceRequestRow | undefined) ?? null;
 }
 
 export async function findMaintenancePhotosByRequestIds(

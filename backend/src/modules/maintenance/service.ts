@@ -20,12 +20,17 @@ import {
 } from "./photos.js";
 import {
   findActiveLeaseForTenantRoom,
+  countMaintenanceRequestsForLandlord,
   countMaintenanceRequestsForTenantUser,
   findMaintenancePhotosByRequestIds,
+  findMaintenanceRequestForLandlord,
   findMaintenanceRequestForTenantUser,
   insertMaintenancePhotos,
   insertMaintenanceRequest,
+  listMaintenanceRequestsForLandlord,
   listMaintenanceRequestsForTenantUser,
+  type LandlordMaintenanceRequestFilters,
+  type LandlordMaintenanceRequestRow,
   type MaintenancePhotoRow,
   type MaintenanceRequestRow,
   type TenantMaintenanceRequestRow,
@@ -52,6 +57,20 @@ export type TenantMaintenanceRequestView = {
   submittedAt: string;
   photos: { id: string; fileUrl: string }[];
 };
+
+export type LandlordMaintenanceRequestView = {
+  id: string;
+  title: string;
+  description: string;
+  property: { id: string; name: string };
+  room: { id: string; name: string };
+  tenant: { id: string; fullName: string };
+  status: "Pending" | "InProgress" | "Completed";
+  submittedAt: string;
+  photos: { id: string; fileUrl: string }[];
+};
+
+type MaintenanceActor = { id: string; role: "Landlord" | "Tenant" };
 
 function serializeSubmission(
   request: MaintenanceRequestRow,
@@ -84,6 +103,29 @@ async function serializeTenantRequest(
     title: request.title,
     description: request.description,
     room: { id: request.roomId, name: request.roomName },
+    status: request.status,
+    submittedAt: request.submittedAt.toISOString(),
+    photos: signedPhotos,
+  };
+}
+
+async function serializeLandlordRequest(
+  request: LandlordMaintenanceRequestRow,
+  photos: readonly MaintenancePhotoRow[],
+): Promise<LandlordMaintenanceRequestView> {
+  const signedPhotos = await Promise.all(
+    photos.map(async (photo) => ({
+      id: photo.id,
+      fileUrl: await createSignedMaintenancePhotoUrl(photo.fileUrl),
+    })),
+  );
+  return {
+    id: request.id,
+    title: request.title,
+    description: request.description,
+    property: { id: request.propertyId, name: request.propertyName },
+    room: { id: request.roomId, name: request.roomName },
+    tenant: { id: request.tenantInfoId, fullName: request.tenantFullName },
     status: request.status,
     submittedAt: request.submittedAt.toISOString(),
     photos: signedPhotos,
@@ -247,4 +289,45 @@ export async function getTenantMaintenanceRequestService(
   if (!request) throw new NotFoundError("Maintenance request not found.");
   const photos = await findMaintenancePhotosByRequestIds([request.id]);
   return serializeTenantRequest(request, photos);
+}
+
+export async function listMaintenanceRequestsService(
+  actor: MaintenanceActor,
+  pagination: Pagination,
+  filters: LandlordMaintenanceRequestFilters = {},
+): Promise<
+  Paginated<TenantMaintenanceRequestView | LandlordMaintenanceRequestView>
+> {
+  if (actor.role === "Tenant") {
+    return listTenantMaintenanceRequestsService(actor.id, pagination);
+  }
+
+  const [requests, total] = await Promise.all([
+    listMaintenanceRequestsForLandlord(actor.id, pagination, filters),
+    countMaintenanceRequestsForLandlord(actor.id, filters),
+  ]);
+  const photos = await findMaintenancePhotosByRequestIds(
+    requests.map((request) => request.id),
+  );
+  const photosByRequest = groupPhotosByRequest(photos);
+  const views = await Promise.all(
+    requests.map((request) =>
+      serializeLandlordRequest(request, photosByRequest.get(request.id) ?? []),
+    ),
+  );
+  return paginate(views, total, pagination);
+}
+
+export async function getMaintenanceRequestService(
+  actor: MaintenanceActor,
+  requestId: string,
+): Promise<TenantMaintenanceRequestView | LandlordMaintenanceRequestView> {
+  if (actor.role === "Tenant") {
+    return getTenantMaintenanceRequestService(actor.id, requestId);
+  }
+
+  const request = await findMaintenanceRequestForLandlord(actor.id, requestId);
+  if (!request) throw new NotFoundError("Maintenance request not found.");
+  const photos = await findMaintenancePhotosByRequestIds([request.id]);
+  return serializeLandlordRequest(request, photos);
 }

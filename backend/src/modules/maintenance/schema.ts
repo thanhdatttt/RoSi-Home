@@ -17,3 +17,16 @@ export const maintenanceRequestParamsSchema = z
     id: z.string().uuid("id must be a valid maintenance request id."),
   })
   .strict();
+
+export const maintenanceRequestListQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    propertyId: z.string().uuid("propertyId must be a valid id.").optional(),
+    status: z.enum(["Pending", "InProgress", "Completed"]).optional(),
+  })
+  .strict();
+
+export type MaintenanceRequestListQuery = z.infer<
+  typeof maintenanceRequestListQuerySchema
+>;

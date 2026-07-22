@@ -2,9 +2,9 @@ import { Router } from "express";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
-import { paginationQuerySchema } from "../../lib/pagination.js";
 import { get, list, submit } from "./controller.js";
 import {
+  maintenanceRequestListQuerySchema,
   maintenanceRequestParamsSchema,
   submitMaintenanceRequestSchema,
 } from "./schema.js";
@@ -16,14 +16,12 @@ maintenanceRouter.use(requireAuth);
 
 maintenanceRouter.get(
   "/",
-  requireRole("Tenant"),
-  validate(paginationQuerySchema, "query"),
+  validate(maintenanceRequestListQuerySchema, "query"),
   asyncHandler(list),
 );
 
 maintenanceRouter.get(
   "/:id",
-  requireRole("Tenant"),
   validate(maintenanceRequestParamsSchema, "params"),
   asyncHandler(get),
 );

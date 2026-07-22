@@ -43,6 +43,8 @@ let handles: IntegrationHandles;
 let dbPool: Pool;
 let app: import("express").Express;
 const tenantToken = sign("Tenant", TENANT_USER_ID);
+const landlordToken = sign("Landlord", LANDLORD_ID);
+const otherLandlordToken = sign("Landlord", OTHER_LANDLORD_ID);
 
 function submit(roomId = ROOM_ID) {
   return request(app)
@@ -331,5 +333,135 @@ describe("Tenant maintenance request reads (US-MAINT-02)", () => {
 
     expect(response.body.error).toMatchObject({ code: "NOT_FOUND" });
     expect(storageMocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe("Landlord maintenance request reviews (US-MAINT-03)", () => {
+  it("lists only the authenticated landlord's portfolio and filters by property/status", async () => {
+    await seedSubmittedRequests();
+
+    const allOwned = await request(app)
+      .get("/api/v1/maintenance-requests?page=1&pageSize=20")
+      .set(auth(landlordToken))
+      .expect(200);
+
+    expect(allOwned.body.meta).toEqual({ page: 1, pageSize: 20, total: 2 });
+    expect(allOwned.body.data.map((item: { id: string }) => item.id)).toEqual([
+      OWN_REQUEST_2_ID,
+      OWN_REQUEST_ID,
+    ]);
+    expect(JSON.stringify(allOwned.body)).not.toContain("Other tenant secret");
+    expect(JSON.stringify(allOwned.body)).not.toContain("secret-photo.png");
+
+    const pendingOwned = await request(app)
+      .get(
+        `/api/v1/maintenance-requests?propertyId=${PROPERTY_ID}&status=Pending&page=1&pageSize=20`,
+      )
+      .set(auth(landlordToken))
+      .expect(200);
+
+    expect(pendingOwned.body.meta).toEqual({ page: 1, pageSize: 20, total: 1 });
+    expect(pendingOwned.body.data).toHaveLength(1);
+    expect(pendingOwned.body.data[0]).toMatchObject({
+      id: OWN_REQUEST_2_ID,
+      status: "Pending",
+      property: { id: PROPERTY_ID, name: "Sunrise House" },
+      room: { id: ROOM_ID, name: "Room 101" },
+      tenant: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+    });
+
+    const foreignProperty = await request(app)
+      .get(`/api/v1/maintenance-requests?propertyId=${OTHER_PROPERTY_ID}`)
+      .set(auth(landlordToken))
+      .expect(200);
+    expect(foreignProperty.body.meta.total).toBe(0);
+    expect(foreignProperty.body.data).toEqual([]);
+    expect(storageMocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalledWith(
+      "maintenance-photos/other/secret-photo.png",
+    );
+  });
+
+  it("opens an owned request with description, property/room/tenant context, time, and signed photos", async () => {
+    await seedSubmittedRequests();
+
+    const response = await request(app)
+      .get(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}`)
+      .set(auth(landlordToken))
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      id: OWN_REQUEST_ID,
+      title: "Leaking sink",
+      description: "Water is leaking continuously.",
+      property: { id: PROPERTY_ID, name: "Sunrise House" },
+      room: { id: ROOM_ID, name: "Room 101" },
+      tenant: { id: TENANT_INFO_ID, fullName: "Tran Thi B" },
+      status: "InProgress",
+      submittedAt: "2026-07-22T02:00:00.000Z",
+      photos: [
+        {
+          id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+          fileUrl:
+            "https://storage.test/signed/maintenance-photos%2Ftenant%2Fown-photo.png",
+        },
+      ],
+    });
+  });
+
+  it("returns a scoped 404 and never signs photos for another landlord's request", async () => {
+    await seedSubmittedRequests();
+    storageMocks.createSignedMaintenancePhotoUrl.mockClear();
+
+    await request(app)
+      .get(`/api/v1/maintenance-requests/${OTHER_REQUEST_ID}`)
+      .set(auth(landlordToken))
+      .expect(404);
+
+    await request(app)
+      .get(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}`)
+      .set(auth(otherLandlordToken))
+      .expect(404);
+
+    expect(storageMocks.createSignedMaintenancePhotoUrl).not.toHaveBeenCalled();
+  });
+
+  it("does not change status, timestamps, history, or audit data when a request is reviewed", async () => {
+    await seedSubmittedRequests();
+    const before = await dbPool.query(
+      `SELECT status, completed_at, updated_at
+       FROM maintenance_requests WHERE id = $1`,
+      [OWN_REQUEST_ID],
+    );
+
+    await request(app)
+      .get("/api/v1/maintenance-requests")
+      .set(auth(landlordToken))
+      .expect(200);
+    await request(app)
+      .get(`/api/v1/maintenance-requests/${OWN_REQUEST_ID}`)
+      .set(auth(landlordToken))
+      .expect(200);
+
+    const after = await dbPool.query(
+      `SELECT status, completed_at, updated_at
+       FROM maintenance_requests WHERE id = $1`,
+      [OWN_REQUEST_ID],
+    );
+    const history = await dbPool.query(
+      "SELECT id FROM maintenance_status_history WHERE request_id = $1",
+      [OWN_REQUEST_ID],
+    );
+    const audits = await dbPool.query(
+      "SELECT id FROM audit_events WHERE entity_id = $1",
+      [OWN_REQUEST_ID],
+    );
+
+    expect(after.rows).toEqual(before.rows);
+    expect(after.rows[0]).toMatchObject({
+      status: "InProgress",
+      completed_at: null,
+    });
+    expect(history.rows).toEqual([]);
+    expect(audits.rows).toEqual([]);
   });
 });

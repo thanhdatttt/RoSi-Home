@@ -6,6 +6,7 @@
 npm test
 npm run test:api
 npm run test:integration
+npm run test:integration:local
 npm run test:watch
 npm run test:coverage
 npm run typecheck
@@ -78,6 +79,14 @@ Tenant maintenance request reads (US-MAINT-02) have automated coverage for:
 - Private photo paths converted to five-minute signed URLs only after ownership succeeds.
 - Cross-tenant request-ID guessing returning scoped `404` without reading or signing attachments.
 
+Landlord maintenance request reviews (US-MAINT-03) have automated coverage for:
+
+- Landlord-only portfolio scoping at the SQL query layer, including paginated list reads.
+- `propertyId` and `status` filters using the fixed maintenance-status vocabulary.
+- List/detail responses with property, room, tenant, description, submission time, current status, and five-minute signed photo URLs.
+- Cross-landlord list/detail isolation, with scoped `404` detail responses and no foreign attachment signing.
+- Read-only review behavior: GET requests do not change status/completion timestamps or create status-history/audit rows.
+
 ## API Automation Layers
 
 ### Contract tests — available now
@@ -116,14 +125,23 @@ operator explicitly approves temporary-schema writes to that database.
 
 Recommended setup:
 
-1. Provision a dedicated PostgreSQL database through `TEST_DATABASE_URL`.
-2. Apply the committed Drizzle migration chain before the suite.
-3. Start `createApp()` with real services and repositories.
-4. Seed a landlord, tenant, property, room, and JWT fixtures.
-5. Reset data between tests using transaction rollback or table truncation.
-6. Run the same HTTP scenarios plus cross-owner `404`, audit rollback,
+1. For a zero-configuration local run with Docker, use
+   `npm run test:integration:local`. It starts PostgreSQL 16 on port `55432`,
+   waits for readiness, exports the dedicated `TEST_DATABASE_URL`, runs the
+   suite, and removes the container even when tests fail.
+2. To keep the local test server running between commands, use
+   `npm run test:db:up`, run `npm run test:integration`, then use
+   `npm run test:db:down`. The matching URL is:
+   `postgresql://rosihome_test:rosihome_test@127.0.0.1:55432/rosihome_test`.
+3. Alternatively, provision a dedicated PostgreSQL server and set
+   `TEST_DATABASE_URL` explicitly.
+4. Apply the committed Drizzle migration chain before the suite.
+5. Start `createApp()` with real services and repositories.
+6. Seed a landlord, tenant, property, room, and JWT fixtures.
+7. Reset data between tests using transaction rollback or table truncation.
+8. Run the same HTTP scenarios plus cross-owner `404`, audit rollback,
    non-overlapping surcharge versions, and concurrency cases.
-7. In CI, use a disposable PostgreSQL service container; never point tests at
+9. In CI, use a disposable PostgreSQL service container; never point tests at
    development, staging, or production data.
 
 ### Deploy smoke/UAT collection — optional
@@ -144,6 +162,8 @@ The integration suite covers:
 - maintenance active-lease authorization and owner-only notification persistence.
 - maintenance tenant list/detail pagination, current-status reads, signed-photo responses,
   and cross-tenant request/attachment isolation.
+- maintenance landlord portfolio/status filtering, triage context, cross-landlord
+  request/attachment isolation, and mutation-free list/detail review behavior.
 
 ## Coverage Gate
 
