@@ -3,15 +3,17 @@ import {
   NotFoundError,
 } from "../../lib/errors.js";
 import { type Paginated, type Pagination, paginate } from "../../lib/pagination.js";
+import { toDateStr } from "../../lib/serialize.js";
 import { writeAudit } from "../../db/audit.js";
 import { db } from "../../db/index.js";
 import {
   assertPropertyOwned,
+  countActiveSurcharges,
   createSurcharge,
   findActiveSurchargesByName,
   findSurchargeScoped,
-  lockSurchargeName,
   listActiveSurcharges,
+  lockSurchargeName,
   softDeleteSurcharge,
   updateSurcharge,
   type SurchargeRow,
@@ -31,12 +33,6 @@ export type SurchargeView = {
   createdAt: string;
   updatedAt: string;
 };
-
-function toDateStr(d: Date | string | null | undefined): string | null {
-  if (d === null || d === undefined) return null;
-  if (typeof d === "string") return d;
-  return d.toISOString().slice(0, 10);
-}
 
 function serialize(row: SurchargeRow): SurchargeView {
   return {
@@ -104,11 +100,12 @@ export async function listSurchargesService(
   p: Pagination,
 ): Promise<Paginated<SurchargeView>> {
   await assertPropertyOwned(propertyId, landlordId);
-  const rows = await listActiveSurcharges(propertyId);
-  const total = rows.length;
-  const start = (p.page - 1) * p.pageSize;
-  const pageRows = rows.slice(start, start + p.pageSize);
-  return paginate(pageRows.map(serialize), total, p);
+  const total = await countActiveSurcharges(propertyId);
+  const rows = await listActiveSurcharges(propertyId, {
+    limit: p.pageSize,
+    offset: (p.page - 1) * p.pageSize,
+  });
+  return paginate(rows.map(serialize), total, p);
 }
 
 export async function updateSurchargeService(

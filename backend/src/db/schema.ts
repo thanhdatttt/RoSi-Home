@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   decimal,
+  foreignKey,
   index,
   jsonb,
   pgEnum,
@@ -264,7 +265,7 @@ export const meterReadings = pgTable(
     rateEffectiveFrom: date("rate_effective_from"),
     locality: text("locality"),
     tenantCount: integer("tenant_count"),
-    correctionOf: uuid("correction_of"), // self-reference to a superseded reading (added as FK in migration)
+    correctionOf: uuid("correction_of"), // self-reference to the superseded reading this row replaces
     supersededAt: timestamp("superseded_at", { withTimezone: true }),
     recordedBy: uuid("recorded_by")
       .notNull()
@@ -278,6 +279,10 @@ export const meterReadings = pgTable(
       t.billingPeriod,
       t.supersededAt,
     ),
+    correctionFk: foreignKey({
+      columns: [t.correctionOf],
+      foreignColumns: [t.id],
+    }),
   }),
 );
 
@@ -461,16 +466,6 @@ export const refreshTokens = pgTable("rosihome_refresh_tokens", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const passwordResetTokens = pgTable("password_reset_tokens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id),
-  tokenHash: text("token_hash").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  usedAt: timestamp("used_at", { withTimezone: true }),
 });
 
 export const reports = pgTable("reports", {

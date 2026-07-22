@@ -88,13 +88,14 @@
 #### US-PROPERTY-01 — Create a property
 - **Endpoint:** `POST /api/v1/properties`
 - **Auth:** Landlord
-- **Request:** `{ name, address }`
+- **Request:** `{ name, address, locality? }`
 - **Response:** `201 { data: property }`
-- **Business rules:** both fields required; `UNIQUE(landlordId, name)` and `UNIQUE(landlordId, address)` among active rows → `409` on violation; `landlordId` always taken from `req.user.id`.
+- **Business rules:** `name` and `address` required; `locality` optional (province/city code, used as the locality key for `regulatory_rate_defaults` fallback in US-METER-02); `UNIQUE(landlordId, name)` and `UNIQUE(landlordId, address)` among active rows → `409` on violation; `landlordId` always taken from `req.user.id`.
 
 #### US-PROPERTY-02 — View and update owned properties
 - **Endpoints:** `GET /api/v1/properties`, `GET /api/v1/properties/:id`, `PATCH /api/v1/properties/:id`
 - **Auth:** Landlord (ownership enforced)
+- **Request (PATCH):** `{ name?, address?, locality? }`
 - **Business rules:** update re-validates uniqueness excluding the row itself; a landlord requesting another landlord's property ID gets `404`.
 
 #### US-ROOM-01 — Add a room to a property
@@ -120,7 +121,7 @@
 ### F-03 — Tenant Information and Account Management
 
 #### US-TENANT-01 — View and update tenant information created from a lease
-- **Endpoints:** `GET /api/v1/tenants`, `GET /api/v1/tenants/:id`, `PATCH /api/v1/tenants/:id`
+- **Endpoints:** `GET /api/v1/tenants`, `GET /api/v1/tenants/:id`, `PATCH /api/v1/tenants/:id`, `DELETE /api/v1/tenants/:id` (soft-archive)
 - **Auth:** Landlord — scoped to `tenant_info` rows linked to at least one lease in a property the landlord owns (join `tenant_info → leases → rooms → properties`)
 - **Request (PATCH):** `{ fullName?, phone?, email?, idNumber? }`
 - **Business rules:**
@@ -173,36 +174,28 @@
 
 ### F-05 — Utility Meter Reading and Calculation
 
-#### US-METER-01 — Record an initial meter reading
+#### US-METER-01 / US-METER-02 — Record an initial or monthly meter reading and calculate consumption
 - **Endpoint:** `POST /api/v1/rooms/:roomId/meter-readings`
 - **Auth:** Landlord, must own room's property
-- **Request:** `{ utilityType: "Electricity"|"Water", billingPeriod, value }`
-- **Business rules:**
-  - Allowed only when no reading exists yet for `(roomId, utilityType, billingPeriod)` — otherwise route to US-METER-02's flow (or reject with `409` directing the client to the "record monthly reading" endpoint if this is genuinely a first reading attempt on an occupied period).
-  - `value >= 0`. Stored with `isInitial=true`. No consumption/charge is computed from an initial reading alone (it's a baseline).
-  - Water readings only accepted when the property's `waterBillingMethod = Metered` (Flat properties reject `utilityType=Water` here with `422`).
-
-#### US-METER-02 — Record monthly readings and calculate consumption
-- **Endpoint:** `POST /api/v1/rooms/:roomId/meter-readings/calculate`
-- **Auth:** Landlord, must own room's property
-- **Request:** `{ billingPeriod, electricityReading, waterReading? }` (waterReading required only if property is `Metered`)
-- **Response:** `{ data: { electricity: { consumption, rate, amount }, water: { consumption?, rate/flatAmount, amount }, previousReadings: {...} } }`
+- **Request:** `{ utilityType: "Electricity"|"Water", billingPeriod, value, isInitial? }`
+- **Response:** `201 { data: MeterReadingView }` where `MeterReadingView` includes at least `{ id, roomId, utilityType, billingPeriod, value, isInitial, consumption?, rate?, amount?, rateSourceId?, rateSourceType?, previousValue?, previousReadingId? }` and any error `fields` (see below).
 - **Business rules (algorithm):**
-  1. Fetch the immediately preceding reading for `(roomId, "Electricity")` ordered by billing period; if `electricityReading < previous.value` → `422 { field: "electricityReading", message: "Reading cannot be lower than the previous reading." }`.
-  2. `electricityConsumption = electricityReading - previous.value`.
-  3. Resolve the **effective electricity rate**: latest `utility_rate_history` row for the property with `effectiveFrom <= billingPeriod start date`; if none exists, fall back to `regulatory_rate_defaults` matching `(utilityType=Electricity, locality=property.locality, effectiveFrom <= period <= effectiveTo|open)`. If neither a landlord rate nor a matching, non-expired, correct-locality default exists → `422 { code: "NO_APPLICABLE_RATE" }` (never silently apply an unrelated/expired default).
-  4. `electricityAmount = roundVnd(electricityConsumption * rate)`.
-  5. If property `waterBillingMethod = Metered`: repeat steps 1–4 for water using `waterReading`.
-     If `waterBillingMethod = Flat`: `waterAmount = roundVnd(flatAmountPerTenant * activeTenantCount)` where `activeTenantCount` = count of distinct tenants on the room's currently `Active` lease (MVP: 1, since one lease = one tenant_info, but keep the multiplier explicit for future multi-occupant leases); **no water meter reading is required or stored**.
-  6. Persist both readings (new rows, `isInitial=false`), and return the computed breakdown for the landlord to review before invoice generation picks it up.
-  7. Store on the reading/line-item enough to reproduce the calculation later: the rate value used, its source (`utility_rate_history` row id or `regulatory_rate_defaults` row id), locality, and effective date.
+  1. If `isInitial=true` (or no reading exists yet for `(roomId, utilityType, billingPeriod)`): store the reading with `isInitial=true`. No consumption/charge is computed from an initial reading alone (it's a baseline). `value >= 0`.
+  2. Otherwise (monthly reading): fetch the immediately preceding reading for `(roomId, utilityType)` ordered by billing period; if `value < previous.value` → `422 { code: "UNPROCESSABLE", fields: [{ field: "value", message: "Reading cannot be lower than the previous reading." }] }`.
+  3. `consumption = value - previous.value`.
+  4. Resolve the **effective rate**: latest `utility_rate_history` row for the property with `effectiveFrom <= billingPeriod start date`; if none exists, fall back to `regulatory_rate_defaults` matching `(utilityType, locality=property.locality, effectiveFrom <= period <= effectiveTo|open)`. If neither a landlord rate nor a matching, non-expired, correct-locality default exists → `422 { code: "UNPROCESSABLE", fields: [{ field: "utilityType", message: "No applicable rate is configured for this utility/period." }] }` (never silently apply an unrelated/expired default).
+  5. `amount = roundVnd(consumption * rate)` for electricity; for water, repeat steps 1–4 if property `waterBillingMethod = Metered` (water readings only accepted when `Metered` — Flat properties reject `utilityType=Water` here with `422`), or apply `roundVnd(flatAmountPerTenant * activeTenantCount)` if Flat (no water reading required/stored).
+  6. The reading (and its computed breakdown) is **persisted** immediately, including the rate value, its source (`utility_rate_history` row id or `regulatory_rate_defaults` row id), locality, and effective date, so the calculation is reproducible later.
+  7. Response returns the persisted `MeterReadingView` for the landlord to review before invoice generation picks it up.
+
+> **Note:** US-METER-01 (initial) and US-METER-02 (monthly + calculation) are implemented as a **single** endpoint; the `isInitial` flag distinguishes them. There is no separate `/calculate` endpoint — the calculation result is stored as part of the reading record.
 
 #### US-METER-03 — Correct a reading used for billing
-- **Endpoint:** `PATCH /api/v1/meter-readings/:id/correct`
+- **Endpoint:** `POST /api/v1/meter-readings/:id/correct`
 - **Auth:** Landlord, must own the room
-- **Request:** `{ correctedValue }`
+- **Request:** `{ value }`
 - **Business rules:**
-  1. Look up the reading's related invoice via `(roomId, billingPeriod)`. Allowed only if that invoice's `status = Draft`; `Sent`/`Paid` → `422 { code: "INVOICE_NOT_DRAFT" }`.
+  1. Look up the reading's related invoice via `(roomId, billingPeriod)`. Allowed only if that invoice's `status = Draft`; `Sent`/`Paid` → `422 { code: "UNPROCESSABLE", message: "This reading cannot be corrected because its invoice has already been sent or paid." }`.
   2. Insert a **new** `meter_readings` row with `correctionOf = original.id`, mark the original `supersededAt = now()` (never overwrite in place — preserves "original value, corrected value, change time, responsible landlord," satisfied jointly by the row itself plus an `audit_events` entry).
   3. Re-run the same calculation as US-METER-02 with the corrected value; re-validate ordering against the *previous period's* reading (unaffected).
   4. Recalculate and overwrite the `Draft` invoice's affected `invoice_line_items` (delete-and-reinsert the Electricity/Water lines, recompute `totalAmount`) — exactly one invoice must exist for the room/lease/period after this (upsert, not append).
@@ -211,7 +204,7 @@
 ### F-06 — Billing and Invoice Generation
 
 #### US-INVOICE-01 — Generate a monthly invoice
-- **Trigger:** scheduled job `generateMonthlyInvoices` (architecture §8); also exposable as `POST /api/v1/admin/invoices/generate?period=YYYY-MM` for manual/test triggering (Landlord-only, or system/dev-only in MVP).
+- **Trigger:** scheduled job `generateMonthlyInvoices` (architecture §8); also exposable as `POST /api/v1/properties/:propertyId/invoices/generate?period=YYYY-MM` for manual/test triggering (Landlord-only). `period` is optional and defaults to the previous month when omitted.
 - **Business rules (algorithm), per active lease whose `billingPeriod` isn't yet invoiced:**
   1. Determine required readings from the property's utility config: Electricity always required; Water required only if `Metered`.
   2. If any required reading is missing for `(roomId, billingPeriod)` → skip this room, insert an `invoice_generation_skips` row with a human-readable reason, continue to the next room. **Do not create a partial invoice.**
@@ -236,11 +229,13 @@
 - **Auth:** Landlord, must own the invoice's property
 - **Business rules:**
   - Allowed only when `status = Draft` and all required fields (line items present, `totalAmount` computed) are populated → `422` otherwise.
-  - Sets `status = Sent`, `sentBy = req.user.id`, `sentAt = now()`, in a transaction with an `audit_events` row. This transition happens **exactly once** — calling send again on an already-`Sent` invoice returns `422 { code: "ALREADY_SENT" }` (idempotent-safe: does not re-notify or duplicate state).
-  - After commit, fires `NotificationService.send(tenantUserId, "invoice.sent", ..., linkRef: "invoice:{id}")`.
+  - Sets `status = Sent`, `sentBy = req.user.id`, `sentAt = now()`, in a transaction with an `audit_events` row. This transition happens **exactly once** — calling send again on an already-`Sent` invoice returns `422 { code: "UNPROCESSABLE", message: "Only a draft invoice can be sent." }` (idempotent-safe: does not re-notify or duplicate state).
+  - After commit, fires `NotificationService.send(tenantUserId, "invoice.sent", ..., linkRef: "invoices/{invoiceId}")`.
   - Sending never sets `Paid` — that only happens via US-PAYMENT-02.
 
 ### F-07 — VietQR Payment Integration
+
+> **Status: NOT YET IMPLEMENTED.** No `payment-config` or `vietqr` route exists in the backend (tables `landlord_payment_configs` and `landlordPaymentConfigs` exist but are not read/written by any module; no QR generator in `lib`). Spec below describes intended behavior.
 
 #### US-VIETQR-01 — Configure landlord payment details
 - **Endpoints:** `GET /api/v1/payment-config`, `PUT /api/v1/payment-config`
@@ -255,6 +250,8 @@
 - **Business rules:** payload built exactly per architecture §7 from the invoice's `totalAmount` and the landlord's current `landlord_payment_configs`; `amount`/`description` in the response **must equal** the values encoded in `payload` (single source of truth — compute once, embed in both). Purely read-only: no state change on any call.
 
 ### F-08 — Payment Verification and Tracking
+
+> **Status: NOT YET IMPLEMENTED.** No `payments` module/router exists in the backend (`payment_proofs` and `payments` tables exist but are unused). Spec below describes intended behavior.
 
 #### US-PAYMENT-01 — Upload payment proof
 - **Endpoint:** `POST /api/v1/invoices/:id/payment-proofs` (multipart)
@@ -278,7 +275,7 @@
 ### F-09 — Rent Payment Reminders
 
 #### US-REMINDER-01 — Receive an automatic overdue-payment reminder
-- **Trigger:** job `sendOverdueReminders` (architecture §8), daily
+- **Trigger:** job `sendOverdueReminders` (architecture §8), daily — **not yet implemented** (deferred; the job entry point currently exists as a no-op stub).
 - **Business rules:**
   1. Query: `invoices WHERE status='Sent' AND dueDate < today AND NOT EXISTS (payments WHERE invoiceId = invoices.id)`.
   2. For each, `NotificationService.send(tenantUserId, "payment.overdue", ..., dedupeKey: "overdue:{invoiceId}:{today}")` — one per configured frequency (default: once/day while overdue, or per landlord's configured schedule — see next bullet).
@@ -286,6 +283,9 @@
   4. A `Paid` invoice is excluded by the `NOT EXISTS (payments...)` clause automatically — no separate check needed.
 
 #### US-REMINDER-02 — Send a manual payment reminder
+
+> **Status: NOT YET IMPLEMENTED.** No `POST /api/v1/invoices/:id/remind` route exists in the backend.
+
 - **Endpoint:** `POST /api/v1/invoices/:id/remind`
 - **Auth:** Landlord, must own the invoice's property
 - **Business rules:** allowed only if `status = Sent` and unpaid → `422` if already `Paid` or not owned. Sends the same notification type as the automatic reminder (reuse `NotificationService`), records trigger time + `req.user.id` via `audit_events`.
@@ -300,7 +300,7 @@
 - **Endpoint:** `POST /api/v1/leases`
 - **Auth:** Landlord, must own the target room
 - **Request:** `{ roomId, tenant: { fullName, phone, idNumber, email }, startDate, endDate, agreedRent, deposit }`
-- **Response:** `201 { data: { lease, tenantAccountProvisioned: true } }`
+- **Response:** `201 { data: <lease>, meta: { tenantAccountProvisioned: boolean } }`
 - **Business rules (this is the highest-risk transaction in the system — implement carefully):**
   1. Validate `roomId` belongs to the authenticated landlord → `404` otherwise.
   2. Validate tenant fields: `email`/`phone`/`idNumber` format; check uniqueness against **active** `tenant_info`/`users` records — but note a returning tenant (already has an account) should reuse their existing `tenant_info` rather than erroring (match by `idNumber` first; if found and active, reuse it and skip re-provisioning per US-TENANT-02's idempotency guard).
@@ -341,6 +341,8 @@
 
 ### F-12 — Maintenance Request Submission
 
+> **Status: NOT YET IMPLEMENTED.** No `maintenance` module/router exists in the backend (`maintenanceRequests`, `maintenancePhotos`, `maintenanceStatusHistory` tables exist but are unused). Spec below describes intended behavior.
+
 #### US-MAINT-01 — Submit a maintenance request
 - **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)
 - **Auth:** Tenant, must have an active lease on the target `roomId`
@@ -376,6 +378,8 @@
 
 ### F-14 — Centralized Business Dashboard
 
+> **Status: NOT YET IMPLEMENTED.** No `dashboard` module/router exists in the backend. Spec below describes intended behavior.
+
 All dashboard endpoints are `GET`, Landlord-only, scoped to owned properties, and read-only (no side effects). Recommend a single aggregate endpoint plus focused sub-endpoints so the mobile app can lazy-load sections:
 
 #### US-DASH-01 — View occupied room count
@@ -398,6 +402,8 @@ All dashboard endpoints are `GET`, Landlord-only, scoped to owned properties, an
 - **Business rules:** calls the exact same service function as US-LEASE-06 — do not re-implement the window/eligibility logic a second time.
 
 ### F-15 — Monthly Business Report and Analytics
+
+> **Status: NOT YET IMPLEMENTED.** No `reports` module/router exists in the backend (the `reports` table exists with a `snapshot` column but is not read/written; `generateReportPdf` in `lib` is not implemented — only `generateInvoicePdf`). Spec below describes intended behavior.
 
 #### US-REPORT-01 — Select a reporting period and generate a report
 - **Endpoint:** `POST /api/v1/reports/generate`
@@ -448,10 +454,9 @@ All dashboard endpoints are `GET`, Landlord-only, scoped to owned properties, an
 | GET/PATCH | /tenants[/:id] | US-TENANT-01 |
 | POST/GET | /properties/:id/utility-rates | US-UTILITY-01/02 |
 | POST/GET/PATCH/DELETE | /properties/:id/surcharges[/:id] | US-CHARGE-01 |
-| POST | /rooms/:id/meter-readings | US-METER-01 |
-| POST | /rooms/:id/meter-readings/calculate | US-METER-02 |
-| PATCH | /meter-readings/:id/correct | US-METER-03 |
-| (job) / POST | /admin/invoices/generate | US-INVOICE-01 |
+| POST | /rooms/:id/meter-readings | US-METER-01/02 |
+| POST | /meter-readings/:id/correct | US-METER-03 |
+| (job) / POST | /properties/:id/invoices/generate | US-INVOICE-01 |
 | GET | /invoices[/:id] | US-INVOICE-02 |
 | GET | /invoices/:id/pdf | US-INVOICE-03 |
 | POST | /invoices/:id/send | US-INVOICE-04 |

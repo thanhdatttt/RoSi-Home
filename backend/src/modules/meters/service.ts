@@ -176,7 +176,7 @@ export async function recordMeterReadingService(
     unitRate,
     amount,
     rateSource,
-    rateSourceId: rateSource === null ? null : rateSourceId!,
+    rateSourceId: rateSource === null ? null : rateSourceId ?? null,
     rateSourceReference,
     rateEffectiveFrom,
     locality,

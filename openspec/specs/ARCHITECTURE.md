@@ -81,9 +81,10 @@ flowchart LR
       /dashboard         # US-DASH-*
       /reports           # US-REPORT-*
       /notifications      # cross-cutting push/email delivery
-    # NOTE: US-METER-* (meter readings) are not yet implemented as a module;
-    # the meter_readings table exists in db/schema.ts but there is no /meters
-    # router/service/repository yet.
+    # NOTE: /meters (US-METER-*) IS implemented. The following are NOT yet
+    # implemented as modules (tables exist in db/schema.ts): /payments
+    # (US-PAYMENT-*, US-VIETQR-*), /maintenance (US-MAINT-*), /dashboard
+    # (US-DASH-*), /reports (US-REPORT-*).
     /jobs               # cron job entry points (one file per job)
     /db
       schema.ts         # Drizzle schema (single source of truth for tables)
@@ -329,6 +330,7 @@ erDiagram
 | landlordId | uuid, FK users | |
 | name | text | UNIQUE(landlordId, name) active rows |
 | address | text | UNIQUE(landlordId, address) active rows |
+| locality | text nullable | province/city code; key for `regulatory_rate_defaults` fallback |
 
 **rooms** (US-ROOM-01/02/03) — *soft-deletable*
 | Column | Type | Notes |
@@ -507,7 +509,7 @@ Corrections (US-METER-03) never overwrite a row; they insert a new row with `cor
 | type | text | e.g. `invoice.sent`, `payment.overdue`, `lease.expiring`, `maintenance.statusChanged` |
 | title | text | |
 | body | text | |
-| linkRef | text | deep-link target (e.g. `invoice:{id}`) |
+| linkRef | text | deep-link target (e.g. `invoices/{id}`) |
 | channel | enum(`Push`) | push-only for MVP (PD-05) |
 | deliveryStatus | enum(`Sent`,`Failed`) | |
 | dedupeKey | text | e.g. `overdue:{invoiceId}:{YYYY-MM-DD}` — used to enforce §4.5 idempotency |
