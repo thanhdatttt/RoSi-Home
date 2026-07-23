@@ -107,7 +107,7 @@ For each story, the assigned member will:
 
 1. review the story, acceptance criteria, dependencies, and architecture constraints;
 2. create or use the assigned feature branch/task;
-3. implement the smallest complete vertical behavior;
+3. implement the complete feature defined by the story, including all approved acceptance criteria;
 4. add or update relevant tests;
 5. run local validation;
 6. open a pull request with scope and validation evidence;
@@ -130,9 +130,25 @@ For each story, the assigned member will:
 
 ## 4. Work Breakdown and Task Plan
 
+Work is organized into four sequential delivery batches. Dependencies are managed according to these rules:
+
+1. Backend batches are sequential: Backend Batch 2 depends on Backend Batch 1, Backend Batch 3 depends on Backend Batch 2, and Backend Batch 4 depends on Backend Batch 3.
+2. Frontend work in each batch depends on the corresponding backend batch. For example, Frontend Batch 1 depends on Backend Batch 1, and Frontend Batch 2 depends on Backend Batch 2.
+3. Backend members may implement their assigned stories within the same batch in parallel when those stories do not block one another.
+4. Frontend preparation may begin earlier, but API integration and completion of a frontend batch require the corresponding backend APIs, data contracts, authorization rules, and deployed behavior to be available.
+5. A batch is complete only when its backend and frontend work has been integrated, validated, and deployed.
+
+The resulting dependency sequence is:
+
+```text
+BE Batch 1 → BE Batch 2 → BE Batch 3 → BE Batch 4
+     ↓            ↓            ↓            ↓
+FE Batch 1   FE Batch 2   FE Batch 3   FE Batch 4
+```
+
 ### 4.1 Batch 1 – Foundation
 
-**Purpose:** establish independent foundations required by later business workflows.
+**Purpose:** establish the backend and frontend foundations required by all later batches.
 
 | Owner | Planned Work | Primary Outputs |
 |---|---|---|
@@ -142,7 +158,11 @@ For each story, the assigned member will:
 | FE1 MXH | Auth, Profile, Property, Room UI | Core account and portfolio screens |
 | FE2 Quân | Design System, Navigation, Shared Components, Utility UI | Reusable UI foundation and utility screens |
 
-**Exit condition:** foundation APIs and UI contracts are available for dependent Batch 2 work.
+**Backend dependency:** none; this is the first backend batch.
+
+**Frontend dependency:** Frontend Batch 1 depends on the APIs, data contracts, and authorization behavior delivered by Backend Batch 1.
+
+**Exit condition:** Backend Batch 1 is deployed; Frontend Batch 1 is integrated with it; the combined foundation is validated and available for Batch 2.
 
 ### 4.2 Batch 2 – Core Business
 
@@ -156,9 +176,11 @@ For each story, the assigned member will:
 | FE1 MXH | Tenant and Lease UI | Tenant/lease flows |
 | FE2 Quân | Meter and Maintenance UI | Meter and maintenance flows |
 
-**Dependencies:** Batch 1 authentication, property/room, utility configuration, storage, and approved shared contracts.
+**Backend dependency:** Backend Batch 2 depends on the completed Backend Batch 1 authentication, property/room, utility/charge, storage, and shared contracts.
 
-**Exit condition:** core lease, meter, and maintenance workflows are integrated and deployed.
+**Frontend dependency:** Frontend Batch 2 depends on the lease, tenant, meter, and maintenance APIs delivered by Backend Batch 2.
+
+**Exit condition:** Backend Batch 2 is deployed; Frontend Batch 2 is integrated with it; the complete lease, meter, and maintenance features are validated and deployed.
 
 ### 4.3 Batch 3 – Billing and Payment
 
@@ -172,9 +194,11 @@ For each story, the assigned member will:
 | FE1 MXH | Invoice and Payment UI | Invoice and payment screens |
 | FE2 Quân | VietQR, Upload Proof, Notification UI | Tenant payment and notification interactions |
 
-**Dependencies:** Lease, Utility, Charge, Meter, storage, PDF generation, and notification infrastructure.
+**Backend dependency:** Backend Batch 3 depends on the completed Backend Batch 2 and its stable Lease, Utility, Charge, and Meter data. Storage, PDF, and notification capabilities required by Batch 3 must also be available before the affected features are completed.
 
-**Exit condition:** an authorized invoice can progress through review, sending, VietQR display, payment proof, and manual verification.
+**Frontend dependency:** Frontend Batch 3 depends on the invoice, VietQR, payment, reminder, and notification APIs delivered by Backend Batch 3.
+
+**Exit condition:** Backend Batch 3 is deployed; Frontend Batch 3 is integrated with it; the complete invoice-to-payment feature is validated and deployed.
 
 ### 4.4 Batch 4 – Dashboard and Reporting
 
@@ -188,9 +212,11 @@ For each story, the assigned member will:
 | FE1 MXH | Dashboard UI | Portfolio dashboard |
 | FE2 Quân | Report UI | Report selection, display, and export |
 
-**Dependencies:** stable Room, Lease, Invoice, Payment, Maintenance, and authorization data.
+**Backend dependency:** Backend Batch 4 depends on the completed Backend Batch 3 and stable Room, Lease, Invoice, Payment, Maintenance, and authorization data from the preceding batches.
 
-**Exit condition:** dashboard/report results match authorized source data and can be demonstrated in the deployed environment.
+**Frontend dependency:** Frontend Batch 4 depends on the dashboard and report APIs delivered by Backend Batch 4.
+
+**Exit condition:** Backend Batch 4 is deployed; Frontend Batch 4 is integrated with it; dashboard and report results match authorized source data and can be demonstrated in the deployed environment.
 
 ### 4.5 Final Integration and Pilot Preparation
 
@@ -208,17 +234,17 @@ The team will:
 
 The baseline duration is 8–10 weeks. The schedule is relative because the formal start date is controlled by the academic calendar.
 
-| Period | Planned Focus | Milestone |
-|---|---|---|
-| Week 1 | Scope, architecture, contracts, environment, Batch 1 start | Planning and technical baseline approved |
-| Weeks 2–3 | Batch 1 completion and Batch 2 start | Foundation available |
-| Weeks 3–5 | Batch 2 backend/frontend integration | Core business workflows deployed |
-| Weeks 5–7 | Batch 3 billing/payment implementation | Invoice-to-payment flow deployed |
-| Weeks 7–8 | Batch 4 dashboard/report implementation | Analytics flows deployed |
-| Week 9 | System integration, testing, documentation, pilot preparation | MVP candidate ready |
-| Week 10 | Contingency for rework, external services, and academic feedback | Final deployed submission |
+| Period | Backend / Project Work | Frontend Work | Milestone |
+|---|---|---|---|
+| Week 1 | Confirm scope, architecture, API/data contracts, environments, and complete backend infrastructure setup | Participate in contract and environment alignment | Planning and technical baseline available |
+| Weeks 2–3 | Complete Backend Batch 1 | Complete frontend infrastructure setup | Backend foundation and frontend infrastructure available |
+| Weeks 3–5 | Complete Backend Batch 2 | Integrate Frontend Batch 1 with Backend Batch 1 | Core backend workflows and integrated Frontend Batch 1 available |
+| Weeks 5–7 | Complete Backend Batch 3 | Integrate Frontend Batch 2 with Backend Batch 2 | Billing/payment backend and integrated Frontend Batch 2 available |
+| Weeks 7–8 | Complete Backend Batch 4 | Integrate Frontend Batch 3 with Backend Batch 3 | Analytics backend and integrated Frontend Batch 3 available |
+| Week 9 | Perform system integration testing across completed modules | Integrate Frontend Batch 4 with Backend Batch 4 and support system testing | Integrated MVP candidate ready |
+| Week 10 | Correct accepted integration defects and complete deployment or academic feedback work if required | Correct accepted frontend integration defects if required | Final deployed submission |
 
-Where dependencies permit, backend and frontend tasks run in parallel. Starting later-batch implementation does not waive its dependency or quality requirements.
+Backend implementation leads frontend integration by one batch. A frontend batch is integrated only after its corresponding backend batch is complete and its API/data contracts and deployed behavior are stable. Overlapping period boundaries represent a planned handoff: completion of one backend batch enables the corresponding frontend integration while the backend team proceeds to the next dependent batch. Week 10 is contingency and does not introduce additional scope.
 
 ## 6. People and Responsibilities
 
@@ -228,8 +254,7 @@ Where dependencies permit, backend and frontend tasks run in parallel. Starting 
 |---|---|
 | Project Sponsor/Lecturer | Approves academic milestones, provides guidance, and evaluates final deliverables |
 | Project Manager/Team Leader | Maintains the plan, coordinates work, manages risks and changes, and reports to the sponsor |
-| Product representatives | Clarify landlord/tenant workflows and provide acceptance feedback |
-| Development team | Designs, implements, tests, integrates, documents, and deploys the MVP |
+| Development team | Designs, implements, tests, integrates, creates, reviews and approves documentation, and deploys the MVP |
 
 ### 6.2 Named Delivery Responsibilities
 
@@ -252,9 +277,12 @@ Where dependencies permit, backend and frontend tasks run in parallel. Starting 
 | Backend CI maintenance | Backend team | BE1 infrastructure owner |
 | Mobile validation | FE1 and FE2 | FE owner for the affected package |
 | Deployment | Assigned release member | Project Manager/Integration owner |
-| Documentation | Story owner | Project Manager |
+| Documentation authoring and updates | All five members for their assigned or affected work | Development team |
+| Documentation review and approval | All five members | Development team |
 
-The Project Manager records the named integration/release owner at the start of each batch. Review work is planned capacity and is not treated as free or duplicate effort.
+Every member is responsible for creating or updating the documentation affected by their work and for reviewing and approving project documentation produced by other members. Documentation is a shared team deliverable rather than the sole responsibility of the Project Manager or a story owner.
+
+The Project Manager records the named integration/release owner at the start of each batch. Code review and documentation review are planned capacity and are not treated as free or duplicate effort.
 
 ## 7. Risk Assessment Mechanism
 
@@ -280,7 +308,10 @@ Risks are reviewed at each batch boundary and whenever a trigger occurs. A risk 
 | Frontend becomes the critical-path bottleneck | Medium | High | FE1/FE2 | Build shared components first; integrate each batch rather than waiting for all backend work |
 | Cross-module API/schema conflict | Medium | High | Batch integration owner | Agree contracts before implementation; require affected-owner review |
 | AI-generated code is accepted without sufficient understanding | Medium | High | Story owner/reviewer | Human review, tests, and explanation of business/security logic before merge |
-| AI trial/free benefit expires or reaches quota | Medium | Medium | Project Manager | Track benefit limits; maintain paid fallback and prioritize critical-path work |
+| AI trial/free benefit expires or reaches quota | Medium | Medium | Project Manager | Prepare fallback and prioritize critical-path work |
+| A team member becomes ill and cannot work as planned | Medium | High | Project Manager | Maintain shared documentation and handover information; rebalance critical work; use schedule contingency |
+| Access to US-based AI services is restricted in Vietnam because of US policy or regulation | Low | High | Project Manager | Prepare alternative AI providers and a manual-development fallback; preserve local project context; prioritize critical-path work |
+| A competitor releases a similar application for free before RosiHome reaches the market | Medium | Medium | Project Manager | Monitor comparable products; validate the target users' needs; prioritize differentiating capabilities and reassess market positioning |
 | External storage/email/notification service is unavailable | Medium | High | Relevant backend owner | Define interfaces early; use test substitutes; isolate provider configuration |
 | CI or deployment fails | Medium | High | Release owner | Fix failed checks before merge/deployment; retain the previous deployable revision |
 | Scope expands beyond the approved backlog | Medium | High | Project Manager/Sponsor | Use formal change control; defer non-essential additions |
@@ -305,20 +336,21 @@ A proposed change must record:
 
 | Change Type | Examples | Approval |
 |---|---|---|
-| Technical implementation change | Internal refactor with no behavior, scope, or baseline impact | Module owner |
-| Minor product clarification | Clarifies an existing acceptance criterion without adding behavior | Project Manager + affected owners |
-| Baseline change | Adds/removes a story, changes acceptance behavior, deadline, architecture, or budget | Project Sponsor/Lecturer + Project Manager |
+| Technical implementation change | Internal refactor with no behavior, scope, or baseline impact | Consensus of the development team |
+| Minor product clarification | Clarifies an existing acceptance criterion without adding behavior | Consensus of the development team |
+| Baseline change | Adds/removes a story, changes acceptance behavior, deadline, architecture, or budget | Consensus of the development team plus Project Sponsor/Lecturer and Project Manager approval |
 
 ### 8.3 Change Procedure
 
 1. Log the request; do not implement it as hidden scope.
 2. Analyze impact on scope, schedule, resources, cost, risk, and quality.
-3. Obtain the required approval.
-4. Update the Product Backlog and affected baselines.
-5. Communicate the decision to all affected owners.
-6. Implement through the normal branch, review, CI, and deployment process.
+3. Communicate the proposed change and its impact to the entire team.
+4. Obtain consensus from all five development members and any additional approval required by Section 8.2.
+5. Assign a change owner to update the Product Backlog and every affected project document before implementation.
+6. Confirm that the updated documents consistently describe the approved change.
+7. Implement through the normal branch, review, CI, and deployment process.
 
-Rejected or deferred requests remain recorded to prevent repeated informal scope discussions.
+An informal discussion or message does not authorize a change. No change may be implemented until the whole development team has been informed and has reached consensus. The latest approved project documents are the source of truth; chat messages, verbal discussions, source code, and task boards do not override them. Rejected or deferred requests remain recorded to prevent repeated informal scope discussions.
 
 ## 9. Quality-Evaluation Mechanism
 
@@ -343,8 +375,8 @@ The delivered MVP should:
 | Local validation | Relevant tests/typecheck/lint executed by the author |
 | Pull-request review | Approval or resolved feedback from another team member |
 | Backend CI | Migration, typecheck, unit tests, integration tests, API tests, and build pass |
-| Mobile validation | `npm run lint` plus relevant manual/functional checks until mobile CI is added |
-| Integration | API/UI contract works with representative test data |
+| Mobile validation | `npm run start` plus relevant manual/functional checks until mobile CI is added |
+| Integration | API/UI contract works with real data |
 | Deployment | Deployment succeeds and acceptance behavior is verified in the agreed environment |
 | Documentation | API, setup, migration, or user documentation updated where affected |
 
@@ -368,7 +400,7 @@ A story is `Done` for this plan when:
 
 | Communication | Participants | Frequency | Purpose |
 |---|---|---|---|
-| Team coordination | Five development members | Short daily asynchronous update or meeting | Assign work, expose blockers, coordinate dependencies |
+| Team coordination | Five development members | Short daily asynchronous update or meeting | Assign work, check progress, expose blockers, and coordinate dependencies |
 | Batch planning/review | Project Manager and affected owners | At each batch boundary | Confirm readiness, ownership, risks, and integration plan |
 | Sponsor review | Project Manager and Lecturer | Weekly or at academic milestones | Confirm direction and obtain required decisions |
 | Pull-request discussion | Author, reviewer, affected owners | Per pull request | Review implementation, contracts, tests, and quality |
@@ -380,13 +412,13 @@ Decisions that affect scope, API contracts, schedule, or quality are recorded in
 
 | Category | Planned Tools/Facilities |
 |---|---|
-| Source and collaboration | GitHub repository, pull requests, issues, GitHub Actions |
+| Source and collaboration | GitHub repository, pull requests, issues, GitHub Actions, Trello, Google Meet, Messenger, and offline meetings |
 | Backend | Node.js, Express, TypeScript, Drizzle ORM |
 | Frontend/mobile | React Native, Expo |
-| Database | PostgreSQL |
-| Storage/integration | Approved cloud storage, email/push services, VietQR tooling |
-| Testing | Vitest, Supertest, PostgreSQL integration environment, Postman/manual API checks |
-| AI development assistance | GPT-5.6 Sol and team-reported `Hy3` access |
+| Database | PostgreSQL hosted by Supabase |
+| Storage/integration | Approved Supabase storage, Resend email service, Expo push service, and VietQR tooling |
+| Testing | Vitest, Supertest, PostgreSQL integration environment, Postman/manual API checks, and REST Client for Visual Studio Code |
+| AI development assistance | Gemini 3.1 Pro through the free student plan, ChatGPT 5.5 free access, and Claude 4.6 Sonnet free access |
 | Documentation | Markdown documents in the repository |
 | Hardware | Member laptops, mobile test devices, internet access |
 
