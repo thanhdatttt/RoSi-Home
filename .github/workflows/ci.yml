@@ -3,23 +3,33 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/ci.yml"
-
-defaults:
-  run:
-    working-directory: backend
 
 jobs:
-  backend_test:
-    name: backend test
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+
+  backend_test:
+    name: Typecheck, Test & Build
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     services:
       postgres:
@@ -78,3 +88,17 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  ci_status:
+    name: CI Status
+    needs: [changes, backend_test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        run: |
+          if [ "${{ needs.changes.outputs.backend }}" = "true" ] && [ "${{ needs.backend_test.result }}" != "success" ]; then
+            echo "Backend CI failed"
+            exit 1
+          fi
+          echo "CI passed (backend unaffected or succeeded)"
