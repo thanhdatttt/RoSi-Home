@@ -10,7 +10,7 @@
 | Client/Sponsor | University Supervisor / Lecturer |
 | Delivery Team | RosiHome Student Development Team |
 | Project Manager | Team Leader |
-| Effective Date | Upon approval by the Sponsor and Project Manager |
+| Effective Date | Upon confirmation by the Sponsor and Project Manager |
 | Planned Duration | 8–10 calendar weeks |
 
 ## 2. Purpose and Agreement
@@ -208,7 +208,7 @@ A change request is required when a proposal affects:
 - schedule or milestone commitments;
 - budget or resource baseline;
 - architecture or external-service dependency;
-- a signed deliverable or responsibility.
+- an approved deliverable or responsibility.
 
 Each request records the requester, reason, affected scope, time/resource/cost impact, risks, and recommended decision.
 
@@ -218,14 +218,13 @@ Each request records the requester, reason, affected scope, time/resource/cost i
 | Clarification within existing approved behavior | Project Manager and affected owners |
 | Scope, deadline, architecture, budget, or acceptance-baseline change | Sponsor/Lecturer and Project Manager |
 
-Approved changes update the backlog, plan, estimate, and SOW where applicable. Work must not be added informally without impact analysis and approval.
+The change-control procedure is:
 
-## 11. Approval
+1. record the request and analyze its scope, time, resource, cost, risk, and quality impact;
+2. obtain approval from the authority defined above;
+3. communicate the approved change, its impact, and its implementation timing to the entire team;
+4. confirm that all affected owners understand the change;
+5. update the backlog, plan, estimate, and SOW where applicable;
+6. begin implementation through the normal branch, review, CI, and deployment process.
 
-By approving this SOW, the parties confirm that the scope, deliverables, responsibilities, schedule, acceptance conditions, budget assumptions, and change-control mechanism form the working agreement for the RosiHome MVP.
-
-| Role | Name | Decision | Signature/Date |
-|---|---|---|---|
-| Project Sponsor/Lecturer |  | Approved / Rejected |  |
-| Project Manager/Team Leader |  | Approved / Rejected |  |
-| Development Team Representative |  | Acknowledged |  |
+No approved change may be implemented before the whole team has been informed. Work must not be added informally without impact analysis, approval, and team communication.
