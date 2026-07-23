@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   backend_test:
-    name: Typecheck, Test & Build
+    name: backend test
     runs-on: ubuntu-latest
 
     services:
@@ -52,7 +52,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Wait for PostgreSQL
         run: |
@@ -78,4 +78,3 @@ jobs:
 
       - name: Build
         run: npm run build
-        
