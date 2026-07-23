@@ -1,5 +1,29 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+
+const isWeb = Platform.OS === 'web';
+
+const Storage = {
+  getItemAsync: async (key: string) => {
+    if (isWeb) return localStorage.getItem(key);
+    return SecureStore.getItemAsync(key);
+  },
+  setItemAsync: async (key: string, value: string) => {
+    if (isWeb) {
+      localStorage.setItem(key, value);
+      return;
+    }
+    return SecureStore.setItemAsync(key, value);
+  },
+  deleteItemAsync: async (key: string) => {
+    if (isWeb) {
+      localStorage.removeItem(key);
+      return;
+    }
+    return SecureStore.deleteItemAsync(key);
+  },
+};
 
 import { apiRequest } from '@/lib/api';
 
@@ -13,7 +37,10 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthUser>;
+  register: (data: any) => Promise<AuthUser>;
+  forgotPassword: (email: string) => Promise<void>;
+  changePassword: (data: any) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -37,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+      const storedToken = await Storage.getItemAsync(TOKEN_KEY);
       if (storedToken && !cancelled) {
         setToken(storedToken);
         // The API exposes the current user via GET /profile; for the push
@@ -50,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) setUser(me);
         } catch {
           // Stored token is no longer valid — drop it.
-          await SecureStore.deleteItemAsync(TOKEN_KEY);
+          await Storage.deleteItemAsync(TOKEN_KEY);
           if (!cancelled) setToken(null);
         }
       }
@@ -67,10 +94,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: { username, password },
       });
-      await SecureStore.setItemAsync(TOKEN_KEY, result.accessToken);
-      await SecureStore.setItemAsync(REFRESH_KEY, result.refreshToken);
+      await Storage.setItemAsync(TOKEN_KEY, result.accessToken);
+      await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
       setToken(result.accessToken);
       setUser(result.user);
+      return result.user;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function register(data: any) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/register', {
+        method: 'POST',
+        body: data,
+      });
+      // After successful registration, log them in immediately
+      return await login(data.email, data.password);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function forgotPassword(email: string) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: { email },
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function changePassword(data: any) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/change-password', {
+        method: 'POST',
+        token,
+        body: data,
+      });
     } finally {
       setLoading(false);
     }
@@ -79,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function logout() {
     try {
       if (token) {
-        const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
+        const refresh = await Storage.getItemAsync(REFRESH_KEY);
         await apiRequest('/auth/logout', {
           method: 'POST',
           token,
@@ -89,15 +156,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Best-effort server logout; always clear local state.
     } finally {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_KEY);
+      await Storage.deleteItemAsync(TOKEN_KEY);
+      await Storage.deleteItemAsync(REFRESH_KEY);
       setToken(null);
       setUser(null);
     }
   }
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, token, loading, login, logout }),
+    () => ({ user, token, loading, login, register, forgotPassword, changePassword, logout }),
     [user, token, loading],
   );
 
