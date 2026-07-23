@@ -41,7 +41,12 @@ export const emailProvider: EmailProvider = {
       });
       return { ok: true };
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : "unknown" };
+      console.error("SMTP ERROR:", err);
+
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "unknown",
+      };
     }
   },
 };
