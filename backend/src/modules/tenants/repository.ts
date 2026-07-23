@@ -1,8 +1,7 @@
 import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
-import { db } from "../../db/index.js";
+import { db, type Db } from "../../db/index.js";
 import { leases, properties, rooms, tenantInfo, users } from "../../db/schema.js";
 import type { Pagination } from "../../lib/pagination.js";
-import type { UpdateTenantInput } from "./schema.js";
 
 export type TenantRow = typeof tenantInfo.$inferSelect;
 
@@ -54,8 +53,8 @@ export async function getTenantScoped(
   return row ?? null;
 }
 
-export async function findTenantById(id: string): Promise<TenantRow | null> {
-  const [row] = await db
+export async function findTenantById(id: string, executor: Db = db): Promise<TenantRow | null> {
+  const [row] = await executor
     .select()
     .from(tenantInfo)
     .where(eq(tenantInfo.id, id));
@@ -83,13 +82,13 @@ export async function hasConflictingField(
   return !!row;
 }
 
-export async function updateTenant(
+export async function softDeleteTenant(
   id: string,
-  fields: UpdateTenantInput,
+  deletedBy: string,
 ): Promise<TenantRow | null> {
   const [row] = await db
     .update(tenantInfo)
-    .set(fields)
+    .set({ deletedAt: new Date(), deletedBy })
     .where(and(eq(tenantInfo.id, id), isNull(tenantInfo.deletedAt)))
     .returning();
   return row ?? null;
@@ -99,6 +98,3 @@ export async function findUserByUsername(username: string) {
   return db.query.users.findFirst({ where: eq(users.username, username) });
 }
 
-export async function findUserById(id: string) {
-  return db.query.users.findFirst({ where: eq(users.id, id) });
-}

@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   decimal,
+  foreignKey,
   index,
   jsonb,
   pgEnum,
@@ -116,6 +117,7 @@ export const properties = pgTable(
       .references(() => users.id),
     name: text("name").notNull(),
     address: text("address").notNull(),
+    locality: text("locality"),
     ...timestamps,
     ...softDelete,
   },
@@ -235,9 +237,9 @@ export const leaseReminderConfigs = pgTable("lease_reminder_configs", {
   propertyId: uuid("property_id")
     .primaryKey()
     .references(() => properties.id),
+  remindAt30Days: boolean("remind_at_30_days").notNull().default(false),
+  remindAt15Days: boolean("remind_at_15_days").notNull().default(false),
   remindAt7Days: boolean("remind_at_7_days").notNull().default(false),
-  remindAt3Days: boolean("remind_at_3_days").notNull().default(false),
-  remindAt1Day: boolean("remind_at_1_day").notNull().default(false),
 });
 
 export const meterReadings = pgTable(
@@ -251,7 +253,19 @@ export const meterReadings = pgTable(
     billingPeriod: text("billing_period").notNull(),
     value: decimal("value", { precision: 18, scale: 4 }).notNull(),
     isInitial: boolean("is_initial").notNull().default(false),
-    correctionOf: uuid("correction_of"), // self-reference to a superseded reading (added as FK in migration)
+    // Calculation result retained for reproducibility (US-METER-02). Null for
+    // initial baseline readings, which create no consumption or charge.
+    previousValue: decimal("previous_value", { precision: 18, scale: 4 }),
+    consumption: decimal("consumption", { precision: 18, scale: 4 }),
+    unitRate: integer("unit_rate"),
+    amount: integer("amount").notNull().default(0),
+    rateSource: text("rate_source"),
+    rateSourceId: uuid("rate_source_id"),
+    rateSourceReference: text("rate_source_reference"),
+    rateEffectiveFrom: date("rate_effective_from"),
+    locality: text("locality"),
+    tenantCount: integer("tenant_count"),
+    correctionOf: uuid("correction_of"), // self-reference to the superseded reading this row replaces
     supersededAt: timestamp("superseded_at", { withTimezone: true }),
     recordedBy: uuid("recorded_by")
       .notNull()
@@ -265,6 +279,10 @@ export const meterReadings = pgTable(
       t.billingPeriod,
       t.supersededAt,
     ),
+    correctionFk: foreignKey({
+      columns: [t.correctionOf],
+      foreignColumns: [t.id],
+    }),
   }),
 );
 
@@ -416,12 +434,15 @@ export const deviceTokens = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id),
-    fcmToken: text("fcm_token").notNull().unique(),
+    // Expo push token, e.g. "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]".
+    // Column kept generic (not fcm_token) because RosiHome uses Expo's push
+    // service instead of calling FCM/APNs directly (see lib/expoPush.ts).
+    pushToken: text("push_token").notNull().unique(),
     platform: platformEnum("platform").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqueToken: uniqueIndex("device_tokens_user_token").on(t.userId, t.fcmToken),
+    uniqueToken: uniqueIndex("device_tokens_user_token").on(t.userId, t.pushToken),
   }),
 );
 
@@ -445,16 +466,6 @@ export const refreshTokens = pgTable("rosihome_refresh_tokens", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const passwordResetTokens = pgTable("password_reset_tokens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id),
-  tokenHash: text("token_hash").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  usedAt: timestamp("used_at", { withTimezone: true }),
 });
 
 export const reports = pgTable("reports", {

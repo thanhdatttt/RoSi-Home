@@ -88,11 +88,10 @@ export async function getRoomService(
   landlordId: string,
   roomId: string,
 ): Promise<RoomView> {
-  const room = await findActiveRoom(roomId);
-  if (!room) throw new NotFoundError("Room not found.");
-  await assertPropertyOwned(room.propertyId, landlordId);
   const withStatus = await findActiveRoomWithStatus(roomId);
-  return serialize(room, withStatus?.status ?? "Vacant");
+  if (!withStatus) throw new NotFoundError("Room not found.");
+  await assertPropertyOwned(withStatus.propertyId, landlordId);
+  return serialize(withStatus, withStatus.status);
 }
 
 export async function updateRoomService(
@@ -115,7 +114,7 @@ export async function updateRoomService(
       beforeValue: { name: room.name, baseRent: room.baseRent },
       afterValue: { name: updated.name, baseRent: updated.baseRent },
     });
-    return serialize(updated, "Vacant");
+    return serialize(updated, (await findActiveRoomWithStatus(roomId))?.status ?? "Vacant");
   } catch (err) {
     if (isUniqueViolation(err)) {
       throw new ConflictError("A room with this name already exists in the property.");

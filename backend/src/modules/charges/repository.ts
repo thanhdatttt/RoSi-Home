@@ -1,4 +1,4 @@
-import { and, asc, eq, getTableColumns, isNull, sql } from "drizzle-orm";
+import { and, asc, count, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { properties, surcharges } from "../../db/schema.js";
 import { findProperty } from "../properties/repository.js";
@@ -35,8 +35,11 @@ export async function createSurcharge(
   return row;
 }
 
-export async function listActiveSurcharges(propertyId: string): Promise<SurchargeRow[]> {
-  return db
+export async function listActiveSurcharges(
+  propertyId: string,
+  options: { limit?: number; offset?: number } = {},
+): Promise<SurchargeRow[]> {
+  const base = db
     .select()
     .from(surcharges)
     .where(
@@ -44,6 +47,49 @@ export async function listActiveSurcharges(propertyId: string): Promise<Surcharg
         eq(surcharges.propertyId, propertyId),
         eq(surcharges.active, true),
         isNull(surcharges.deletedAt),
+      ),
+    )
+    .orderBy(asc(surcharges.name));
+  if (options.limit !== undefined || options.offset !== undefined) {
+    return base
+      .limit(options.limit ?? Number.MAX_SAFE_INTEGER)
+      .offset(options.offset ?? 0);
+  }
+  return base;
+}
+
+export async function countActiveSurcharges(propertyId: string): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+      ),
+    );
+  return Number(row?.value ?? 0);
+}
+
+// Active surcharges whose effective window overlaps the billing period
+// (inclusive range; null effectiveTo means open-ended).
+export async function findActiveSurchargesForPropertyPeriod(
+  propertyId: string,
+  periodStart: string,
+  periodEnd: string,
+  executor: typeof db = db,
+): Promise<SurchargeRow[]> {
+  return executor
+    .select()
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+        sql`${surcharges.effectiveFrom} <= ${periodEnd}`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${periodStart})`,
       ),
     )
     .orderBy(asc(surcharges.name));

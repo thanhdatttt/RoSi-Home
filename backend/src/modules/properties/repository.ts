@@ -12,7 +12,12 @@ export async function createProperty(
 ): Promise<PropertyRow> {
   const [row] = await db
     .insert(properties)
-    .values({ landlordId, name: input.name, address: input.address })
+    .values({
+      landlordId,
+      name: input.name,
+      address: input.address,
+      locality: input.locality ?? null,
+    })
     .returning();
   return row;
 }

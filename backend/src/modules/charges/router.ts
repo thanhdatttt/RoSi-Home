@@ -8,17 +8,27 @@ import { create, list, update, remove } from "./controller.js";
 
 export const chargesRouter = Router();
 
-chargesRouter.use(requireAuth, requireRole("Landlord"));
+// NOTE: requireRole is applied per-route, not as a blanket router.use();
+// see the comment in meters/router.ts for why a router-level role check
+// is unsafe when multiple routers share the same prefix.
+chargesRouter.use(requireAuth);
 
 chargesRouter.post(
   "/properties/:propertyId/surcharges",
+  requireRole("Landlord"),
   validate(createSurchargeSchema),
   asyncHandler(create),
 );
 chargesRouter.get(
   "/properties/:propertyId/surcharges",
+  requireRole("Landlord"),
   validate(paginationQuerySchema, "query"),
   asyncHandler(list),
 );
-chargesRouter.patch("/surcharges/:id", validate(updateSurchargeSchema), asyncHandler(update));
-chargesRouter.delete("/surcharges/:id", asyncHandler(remove));
+chargesRouter.patch(
+  "/:id",
+  requireRole("Landlord"),
+  validate(updateSurchargeSchema),
+  asyncHandler(update),
+);
+chargesRouter.delete("/:id", requireRole("Landlord"), asyncHandler(remove));

@@ -1,5 +1,5 @@
 {
-  "id": "538cab47-0c14-44f0-9104-406a3730a9f2",
+  "id": "7fe201c2-47c4-4c6f-b720-96bb85b86558",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -41,13 +41,13 @@
         },
         "before_value": {
           "name": "before_value",
-          "type": "text",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
         "after_value": {
           "name": "after_value",
-          "type": "text",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -98,8 +98,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "fcm_token": {
-          "name": "fcm_token",
+        "push_token": {
+          "name": "push_token",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -130,7 +130,7 @@
               "nulls": "last"
             },
             {
-              "expression": "fcm_token",
+              "expression": "push_token",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -159,11 +159,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "device_tokens_fcm_token_unique": {
-          "name": "device_tokens_fcm_token_unique",
+        "device_tokens_push_token_unique": {
+          "name": "device_tokens_push_token_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "fcm_token"
+            "push_token"
           ]
         }
       },
@@ -686,22 +686,22 @@
           "primaryKey": true,
           "notNull": true
         },
+        "remind_at_30_days": {
+          "name": "remind_at_30_days",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "remind_at_15_days": {
+          "name": "remind_at_15_days",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "remind_at_7_days": {
           "name": "remind_at_7_days",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "remind_at_3_days": {
-          "name": "remind_at_3_days",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "remind_at_1_day": {
-          "name": "remind_at_1_day",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -1225,6 +1225,67 @@
           "notNull": true,
           "default": false
         },
+        "previous_value": {
+          "name": "previous_value",
+          "type": "numeric(18, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consumption": {
+          "name": "consumption",
+          "type": "numeric(18, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit_rate": {
+          "name": "unit_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "rate_source": {
+          "name": "rate_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_source_id": {
+          "name": "rate_source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_source_reference": {
+          "name": "rate_source_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_effective_from": {
+          "name": "rate_effective_from",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locality": {
+          "name": "locality",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tenant_count": {
+          "name": "tenant_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "correction_of": {
           "name": "correction_of",
           "type": "uuid",
@@ -1306,6 +1367,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "recorded_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "meter_readings_correction_of_meter_readings_id_fk": {
+          "name": "meter_readings_correction_of_meter_readings_id_fk",
+          "tableFrom": "meter_readings",
+          "tableTo": "meter_readings",
+          "columnsFrom": [
+            "correction_of"
           ],
           "columnsTo": [
             "id"
@@ -1396,64 +1470,6 @@
         "notifications_user_id_users_id_fk": {
           "name": "notifications_user_id_users_id_fk",
           "tableFrom": "notifications",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.password_reset_tokens": {
-      "name": "password_reset_tokens",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "token_hash": {
-          "name": "token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "used_at": {
-          "name": "used_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "password_reset_tokens_user_id_users_id_fk": {
-          "name": "password_reset_tokens_user_id_users_id_fk",
-          "tableFrom": "password_reset_tokens",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
@@ -1694,6 +1710,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "locality": {
+          "name": "locality",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -2224,7 +2246,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "where": "\"surcharges\".\"deleted_at\" IS NULL AND \"surcharges\".\"active\" = true",
           "concurrently": false,
           "method": "btree",

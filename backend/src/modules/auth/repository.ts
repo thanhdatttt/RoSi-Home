@@ -1,5 +1,5 @@
 import { db } from "../../db/index.js";
-import { landlordProfiles, passwordResetTokens, refreshTokens, users } from "../../db/schema.js";
+import { landlordProfiles, refreshTokens, users } from "../../db/schema.js";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
 export async function findUserByUsername(username: string) {
@@ -73,34 +73,5 @@ export async function revokeAllRefreshTokensForUser(userId: string) {
     .update(refreshTokens)
     .set({ revokedAt: new Date() })
     .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
-}
-
-export async function insertPasswordResetToken(input: {
-  userId: string;
-  tokenHash: string;
-  expiresAt: Date;
-}) {
-  const [row] = await db
-    .insert(passwordResetTokens)
-    .values(input)
-    .returning();
-  return row;
-}
-
-export async function findValidPasswordResetToken(tokenHash: string) {
-  return db.query.passwordResetTokens.findFirst({
-    where: and(
-      eq(passwordResetTokens.tokenHash, tokenHash),
-      isNull(passwordResetTokens.usedAt),
-      gt(passwordResetTokens.expiresAt, new Date()),
-    ),
-  });
-}
-
-export async function markPasswordResetTokenUsed(id: string) {
-  await db
-    .update(passwordResetTokens)
-    .set({ usedAt: new Date() })
-    .where(eq(passwordResetTokens.id, id));
 }
 
