@@ -37,7 +37,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<AuthUser>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   register: (data: any) => Promise<AuthUser>;
   forgotPassword: (email: string) => Promise<void>;
   changePassword: (data: any) => Promise<void>;
@@ -87,15 +87,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function login(username: string, password: string) {
+  async function login(username: string, password: string, rememberMe: boolean = false) {
     setLoading(true);
     try {
       const result = await apiRequest<LoginResponse>('/auth/login', {
         method: 'POST',
         body: { username, password },
       });
-      await Storage.setItemAsync(TOKEN_KEY, result.accessToken);
-      await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
+      if (rememberMe) {
+        await Storage.setItemAsync(TOKEN_KEY, result.accessToken);
+        await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
+      } else {
+        // Do not persist session
+        await Storage.deleteItemAsync(TOKEN_KEY);
+        await Storage.deleteItemAsync(REFRESH_KEY);
+      }
       setToken(result.accessToken);
       setUser(result.user);
       return result.user;
@@ -111,8 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: data,
       });
-      // After successful registration, log them in immediately
-      return await login(data.email, data.password);
+      // After successful registration, log them in immediately with persistent session
+      return await login(data.email, data.password, true);
     } finally {
       setLoading(false);
     }

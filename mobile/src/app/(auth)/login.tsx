@@ -23,7 +23,7 @@ export default function Login() {
     }
     setErr(null);
     try {
-      const user = await login(email.trim(), password);
+      const user = await login(email.trim(), password, rememberMe);
       if (user.mustChangePassword) {
         router.push("/force-change-password");
       } else if (user.role === 'Tenant') {

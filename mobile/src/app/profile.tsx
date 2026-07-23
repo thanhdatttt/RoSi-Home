@@ -84,7 +84,7 @@ export default function Profile() {
           </View>
         </View>
 
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6 flex-col items-center pt-2 pb-6">
             <View className="h-20 w-20 rounded-full bg-[#2563eb] items-center justify-center shadow-sm">
               <Text className="text-white text-2xl font-extrabold">
