@@ -75,9 +75,8 @@ The rental property management market already offers several solutions ranging f
 |---|---|---|---|
 |**Excel / Google Sheets**|Small landlords|Free, familiar, highly customizable|Manual rent calculation, no payment tracking, no reminders, no tenant portal, prone to data entry errors, difficult to use on mobile devices.|
 |**Zalo + Notebook + Calculator**|Individual landlords|No additional cost, already widely used|Information is scattered across chats and notebooks, no audit trail, no centralized records, maintenance requests and payment history are easily lost.|
-|**EasyTro**|Small and medium landlords|Runs directly on Zalo Mini App, automatic billing, VietQR invoices, debt tracking, contract management, free plan for up to 10 rooms.|Focuses mainly on operational management. Limited customization and analytics for landlords who want a more comprehensive business overview.|
-|**Resident**|Boarding houses, serviced apartments, apartment buildings and property operators|Comprehensive platform with online contracts, automatic payment confirmation, financial reports, IoT meter integration, Zalo Mini App and resident application. More than **30,000 rental units** are managed through the platform.|Rich feature set increases complexity. Better suited to professional operators and larger rental businesses than individual landlords managing a small number of rooms.|
-|**Quản lý trọ – CL Team**|Individual landlords using Android devices|Supports room management, utility calculation, tenant information, contracts, debt tracking and financial reports through a lightweight mobile application.|Android-only application with relatively basic functionality, limited ecosystem integration, and lacks collaborative landlord–tenant workflows compared with modern cloud-based platforms.|
+|**EasyTro**|Small and medium landlords|Runs directly on Zalo Mini App, automatic billing, VietQR invoices, debt tracking, contract management, free plan for up to 10 rooms.|Focuses mainly on operational management, with limited customization and analytics for landlords who want a more comprehensive business overview. Hands-on testing also found significant **UI/UX weaknesses**: the app provides **no onboarding guidance for first-time users**, and the flow for **adding a tenant is not discoverable** — a new landlord has no clear indication of where to start or what the expected setup sequence is.|
+|**Quản lý trọ – CL Team**|Individual landlords using Android devices|Supports room management, utility calculation, tenant information, contracts, debt tracking and financial reports through a lightweight mobile application.|Android-only application with relatively basic functionality, limited ecosystem integration, and lacks collaborative landlord–tenant workflows compared with modern cloud-based platforms. Hands-on testing also found **weak payment automation**: the landlord must **manually add their own payment QR code** and the **tenant has to manually type in the amount to transfer** rather than the app generating a QR pre-filled with the correct invoice amount, which reintroduces the same manual-entry error risk RosiHome is designed to eliminate. Pricing is also **not transparent** — the app pushes new users into a **1-month free trial with no visible information on what it will cost afterward** to keep full feature access, making it difficult for a landlord to budget or compare cost against alternatives before committing.|
 
 ---
 
@@ -88,7 +87,7 @@ Although several property management solutions already exist, there remains a ga
 Current solutions generally fall into two categories:
 
 - **Manual tools**, such as Excel and Zalo, which are inexpensive but require landlords to calculate bills manually, track payments themselves, and remember important dates.
-- **Professional property management platforms**, such as Resident, which provide comprehensive features but are designed for larger rental businesses and property management companies, making them more complex than necessary for many self-managing landlords.
+- **Professional property management platforms**, which provide comprehensive features but are designed for larger rental businesses and property management companies, making them more complex than necessary for many self-managing landlords.
 
 Meanwhile, many Vietnamese landlords own only **1–30 rental units** and manage their properties themselves as a side business. Their primary need is not an enterprise management system but a lightweight, affordable solution that digitizes their daily workflow with minimal learning effort.
 
@@ -98,17 +97,20 @@ Another gap is that **most solutions in the small-landlord segment are landlord-
 
 ## 4.3 Competitive Comparison
 
-| Capability                           | Excel | Zalo | EasyTro | Resident | Quản lý trọ – CL Team | **RosiHome** |
-| ------------------------------------ | ----- | ---- | ------- | -------- | --------------------- | ------------ |
-| Room management                      | ✓     | ✗    | ✓       | ✓        | ✓                     | ✓            |
-| Automatic utility calculation        | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
-| QR payment support                   | ✗     | ✗    | ✓       | ✓        | Partial               | ✓            |
-| Payment history                      | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
-| Lease renewal reminders              | ✗     | ✗    | ✓       | ✓        | ✓                     | ✓            |
-| Maintenance request management       | ✗     | ✗    | Limited | ✓        | Limited               | ✓            |
-| Revenue dashboard                    | ✗     | ✗    | Basic   | ✓        | Basic                 | ✓            |
-| Tenant self-service                  | ✗     | ✗    | Partial | ✓        | ✗                     | ✓            |
-| Designed for self-managing landlords | ✓     | ✓    | ✓       | Partial  | ✓                     | ✓            |
+| Capability                                      | Excel    | Zalo     | EasyTro                                             | Quản lý trọ – CL Team                                     | **RosiHome** |
+| ----------------------------------------------- | -------- | -------- | --------------------------------------------------- | --------------------------------------------------------- | ------------ |
+| Room management                                 | ✓        | ✗        | ✓                                                   | ✓                                                         | ✓            |
+| Automatic utility calculation                   | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
+| QR payment support                              | ✗        | ✗        | ✓                                                   | Partial                                                   | ✓            |
+| Payment history                                 | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
+| Lease renewal reminders                         | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
+| Maintenance request management                  | ✗        | ✗        | Limited                                             | Limited                                                   | ✓            |
+| Revenue dashboard                               | ✗        | ✗        | Basic                                               | Basic                                                     | ✓            |
+| Tenant self-service                             | ✗        | ✗        | Partial                                             | ✗                                                         | ✓            |
+| Designed for self-managing landlords            | ✓        | ✓        | ✓                                                   | ✓                                                         | ✓            |
+| Guided onboarding for first-time landlords      | ✗        | ✗        | Weak — no onboarding, tenant setup not discoverable | Weak — no guided setup                                    | ✓            |
+| Auto-filled payment QR (no manual amount entry) | ✗        | ✗        | ✓                                                   | ✗ — landlord adds own QR, tenant types amount manually    | ✓            |
+| Transparent pricing before commitment           | ✓ (free) | ✓ (free) | Free plan advertised up front                       | ✗ — 1-month free trial with no visible post-trial pricing | ✓            |
 
 ---
 
@@ -119,10 +121,33 @@ Rather than competing directly with enterprise property management systems, **Ro
 
 Its competitive advantage lies in four key principles:
 
-- **Simple** – only includes features that landlords use every month, reducing learning time and operational complexity.
-- **Affordable** – avoids expensive infrastructure and payment gateway integration by using VietQR-based bank transfers and offers affordable pricing for small landlords.
+- **Simple** – only includes features that landlords use every month, reducing learning time and operational complexity. This directly addresses the onboarding gap observed in EasyTro and CL Team, where first-time landlords have no guided setup and cannot easily discover how to add a tenant.
+- **Affordable and Transparent** – avoids expensive infrastructure and payment gateway integration by using VietQR-based bank transfers, and states pricing clearly up front, in contrast to CL Team's 1-month free trial with no disclosed cost for continued full-feature access.
 - **Localized** – designed specifically for Vietnamese rental practices, including utility billing, VietQR payments, and local lease management.
-- **End-to-End Workflow** – integrates rent calculation, billing, payment tracking, lease reminders, maintenance requests, and business reporting into a single platform, eliminating the need to switch between spreadsheets, calculators, messaging applications, and notebooks.---
+- **End-to-End Workflow** – integrates rent calculation, billing, payment tracking, lease reminders, maintenance requests, and business reporting into a single platform, eliminating the need to switch between spreadsheets, calculators, messaging applications, and notebooks.
+
+---
+
+## 4.5 Comparison with Combining Existing Tools Manually
+
+Section 4.1 compares RosiHome against individual products already on the market. A separate and equally important question is whether a landlord could get the same outcome without buying any product at all, simply by **combining several free/general-purpose tools they already use** — typically a notebook or Excel sheet for meter readings, a calculator for billing, Zalo for communication and payment requests, a phone reminder/calendar app for lease dates, and manual bank-transfer checking for payment confirmation.
+
+This manual "tool stack" is in fact the real baseline that RosiHome competes with for most self-managing landlords (more so than EasyTro, which very few of them have actually adopted yet). The table below evaluates that combined workflow against RosiHome on the same tasks used in the 4.3 comparison table.
+
+| Task | Manual Combination (Excel + Calculator + Zalo + Calendar + Bank App) | RosiHome |
+|---|---|---|
+| Record meter readings & calculate utility charges | Possible, but each room is calculated by hand every month; formulas can be copied incorrectly between sheets and there is no validation against the previous reading. | Automatic calculation from the previous reading and configured rates; consistent formula applied to every room. |
+| Generate and send invoices | Landlord types the amount into a Zalo message per tenant; no standard invoice format; easy to send the wrong amount to the wrong tenant. | System generates a standardized invoice per tenant automatically from billing data. |
+| Collect payment | Tenant transfers money and sends a screenshot in Zalo; landlord must manually match the screenshot/bank SMS to the right tenant and month. | VietQR code generated per invoice; payment status can be verified against the bank reference tied to that invoice. |
+| Keep a payment history | Scattered across bank statements, Zalo chat history (which can be deleted or lost when a phone is changed), and possibly a notebook. | Centralized, persistent payment history accessible to both landlord and tenant at any time. |
+| Track lease renewal dates | Depends on the landlord remembering to check a calendar app and manually cross-referencing which tenant is due; nothing proactively surfaces upcoming expirations. | System automatically tracks lease expiration dates and pushes reminders to landlord and tenant. |
+| Track maintenance requests | Reported ad hoc via phone call or Zalo message; no status, no history, easy to forget once the chat is buried under other messages. | Structured maintenance request with status (Pending/In Progress/Completed) and a visible history. |
+| Get an overview of the business (occupancy, revenue, overdue payments) | Landlord must manually reopen and cross-reference several Excel sheets and Zalo threads; realistically this is rarely done except at a rough, infrequent level. | Dashboard aggregates data automatically from rooms, invoices, and leases in real time. |
+| Cost | "Free", but the true cost is the landlord's own time every month, plus the cost of errors (wrong bills, missed renewals, disputed payments). | Low subscription/usage cost, but replaces recurring manual effort with automated processing. |
+
+**Conclusion.** Combining existing general-purpose tools does not fail because any single tool is bad — Excel, Zalo, and a calendar app all work fine individually. It fails because **none of these tools were designed to talk to each other**, so the landlord becomes the integration layer: manually copying numbers from a notebook into Excel, from Excel into a Zalo message, and from a Zalo screenshot into a mental record of "who has paid." This manual integration is exactly where time is lost and errors are introduced, and it does not scale as the number of rooms grows. RosiHome's core value proposition is therefore not "a single new feature" but **removing the manual integration work** between billing, payment, communication, and record-keeping — the same conclusion reached independently in the competitor-focused comparison in 4.3–4.4.
+
+---
 ## 5. Feasibility Study
 
 ### 5.1. Operational Feasibility — **Feasible with caveats**

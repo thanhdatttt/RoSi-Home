@@ -341,7 +341,7 @@
 
 ### F-12 — Maintenance Request Submission
 
-> **Status: NOT YET IMPLEMENTED.** No `maintenance` module/router exists in the backend (`maintenanceRequests`, `maintenancePhotos`, `maintenanceStatusHistory` tables exist but are unused). Spec below describes intended behavior.
+> **Status: US-MAINT-01 through US-MAINT-05 IMPLEMENTED (backend).** The backend supports tenant submission and reads, landlord triage and status transitions, private signed photo access, push notifications, and owner-scoped paginated room maintenance history with full status-change history.
 
 #### US-MAINT-01 — Submit a maintenance request
 - **Endpoint:** `POST /api/v1/maintenance-requests` (multipart, up to 3 photos)
@@ -351,7 +351,9 @@
 
 #### US-MAINT-02 — View submitted maintenance requests
 - **Endpoint:** `GET /api/v1/maintenance-requests` (Tenant: own submissions only)
+- **Detail endpoint:** `GET /api/v1/maintenance-requests/:id` (Tenant: own submission only; out-of-scope IDs return the same `404` as missing IDs)
 - **Response:** title, room, submission date, current `status`, photos.
+- **Photo access:** database paths remain private; list/detail responses replace them with five-minute Supabase signed URLs only after the tenant ownership query succeeds.
 
 ### F-13 — Maintenance Status Tracking
 
