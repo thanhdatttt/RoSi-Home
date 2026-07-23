@@ -4,45 +4,43 @@
 
 | Attribute | Value |
 |---|---|
-| Version | 1.0 – Estimation Baseline |
+| Version | 1.0 |
 | Date | 23 July 2026 |
-| Estimation horizon | Remaining backend, complete MVP, and first pilot month |
-| Scope baseline | 51 backend user stories plus frontend, integration, testing, deployment, and pilot work |
-| Estimation method | Empirical Kanban forecasting calibrated with AI-assisted delivery data |
-| Status | Project baseline; updated after each batch or material variance |
+| Purpose | Estimate the time, resources, and cost required to deliver the RosiHome MVP |
+| Scope | 51 backend user stories, 19 frontend work packages, integration, testing, deployment, and pilot preparation |
+| Estimation method | Empirical forecasting calibrated with AI-assisted delivery data |
+| Confidence | Medium overall; confidence varies by estimate component |
 
-## 2. Executive Estimate
+## 2. Executive Summary
 
-RosiHome should retain the target of **8–10 calendar weeks for the complete MVP**, supported by the following estimates:
+RosiHome is estimated to require **8–10 calendar weeks** to deliver the complete MVP. The expected case is **9 weeks**, based on five part-time members working 3–4 hours per day, five days per week.
 
-- AI-assisted backend implementation is expected to finish substantially earlier than the complete product;
-- remaining backend work is estimated at **9.8–19.5 measured/agent-clock hours** and **157.6–315.2 million tokens**;
-- the backend Estimate at Completion (EAC) is approximately **58.2–67.9 proxy hours** and **407.5–565.1 million tokens**;
-- the two frontend streams contain **19 module-level work packages** mapped to the same product stories and are estimated at **143–266 frontend hours**, with an expected value of **198 hours**;
-- provisional frontend AI usage is estimated at **498–927 million tokens**, with an expected value of **690 million tokens**, pending replacement with actual FE telemetry;
-- the complete MVP still requires frontend/mobile integration, human review, acceptance testing, infrastructure, deployment, and pilot stabilization;
-- expected gross team capacity over nine weeks is approximately **787.5 team-hours**;
-- the expected cash budget for the current backlog is approximately **VND 3.28 million**;
-- the conservative cash envelope is approximately **VND 4.1 million**, subject to actual provider and infrastructure quotations.
+The main estimates are:
 
-These ranges support planning and are not guaranteed commitments. The estimate is updated after every batch using actual delivery data from CI/CD, deployment, effort logs, and AI usage.
+| Dimension | Expected Estimate | Estimated Range |
+|---|---:|---:|
+| Complete MVP duration | 9 weeks | 8–10 weeks |
+| Gross team capacity | 787.5 team-hours | 600–1,000 team-hours |
+| Remaining backend time | 14.6 proxy hours | 9.8–19.5 hours |
+| Remaining backend AI usage | 236.4M tokens | 157.6–315.2M tokens |
+| Backend token Estimate at Completion | 486.3M tokens | 407.5–565.1M tokens |
+| Frontend effort | 198 hours | 143–266 hours |
+| Frontend AI usage | 690M tokens | 498–927M tokens |
+| Full implementation AI usage | 1.176B tokens | 905.5M–1.492B tokens |
+| Development cash budget | VND 3,277,500 | VND 950,000–4,062,500 |
+| Economic labor | 787.5 hours × approved shadow rate | 600–1,000 hours × shadow rate |
 
-## 3. Estimation Objectives
+AI-assisted backend implementation is substantially faster than complete product delivery. Frontend implementation, integration, testing, deployment, and pilot preparation remain necessary and determine the overall 8–10 week duration.
 
-This report answers four planning questions:
+Token volume is treated as an AI resource indicator, not as an invoice. Usage included in a free trial or subscription is not charged again using API prices.
 
-1. How much time is likely required to finish the remaining backend work and the complete MVP?
-2. What human, AI, and technical resources are required?
-3. What cash and economic costs should be planned?
-4. How will the estimate be monitored and updated during delivery?
+## 3. Scope Basis
 
-Historical delivery figures are used only to calibrate rates. This document is an estimation baseline rather than a retrospective status report.
+### 3.1 Backend Scope
 
-## 4. Estimation Scope
+The backend scope contains 51 user stories allocated across three members and four dependency batches.
 
-### 4.1 Backend Scope by Batch
-
-| Batch | BE1 Chí | BE2 Đạt | BE3 Minh | Total US |
+| Batch | BE1 Chí | BE2 Đạt | BE3 Minh | Total |
 |---|---|---|---|---:|
 | Batch 1 – Foundation | AUTH-01→06, PROFILE-01 | PROPERTY-01→02, ROOM-01→03 | UTILITY-01→02, CHARGE-01 | 15 |
 | Batch 2 – Core | TENANT-01→02, LEASE-01→06 | METER-01→03 | MAINT-01→05 | 16 |
@@ -50,166 +48,148 @@ Historical delivery figures are used only to calibrate rates. This document is a
 | Batch 4 – Analytics | DASH-01→02 | DASH-03→04 | REPORT-01→05 | 9 |
 | **Total** | **17** | **14** | **20** | **51** |
 
-### 4.2 Frontend Scope by Batch
+The team confirmed that GitHub CI/CD is configured and that the backend user stories used as calibration data were deployed successfully.
 
-Frontend work implements the presentation and interaction layers for the same Product Backlog stories. It is therefore estimated as work packages and **is not added to the 51-product-story count**.
-
-| Batch | FE1 MXH | FE2 Quân | Work Packages |
-|---|---|---|---:|
-| Batch 1 – Foundation UI | Auth, Profile, Property, and Room UI (4) | Design System, Navigation, Shared Components, and Utility UI (4) | 8 |
-| Batch 2 – Core UI | Tenant and Lease UI (2) | Meter and Maintenance UI (2) | 4 |
-| Batch 3 – Billing/Payment UI | Invoice and Payment UI (2) | VietQR, Upload Proof, and Notification UI (3) | 5 |
-| Batch 4 – Analytics UI | Dashboard UI (1) | Report UI (1) | 2 |
-| After Batch 3 | Property/Lease/Tenant integration | UI completion, testing, and bug fixing | Enabling work |
-| **Total estimated packages** | **9** | **10** | **19** |
-
-The estimate also includes non-story work required to deliver the MVP:
-
-- frontend/mobile implementation;
-- API integration and shared-contract alignment;
-- infrastructure and database setup;
-- automated and manual testing;
-- security and authorization verification;
-- CI/CD, deployment, and smoke testing;
-- bug fixing, documentation, and pilot support.
-
-Setup, review, and bug-fixing work consumes resources but is not counted as additional user-story throughput.
-
-### 4.3 Dependency Model
-
-```text
-Batch 1: Auth + Property/Room + Billing configuration
-                    ↓
-Batch 2: Tenant/Lease + Meter + Maintenance
-                    ↓
-Batch 3: Invoice + Payment + Reminder
-                    ↓
-Batch 4: Dashboard + Report
-                    ↓
-Integration → Deployment → Pilot acceptance
-```
-
-Batches manage dependencies. User stories remain the product estimation and acceptance unit.
-
-## 5. Estimation Method
-
-### 5.1 Selected Approach
-
-The project uses **Kanban with empirical flow-based forecasting** because AI-agent cycle times can be substantially shorter and less regular than a traditional two-week sprint.
-
-The estimation process is:
-
-1. split the backlog into independently testable user stories;
-2. group dependent stories into ordered batches;
-3. measure time, token usage, rework, and acceptance outcomes;
-4. estimate remaining work using the rate of the most comparable member/model stream;
-5. apply uncertainty factors for integration, review, and deployment;
-6. update the Estimate at Completion after every batch.
-
-### 5.2 Core Formulas
-
-```text
-Implementation rate
-= Measured implementation time / Implemented stories
-
-Token rate
-= Measured tokens / Implemented stories
-
-Remaining effort
-= Remaining comparable stories × Implementation rate
-
-Estimate at Completion
-= Actual to Date + Estimate to Complete
-
-Economic labor cost
-= Human effort hours × Approved shadow hourly rate
-
-Cash cost
-= Subscriptions + Paid usage + Infrastructure
- + External services + Domain/Security + Contingency
-```
-
-### 5.3 Standardized Time Measures
-
-The following measures represent different aspects of delivery and are reported separately:
-
-| Measure | Definition | Use |
-|---|---|---|
-| Human effort | Total person-hours spent directly on analysis, prompting, review, testing, correction, integration, deployment, and documentation | Resource planning and economic labor cost |
-| Agent-active time | Time during which an AI agent processes a task, including reasoning and tool execution when telemetry is available | AI workflow speed and capacity comparison |
-| Cycle time | Calendar time from story start to deployment/acceptance, including queue and blocked time | Completion-date and throughput forecasting |
-| Gross capacity | Total member hours available during a period | Verifying that the plan does not exceed available resources |
-
-The 35-hour and 10-hour member declarations may include multiple activity types, whereas the BE3 measurement is agent-active time. They are therefore combined only as a **time proxy for order-of-magnitude planning** and must not be described as total human effort or used directly for payroll.
-
-From this baseline onward, every member should use a common time log containing human effort, agent-active time when exposed by the tool, start timestamp, deployment/acceptance timestamp, and blocked time.
-
-### 5.4 Confidence Rules
-
-- `High`: telemetry, CI/CD, or invoice-backed measurement mapped clearly to a story;
-- `Medium`: member-reported aggregate with clear scope and delivery outcome;
-- `Low`: mixed work types, an unclear model identifier, or missing story-level measurement.
-
-The team has confirmed that GitHub CI/CD is configured and that the backend user stories used for calibration were deployed successfully. The **backend delivery baseline** therefore has medium-to-high confidence. The **combined time estimate** has medium confidence because the source time logs do not separate human effort, agent-active time, and cycle time. The frontend estimate has low confidence because FE1 and FE2 do not yet have actual telemetry or effort logs.
-
-## 6. Calibration Data
-
-### 6.1 Observed Inputs
-
-| Stream | Calibration Scope | Stories | Time Basis | Tokens | Model/Access | Confidence |
-|---|---|---:|---:|---:|---|---|
-| BE1 | Batch 1 + Batch 2 plus setup/testing/FE/docs overhead | 15 | 35 member-reported hours | 135.0M | `Hy3`, free | Medium |
-| BE2 | Batch 1, Batch 2+3, and Batch 4 | 14 | 10 member-reported hours | 21.8M | `Hy3`, free | Medium |
-| BE3 | Billing Foundation | 3 | 1h01 agent-active | 36.5M | GPT-5.6 Sol, Plus/trial | Medium |
-| BE3 | MAINT-01→05 | 5 | 2h22m50 agent-active | 56.564626M | GPT-5.6 Sol, Plus/trial | High for usage; medium for story split |
-
-The `Hy3` label is retained exactly as reported. The provider, exact model ID, and product surface must be confirmed before a formal model comparison.
-
-All backend stories in the calibration dataset were deployed successfully through the team's CI/CD process. The resulting rates therefore reflect delivered backend work rather than code generation alone.
-
-### 6.2 Applied Rates
-
-| Stream | Time/Story | Tokens/Story | Forecast Use |
-|---|---:|---:|---|
-| BE1 blended | 2.33 hours | 9.00M | Remaining BE1 Dashboard work |
-| BE2 reported | 0.71 hours | 1.56M | No assigned backend story remains in the supplied dataset |
-| BE3 Billing | 0.34 agent-hours | 12.17M | Billing-configuration work |
-| BE3 Maintenance | 0.48 agent-hours | 11.31M | CRUD/workflow/history work |
-| BE3 combined | 0.42 agent-hours | 11.63M | Initial Payment/Reminder/Report forecast |
-
-Rates remain provider- and member-specific. A token from one subscription model is not assumed to have the same monetary cost or productivity as a token reported by another model.
-
-## 7. Backend Estimate
-
-### 7.1 Current Planning Position
-
-The delivery record shows that 37 of 51 backend stories were deployed successfully through CI/CD. The remaining backend forecast scope is:
+The remaining backend scope used in this estimate is:
 
 - BE1: DASH-01→02 — 2 stories;
 - BE3: VIETQR-01→02, PAYMENT-01→03, REMINDER-01→02 — 7 stories;
 - BE3: REPORT-01→05 — 5 stories.
 
-The 37/51 ratio is used as the deployed-backend baseline. Acceptance criteria, test results, CI runs, and deployment references for each story should remain in the delivery record for auditability.
+This produces a calibration position of 37 deployed backend stories and 14 remaining backend stories.
 
-### 7.2 Estimate to Complete
+### 3.2 Frontend Scope
+
+Frontend work implements the user interface and interaction layer for the same Product Backlog stories. It is represented as 19 module-level work packages and is **not added to the 51-user-story product count**.
+
+| Batch | FE1 MXH | FE2 Quân | Packages |
+|---|---|---|---:|
+| Batch 1 | Auth, Profile, Property, Room UI (4) | Design System, Navigation, Shared Components, Utility UI (4) | 8 |
+| Batch 2 | Tenant and Lease UI (2) | Meter and Maintenance UI (2) | 4 |
+| Batch 3 | Invoice and Payment UI (2) | VietQR, Upload Proof, Notification UI (3) | 5 |
+| Batch 4 | Dashboard UI (1) | Report UI (1) | 2 |
+| **Total** | **9** | **10** | **19** |
+
+Property/Lease/Tenant integration, final UI testing, and bug fixing are treated as enabling work rather than additional product stories.
+
+### 3.3 Included Supporting Work
+
+The estimate includes:
+
+- API and database implementation;
+- frontend/mobile implementation;
+- automated and manual testing;
+- API and UI integration;
+- infrastructure and database setup;
+- CI/CD and deployment;
+- bug fixing and technical documentation;
+- pilot preparation.
+
+Major product-scope changes and production operation beyond the initial pilot are excluded.
+
+## 4. Estimation Method and Data Quality
+
+### 4.1 Approach
+
+The estimate uses empirical rates from completed AI-assisted work and applies them to comparable remaining work. Because the sample is small and time records are not fully standardized, three scenarios are used:
+
+- **Optimistic:** dependencies are ready and little rework is required;
+- **Expected:** one normal review/integration iteration is required;
+- **Conservative:** additional integration, provider, or infrastructure rework occurs.
+
+Core formulas:
+
+```text
+Implementation rate
+= Measured implementation time / Completed stories
+
+Token rate
+= Measured tokens / Completed stories
+
+Estimate to Complete
+= Remaining comparable work × Observed rate × Uncertainty factor
+
+Estimate at Completion
+= Actual to Date + Estimate to Complete
+
+Economic labor cost
+= Human effort × Approved shadow hourly rate
+```
+
+### 4.2 Standard Time Definitions
+
+The available time figures do not all measure the same quantity. The report therefore distinguishes:
+
+| Measure | Definition | Estimation Use |
+|---|---|---|
+| Human effort | Person-hours spent on analysis, prompting, review, testing, correction, integration, deployment, and documentation | Resource and economic labor estimation |
+| Agent-active time | Time during which an AI agent processes a task, including reasoning and tool execution | AI speed and capacity analysis |
+| Cycle time | Calendar time from story start to successful deployment, including waiting and blocked time | Completion-date forecasting |
+| Gross capacity | Total member availability during a period | Feasibility check for the overall schedule |
+
+The 35-hour and 10-hour member declarations may contain several activity types. The BE3 measurement is agent-active time. Their sum is therefore a **planning proxy**, not total human effort or a payroll measure.
+
+Future data collection should record human effort, agent-active time, start time, deployment time, and blocked time separately.
+
+### 4.3 Confidence Assessment
+
+| Estimate Component | Confidence | Reason |
+|---|---|---|
+| Backend delivery baseline | Medium–High | CI/CD and successful deployment confirmed |
+| Backend token usage | Medium–High | Telemetry available for Maintenance; aggregates available for other work |
+| Combined backend time | Medium | Source records use different time definitions |
+| Frontend effort | Low–Medium | Bottom-up estimate without actual FE time logs |
+| Frontend token usage | Low | Derived from a provisional blended token/hour rate |
+| Cash budget | Medium | Based on existing budget assumptions; quotations are still required |
+
+The overall estimate is suitable for software-project-management planning but should be updated when standardized FE and human-effort data becomes available.
+
+## 5. Calibration Data
+
+### 5.1 Observed Delivery Inputs
+
+| Stream | Calibrated Scope | Stories | Time Basis | Tokens | Model/Access |
+|---|---|---:|---:|---:|---|
+| BE1 | Batch 1 + Batch 2 plus setup/testing/FE/docs overhead | 15 | 35 member-reported hours | 135.0M | `Hy3`, free |
+| BE2 | Batch 1, Batch 2+3, and Batch 4 | 14 | 10 member-reported hours | 21.8M | `Hy3`, free |
+| BE3 | Billing Foundation | 3 | 1h01 agent-active | 36.5M | GPT-5.6 Sol, Plus/trial |
+| BE3 | MAINT-01→05 | 5 | 2h22m50 agent-active | 56.564626M | GPT-5.6 Sol, Plus/trial |
+
+The `Hy3` label is retained exactly as reported. The provider, exact model identifier, and product surface should be confirmed before formal model-efficiency comparison.
+
+### 5.2 Derived Rates
+
+| Stream | Time/Story | Tokens/Story | Forecast Application |
+|---|---:|---:|---|
+| BE1 blended | 2.33 hours | 9.00M | Remaining BE1 Dashboard work |
+| BE2 reported | 0.71 hours | 1.56M | Reference only; no BE2 backend story remains |
+| BE3 Billing | 0.34 agent-hours | 12.17M | Billing-configuration work |
+| BE3 Maintenance | 0.48 agent-hours | 11.31M | CRUD, workflow, and history work |
+| BE3 combined | 0.42 agent-hours | 11.63M | Payment, Reminder, and Report forecast |
+
+The substantial difference in tokens per story does not by itself prove that one model is more efficient. Story complexity, context size, caching, parallel agents, rework, and measurement method differ between streams.
+
+## 6. Time and AI-Usage Estimate
+
+### 6.1 Remaining Backend
 
 The linear estimate is:
 
-- BE1: `2 × 2.33 ≈ 4.7 hours`, approximately `18M tokens`;
-- BE3: `12 × 0.42 ≈ 5.1 agent-hours`, approximately `139.6M tokens`;
-- total remaining backend implementation: approximately **9.8 proxy hours and 157.6M tokens**.
+- BE1: `2 stories × 2.33 hours ≈ 4.7 hours` and approximately `18M tokens`;
+- BE3: `12 stories × 0.42 hours ≈ 5.1 agent-hours` and approximately `139.6M tokens`;
+- combined optimistic baseline: **9.8 proxy hours and 157.6M tokens**.
 
-Payment and Report contain more cross-module and external dependencies than the average completed BE3 story. The linear result is therefore treated as the optimistic case.
+Payment and Report have more cross-module dependencies than the completed BE3 stories. Uncertainty factors are therefore applied:
 
-| Scenario | Remaining Time Proxy | Remaining Tokens | Assumption |
-|---|---:|---:|---|
-| Optimistic | 9.8 hours | 157.6M | Dependencies ready, one pass, limited rework |
-| Expected | 14.6 hours | 236.4M | One review/integration iteration; 1.5× factor |
-| Conservative | 19.5 hours | 315.2M | External-service or integration rework; 2.0× factor |
+| Scenario | Remaining Time | Remaining Tokens | Factor |
+|---|---:|---:|---:|
+| Optimistic | 9.8 hours | 157.6M | 1.0× |
+| Expected | 14.6 hours | 236.4M | 1.5× |
+| Conservative | 19.5 hours | 315.2M | 2.0× |
 
-### 7.3 Backend Estimate at Completion
+### 6.2 Backend Estimate at Completion
 
-The recorded inventory to date is approximately 48h23m50 across mixed time definitions and 249.864626M tokens. Adding the Estimate to Complete produces:
+Recorded work to date is approximately 48h23m50 across mixed time definitions and 249.864626M tokens.
 
 | Scenario | Backend Time EAC Proxy | Backend Token EAC |
 |---|---:|---:|
@@ -217,152 +197,126 @@ The recorded inventory to date is approximately 48h23m50 across mixed time defin
 | Expected | 63.0 hours | 486.3M |
 | Conservative | 67.9 hours | 565.1M |
 
-The time EAC supports order-of-magnitude planning only. It combines member-reported hours with agent-active hours and is not a valid payroll total. Future batches must record human effort separately.
+Time EAC is an order-of-magnitude planning value and not a payroll total.
 
-### 7.4 Backend Completion-Date Logic
+### 6.3 Frontend Estimate
 
-The 9.8–19.5 hours must not be divided mechanically by the number of agents. Calendar duration depends on:
+No standardized FE time or telemetry data is available. Frontend is therefore estimated bottom-up at 6–10 hours per module package, including UI implementation, validation, state handling, API integration, and relevant testing.
 
-- Invoice readiness before Payment;
-- source-data stability before Report;
-- file-storage and push-notification availability;
-- review and testing capacity;
-- shared schema/API conflicts;
-- deployment-environment availability.
+| Scenario | Base Package Effort | Integration/Rework Reserve | Total FE Effort |
+|---|---:|---:|---:|
+| Lean | 19 × 6 h = 114 h | 25% | 143 h |
+| Expected | 19 × 8 h = 152 h | 30% | 198 h |
+| Conservative | 19 × 10 h = 190 h | 40% | 266 h |
 
-If BE1 and BE3 work in parallel and dependencies are ready, raw implementation may finish within several working days. Acceptance and deployment can take longer than code generation.
+With two frontend members providing a combined 30–40 hours per week, this equals approximately:
 
-## 8. Complete MVP Estimate
+- 3.6 weeks in the lean case;
+- 5.7 weeks in the expected case;
+- 8.9 weeks in the conservative case.
 
-### 8.1 Frontend Bottom-Up Estimate
-
-No frontend telemetry or member time log is currently available. The frontend estimate therefore uses a bottom-up assumption of 6–10 hours per module-level work package, including screen implementation, state/validation, API integration, and component testing. A separate integration, regression, and bug-fix reserve is then applied.
-
-| Scenario | Package Effort | Integration/Rework Reserve | Total FE Effort | Two-Person FE Calendar |
-|---|---:|---:|---:|---:|
-| Lean | 19 × 6 h = 114 h | 25% | 143 h | 3.6 weeks at 40 combined h/week |
-| Expected | 19 × 8 h = 152 h | 30% | 198 h | 5.7 weeks at 35 combined h/week |
-| Conservative | 19 × 10 h = 190 h | 40% | 266 h | 8.9 weeks at 30 combined h/week |
-
-For token-capacity planning only, the two reported `Hy3` streams provide a blended rate of:
+For AI-capacity planning only, the two reported `Hy3` streams provide a provisional rate:
 
 ```text
 156.8M tokens / 45 hours ≈ 3.48M tokens/hour
 ```
 
-Applying this provisional rate to frontend effort produces:
+| Scenario | Provisional FE Tokens |
+|---|---:|
+| Lean | 498M |
+| Expected | 690M |
+| Conservative | 927M |
 
-| Scenario | Estimated FE Tokens | Confidence |
-|---|---:|---|
-| Lean | 498M | Low |
-| Expected | 690M | Low |
-| Conservative | 927M | Low |
+This token estimate has low confidence and should be replaced with FE1/FE2 measurements. It is not an API charge.
 
-This token estimate must be replaced when FE1 and FE2 provide actual telemetry. It is not an API bill and is not used to calculate subscription cash cost.
+### 6.4 Complete MVP Duration
 
-Combining backend EAC with the provisional frontend estimate produces an implementation-wide AI usage envelope of approximately **905.5M–1.492B tokens**, with an expected value of **1.176B tokens**. This excludes usage for later documentation, support, or unmeasured tools.
-
-### 8.2 Calendar Scenarios
-
-| Scenario | Calendar Duration | Gross Team Capacity | Conditions |
+| Scenario | Duration | Gross Team Capacity | Main Assumption |
 |---|---:|---:|---|
-| Lean | 8 weeks | 600 team-hours | 75 h/week; stable free tiers; limited rework |
-| Expected | 9 weeks | 787.5 team-hours | 87.5 h/week; normal integration and pilot feedback |
-| Conservative | 10 weeks | 1,000 team-hours | Up to 100 h/week; deployment/rework reserve |
+| Lean | 8 weeks | 600 hours | Stable free tiers and limited rework |
+| Expected | 9 weeks | 787.5 hours | Normal integration and pilot feedback |
+| Conservative | 10 weeks | 1,000 hours | Additional integration and deployment reserve |
 
-Gross capacity is not coding effort. It includes planning, prompting, review, testing, integration, documentation, deployment, and project management.
+The expected frontend effort produces a critical path of approximately 5.7 working weeks. When integration, testing, deployment, and pilot preparation are included, the complete MVP estimate remains **8–10 weeks**.
 
-### 8.3 Expected Phase Plan
+## 7. Resource Estimate
 
-| Phase | Calendar Allocation | Main Outputs |
+### 7.1 Human Resources
+
+The team consists of five part-time members, each available for approximately 3–4 hours per day, five days per week.
+
+| Resource | Quantity | Estimated Responsibility |
 |---|---:|---|
-| Scope/architecture baseline | Week 1 | Backlog, SOW, API/schema contracts, and DoR/DoD |
-| Backend and core frontend | Weeks 2–4 | Integrated Batch 1–2 vertical flows |
-| Billing/payment/mobile integration | Weeks 4–6 | Batch 3 end-to-end flow |
-| Dashboard/report and system integration | Weeks 6–7 | Batch 4 and cross-module verification |
-| Acceptance, deployment, and pilot | Weeks 8–9 | CI, deployment, smoke testing, and pilot feedback |
-| Contingency | Week 10 when required | Rework, provider/infrastructure issues, and demo stabilization |
+| Backend-focused members | 3 | APIs, schemas, business logic, tests, and integration |
+| Frontend/mobile-focused members | 2 | UI, state handling, API integration, and frontend testing |
+| Integration responsibility | Shared among the team | API/schema alignment and integration fixes |
+| Testing responsibility | Shared among the team | Automated/manual testing and regression checks |
+| Deployment responsibility | Shared through GitHub CI/CD | Environment configuration and deployment verification |
 
-The expected frontend estimate is approximately 5.7 working weeks and is therefore a more plausible implementation critical path than raw backend generation. Integration, acceptance, and pilot stabilization support retaining the complete MVP range of 8–10 weeks.
+One member may perform several activities, but the same hour must not be counted more than once.
 
-## 9. Resource Estimate
+### 7.2 AI Resources
 
-### 9.1 Human Resources
-
-The project baseline is five part-time members, each available for 3–4 hours per day, five days per week.
-
-| Resource | Planned Quantity | Responsibility |
-|---|---:|---|
-| Backend-focused developers | 3 | Domain APIs, schemas, tests, and integration |
-| Frontend/mobile-focused developers | 2 | UI, mobile flows, and API integration |
-| Integration owner | 1 named, potentially rotating owner | Shared schema/API merges and release control |
-| Reviewer/QA | At least 1 reviewer per story | Independent acceptance and regression checks |
-| Deployment owner | 1 named owner | CI/CD, environments, and smoke testing |
-| Project/data owner | 1 named owner | Kanban, metrics, forecasts, and cost logs |
-
-One person may hold multiple roles, but the same hour must not be counted twice.
-
-### 9.2 AI Resources
-
-| Resource | Planning Assumption | Risk/Control |
+| Resource | Current Basis | Estimation Treatment |
 |---|---|---|
-| GPT-5.6 Sol through ChatGPT Plus/trial | BE3 coding stream | Track benefit expiry, included usage, and purchased overage separately |
-| Free `Hy3` access | Member-reported coding streams | Confirm the exact model, quota, and paid fallback |
-| Concurrent agent sessions | Begin with no more than one active implementation story per member | Increase only while review/testing queues remain stable |
-| Telemetry | Per-turn tokens and agent-active time where available | Apply one common reporting format across members and models |
+| GPT-5.6 Sol | ChatGPT Plus/trial | Record agent-active time and token usage |
+| `Hy3` | Free access as reported | Record time/tokens; confirm exact model and benefit expiry |
+| Concurrent agent sessions | Multiple sessions may be available | Do not convert directly into employee equivalents |
+| AI usage data | Detailed for BE3; aggregate for other streams | Maintain provider/model labels |
 
-The theoretical number of sessions is not converted into “virtual employees.” Human review and integration remain the limiting resources.
+Free or trial access has zero incremental usage charge while active but creates expiry, quota, and paid-fallback risk.
 
-### 9.3 Technical and External Resources
+### 7.3 Technical and External Resources
 
-The estimate must reserve capacity or budget for:
+The MVP may require:
 
-- API/web compute and managed PostgreSQL;
-- image/file storage and bandwidth;
-- backup and recovery;
+- API/web hosting and managed PostgreSQL;
+- file/image storage and bandwidth;
+- database backup and recovery;
 - transactional email and mobile push notifications;
 - PDF generation and VietQR validation;
-- CI/CD, artifacts, monitoring, and logs;
+- GitHub CI/CD, artifact storage, monitoring, and logs;
 - domain, DNS, and TLS;
-- mobile distribution and pilot-user support.
+- mobile distribution and pilot support.
 
-## 10. Cost Estimate
+The infrastructure estimate should be replaced with provider quotations before production-scale deployment.
 
-### 10.1 Cost Views
+## 8. Cost Estimate
+
+### 8.1 Cost Views
 
 | View | Purpose | Labor Treatment |
 |---|---|---|
-| Cash budget | Money the team or sponsor must fund | Excludes unpaid contributed labor |
-| Economic project cost | Full value of consumed resources | Includes human effort at a shadow rate |
-| Operating TCO | Post-delivery operating and maintenance cost | Includes recurring services and support |
+| Cash budget | Money the team or sponsor must fund | Excludes unpaid student labor |
+| Economic cost | Full value of resources used to build the MVP | Includes labor at a shadow rate |
+| Operating TCO | Cost to operate and maintain the system | Includes recurring services and support |
 
-### 10.2 Development Cash Scenarios
+### 8.2 Development Cash Scenarios
 
-| Category | Lean/Free Tier | Expected Current Backlog | Conservative Paid Fallback |
+| Category | Lean/Free Tier | Expected | Conservative |
 |---|---:|---:|---:|
 | AI development tools | 0 while benefits remain active | 1,600,000 | 1,600,000 |
 | Cloud infrastructure | 0 with approved credits | 800,000 | 1,200,000 |
 | Domain/security | 450,000 | 450,000 | 450,000 |
-| Contingency | 500,000 | 427,500 (15% of base) | 812,500 (25% of base) |
-| **Estimated cash total** | **950,000** | **3,277,500** | **4,062,500** |
+| Contingency | 500,000 | 427,500 | 812,500 |
+| **Estimated total (VND)** | **950,000** | **3,277,500** | **4,062,500** |
 
-The conservative scenario increases cloud capacity and holds a 25% contingency for expired AI benefits, provider variance, infrastructure overage, and additional test usage. Approximately **VND 4.1 million** is a planning ceiling rather than approved expenditure.
+The expected contingency is 15% of the cost baseline. The conservative contingency is 25% and covers benefit expiry, provider variation, infrastructure overage, and additional testing usage.
 
-### 10.3 AI Usage Cost Treatment
+These values are estimates, not approved expenditures. Actual invoices and provider quotations should replace assumptions when available.
 
-- Usage within free/trial access or an included subscription has zero incremental usage cost unless the team purchases overage.
-- Token volume is still recorded for capacity and paid-fallback planning.
-- Subscription token usage must not be multiplied by API rates and charged again.
-- If paid APIs are introduced, input, output, cache-read, and cache-write usage must be costed separately using the rate card valid on the usage date.
-- Results must retain their provider/model labels.
+### 8.3 AI Cost Treatment
 
-### 10.4 Economic Labor Estimate
+- Token usage included in free/trial or subscription access has zero incremental charge unless overage is purchased.
+- Subscription usage must not be multiplied by API prices and charged again.
+- If paid APIs are introduced, input, output, cache-read, and cache-write usage should be costed using the applicable rate card.
+- Token usage should remain separated by provider and model.
 
-The complete MVP economic labor cost is estimated from gross capacity:
+### 8.4 Economic Labor
 
 ```text
 Economic labor estimate
-= 600–1,000 team-hours × Approved shadow rate
+= Gross team-hours × Approved shadow hourly rate
 ```
 
 | Shadow Rate | Lean: 600 h | Expected: 787.5 h | Conservative: 1,000 h |
@@ -371,11 +325,11 @@ Economic labor estimate
 | VND 50,000/h | 30,000,000 | 39,375,000 | 50,000,000 |
 | VND 100,000/h | 60,000,000 | 78,750,000 | 100,000,000 |
 
-These values represent the economic value of student effort and are not necessarily cash salaries. The SOW must select a shadow-rate basis before approval.
+This represents the economic value of contributed labor and is separate from the cash budget.
 
-### 10.5 First-Month Operating Estimate
+### 8.5 Operating-Cost Formula
 
-The available inputs do not include operating-service quotations or invoices. First-month operating TCO is therefore represented by:
+The available inputs do not include complete operating-service quotations. First-month operating TCO is therefore represented as:
 
 ```text
 Monthly operating TCO
@@ -384,146 +338,51 @@ Monthly operating TCO
  + Support/Maintenance labor + Tax/FX variance
 ```
 
-The infrastructure owner must replace each term with an invoice or official rate-card estimate before the pilot deployment gate.
+## 9. Assumptions and Estimation Risks
 
-## 11. Planning Baseline
+### 9.1 Assumptions
 
-### 11.1 Delivery Workflow
-
-```text
-Backlog
-→ Ready for Agent
-→ AI Implementing
-→ Human Review
-→ Testing / Acceptance
-→ Integration
-→ Deployment
-→ Accepted Done
-```
-
-### 11.2 Initial WIP Policy
-
-- no more than five active implementation stories across the team;
-- no more than one active implementation story per member;
-- no more than three stories waiting for review;
-- no more than three stories in testing/acceptance;
-- one shared integration change at a time;
-- one controlled deployment at a time.
-
-An additional agent is started only when it can work independently and downstream queues remain stable.
-
-### 11.3 Definition of Done Used by the Estimate
-
-A story contributes to delivery throughput only when:
-
-- every acceptance criterion passes;
-- a human reviewer approves it;
-- relevant automated tests and CI pass;
-- authorization and security behavior is verified;
-- integration has no unresolved conflicts;
-- target-environment deployment succeeds;
-- post-deployment smoke tests pass;
-- documentation is updated;
-- no severity-1 or severity-2 defect remains.
-
-Before these conditions are met, the item is implementation-complete or under validation rather than `Accepted Done`.
-
-## 12. Monitoring and Reforecasting
-
-### 12.1 Required Measures
-
-| Area | Measures |
-|---|---|
-| Time | Cycle time, agent-active time, human touch time, and blocked time |
-| Delivery | Accepted Done stories/week, work-item age, and carry-over |
-| Quality | Acceptance yield, test pass rate, defects, and rework ratio |
-| AI resources | Model, provider, tokens, task/turn, and quota/rate-limit events |
-| Cost | Subscriptions, paid usage, infrastructure, external services, and shadow labor |
-| Deployment | CI/deployment attempts, success rate, rollback, and smoke-test results |
-
-### 12.2 Forecast Update Rules
-
-At the end of every batch:
-
-1. replace planned rates with actual `Accepted Done` rates;
-2. recalculate remaining stories by work class;
-3. update expected and conservative scenarios;
-4. update cost EAC from actual invoices and effort logs;
-5. document variance and corrective action;
-6. obtain sponsor approval if scope, deadline, or budget baselines change.
-
-Recommended control triggers:
-
-- cycle time exceeds twice the median for a comparable story;
-- tokens/story exceed twice the stream median without a complexity explanation;
-- rework exceeds 30% of human effort;
-- a story remains blocked for more than one working day;
-- two consecutive CI/deployment failures occur;
-- the review/testing queue exceeds three stories;
-- the expected forecast exceeds the SOW deadline or budget contingency.
-
-## 13. Statement of Work Reconciliation
-
-The Statement of Work converts sponsor expectations and the developer estimate into an approved delivery baseline. It defines scope, deliverables, acceptance criteria, responsibilities, milestones, budget, assumptions, dependencies, and change control.
-
-| Item | Sponsor/Proposal Baseline | Developer Estimate | Required Agreement |
-|---|---|---|---|
-| Complete MVP duration | 8–10 weeks | Retain 8–10 weeks until an Accepted Done pilot supports a change | Approve the calendar baseline and milestone gates |
-| Remaining backend | Not estimated separately | 9.8–19.5 proxy hours; 157.6–315.2M tokens | Treat as an implementation estimate, not a delivery promise |
-| Frontend | Not estimated separately by work package | 143–266 hours; 498–927M provisional tokens | Validate package sizes using FE1/FE2 telemetry |
-| Cash budget | No formally approved baseline | VND 3.28M expected; approximately VND 4.1M conservative | Confirm infrastructure quotations and contingency |
-| Economic labor | Excluded from cash budget | 600–1,000 hours × shadow rate | Select the shadow rate and reporting view |
-| Free AI access | In use | Expiry, quota, and fallback risk | Record expiry dates and paid fallback |
-| Acceptance | Deployable MVP | CI/CD is configured and backend stories in the calibration dataset were deployed successfully | Maintain traceability from stories to tests, CI runs, and deployments |
-
-When sponsor and developer values differ, the variance and resolution are recorded here rather than silently replacing one estimate with the other.
-
-## 14. Assumptions, Exclusions, and Required Inputs
-
-### 14.1 Assumptions
-
-- the 51-story backend scope remains materially stable;
-- completed modules remain reusable and do not require major redesign;
+- the 51-story backend scope and 19 frontend work packages remain materially stable;
+- deployed backend modules do not require major redesign;
 - team availability remains 3–4 hours per member per day, five days per week;
-- external baselines are available before dependent acceptance tests;
-- trial/student AI benefits remain active during the immediate development period.
+- external services are available when dependent work begins;
+- trial/student AI benefits remain active during the immediate development period;
+- CI/CD remains available for subsequent deployments.
 
-### 14.2 Exclusions from Firm Cost Commitment
+### 9.2 Main Estimation Risks
 
-- legal or commercial production-support obligations;
-- unknown paid-provider overage;
-- production scale beyond the pilot;
-- major backlog changes after SOW approval.
+| Risk | Estimate Impact | Treatment |
+|---|---|---|
+| Different time definitions | Distorts effort and productivity comparison | Separate human effort, agent time, and cycle time |
+| Missing FE measurements | Reduces frontend-estimate confidence | Use bottom-up range and replace with actual data |
+| AI benefit expiry or quota | Increases cash cost or delays work | Maintain conservative paid fallback |
+| Cross-module dependency | Increases backend and integration duration | Apply 1.5×–2.0× uncertainty factors |
+| Infrastructure quotation variance | Changes cash budget | Keep 15%–25% contingency |
+| Backlog growth | Increases all estimates | Re-estimate added scope separately |
 
-### 14.3 Inputs Required to Increase Confidence
+### 9.3 Required Inputs for Higher Confidence
 
-1. the exact provider, model, and product surface behind `Hy3`;
-2. a common human time-log definition for all members;
-3. traceability from each story to its acceptance result, CI run, and deployment;
-4. FE1/FE2 time and token telemetry by work package;
-5. rework, defect, and blocked-time logs;
-6. subscription invoices and benefit expiry dates;
-7. cloud, database, storage, email, and push quotations;
-8. an approved shadow labor rate;
-9. a signed SOW baseline.
+1. exact provider/model/product surface behind `Hy3`;
+2. standardized human-effort and cycle-time logs;
+3. FE1/FE2 time and token measurements by work package;
+4. rework and blocked-time records;
+5. subscription invoices and benefit-expiry dates;
+6. cloud, database, storage, email, and notification quotations;
+7. an approved shadow labor rate.
 
-## 15. Recommended Baseline
-
-The following planning baseline applies to the next delivery period and is reforecast after every batch:
+## 10. Recommended Estimation Baseline
 
 | Dimension | Recommended Baseline |
 |---|---|
-| Complete MVP calendar | 9 weeks expected; 8–10 week range |
+| Complete MVP duration | 9 weeks expected; 8–10 week range |
 | Gross team capacity | 787.5 hours expected; 600–1,000 hour range |
-| Remaining backend implementation | 14.6 proxy hours expected; 9.8–19.5 hour range |
-| Remaining backend AI usage | 236.4M tokens expected; 157.6–315.2M range |
+| Remaining backend | 14.6 proxy hours and 236.4M tokens expected |
 | Backend token EAC | 486.3M expected; 407.5–565.1M range |
-| Frontend implementation | 198 hours expected; 143–266 hour range |
+| Frontend effort | 198 hours expected; 143–266 hour range |
 | Frontend AI usage | 690M provisional expected; 498–927M range |
 | Full implementation AI usage | 1.176B expected; 905.5M–1.492B range |
-| Current-scope cash budget | VND 3,277,500 expected |
-| Conservative cash envelope | Up to approximately VND 4.1 million |
+| Development cash budget | VND 3,277,500 expected |
+| Conservative cash ceiling | Approximately VND 4,062,500 |
 | Economic labor | 787.5 hours × approved shadow rate |
-| Reforecast frequency | After every batch and material variance trigger |
 
-This baseline covers the complete delivery system. Fast code generation reduces implementation time, but the project is complete only when accepted stories are integrated, deployed, and verified.
+This baseline is appropriate for the Software Project Management course context. It provides a concise, evidence-based estimate while clearly separating measured data, assumptions, and uncertainty.
