@@ -1,7 +1,6 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import cors from "cors";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./modules/auth/router.js";
 import { profileRouter } from "./modules/profile/router.js";
