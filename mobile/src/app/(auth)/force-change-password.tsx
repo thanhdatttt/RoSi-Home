@@ -19,8 +19,8 @@ export default function ForceChangePassword() {
 
   const rules = [
     { label: "At least 8 characters", ok: next.length >= 8 },
-    { label: "At least 1 uppercase letter", ok: /[A-Z]/.test(next) },
-    { label: "At least 1 number", ok: /\\d/.test(next) },
+    { label: "At least 1 letter", ok: /[a-zA-Z]/.test(next) },
+    { label: "At least 1 number", ok: /\d/.test(next) },
   ];
 
   async function submit() {
