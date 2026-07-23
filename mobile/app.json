@@ -42,7 +42,7 @@
       "expo-web-browser"
     ],
     "extra": {
-      "apiUrl": "http://localhost:3000",
+      "apiUrl": "https://rosi-home.onrender.com",
       "eas": {
         "projectId": "2bd46abb-07f1-49ad-9b4f-d2e51bb2d48d"
       }
