@@ -1,30 +1,73 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { MobileFrame } from "@/components/MobileFrame";
 import { Field } from "@/components/ui/Field";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { ArrowLeft, Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
 import { useAuth } from "@/contexts/auth-context";
+import { apiRequest } from "@/lib/api";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const router = useRouter();
   
-  // Use real user data if available, fallback to mock
-  const [name, setName] = useState(user?.fullName || "Amelia Osei");
-  const [email] = useState(user?.email || "amelia@rosihome.app");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1800);
+  useEffect(() => {
+    async function loadProfile() {
+      if (!token) return;
+      try {
+        const data = await apiRequest<any>('/profile', { method: 'GET', token });
+        if (data) {
+          setName(data.fullName || "");
+          setEmail(data.email || "");
+        }
+      } catch (err) {
+        console.error("Failed to load profile", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfile();
+  }, [token]);
+
+  const handleSave = async () => {
+    if (!token) return;
+    setSaving(true);
+    try {
+      await apiRequest('/profile', {
+        method: 'PATCH',
+        token,
+        body: { fullName: name }
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1800);
+    } catch (err) {
+      console.error("Failed to save profile", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = async () => {
     await logout();
     router.replace("/login");
   };
+
+  if (loading) {
+    return (
+      <MobileFrame>
+        <View className="flex-1 items-center justify-center bg-background">
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      </MobileFrame>
+    );
+  }
 
   return (
     <MobileFrame>
@@ -45,7 +88,7 @@ export default function Profile() {
           <View className="px-6 flex-col items-center pt-2 pb-6">
             <View className="h-20 w-20 rounded-full bg-[#2563eb] items-center justify-center shadow-sm">
               <Text className="text-white text-2xl font-extrabold">
-                {name.substring(0, 2).toUpperCase()}
+                {name ? name.substring(0, 2).toUpperCase() : "US"}
               </Text>
             </View>
             <View className="mt-3 flex-row items-center gap-1.5 bg-[#2563eb]/15 px-2.5 py-1 rounded-full">
@@ -68,13 +111,13 @@ export default function Profile() {
               icon={<Mail size={16} color="gray" />} 
               hint="Contact support to change your login email." 
             />
-            <Field 
-              label="Role" 
-              value={user?.role || "Landlord"} 
-              readOnly 
-              icon={<ShieldCheck size={16} color="gray" />} 
-              hint="Role can't be changed from the profile screen." 
-            />
+            <View>
+              <Text className="text-xs font-medium text-foreground mb-1.5 ml-1">Role</Text>
+              <View className="flex-row items-center gap-2 bg-secondary/50 border border-border px-4 h-12 rounded-2xl">
+                <ShieldCheck size={16} color="#64748b" />
+                <Text className="text-sm font-medium text-foreground">{user?.role || "Landlord"}</Text>
+              </View>
+            </View>
 
             {saved && (
               <View className="rounded-lg bg-[#2563eb]/15 border border-[#2563eb]/30 px-3 py-2 mt-2">
@@ -83,8 +126,8 @@ export default function Profile() {
             )}
 
             <View className="pt-2">
-              <PrimaryButton variant="primary" onPress={handleSave}>
-                Save changes
+              <PrimaryButton variant="primary" onPress={handleSave} disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
               </PrimaryButton>
             </View>
           </View>
