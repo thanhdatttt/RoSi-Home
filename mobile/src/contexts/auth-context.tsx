@@ -31,6 +31,9 @@ export type AuthUser = {
   id: string;
   role: 'Landlord' | 'Tenant';
   mustChangePassword: boolean;
+  fullName?: string;
+  email?: string;
+  phone?: string;
 };
 
 type AuthContextValue = {
@@ -42,6 +45,7 @@ type AuthContextValue = {
   forgotPassword: (email: string) => Promise<void>;
   changePassword: (data: any) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -60,6 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  async function refreshProfile() {
+    if (!token) return;
+    try {
+      const me = await apiRequest<any>('/profile', { token });
+      setUser((prev) => prev ? { ...prev, ...me } : { ...me, mustChangePassword: false });
+    } catch (err) {
+      console.error("Failed to refresh profile", err);
+    }
+  }
+
   // Restore a persisted session on cold start.
   useEffect(() => {
     let cancelled = false;
@@ -67,14 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedToken = await Storage.getItemAsync(TOKEN_KEY);
       if (storedToken && !cancelled) {
         setToken(storedToken);
-        // The API exposes the current user via GET /profile; for the push
-        // test screen we only need the token + a lightweight user object.
         try {
-          const me = await apiRequest<{ id: string; role: AuthUser['role']; mustChangePassword: boolean }>(
-            '/profile',
-            { token: storedToken },
-          );
-          if (!cancelled) setUser(me);
+          const me = await apiRequest<any>('/profile', { token: storedToken });
+          if (!cancelled) setUser({ ...me, mustChangePassword: false });
         } catch {
           // Stored token is no longer valid — drop it.
           await Storage.deleteItemAsync(TOKEN_KEY);
@@ -104,6 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setToken(result.accessToken);
       setUser(result.user);
+      
+      // Fetch full profile in background to populate fullName and email
+      apiRequest<any>('/profile', { token: result.accessToken })
+        .then(me => setUser(prev => prev ? { ...prev, ...me } : prev))
+        .catch(err => console.error("Failed to fetch profile on login", err));
+        
       return result.user;
     } finally {
       setLoading(false);
@@ -170,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, token, loading, login, register, forgotPassword, changePassword, logout }),
+    () => ({ user, token, loading, login, register, forgotPassword, changePassword, logout, refreshProfile }),
     [user, token, loading],
   );
 
