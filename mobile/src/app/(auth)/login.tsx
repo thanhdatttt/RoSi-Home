@@ -5,26 +5,38 @@ import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail, Lock } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { ApiRequestError } from "../../lib/api";
 
 export default function Login() {
   const router = useRouter();
+  const { login, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
-  function submit() {
+  async function submit() {
     if (!email || !password) {
       setErr("The email or password you entered is incorrect.");
       return;
     }
     setErr(null);
-    if (email.toLowerCase().includes("temp")) {
-      router.push("/force-change-password");
-    } else if (email.toLowerCase().includes("tenant")) {
-      router.push("/tenant");
-    } else {
-      router.push("/landlord");
+    try {
+      const user = await login(email.trim(), password);
+      if (user.mustChangePassword) {
+        router.push("/force-change-password");
+      } else if (user.role === 'Tenant') {
+        router.push("/tenant");
+      } else {
+        router.push("/landlord");
+      }
+    } catch (e: any) {
+      if (e instanceof ApiRequestError) {
+        setErr(e.message || "Invalid credentials.");
+      } else {
+        setErr("An unexpected error occurred. Please try again.");
+      }
     }
   }
 
@@ -85,7 +97,7 @@ export default function Login() {
           )}
 
           <PrimaryButton variant="primary" onPress={submit}>
-            Sign in
+            {loading ? "Signing in..." : "Sign in"}
           </PrimaryButton>
 
           <View className="pt-4 flex-row justify-center items-center gap-1">

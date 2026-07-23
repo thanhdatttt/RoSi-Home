@@ -5,26 +5,60 @@ import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail, Lock, User, Building2 } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { ApiRequestError } from "../../lib/api";
 
 export default function Register() {
   const router = useRouter();
+  const { register, loading } = useAuth();
   const [values, setValues] = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   function set(k: keyof typeof values, v: string) {
     setValues((s) => ({ ...s, [k]: v }));
   }
 
-  function submit() {
+  async function submit() {
     const errs: Record<string, string> = {};
     if (!values.name.trim()) errs.name = "Full name is required";
     if (!values.email.trim()) errs.email = "Email is required";
-    else if (!/^\\S+@\\S+\\.\\S+$/.test(values.email)) errs.email = "Enter a valid email";
+    else if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) errs.email = "Enter a valid email";
     if (values.password.length < 8) errs.password = "Minimum 8 characters";
+    if (!/[A-Za-z]/.test(values.password)) errs.password = "Must contain a letter";
+    if (!/[0-9]/.test(values.password)) errs.password = "Must contain a number";
     if (values.confirm !== values.password) errs.confirm = "Passwords don't match";
+    
     setErrors(errs);
+    setApiError(null);
     if (Object.keys(errs).length) return;
-    router.push("/landlord");
+
+    try {
+      const user = await register({
+        fullName: values.name.trim(),
+        email: values.email.trim(),
+        password: values.password,
+        passwordConfirmation: values.confirm,
+      });
+      router.push("/landlord");
+    } catch (e: any) {
+      if (e instanceof ApiRequestError) {
+        if (e.fields) {
+          const fieldErrors: Record<string, string> = {};
+          e.fields.forEach((f) => {
+            if (f.field === 'fullName') fieldErrors.name = f.message;
+            if (f.field === 'email') fieldErrors.email = f.message;
+            if (f.field === 'password') fieldErrors.password = f.message;
+            if (f.field === 'passwordConfirmation') fieldErrors.confirm = f.message;
+          });
+          setErrors(fieldErrors);
+        } else {
+          setApiError(e.message || "Registration failed. Please try again.");
+        }
+      } else {
+        setApiError("An unexpected error occurred. Please try again.");
+      }
+    }
   }
 
   return (
@@ -90,9 +124,15 @@ export default function Register() {
             error={errors.confirm} 
           />
 
+          {apiError && (
+            <View className="rounded-lg bg-destructive/10 px-3 py-2 mb-4">
+              <Text className="text-xs text-destructive">{apiError}</Text>
+            </View>
+          )}
+
           <View className="pt-2">
-            <PrimaryButton variant="primary" onPress={submit}>
-              Create landlord account
+            <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
+              {loading ? "Creating account..." : "Create landlord account"}
             </PrimaryButton>
           </View>
           

@@ -5,12 +5,17 @@ import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { Lock, ShieldAlert, Check } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { ApiRequestError } from "../../lib/api";
 
 export default function ForceChangePassword() {
   const router = useRouter();
+  const { changePassword, loading } = useAuth();
+  const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const rules = [
     { label: "At least 8 characters", ok: next.length >= 8 },
@@ -18,13 +23,39 @@ export default function ForceChangePassword() {
     { label: "At least 1 number", ok: /\\d/.test(next) },
   ];
 
-  function submit() {
+  async function submit() {
     const errs: Record<string, string> = {};
+    if (!current) errs.current = "Enter your temporary password";
     if (!rules.every((r) => r.ok)) errs.next = "Password doesn't meet the policy";
     if (confirm !== next) errs.confirm = "Passwords don't match";
     setErrors(errs);
+    setApiError(null);
     if (Object.keys(errs).length) return;
-    router.push("/tenant");
+
+    try {
+      await changePassword({
+        currentPassword: current,
+        newPassword: next,
+        newPasswordConfirmation: confirm,
+      });
+      router.push("/tenant");
+    } catch (e: any) {
+      if (e instanceof ApiRequestError) {
+        if (e.fields) {
+          const fieldErrors: Record<string, string> = {};
+          e.fields.forEach((f) => {
+            if (f.field === 'currentPassword') fieldErrors.current = f.message;
+            if (f.field === 'newPassword') fieldErrors.next = f.message;
+            if (f.field === 'newPasswordConfirmation') fieldErrors.confirm = f.message;
+          });
+          setErrors(fieldErrors);
+        } else {
+          setApiError(e.message || "Failed to set password.");
+        }
+      } else {
+        setApiError("An unexpected error occurred. Please try again.");
+      }
+    }
   }
 
   return (
@@ -42,6 +73,16 @@ export default function ForceChangePassword() {
         </View>
 
         <ScrollView className="flex-1 px-6 pb-6">
+          <Field 
+            label="Temporary password" 
+            type="password" 
+            secureTextEntry 
+            placeholder="Enter temporary password" 
+            icon={<Lock size={16} color="gray" />} 
+            value={current} 
+            onChangeText={setCurrent} 
+            error={errors.current} 
+          />
           <Field 
             label="New password" 
             type="password" 
@@ -77,8 +118,14 @@ export default function ForceChangePassword() {
             </View>
           </View>
 
-          <PrimaryButton variant="primary" onPress={submit}>
-            Set password & continue
+          {apiError && (
+            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
+              <Text className="text-xs text-destructive">{apiError}</Text>
+            </View>
+          )}
+
+          <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
+            {loading ? "Setting password..." : "Set password & continue"}
           </PrimaryButton>
           <Text className="text-center text-[11px] text-muted-foreground mt-4">
             The temporary password will stop working after this step.

@@ -5,13 +5,17 @@ import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Lock, Check } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { ApiRequestError } from "../../lib/api";
 
 export default function ChangePassword() {
   const router = useRouter();
+  const { changePassword, loading } = useAuth();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const rules = [
     { label: "At least 8 characters", ok: next.length >= 8 },
@@ -20,14 +24,39 @@ export default function ChangePassword() {
     { label: "Different from current password", ok: next.length > 0 && next !== current },
   ];
 
-  function submit() {
+  async function submit() {
     const errs: Record<string, string> = {};
     if (!current) errs.current = "Enter your current password";
     if (!rules.every((r) => r.ok)) errs.next = "Password doesn't meet the policy";
     if (confirm !== next) errs.confirm = "Passwords don't match";
     setErrors(errs);
+    setApiError(null);
     if (Object.keys(errs).length) return;
-    router.push("/profile");
+
+    try {
+      await changePassword({
+        currentPassword: current,
+        newPassword: next,
+        newPasswordConfirmation: confirm,
+      });
+      router.push("/profile");
+    } catch (e: any) {
+      if (e instanceof ApiRequestError) {
+        if (e.fields) {
+          const fieldErrors: Record<string, string> = {};
+          e.fields.forEach((f) => {
+            if (f.field === 'currentPassword') fieldErrors.current = f.message;
+            if (f.field === 'newPassword') fieldErrors.next = f.message;
+            if (f.field === 'newPasswordConfirmation') fieldErrors.confirm = f.message;
+          });
+          setErrors(fieldErrors);
+        } else {
+          setApiError(e.message || "Failed to change password.");
+        }
+      } else {
+        setApiError("An unexpected error occurred. Please try again.");
+      }
+    }
   }
 
   return (
@@ -91,8 +120,14 @@ export default function ChangePassword() {
             </View>
           </View>
 
-          <PrimaryButton variant="primary" onPress={submit}>
-            Update password
+          {apiError && (
+            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
+              <Text className="text-xs text-destructive">{apiError}</Text>
+            </View>
+          )}
+
+          <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
+            {loading ? "Updating..." : "Update password"}
           </PrimaryButton>
         </ScrollView>
       </View>

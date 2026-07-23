@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./modules/auth/router.js";
 import { profileRouter } from "./modules/profile/router.js";
@@ -15,6 +16,7 @@ import { notificationsRouter } from "./modules/notifications/router.js";
 
 export function createApp(): express.Express {
   const app = express();
+  app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 

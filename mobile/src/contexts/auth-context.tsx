@@ -37,7 +37,10 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthUser>;
+  register: (data: any) => Promise<AuthUser>;
+  forgotPassword: (email: string) => Promise<void>;
+  changePassword: (data: any) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -95,6 +98,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
       setToken(result.accessToken);
       setUser(result.user);
+      return result.user;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function register(data: any) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/register', {
+        method: 'POST',
+        body: data,
+      });
+      // After successful registration, log them in immediately
+      return await login(data.email, data.password);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function forgotPassword(email: string) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: { email },
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function changePassword(data: any) {
+    setLoading(true);
+    try {
+      await apiRequest('/auth/change-password', {
+        method: 'POST',
+        token,
+        body: data,
+      });
     } finally {
       setLoading(false);
     }
@@ -121,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, token, loading, login, logout }),
+    () => ({ user, token, loading, login, register, forgotPassword, changePassword, logout }),
     [user, token, loading],
   );
 

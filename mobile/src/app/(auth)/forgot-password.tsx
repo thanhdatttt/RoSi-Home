@@ -5,13 +5,32 @@ import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { ApiRequestError } from "../../lib/api";
 
 export default function Forgot() {
   const router = useRouter();
+  const { forgotPassword, loading } = useAuth();
   const [email, setEmail] = useState("");
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  function submit() {
-    router.push("/reset-sent");
+  async function submit() {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setApiError("Enter a valid email address.");
+      return;
+    }
+    setApiError(null);
+    try {
+      await forgotPassword(trimmedEmail);
+      router.push("/reset-sent");
+    } catch (e: any) {
+      if (e instanceof ApiRequestError) {
+        setApiError(e.message || "Failed to send reset link.");
+      } else {
+        setApiError("An unexpected error occurred. Please try again.");
+      }
+    }
   }
 
   return (
@@ -46,8 +65,13 @@ export default function Forgot() {
             onChangeText={setEmail} 
           />
           <View className="mb-4" />
-          <PrimaryButton variant="primary" onPress={submit}>
-            Send reset link
+          {apiError && (
+            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
+              <Text className="text-xs text-destructive">{apiError}</Text>
+            </View>
+          )}
+          <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
+            {loading ? "Sending..." : "Send reset link"}
           </PrimaryButton>
           
           <View className="flex-row justify-center items-center gap-1 mt-4">
