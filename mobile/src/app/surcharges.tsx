@@ -1,1 +1,1 @@
-export { SurchargesListScreen as default } from '@/features/settings-screens';
+export { SurchargesListScreen as default } from '@/features/settings';

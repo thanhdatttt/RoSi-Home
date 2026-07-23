@@ -1,1 +1,1 @@
-export { UtilityRateScreen as default } from '@/features/settings-screens';
+export { UtilityRateScreen as default } from '@/features/settings';

@@ -1,1 +1,1 @@
-export { ChangePasswordScreen as default } from '@/features/auth-screens';
+export { ChangePasswordScreen as default } from '@/features/auth';

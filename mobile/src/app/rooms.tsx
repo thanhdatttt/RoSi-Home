@@ -1,1 +1,1 @@
-export { RoomsListScreen as default } from '@/features/property-screens';
+export { RoomsListScreen as default } from '@/features/rooms';

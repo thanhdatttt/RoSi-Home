@@ -1,1 +1,1 @@
-export { BulkRoomFormScreen as default } from '@/features/property-screens';
+export { BulkRoomFormScreen as default } from '@/features/rooms';

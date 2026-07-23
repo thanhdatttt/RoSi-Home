@@ -1,1 +1,1 @@
-export { SurchargeFormScreen as default } from '@/features/settings-screens';
+export { SurchargeFormScreen as default } from '@/features/settings';

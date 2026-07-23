@@ -1,1 +1,1 @@
-export { PropertyFormScreen as default } from '@/features/property-screens';
+export { PropertyFormScreen as default } from '@/features/properties';
