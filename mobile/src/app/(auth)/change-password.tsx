@@ -19,8 +19,8 @@ export default function ChangePassword() {
 
   const rules = [
     { label: "At least 8 characters", ok: next.length >= 8 },
-    { label: "One uppercase letter", ok: /[A-Z]/.test(next) },
-    { label: "One number", ok: /\\d/.test(next) },
+    { label: "At least 1 letter", ok: /[a-zA-Z]/.test(next) },
+    { label: "At least 1 number", ok: /\d/.test(next) },
     { label: "Different from current password", ok: next.length > 0 && next !== current },
   ];
 
