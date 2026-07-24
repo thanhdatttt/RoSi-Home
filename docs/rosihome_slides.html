@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>RosiHome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0B1F2B;
+      --ink-soft: #3A4B54;
+      --paper: #FFFFFF;
+      --surface: #EFF8F7;
+      --surface-2: #F4F6F8;
+      --line: #DCE6E6;
+      --teal: #0BA995;
+      --teal-deep: #087A6C;
+      --coral: #FF5A36;
+      --blue: #2F6FED;
+      --amber: #F2A900;
+      --purple: #8B5CF6;
+      --s1: var(--coral);
+      --s2: var(--blue);
+      --s3: var(--teal);
+      --s4: var(--purple);
+      --s5: var(--amber);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0B1F2B;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--ink);
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(1200px 700px at 15% -10%, #123244 0%, transparent 60%),
+        radial-gradient(1000px 700px at 110% 110%, #0e2a36 0%, transparent 55%),
+        #0B1F2B;
+    }
+
+    .viewport {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      background: var(--paper);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      border-radius: 6px;
+      overflow: hidden;
+      transform-origin: center center;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 64px 76px 56px 76px;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* --- decorative qr-dot pattern --- */
+    .qr-dots {
+      position: absolute;
+      display: grid;
+      grid-template-columns: repeat(6, 8px);
+      grid-template-rows: repeat(6, 8px);
+      gap: 4px;
+      opacity: 0.9;
+    }
+
+    .qr-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--teal);
+    }
+
+    .qr-dots span:nth-child(3n) {
+      background: var(--coral);
+    }
+
+    .qr-dots span:nth-child(5n) {
+      background: var(--blue);
+      opacity: .7;
+    }
+
+    /* --- header --- */
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex: none;
+    }
+
+    .eyebrow .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+
+    .eyebrow .rule {
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+
+    h1.title {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: 40px;
+      line-height: 1.12;
+      margin: 0 0 6px 0;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    h1.title .accent {
+      color: var(--teal-deep);
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: var(--ink-soft);
+      margin: 0 0 22px 0;
+      font-weight: 500;
+      max-width: 900px;
+    }
+
+    .content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* --- generic bits --- */
+    .cards {
+      display: grid;
+      gap: 16px;
+    }
+
+    .cards.c2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .cards.c3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .cards.c4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .cards.c5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .card h4 {
+      margin: 0 0 8px 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--teal-deep);
+    }
+
+    .card p,
+    .card li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .card ul li {
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .pill.coral {
+      background: #FFE6DE;
+      color: #C23E1F;
+    }
+
+    .pill.teal {
+      background: #DFF5F1;
+      color: var(--teal-deep);
+    }
+
+    .pill.blue {
+      background: #E3ECFE;
+      color: #1D4FC4;
+    }
+
+    .pill.amber {
+      background: #FDEFCB;
+      color: #8A5E00;
+    }
+
+    .pill.purple {
+      background: #EFE6FE;
+      color: #5B21B6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    th {
+      text-align: left;
+      background: var(--ink);
+      color: #fff;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      padding: 9px 12px;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      color: var(--ink);
+    }
+
+    tr:nth-child(even) td {
+      background: #FAFCFC;
+    }
+
+    td.hl {
+      background: #DFF5F1 !important;
+      font-weight: 700;
+      color: var(--teal-deep);
+    }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .col-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .col-title {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .col-title .sq {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .stat {
+      flex: 1;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .stat .num {
+      font-family: 'Manrope', sans-serif;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--teal);
+    }
+
+    .stat .num.coral {
+      color: #FF8A6B;
+    }
+
+    .stat .num.amber {
+      color: #FFD166;
+    }
+
+    .stat .lbl {
+      font-size: 12.5px;
+      color: #B9CBD2;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flow .step {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 13px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .flow .arrow {
+      color: var(--ink-soft);
+      font-size: 16px;
+    }
+
+    .diagram-box {
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      padding: 12px 16px;
+      background: #fff;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-align: center;
+      color: var(--ink);
+    }
+
+    .diagram-box.accent {
+      border-color: var(--teal);
+      background: var(--surface);
+      color: var(--teal-deep);
+    }
+
+    .diagram-box.dark {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .quote-box {
+      border-left: 4px solid var(--coral);
+      background: var(--surface-2);
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .quote-box b {
+      color: var(--coral);
+    }
+
+    .footer-note {
+      font-size: 11.5px;
+      color: #8C9AA0;
+      margin-top: auto;
+      padding-top: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Title slide */
+    .slide.title-slide {
+      align-items: flex-start;
+      justify-content: center;
+      padding: 0 90px;
+    }
+
+    .title-slide .kicker {
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      font-size: 14px;
+      color: var(--teal-deep);
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .title-slide h1 {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: 72px;
+      line-height: 1;
+      margin: 0 0 18px 0;
+      color: var(--ink);
+    }
+
+    .title-slide h1 span {
+      color: var(--coral);
+    }
+
+    .title-slide .tagline {
+      font-size: 20px;
+      color: var(--ink-soft);
+      max-width: 700px;
+      font-weight: 500;
+      margin-bottom: 38px;
+    }
+
+    .title-meta {
+      display: flex;
+      gap: 34px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .title-meta b {
+      display: block;
+      color: var(--ink);
+      font-size: 14.5px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+    }
+
+    .title-decor {
+      position: absolute;
+      right: 70px;
+      top: 64px;
+    }
+
+    /* Section index list on agenda */
+    .agenda-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .agenda-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .agenda-item .idx {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex: none;
+    }
+
+    .agenda-item .txt b {
+      display: block;
+      font-family: 'Manrope', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .agenda-item .txt span {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    /* nav */
+    .navbar {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 50;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #cfe3e6;
+      font-size: 13px;
+    }
+
+    .navbar button {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .navbar button:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 50;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--coral), var(--teal));
+      transition: width .25s ease;
+    }
+
+    .end-note {
+      font-size: 11px;
+      color: #7d8b91;
+    }
+
+    .small-list {
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .small-list li {
+      margin-bottom: 5px;
+    }
+
+    .compact td,
+    .compact th {
+      padding: 6px 10px;
+      font-size: 12.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="stage">
+    <div class="viewport" id="viewport">
+
+      <!-- 0. TITLE -->
+      <section class="slide title-slide active">
+        <div class="title-decor qr-dots">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="kicker">Quản lý Dự án Phần mềm</div>
+        <h1>Rosi<span>Home</span></h1>
+        <div class="tagline">Nền tảng quản lý nhà trọ số hóa, tinh gọn dành cho chủ nhà tự quản lý</div>
+        <div class="title-meta">
+          <div><b>Ngô Huy Biên</b>Giáo viên hướng dẫn</div>
+          <div><b>RosiHome</b>Đự án startup - 5 thành viên</div>
+          <div><b>8 - 10 tuần</b>Thời gian triển khai dự kiến</div>
+        </div>
+      </section>
+
+      <!-- 1. AGENDA -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--ink)"></span><span class="label">
+            Mục lục
+          </span><span class="rule"></span></div>
+        <h1 class="title"><span class="accent">Nội dung</span></h1>
+        <div class="agenda-list">
+          <div class="agenda-item">
+            <div class="idx" style="background:var(--s1)">1</div>
+            <div class="txt"><b>Project Proposal</b><span>Vì sao làm dự án này · đối thủ · các bên liên quan · tính khả
+                thi</span></div>
+          </div>
+          <div class="agenda-item">
+            <div class="idx" style="background:var(--s2)">2</div>
+            <div class="txt"><b>Vision & Scope · Charter · Product Backlog</b><span>So sánh quy trình nghiệp vụ · RACI ·
+                tiêu chí chấp nhận</span></div>
+          </div>
+          <div class="agenda-item">
+            <div class="idx" style="background:var(--s3)">3</div>
+            <div class="txt"><b>Architecture & Proof of Concept</b><span>Kiến trúc · tech stack · luồng dữ
+                liệu</span></div>
+          </div>
+          <div class="agenda-item">
+            <div class="idx" style="background:var(--s4)">4</div>
+            <div class="txt"><b>Development Method</b><span>Quy trình Kanban · phân công · AI-assisted
+                coding</span></div>
+          </div>
+          <div class="agenda-item">
+            <div class="idx" style="background:var(--s5)">5</div>
+            <div class="txt"><b>Estimation · Planning · Monitoring</b><span>Ước lượng chi phí-thời gian · kế hoạch · SOW
+                · giám sát</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== SECTION 1 ====================== -->
+
+      <!-- 2. Pain points -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">Lý do thực hiện <span class="accent">RosiHome</span>?</h1>
+        <p class="subtitle">Chủ trọ nhỏ (1 - 30 phòng) đang tự làm mọi việc bằng sổ tay, Excel và Zalo - gây mất thời
+          gian và tiền bạc.</p>
+        <div class="content">
+          <div class="table-wrap">
+            <table>
+              <tr>
+                <th style="width:60px">#</th>
+                <th>Nỗi đau (Pain point)</th>
+                <th>Nguyên nhân</th>
+                <th>Hậu quả</th>
+              </tr>
+              <tr>
+                <td class="hl">P1</td>
+                <td>Tính tiền điện nước &amp; thuê phòng thủ công</td>
+                <td>Không có hệ thống tự tính theo chỉ số công tơ</td>
+                <td>Tốn hàng giờ mỗi tháng, dễ sai số</td>
+              </tr>
+              <tr>
+                <td class="hl">P2</td>
+                <td>Không có nơi lưu bằng chứng thanh toán chung</td>
+                <td>Xác nhận qua tin nhắn Zalo hoặc trí nhớ</td>
+                <td>Tranh cãi "đã trả tiền chưa" khi không có bằng chứng</td>
+              </tr>
+              <tr>
+                <td class="hl">P3</td>
+                <td>Không nhớ ngày hết hạn hợp đồng</td>
+                <td>Không có hệ thống nhắc hẹn</td>
+                <td>Bỏ lỡ gia hạn, có thể trống phòng ngoài kế hoạch</td>
+              </tr>
+              <tr>
+                <td class="hl">P4</td>
+                <td>Yêu cầu bảo trì không được lưu trữ</td>
+                <td>Gọi điện/nhắn tin, không có log</td>
+                <td>Sửa chữa trễ, giảm độ hài lòng của khách thuê</td>
+              </tr>
+              <tr>
+                <td class="hl">P5</td>
+                <td>Không có cái nhìn tổng quan về doanh thu</td>
+                <td>Dữ liệu rải rác sổ tay/Excel/chat</td>
+                <td>Không biết chính xác doanh thu</td>
+              </tr>
+            </table>
+          </div>
+          <div class="quote-box">"Chủ trọ nhỏ mất thời gian và tiền bạc mỗi tháng vì việc tính tiền thuê, theo dõi thanh
+            toán, gia hạn hợp đồng và xử lý yêu cầu bảo trì đều được thực hiện thủ công và không chính thức - họ phải tự
+            mình quản lý toàn bộ quy trình bằng các công cụ như máy tính, bảng tính và ứng dụng nhắn tin để liên lạc với
+            khách thuê." <span style="color:var(--ink-soft); font-weight:600;">-> Problem Statement, Project
+              Proposal</span></div>
+        </div>
+      </section>
+
+      <!-- 3. Business case / pitch -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">Business case &amp; <span class="accent">Elevator pitch</span></h1>
+        <div class="content">
+          <div class="two-col">
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--coral)"></span>Câu chuyện của anh Tuấn
+              </div>
+              <div class="card" style="flex:1">
+                <p>Anh Tuấn (48 tuổi, TP.HCM) sở hữu dãy trọ 12 phòng, vừa đi làm vừa quản lý buổi tối. Mỗi tháng anh đi
+                  từng phòng ghi công tơ, dùng máy tính tính tiền thuê và tiền điện nước, nhắn Zalo từng người - rồi
+                  quên mất ai đã trả, nhầm dòng sổ, và một hợp đồng hết hạn âm thầm khiến phòng trống cả tháng.</p>
+              </div>
+              <div class="card" style="background:var(--surface)">
+                <h4>RosiHome thay đổi điều gì?</h4>
+                <p>Hằng tháng chủ trọ chỉ cần nhập chỉ số công tơ - hệ thống tự động tính hóa đơn, tạo mã QR chuyển
+                  khoản, lưu lịch sử thanh toán, nhắc hạn hợp đồng và tổng hợp báo cáo tự động.</p>
+              </div>
+            </div>
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--teal)"></span>Elevator Pitch</div>
+              <div class="quote-box" style="flex:1;">
+                <b>Dành cho</b> chủ trọ tự quản lý sở hữu 1 - 30 phòng,<br>
+                <b>RosiHome</b> là nền tảng quản lý nhà trọ nhẹ, tự động hoá tính tiền thuê, tiền điện nước, thanh toán,
+                nhắc hạn hợp đồng và quản lý bảo trì trong một ứng dụng duy nhất.<br><br>
+                <b>Khác với</b> bảng tính, ứng dụng nhắn tin hay phần mềm quản lý bất động sản doanh nghiệp - quá thủ
+                công hoặc quá phức tạp - <b>RosiHome</b> mang lại giải pháp vừa túi tiền, dễ dùng, đúng thiết kế cho
+                công việc hằng ngày của chủ trọ nhỏ.
+              </div>
+              <div class="card">
+                <h4>Kết quả</h4>
+                <p>Anh Tuấn không còn mất nhiều thời gian cho sổ sách, không mất tiền vì tranh chấp, không mất khách vì
+                  quên gia hạn.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Competitor comparison -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">So sánh với <span class="accent"> các đối thủ cạnh tranh</span></h1>
+        <p class="subtitle">Thị trường có 2 nhóm: công cụ thủ công (Excel, Zalo) và nền tảng chuyên biệt (EasyTro, CL
+          Team) - nhưng đều thiếu trải nghiệm hai chiều landlord - tenant.</p>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Năng lực</th>
+                <th>Excel / Zalo</th>
+                <th>EasyTro</th>
+                <th>Quản lý trọ – CL Team</th>
+                <th>RosiHome</th>
+              </tr>
+              <tr>
+                <td>Tự động tính tiền điện nước</td>
+                <td>✗</td>
+                <td>✓</td>
+                <td>✓</td>
+                <td class="hl">✓</td>
+              </tr>
+              <tr>
+                <td>QR thanh toán điền sẵn số tiền</td>
+                <td>✗</td>
+                <td>✓</td>
+                <td>✗ landlord tự dán QR, tenant gõ tay số tiền</td>
+                <td class="hl">✓</td>
+              </tr>
+              <tr>
+                <td>Nhắc gia hạn hợp đồng</td>
+                <td>✗</td>
+                <td>✓</td>
+                <td>✓</td>
+                <td class="hl">✓</td>
+              </tr>
+              <tr>
+                <td>Ứng dụng riêng cho Tenant</td>
+                <td>✗</td>
+                <td>Hạn chế</td>
+                <td>✗</td>
+                <td class="hl">✓ hai chiều đầy đủ</td>
+              </tr>
+              <tr>
+                <td>Onboarding có hướng dẫn</td>
+                <td>✗</td>
+                <td>Yếu — không hướng dẫn</td>
+                <td>Yếu</td>
+                <td class="hl">✓</td>
+              </tr>
+              <tr>
+                <td>Giá minh bạch trước khi dùng</td>
+                <td>Miễn phí</td>
+                <td>Có gói free</td>
+                <td>✗ trial 1 tháng, ẩn giá sau đó</td>
+                <td class="hl">✓ minh bạch</td>
+              </tr>
+            </table>
+          </div>
+          <div class="card" style="background:var(--ink); color:#fff;">
+            <h4 style="color:var(--teal)">Giá trị khác biệt (USP)</h4>
+            <p style="color:#E7EEF0">Đơn giản · Chi phí thấp &amp; minh bạch (VietQR, không cần cổng thanh toán) · Bản
+              địa hóa cho thị trường Việt Nam · Quy trình end-to-end cho <b style="color:#fff">cả landlord lẫn
+                tenant</b>, thay vì chỉ tối ưu một phía.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Manual tool combination comparison -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">So sánh với <span class="accent"> việc kết hợp công cụ</span> có sẵn</h1>
+        <p class="subtitle">Baseline thật sự của đa số chủ trọ: Excel + máy tính + Zalo + lịch điện thoại + app ngân
+          hàng.</p>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Công việc</th>
+                <th>Kết hợp công cụ thủ công</th>
+                <th>RosiHome</th>
+              </tr>
+              <tr>
+                <td>Ghi chỉ số &amp; tính tiền điện nước</td>
+                <td>Tính tiền từng phòng bằng tay / Excel, dễ gây nhầm lẫn</td>
+                <td class="hl">Tự tính từ chỉ số trước + đơn giá cấu hình</td>
+              </tr>
+              <tr>
+                <td>Gửi hóa đơn</td>
+                <td>Nhắn tay hoặc gửi ảnh qua Zalo, dễ gửi nhầm người</td>
+                <td class="hl">Sinh hóa đơn chuẩn hoá tự động</td>
+              </tr>
+              <tr>
+                <td>Thu tiền</td>
+                <td>Chủ trọ tự đối chiếu ảnh chụp màn hình với sao kê</td>
+                <td class="hl">Mã VietQR gắn theo từng hóa đơn</td>
+              </tr>
+              <tr>
+                <td>Lưu lịch sử thanh toán</td>
+                <td>Rải rác sao kê / chat, dễ mất khi đổi điện thoại</td>
+                <td class="hl">Lưu tập trung, truy cập được bởi cả 2 bên</td>
+              </tr>
+              <tr>
+                <td>Theo dõi hạn hợp đồng</td>
+                <td>Phụ thuộc trí nhớ, không có nhắc chủ động</td>
+                <td class="hl">Tự động theo dõi &amp; thông báo đẩy</td>
+              </tr>
+            </table>
+          </div>
+          <div class="quote-box">Vấn đề không nằm ở từng công cụ riêng lẻ - Excel, Zalo, lịch đều hoạt động tốt. Vấn đề
+            là <b>các công cụ hoạt động rời rạc, không liên kết </b>, khiến chính chủ trọ trở thành "lớp tích hợp"
+            thủ công, dễ gây ra nhầm lẫn, mất mát thông tin. RosiHome loại bỏ chính công việc tích hợp thủ công đó.
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Stakeholder analysis (proposal) -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">Phân tích <span class="accent">các bên liên quan (Stakeholders)</span></h1>
+        <p class="subtitle">Làm rõ tính khả thi bằng cách xác định ai có liên quan đến dự án.</p>
+        <div class="content">
+          <div class="table-wrap">
+            <table>
+              <tr>
+                <th style="width:220px">Các bên liên quan</th>
+                <th>Vai trò</th>
+                <th>Mong muốn</th>
+              </tr>
+              <tr>
+                <td class="hl">Landlords (chủ nhà)</td>
+                <td>Người dùng chính, vận hành hằng ngày</td>
+                <td>Tiết kiệm thời gian, lưu trữ thông tin lâu dài, không mất mát vì quên gia hạn/thanh toán</td>
+              </tr>
+              <tr>
+                <td class="hl">Tenants (người thuê)</td>
+                <td>Người dùng phụ, sử dụng để báo cáo sự cố, xem chi phí và thanh toán</td>
+                <td>Dễ dàng xem chi phí, thanh toán tiện lợi, báo cáo sự cố nhanh chóng</td>
+              </tr>
+              <tr>
+                <td class="hl">Project Manager</td>
+                <td>Điều phối thực thi hằng ngày</td>
+                <td>Giao hàng đúng hạn, phạm vi rõ ràng, phối hợp trơn tru</td>
+              </tr>
+              <tr>
+                <td class="hl">Development Team</td>
+                <td>4 thành viên còn lại</td>
+                <td>Nhiệm vụ rõ ràng, làm chủ kỹ thuật, portfolio mạnh</td>
+              </tr>
+              <tr>
+                <td class="hl">External corp.</td>
+                <td>Cloud, Ngân hàng (VietQR), GitHub</td>
+                <td>Sử dụng nền tảng/chuẩn đáng tin cậy - không cần hợp tác cổng thanh toán</td>
+              </tr>
+              <tr>
+                <td class="hl">University</td>
+                <td>Đơn vị đào tạo</td>
+                <td>Dự án minh chứng tốt cho chương trình đào tạo</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Feasibility + budget/timeline -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s1)"></span><span class="label">1 · Project
+            Proposal</span><span class="rule"></span></div>
+        <h1 class="title">Tính khả thi, <span class="accent">ngân sách &amp; thời gian dự kiến</span></h1>
+        <div class="content">
+          <div class="cards c4">
+            <div class="card">
+              <h4>Vận hành</h4>
+              <p>Khả thi có điều kiện - onboarding phải cực kỳ dễ với người dùng không rành công nghệ.</p>
+            </div>
+            <div class="card">
+              <h4>Kinh tế</h4>
+              <p>Khả thi - không tốn nhân công (SV), chi phí chính là hosting/domain, có gói student.</p>
+            </div>
+            <div class="card">
+              <h4>Lịch trình</h4>
+              <p>Khả thi trong 8 - 10 tuần với 5 thành viên + AI coding assistants.</p>
+            </div>
+            <div class="card">
+              <h4>Pháp lý</h4>
+              <p>Khả thi có ràng buộc - không giữ tiền tenant, không ký số ràng buộc pháp lý.</p>
+            </div>
+          </div>
+          <div class="two-col" style="flex:none;">
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--teal)"></span>Lộ trình 8 - 10 tuần</div>
+              <div class="flow">
+                <div class="step">Planning & Design · 1w</div>
+                <div class="arrow">→</div>
+                <div class="step">Backend · 3w</div>
+                <div class="arrow">→</div>
+                <div class="step">Mobile · 2w</div>
+                <div class="arrow">→</div>
+                <div class="step">Testing & Fix · 1 - 2w</div>
+                <div class="arrow">→</div>
+                <div class="step">Pilot & Demo · 1 - 2w</div>
+              </div>
+            </div>
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--coral)"></span>Ngân sách seed dự kiến
+              </div>
+              <div class="stat-row">
+                <div class="stat">
+                  <div class="num coral">4.25 triệu VND</div>
+                  <div class="lbl">Tổng ngân sách - tool &amp; hạ tầng, không tính công lao động</div>
+                </div>
+                <div class="stat">
+                  <div class="num">~850 nghìn VND</div>
+                  <div class="lbl">Mỗi thành viên tự góp nếu không có tài trợ</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== SECTION 2 ====================== -->
+
+      <!-- 8. Vision domain model -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Mô hình nghiệp vụ: <span class="accent">hiện tại → tương lai</span></h1>
+        <div class="content">
+          <div class="two-col">
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:#B0BEC5"></span>Domain hiện tại (thủ công)</div>
+              <div class="card" style="flex:1;">
+                <ul>
+                  <li>Landlord quản lý mọi thứ thủ công qua sổ tay/Excel</li>
+                  <li>Meter Reading, Invoice, Payment Record rời rạc, không liên kết</li>
+                  <li>Maintenance Request qua điện thoại/Zalo, không có tracking</li>
+                  <li>Thông tin trùng lặp, khó xác minh, dễ mất</li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--teal)"></span>Domain tương lai (RosiHome)
+              </div>
+              <div class="card" style="flex:1; background:var(--surface);">
+                <ul>
+                  <li><b>Property → Room → Lease → Tenant</b> liên kết chặt chẽ</li>
+                  <li><b>Meter Reading → Invoice → Payment</b> tự động, có audit trail</li>
+                  <li><b>Maintenance Request</b> có trạng thái Pending/In Progress/Completed</li>
+                  <li><b>Notification</b> &amp; <b>Dashboard</b> tổng hợp từ mọi entity</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Business process comparison with manual -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Quy trình nghiệp vụ: <span class="accent">thủ công vs RosiHome</span></h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Tiêu chí</th>
+                <th>Kết hợp thủ công (hiện tại)</th>
+                <th>RosiHome (tương lai)</th>
+              </tr>
+              <tr>
+                <td>Số công cụ chạm mỗi kỳ tính tiền</td>
+                <td>≥4: sổ tay, máy tính, Excel, Zalo</td>
+                <td class="hl">1: RosiHome</td>
+              </tr>
+              <tr>
+                <td>Ai tính toán</td>
+                <td>Chủ trọ, tay hoặc Excel, từng phòng</td>
+                <td class="hl">Hệ thống, tự động từ chỉ số &amp; đơn giá lưu sẵn</td>
+              </tr>
+              <tr>
+                <td>Ai chuyển dữ liệu giữa các bước</td>
+                <td>Chủ trọ tự chép/gõ lại giữa các công cụ</td>
+                <td class="hl">Một bản ghi duy nhất chảy xuyên suốt hệ thống</td>
+              </tr>
+              <tr>
+                <td>Trạng thái thanh toán "nằm ở đâu"</td>
+                <td>Trí nhớ + tin nhắn rải rác, tenant không tìm thấy</td>
+                <td class="hl">Bản ghi hóa đơn/thanh toán dùng chung, cả 2 bên thấy</td>
+              </tr>
+              <tr>
+                <td>Độ phức tạp khi tăng số phòng</td>
+                <td>Tăng tuyến tính theo công sức thủ công</td>
+                <td class="hl">Chỉ tăng theo việc nhập chỉ số, còn lại tự động</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Business process comparison with competitors -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Quy trình nghiệp vụ: <span class="accent">RosiHome vs đối thủ</span></h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Bước quy trình</th>
+                <th>EasyTro (Zalo Mini App)</th>
+                <th>CL Team (Android)</th>
+                <th>RosiHome</th>
+              </tr>
+              <tr>
+                <td>Nơi vận hành</td>
+                <td>Bên trong Zalo Mini App</td>
+                <td>App Android riêng biệt</td>
+                <td class="hl">App landlord + app tenant, đa nền tảng</td>
+              </tr>
+              <tr>
+                <td>Gửi hóa đơn cho tenant</td>
+                <td>Tự động, kèm VietQR trong Zalo</td>
+                <td>Sinh trong app nhưng landlord tự chuyển tay</td>
+                <td class="hl">Tự động tạo QR và gửi hóa đơn vào tài khoản tenant</td>
+              </tr>
+              <tr>
+                <td>Xác nhận thanh toán</td>
+                <td>Landlord vẫn tự kiểm tra ngân hàng</td>
+                <td>Hoàn toàn thủ công, landlord tự cập nhật</td>
+                <td class="hl">Đối chiếu theo tham chiếu hóa đơn, 2 bên cùng thấy trạng thái</td>
+              </tr>
+              <tr>
+                <td>Vai trò của Tenant trong hệ thống</td>
+                <td>Hạn chế, không có mini-app riêng</td>
+                <td>Không có, hoàn toàn bên ngoài</td>
+                <td class="hl">Tài khoản đầy đủ: hóa đơn, lịch sử, hợp đồng, bảo trì</td>
+              </tr>
+            </table>
+          </div>
+          <div class="quote-box">RosiHome được định vị giữa hai thái cực: <b>số hóa đầy đủ và hai chiều</b> như các nền
+            tảng lớn, nhưng với <b>số bước &amp; công sức thiết lập tối giản</b> dành riêng cho chủ trọ nhỏ tự quản lý.
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Stakeholder RACI -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Phân tích bên liên quan: <span class="accent">RACI &amp; Ảnh hưởng</span></h1>
+        <p class="subtitle">Trách nhiệm thực hiện (Responsibility) · trách nhiệm giải trình (Accountability) · khả năng
+          tiếp cận (Access) · mức ảnh hưởng (Influence).</p>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Bên liên quan</th>
+                <th>Responsibility</th>
+                <th>Accountability</th>
+                <th>Access</th>
+                <th>Influence</th>
+              </tr>
+              <tr>
+                <td class="hl">Supervisor / Sponsor</td>
+                <td>Duyệt milestone, hướng dẫn học thuật</td>
+                <td>Chịu trách nhiệm điểm số &amp; chuẩn học thuật</td>
+                <td>Toàn bộ deliverables</td>
+                <td>Cao — có thể yêu cầu làm lại</td>
+              </tr>
+              <tr>
+                <td class="hl">Project Manager</td>
+                <td>Điều phối nhóm, theo dõi tiến độ, rủi ro</td>
+                <td>Chịu trách nhiệm giao hàng tổng thể trước Sponsor</td>
+                <td>Toàn bộ artifact nội bộ</td>
+                <td>Cao — quyết định scope/priority hằng ngày</td>
+              </tr>
+              <tr>
+                <td class="hl">Development Team</td>
+                <td>Thiết kế, code, test từng module</td>
+                <td>Từng US được giao; cả nhóm chịu sprint commitment</td>
+                <td>Toàn bộ codebase/backlog/CI</td>
+                <td>Cao — ảnh hưởng cách tiếp cận kỹ thuật</td>
+              </tr>
+              <tr>
+                <td class="hl">Landlords (Product Owner)</td>
+                <td>Cung cấp yêu cầu, xác thực quy trình, UAT</td>
+                <td>Không chịu trách nhiệm giao hàng, chỉ tư vấn</td>
+                <td>Hạn chế — nhận bản tóm tắt, prototype</td>
+                <td>Cao cho quyết định sản phẩm</td>
+              </tr>
+              <tr>
+                <td class="hl">Tenants</td>
+                <td>Đánh giá usability, test luồng thanh toán</td>
+                <td>Không chịu trách nhiệm giao hàng</td>
+                <td>Hạn chế — chỉ phần liên quan tenant</td>
+                <td>Thấp–Trung bình</td>
+              </tr>
+              <tr>
+                <td class="hl">Banking (VietQR)</td>
+                <td>Chuẩn mã QR chuyển khoản</td>
+                <td>Chỉ chịu trách nhiệm về tính đúng của chuẩn</td>
+                <td>Không có quyền truy cập artifact</td>
+                <td>Trung bình — thay đổi chuẩn buộc đổi thiết kế</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. Scope + Backlog structure -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Phạm vi dự án &amp; <span class="accent">cấu trúc Backlog</span></h1>
+        <div class="content">
+          <div class="two-col">
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--teal)"></span>In Scope / Out of Scope
+              </div>
+              <div class="cards c2" style="flex:1;">
+                <div class="card">
+                  <h4>Trong phạm vi (MVP)</h4>
+                  <ul>
+                    <li>Auth &amp; RBAC</li>
+                    <li>Property/Room/Tenant/Lease</li>
+                    <li>Utility &amp; Billing + VietQR</li>
+                    <li>Maintenance, Dashboard, Notification</li>
+                  </ul>
+                </div>
+                <div class="card" style="background:#FFF1EC">
+                  <h4 style="color:var(--coral)">Ngoài phạm vi</h4>
+                  <ul>
+                    <li>AI-powered analytics</li>
+                    <li>Payment gateway thật</li>
+                    <li>Chữ ký điện tử pháp lý</li>
+                    <li>IoT smart-meter, kế toán nâng cao</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-block">
+              <div class="col-title"><span class="sq" style="background:var(--blue)"></span>Backlog: Epic → Feature →
+                User Story</div>
+              <div class="table-wrap" style="flex:1;">
+                <table class="compact">
+                  <tr>
+                    <th>Epic</th>
+                    <th>Feature chính</th>
+                    <th>Số US</th>
+                  </tr>
+                  <tr>
+                    <td>1. Infrastructure &amp; User Mgmt</td>
+                    <td>Auth, Profile, RBAC</td>
+                    <td>~6</td>
+                  </tr>
+                  <tr>
+                    <td>2. Portfolio &amp; Property Setup</td>
+                    <td>Property, Room, Tenant, Utility</td>
+                    <td>~11</td>
+                  </tr>
+                  <tr>
+                    <td>3. Billing &amp; Payment</td>
+                    <td>Meter, Invoice, VietQR, Reminder</td>
+                    <td>~19</td>
+                  </tr>
+                  <tr>
+                    <td>4. Lease &amp; Maintenance</td>
+                    <td>Lease tracking, Maintenance</td>
+                    <td>~9</td>
+                  </tr>
+                  <tr>
+                    <td>5. Portfolio Monitoring</td>
+                    <td>Dashboard, Report</td>
+                    <td>~6</td>
+                  </tr>
+                  <tr>
+                    <td class="hl">Tổng</td>
+                    <td class="hl">51 User Stories</td>
+                    <td class="hl">MVP</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. Acceptance criteria example -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s2)"></span><span class="label">2 · Vision,
+            Scope, Charter & Backlog</span><span class="rule"></span></div>
+        <h1 class="title">Ví dụ <span class="accent">tiêu chí chấp nhận</span></h1>
+        <p class="subtitle">US-UTILITY-01 — Cấu hình đơn giá điện nước (Epic 2, Must Have).</p>
+        <div class="content">
+          <div class="quote-box">"Là một landlord, tôi muốn cấu hình đơn giá điện và nước để phí điện nước hằng tháng
+            phản ánh đúng chính sách giá của tôi."</div>
+          <div class="card" style="flex:1;">
+            <h4>Acceptance Criteria</h4>
+            <ul class="small-list">
+              <li>Landlord cấu hình đúng 1 đơn giá điện/kWh cho property mình sở hữu.</li>
+              <li>Với nước, chọn đúng 1 phương thức: theo m³ hoặc mức cố định/người/tháng.</li>
+              <li>Mọi đơn giá phải là số tiền hợp lệ, không âm, có đơn vị/phương thức rõ ràng.</li>
+              <li>Landlord không thể tạo/sửa đơn giá cho property của landlord khác.</li>
+              <li>Cấu hình đã lưu phải xác định rõ property và thời điểm hiệu lực.</li>
+              <li>Nếu chưa có đơn giá riêng, hệ thống chỉ dùng giá mặc định có ghi nguồn, khu vực và ngày hiệu lực.</li>
+            </ul>
+          </div>
+          <div class="footer-note">Toàn bộ 51 User Story đều có bộ tiêu chí chấp nhận tương tự — cụ thể, có thể kiểm
+            thử, ràng buộc theo quyền sở hữu dữ liệu.</div>
+        </div>
+      </section>
+
+      <!-- ====================== SECTION 3 ====================== -->
+
+      <!-- 14. Architecture style -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s3)"></span><span class="label">3 · Architecture
+            & Proof of Concept</span><span class="rule"></span></div>
+        <h1 class="title">Kiến trúc <span class="accent">3 lớp — monolith</span></h1>
+        <div class="content">
+          <div class="cards c3">
+            <div class="diagram-box">Presentation<br><span style="font-weight:500; font-size:12px;">Web (React) + Mobile
+                (React Native)</span></div>
+            <div class="diagram-box accent">Application / API<br><span style="font-weight:500; font-size:12px;">1 REST
+                API — Node.js/Express</span></div>
+            <div class="diagram-box dark">Data Layer<br><span style="font-weight:500; font-size:12px;">PostgreSQL +
+                Cloud Storage</span></div>
+          </div>
+          <div class="cards c2">
+            <div class="card">
+              <h4>Vì sao Monolith, không Microservices?</h4>
+              <p>Microservices chỉ có giá trị khi cần scale độc lập &amp; nhiều team sở hữu riêng — không áp dụng cho
+                đội 5 người trong 8–10 tuần. Monolith dễ build, test, deploy, debug hơn nhiều.</p>
+            </div>
+            <div class="card">
+              <h4>Vì sao REST, không GraphQL?</h4>
+              <p>REST đơn giản để học và để AI coding tool scaffold chính xác — đủ dùng cho quy mô ứng dụng này; GraphQL
+                giải quyết vấn đề RosiHome không gặp phải.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15. Tech stack -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s3)"></span><span class="label">3 · Architecture
+            & Proof of Concept</span><span class="rule"></span></div>
+        <h1 class="title">Technology <span class="accent">Stack</span></h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Lớp</th>
+                <th>Lựa chọn</th>
+                <th>Lý do</th>
+              </tr>
+              <tr>
+                <td>Backend</td>
+                <td>Node.js + Express</td>
+                <td>Cùng ngôn ngữ với FE/Mobile — AI scaffold chính xác</td>
+              </tr>
+              <tr>
+                <td>Web / Mobile</td>
+                <td>React / React Native</td>
+                <td>Phổ biến nhất, dùng chung kiến thức &amp; code</td>
+              </tr>
+              <tr>
+                <td>Database / ORM</td>
+                <td>PostgreSQL + Drizzle</td>
+                <td>Đơn giản, tin cậy, AI tạo schema/query chính xác</td>
+              </tr>
+              <tr>
+                <td>Auth</td>
+                <td>JWT (Passport.js/Auth.js)</td>
+                <td>Tránh tự xây bảo mật từ đầu</td>
+              </tr>
+              <tr>
+                <td>File / DB hosting</td>
+                <td>Supabase (Storage + Postgres)</td>
+                <td>Tích hợp tốt với Drizzle, giảm setup backend</td>
+              </tr>
+              <tr>
+                <td>Payment</td>
+                <td>VietQR standard</td>
+                <td>Sinh mã QR chuyển khoản — RosiHome không giữ tiền</td>
+              </tr>
+              <tr>
+                <td>CI/CD · Hosting</td>
+                <td>GitHub Actions · Render/Railway/Vercel</td>
+                <td>Miễn phí, một sinh viên có thể tự vận hành</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16. System diagram -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s3)"></span><span class="label">3 · Architecture
+            & Proof of Concept</span><span class="rule"></span></div>
+        <h1 class="title">Sơ đồ <span class="accent">luồng dữ liệu</span></h1>
+        <div class="content" style="justify-content:center;">
+          <div class="cards c2" style="align-items:center;">
+            <div class="diagram-box">Web App (React)</div>
+            <div class="diagram-box">Mobile App (React Native)</div>
+          </div>
+          <div style="text-align:center; font-size:22px; color:var(--ink-soft);">↓ &nbsp;&nbsp; HTTP / REST &nbsp;&nbsp;
+            ↓</div>
+          <div class="diagram-box accent" style="max-width:420px; margin:0 auto;">Backend API (Node.js / Express)</div>
+          <div style="text-align:center; font-size:22px; color:var(--ink-soft);">↓</div>
+          <div class="cards c3">
+            <div class="diagram-box dark">PostgreSQL</div>
+            <div class="diagram-box dark">Cloud Storage<br><span style="font-weight:500;font-size:11.5px;">photos,
+                proofs</span></div>
+            <div class="diagram-box dark">VietQR Generator</div>
+          </div>
+          <div class="quote-box" style="margin-top:8px;">Đường nét đứt quan trọng nhất: <b>tiền chuyển thẳng ngân
+              hàng-tới-ngân hàng</b> giữa tenant và landlord — RosiHome chỉ sinh mã QR và lưu ảnh chứng minh, <b>không
+              giữ tiền của ai</b>.</div>
+        </div>
+      </section>
+
+      <!-- ====================== SECTION 4 ====================== -->
+
+      <!-- 17. Kanban flow -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s4)"></span><span class="label">4 · Development
+            Method</span><span class="rule"></span></div>
+        <h1 class="title">Quy trình phát triển: <span class="accent">Kanban</span></h1>
+        <p class="subtitle">Kanban phù hợp vì công việc AI-assisted hoàn thành ở nhịp độ không đều — không cần chờ ranh
+          giới sprint cố định.</p>
+        <div class="content">
+          <div class="flow" style="justify-content:center;">
+            <div class="step">Backlog</div>
+            <div class="arrow">→</div>
+            <div class="step">Ready</div>
+            <div class="arrow">→</div>
+            <div class="step">AI Implementing</div>
+            <div class="arrow">→</div>
+            <div class="step">Human Review</div>
+            <div class="arrow">→</div>
+            <div class="step">Testing</div>
+            <div class="arrow">→</div>
+            <div class="step">Integration</div>
+            <div class="arrow">→</div>
+            <div class="step">Deployment</div>
+            <div class="arrow">→</div>
+            <div class="step" style="background:var(--surface); color:var(--teal-deep); border-color:var(--teal)">
+              Accepted Done</div>
+          </div>
+          <div class="cards c3">
+            <div class="card">
+              <h4>WIP Limit</h4>
+              <p>Tối đa 5 story implementation đồng thời — 1 story đang làm / thành viên, kể cả khi có 13 phiên agent lý
+                thuyết.</p>
+            </div>
+            <div class="card">
+              <h4>Definition of Ready</h4>
+              <p>Có tiêu chí chấp nhận cụ thể, dependency đã xác định, quyết định sản phẩm liên quan đã chốt.</p>
+            </div>
+            <div class="card">
+              <h4>Definition of Done</h4>
+              <p>Test pass, review bởi người, không có defect severity cao, đã deploy &amp; smoke test thành công.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 18. Team assignment -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s4)"></span><span class="label">4 · Development
+            Method</span><span class="rule"></span></div>
+        <h1 class="title">Phân công <span class="accent">đội ngũ</span></h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Dev</th>
+                <th>Batch 0 — Hạ tầng phụ trách</th>
+              </tr>
+              <tr>
+                <td>Dev 1</td>
+                <td>Backend &amp; API foundation (Node/Express, health endpoint)</td>
+              </tr>
+              <tr>
+                <td>Dev 2</td>
+                <td>Database &amp; persistence (PostgreSQL, Drizzle, audit/soft-delete)</td>
+              </tr>
+              <tr>
+                <td>Dev 3</td>
+                <td>Mobile app foundation (React Native, navigation, API client)</td>
+              </tr>
+              <tr>
+                <td>Dev 4</td>
+                <td>Security &amp; external service (JWT/RBAC, email/push/storage adapters)</td>
+              </tr>
+              <tr>
+                <td>Dev 5</td>
+                <td>Quality &amp; delivery foundation (test runner, CI, dev deploy, PDF interface)</td>
+              </tr>
+            </table>
+          </div>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">51</div>
+              <div class="lbl">User stories trong backlog</div>
+            </div>
+            <div class="stat">
+              <div class="num coral">11 / 10×4</div>
+              <div class="lbl">Phân bổ cân bằng cho 5 dev (Dev1: 11, còn lại 10 mỗi người)</div>
+            </div>
+            <div class="stat">
+              <div class="num amber">16</div>
+              <div class="lbl">Batch phụ thuộc tuần tự, mỗi batch chỉ bắt đầu khi batch trước Accepted Done</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19. AI-assisted development -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s4)"></span><span class="label">4 · Development
+            Method</span><span class="rule"></span></div>
+        <h1 class="title">Phát triển <span class="accent">với sự trợ giúp của AI</span></h1>
+        <div class="content">
+          <div class="cards c3">
+            <div class="card">
+              <h4>Công cụ sử dụng</h4>
+              <ul>
+                <li>Claude Code / Claude Pro (chia sẻ 5 người)</li>
+                <li>ChatGPT Plus + Codex desktop/CLI</li>
+                <li>Google AI Pro + Antigravity (Gemini)</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Giả thuyết vận hành</h4>
+              <p>Đội kỳ vọng AI tạo ra khoảng <b>90% code</b> — đây là <b>giả thuyết chưa kiểm chứng</b>, con người vẫn
+                chịu trách nhiệm về requirement, kiến trúc, review, bảo mật, tích hợp.</p>
+            </div>
+            <div class="card">
+              <h4>Concurrency theo giai đoạn</h4>
+              <ul>
+                <li>C1: tối đa 5 phiên song song</li>
+                <li>C2: tối đa 8 phiên, kiểm tra throughput</li>
+                <li>C3: tối đa 13 phiên (giới hạn lý thuyết)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="quote-box">Mỗi agent làm việc trên nhánh/worktree cô lập. Mọi thành viên phải review và hiểu code
+            trước khi merge — <b>AI soạn thảo, con người phê duyệt</b>.</div>
+        </div>
+      </section>
+
+      <!-- ====================== SECTION 5 ====================== -->
+
+      <!-- 20. Estimation methodology -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Phương pháp <span class="accent">ước lượng</span></h1>
+        <p class="subtitle">Empirical, flow-based forecasting bằng Kanban — dữ liệu thực tế thay cho giả định ban đầu.
+        </p>
+        <div class="content">
+          <div class="cards c2">
+            <div class="card">
+              <h4>Nguyên tắc cốt lõi</h4>
+              <ul>
+                <li>Bằng chứng trước khi ngoại suy — proposal ban đầu chỉ là giả thuyết</li>
+                <li>Chỉ tính story "Accepted Done" là throughput thật</li>
+                <li>Elapsed time ≠ AI active time ≠ Human effort</li>
+                <li>Dự báo là khoảng (P50/P80/P90), không phải một mốc cố định</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Phân lớp công việc (A–E)</h4>
+              <ul>
+                <li>A: CRUD/form đơn giản</li>
+                <li>B: Quy tắc nghiệp vụ (tính tiền, chuyển trạng thái)</li>
+                <li>C: Tích hợp nhiều lớp (UI+API+DB)</li>
+                <li>D: Tích hợp bên ngoài (VietQR, email, CI/CD)</li>
+                <li>E: Nền tảng/rủi ro cao (auth, schema, bảo mật)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="quote-box">Pilot 5 ngày làm việc để đo throughput thật trước khi áp dụng cho toàn bộ backlog —
+            tránh nhầm lẫn giữa "khả năng lý thuyết của công cụ" với "năng lực giao hàng đã chứng minh".</div>
+        </div>
+      </section>
+
+      <!-- 21. Cost-time-resources results -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Kết quả ước lượng <span class="accent">Cost–Time–Resources</span></h1>
+        <div class="content">
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">9 tuần</div>
+              <div class="lbl">Thời gian dự kiến (khoảng 8–10 tuần)</div>
+            </div>
+            <div class="stat">
+              <div class="num coral">787.5h</div>
+              <div class="lbl">Tổng năng lực đội (khoảng 600–1.000h)</div>
+            </div>
+            <div class="stat">
+              <div class="num amber">1.176 tỷ token</div>
+              <div class="lbl">Tổng token AI dự kiến toàn dự án</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Hạng mục</th>
+                <th>Ước lượng kỳ vọng</th>
+                <th>Khoảng ước lượng</th>
+              </tr>
+              <tr>
+                <td>Thời gian còn lại backend</td>
+                <td>14.6 giờ proxy</td>
+                <td>9.8 – 19.5 giờ</td>
+              </tr>
+              <tr>
+                <td>Nỗ lực frontend</td>
+                <td>198 giờ</td>
+                <td>143 – 266 giờ</td>
+              </tr>
+              <tr>
+                <td>Ngân sách phát triển (cash)</td>
+                <td>3.277.500 đ</td>
+                <td>950.000 – 4.062.500 đ</td>
+              </tr>
+            </table>
+          </div>
+          <div class="footer-note">Phạm vi: 51 user story backend + 19 gói công việc frontend · Phương pháp: dùng tốc độ
+            thực đo được, hiệu chỉnh bằng dữ liệu pilot AI-assisted.</div>
+        </div>
+      </section>
+
+      <!-- 22. Budget breakdown -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Chi tiết <span class="accent">ngân sách</span> (4.250.000 đ)</h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Hạng mục</th>
+                <th>Chi phí</th>
+                <th>%</th>
+                <th>Mục đích</th>
+              </tr>
+              <tr>
+                <td>Development Tools</td>
+                <td>1.600.000 đ</td>
+                <td class="hl">38%</td>
+                <td>Claude Code/Pro — công cụ nhân bội cho cả 5 người</td>
+              </tr>
+              <tr>
+                <td>AI Agent Infra (LLM API)</td>
+                <td>900.000 đ</td>
+                <td class="hl">21%</td>
+                <td>AI trong sản phẩm: đọc ảnh công tơ, báo cáo hằng tuần</td>
+              </tr>
+              <tr>
+                <td>Cloud Infrastructure</td>
+                <td>800.000 đ</td>
+                <td class="hl">19%</td>
+                <td>Hosting production-grade, tránh timeout</td>
+              </tr>
+              <tr>
+                <td>Domain &amp; Security</td>
+                <td>450.000 đ</td>
+                <td class="hl">11%</td>
+                <td>Domain + SSL — xây dựng niềm tin người dùng</td>
+              </tr>
+              <tr>
+                <td>System Contingency</td>
+                <td>500.000 đ</td>
+                <td class="hl">12%</td>
+                <td>Dự phòng vượt hạn mức API khi test nhiều</td>
+              </tr>
+            </table>
+          </div>
+          <div class="quote-box">Không tính chi phí nhân công — công sức sinh viên là đóng góp học tập, không phải lao
+            động trả phí. Mọi con số trên là <b>tiền mặt thật sự</b> đội sẽ chi.</div>
+        </div>
+      </section>
+
+      <!-- 23. Project plan / milestones -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Kế hoạch dự án &amp; <span class="accent">các mốc chính</span></h1>
+        <div class="content">
+          <div class="table-wrap">
+            <table class="compact">
+              <tr>
+                <th>Milestone</th>
+                <th>Kết quả kỳ vọng</th>
+              </tr>
+              <tr>
+                <td>Project Charter Approved</td>
+                <td>Dự án được chính thức phê duyệt</td>
+              </tr>
+              <tr>
+                <td>Requirements &amp; Design Complete</td>
+                <td>Yêu cầu chức năng &amp; kỹ thuật hoàn tất</td>
+              </tr>
+              <tr>
+                <td>MVP Development Complete</td>
+                <td>Các tính năng lõi được triển khai</td>
+              </tr>
+              <tr>
+                <td>System Testing Complete</td>
+                <td>Kiểm thử chức năng &amp; usability hoàn tất</td>
+              </tr>
+              <tr>
+                <td>User Acceptance Testing</td>
+                <td>Người dùng pilot xác thực hệ thống</td>
+              </tr>
+              <tr>
+                <td>Final Deployment &amp; Demonstration</td>
+                <td>Trình bày cuối kỳ &amp; nộp dự án</td>
+              </tr>
+            </table>
+          </div>
+          <div class="card">
+            <h4>Mô hình giao hàng</h4>
+            <p>Kanban theo dependency batch — user story là đơn vị triển khai và nghiệm thu, không phải sprint velocity
+              cố định 2 tuần.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 24. Statement of Work -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Ý nghĩa của <span class="accent">Statement of Work</span></h1>
+        <p class="subtitle">SOW là văn bản thống nhất giữa các bên về "sẽ giao gì, khi nào, và ai chịu trách nhiệm".</p>
+        <div class="content">
+          <div class="cards c3">
+            <div class="card">
+              <h4>Deliverables &amp; Acceptance</h4>
+              <p>Xác định rõ sản phẩm bàn giao và tiêu chí để coi là hoàn thành/được nghiệm thu.</p>
+            </div>
+            <div class="card">
+              <h4>Schedule &amp; Milestones</h4>
+              <p>Ràng buộc thời gian cụ thể, gắn với các mốc đã thống nhất với sponsor.</p>
+            </div>
+            <div class="card">
+              <h4>Roles &amp; Responsibilities</h4>
+              <p>Ai làm gì — tránh chồng chéo hoặc bỏ sót trách nhiệm giữa các thành viên.</p>
+            </div>
+            <div class="card">
+              <h4>Resource &amp; Budget Baseline</h4>
+              <p>Chốt ngân sách và nguồn lực nền để đo lường độ lệch về sau.</p>
+            </div>
+            <div class="card">
+              <h4>Assumptions &amp; Constraints</h4>
+              <p>Ghi nhận điều kiện tiên quyết — nếu thay đổi, cần xét lại phạm vi.</p>
+            </div>
+            <div class="card">
+              <h4>Change Control</h4>
+              <p>Quy trình chính thức khi cần điều chỉnh phạm vi, ngân sách hoặc lịch trình.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 25. Monitoring & control -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
+            Planning & Monitoring</span><span class="rule"></span></div>
+        <h1 class="title">Giám sát &amp; <span class="accent">kiểm soát dự án</span></h1>
+        <div class="content">
+          <div class="col-title"><span class="sq" style="background:var(--teal)"></span>Chu kỳ kiểm soát hằng tuần</div>
+          <div class="flow" style="justify-content:center;">
+            <div class="step">Cập nhật số liệu thực tế</div>
+            <div class="arrow">→</div>
+            <div class="step">So sánh với dự báo</div>
+            <div class="arrow">→</div>
+            <div class="step">Xác định nút thắt lớn nhất</div>
+            <div class="arrow">→</div>
+            <div class="step">Cập nhật dự báo</div>
+            <div class="arrow">→</div>
+            <div class="step" style="background:var(--surface); color:var(--teal-deep); border-color:var(--teal)">Change
+              Request nếu vượt ngưỡng</div>
+          </div>
+          <div class="cards c4">
+            <div class="card">
+              <h4>Identity &amp; Scope</h4>
+              <p>Story ID, feature, workstream, class, tiêu chí chấp nhận</p>
+            </div>
+            <div class="card">
+              <h4>Time &amp; AI usage</h4>
+              <p>Ready/start/deploy time, token, chi phí AI</p>
+            </div>
+            <div class="card">
+              <h4>Flow &amp; Quality</h4>
+              <p>Cycle time, blocked time, acceptance yield, rework</p>
+            </div>
+            <div class="card">
+              <h4>Delivery</h4>
+              <p>PR/merge, CI attempts, deployment result, rollback</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 26. Conclusion -->
+      <section class="slide">
+        <div class="eyebrow"><span class="dot" style="background:var(--ink)"></span><span class="label">Tổng
+            kết</span><span class="rule"></span></div>
+        <h1 class="title">RosiHome: <span class="accent">một nền tảng, đủ ba yếu tố</span></h1>
+        <div class="content">
+          <div class="cards c3">
+            <div class="card" style="background:var(--surface)">
+              <h4>Đủ nhỏ để hoàn thành</h4>
+              <p>Phạm vi MVP rõ ràng trong 8–10 tuần, 5 thành viên, ngân sách 4,25 triệu đồng.</p>
+            </div>
+            <div class="card" style="background:var(--surface)">
+              <h4>Đủ thực tế để có người dùng</h4>
+              <p>Pain points &amp; thị trường đã được xác thực bởi các sản phẩm hiện có (EasyTro, CL Team).</p>
+            </div>
+            <div class="card" style="background:var(--surface)">
+              <h4>Đủ lớn để phát triển tiếp</h4>
+              <p>Grand Vision: AI Landlord Assistant &amp; Rental Benchmark Data sau MVP.</p>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top:auto;">Cảm ơn thầy/cô đã lắng nghe. Nhóm sẵn sàng cho phần hỏi đáp.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="navbar">
+    <button id="prevBtn">‹</button>
+    <span id="counter">1 / 27</span>
+    <button id="nextBtn">›</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let idx = 0;
+    const counter = document.getElementById('counter');
+    const progressFill = document.getElementById('progressFill');
+
+    function render() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+      counter.textContent = (idx + 1) + ' / ' + total;
+      progressFill.style.width = ((idx + 1) / total * 100) + '%';
+    }
+    function go(delta) {
+      idx = Math.min(total - 1, Math.max(0, idx + delta));
+      render();
+    }
+    document.getElementById('prevBtn').addEventListener('click', () => go(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => go(1));
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { go(1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(-1); }
+    });
+
+    function scaleStage() {
+      const vp = document.getElementById('viewport');
+      const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720) * 0.96;
+      vp.style.transform = 'scale(' + scale + ')';
+    }
+    window.addEventListener('resize', scaleStage);
+    scaleStage();
+    render();
+  </script>
+</body>
+
+</html>
