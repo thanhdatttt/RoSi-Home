@@ -18,7 +18,7 @@ const qrCells = Array.from({ length: 121 }, (_, index) => {
 });
 
 export function VietQrScreen() {
-  const { invoiceId = 'i1' } = useLocalSearchParams<{ invoiceId?: string }>();
+  const { invoiceId } = useLocalSearchParams<{ invoiceId?: string }>();
   const { invoices } = useInvoices();
   const { rooms } = useRooms();
   const invoice = invoices.find((item) => item.id === invoiceId);

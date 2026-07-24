@@ -4,10 +4,12 @@ import { Lease } from '../models/lease';
 
 export interface LeasesRepository {
   leases: Lease[];
-  createLease(value: Omit<Lease, 'id' | 'status'>): string;
+  loading: boolean;
+  error: string | null;
+  createLease(value: Omit<Lease, 'id' | 'status'>): Promise<string>;
 }
 
 export function useLeasesRepository(): LeasesRepository {
-  const { leases, addLease } = useMockAppData();
-  return { leases, createLease: addLease };
+  const { leases, loading, error, addLease } = useMockAppData();
+  return { leases, loading, error, createLease: addLease };
 }

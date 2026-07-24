@@ -4,10 +4,28 @@ import { Property } from '../models/property';
 
 export interface PropertiesRepository {
   properties: Property[];
-  createProperty(value: Omit<Property, 'id'>): void;
+  loading: boolean;
+  error: string | null;
+  refresh(): Promise<void>;
+  createProperty(value: Omit<Property, 'id'>): Promise<Property>;
+  updateProperty(value: Property): Promise<Property>;
 }
 
 export function usePropertiesRepository(): PropertiesRepository {
-  const { properties, addProperty } = useMockAppData();
-  return { properties, createProperty: addProperty };
+  const {
+    properties,
+    loading,
+    error,
+    refresh,
+    addProperty,
+    updateProperty,
+  } = useMockAppData();
+  return {
+    properties,
+    loading,
+    error,
+    refresh,
+    createProperty: addProperty,
+    updateProperty,
+  };
 }

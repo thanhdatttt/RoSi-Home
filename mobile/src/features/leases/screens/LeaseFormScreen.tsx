@@ -6,10 +6,13 @@ import { Button, Field, Notice, Screen, Success, Title } from '@/ui';
 import { useLeases } from '../hooks/use-leases';
 
 export function LeaseFormScreen() {
-  const { roomId = 'r2' } = useLocalSearchParams<{ roomId?: string }>();
+  const { roomId } = useLocalSearchParams<{ roomId?: string }>();
   const { rooms } = useRooms();
   const { createLease } = useLeases();
-  const room = rooms.find((item) => item.id === roomId) ?? rooms[0];
+  const room =
+    rooms.find((item) => item.id === roomId) ??
+    rooms.find((item) => item.status === 'Trống') ??
+    rooms[0];
   const [tenantName, setTenantName] = useState('');
   const [phone, setPhone] = useState('');
   const [identityNumber, setIdentityNumber] = useState('');
@@ -19,41 +22,62 @@ export function LeaseFormScreen() {
   const [rent, setRent] = useState(String(room?.rent ?? 0));
   const [deposit, setDeposit] = useState(String((room?.rent ?? 0) * 2));
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingError, setSavingError] = useState<string | null>(null);
   const invalid =
     !room ||
     !tenantName ||
     !phone ||
     !identityNumber ||
+    !email ||
     !startDate ||
     !endDate ||
     Number(rent) < 0 ||
     Number(deposit) < 0;
 
-  const submit = () => {
+  const submit = async () => {
     if (!room) return;
-    const id = createLease({
-      roomId: room.id,
-      tenantName,
-      phone,
-      identityNumber,
-      email,
-      startDate,
-      endDate,
-      rent: Number(rent),
-      deposit: Number(deposit),
-    });
-    setSaved(true);
-    setTimeout(() => router.replace({ pathname: '/lease-detail', params: { leaseId: id } }), 350);
+    setSaving(true);
+    setSavingError(null);
+    try {
+      const id = await createLease({
+        roomId: room.id,
+        tenantName,
+        phone,
+        identityNumber,
+        email,
+        startDate,
+        endDate,
+        rent: Number(rent),
+        deposit: Number(deposit),
+      });
+      setSaved(true);
+      router.replace({
+        pathname: '/lease-detail',
+        params: { leaseId: id },
+      });
+    } catch (requestError) {
+      setSavingError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Không thể tạo hợp đồng.',
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Screen>
       <Title subtitle={room ? `Phòng ${room.name}` : 'Chọn phòng còn trống'}>Tạo hợp đồng</Title>
       <Notice
-        title="CONCEPT · DỮ LIỆU MẪU"
-        message="Chưa tạo tài khoản người thuê hoặc hợp đồng điện tử."
+        title="HỢP ĐỒNG"
+        message="Khi dùng backend, người thuê được tạo hoặc cấp tài khoản trong cùng giao dịch."
       />
-      {saved ? <Success message="Đã tạo hợp đồng mẫu" /> : null}
+      {saved ? <Success message="Đã tạo hợp đồng" /> : null}
+      {savingError ? (
+        <Notice title="Không thể tạo hợp đồng" message={savingError} />
+      ) : null}
       <Field label="Họ tên người thuê *" value={tenantName} onChangeText={setTenantName} />
       <Field label="Số điện thoại *" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
       <Field label="CCCD *" value={identityNumber} onChangeText={setIdentityNumber} keyboardType="numeric" />
@@ -74,7 +98,11 @@ export function LeaseFormScreen() {
         keyboardType="numeric"
         error={Number(deposit) < 0 ? 'Số tiền không được âm' : undefined}
       />
-      <Button label="Tạo hợp đồng" disabled={invalid} onPress={submit} />
+      <Button
+        label={saving ? 'Đang tạo hợp đồng…' : 'Tạo hợp đồng'}
+        disabled={invalid || saving}
+        onPress={submit}
+      />
     </Screen>
   );
 }

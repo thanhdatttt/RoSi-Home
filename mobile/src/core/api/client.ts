@@ -5,10 +5,11 @@ import { ApiError } from './types';
 export type ApiRequest = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   path: string;
-  body?: unknown;
+  body?: unknown | FormData;
   headers?: Record<string, string>;
   authenticated?: boolean;
   timeoutMs?: number;
+  responseType?: 'json' | 'text' | 'arrayBuffer';
 };
 
 export interface ApiClient {
@@ -16,10 +17,10 @@ export interface ApiClient {
 }
 
 function errorKind(status: number) {
+  if (status === 400 || status === 422) return 'validation';
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
   if (status === 404) return 'not-found';
-  if (status === 422) return 'validation';
   if (status >= 500) return 'server';
   return 'unknown';
 }
@@ -37,7 +38,19 @@ export class FetchApiClient implements ApiClient {
     headers,
     authenticated = true,
     timeoutMs = API_TIMEOUT_MS,
+    responseType = 'json',
   }: ApiRequest): Promise<T> {
+    return this.requestOnce<T>(
+      { method, path, body, headers, authenticated, timeoutMs, responseType },
+      true,
+    );
+  }
+
+  private async requestOnce<T>(
+    request: Required<Pick<ApiRequest, 'method' | 'path' | 'authenticated' | 'timeoutMs' | 'responseType'>> &
+      Pick<ApiRequest, 'body' | 'headers'>,
+    allowRefresh: boolean,
+  ): Promise<T> {
     if (!this.baseUrl) {
       throw new ApiError(
         'EXPO_PUBLIC_API_BASE_URL chưa được cấu hình.',
@@ -46,29 +59,56 @@ export class FetchApiClient implements ApiClient {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const timeout = setTimeout(() => controller.abort(), request.timeoutMs);
     try {
-      const accessToken = authenticated ? await this.tokenProvider.getAccessToken() : null;
-      const response = await fetch(`${this.baseUrl}${path}`, {
-        method,
+      const accessToken = request.authenticated
+        ? await this.tokenProvider.getAccessToken()
+        : null;
+      const isFormData =
+        typeof FormData !== 'undefined' && request.body instanceof FormData;
+      const requestBody: BodyInit | undefined =
+        request.body === undefined
+          ? undefined
+          : isFormData
+            ? (request.body as FormData)
+            : JSON.stringify(request.body);
+      const response = await fetch(`${this.baseUrl}${request.path}`, {
+        method: request.method,
         signal: controller.signal,
         headers: {
           Accept: 'application/json',
-          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...(request.body === undefined || isFormData
+            ? {}
+            : { 'Content-Type': 'application/json' }),
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          ...headers,
+          ...request.headers,
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: requestBody,
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: { message?: string; fields?: Record<string, string> } }
-        | T
-        | null;
+      if (response.status === 401 && request.authenticated && allowRefresh) {
+        const refreshedToken = await this.tokenProvider.refreshAccessToken();
+        if (refreshedToken) {
+          return this.requestOnce<T>(request, false);
+        }
+        await this.tokenProvider.handleUnauthorized();
+      }
+
+      const payload =
+        request.responseType === 'arrayBuffer' && response.ok
+          ? await response.arrayBuffer()
+          : request.responseType === 'text' && response.ok
+            ? await response.text()
+            : await response.json().catch(() => null);
+
       if (!response.ok) {
-        if (response.status === 401) await this.tokenProvider.handleUnauthorized();
         const apiPayload = payload as
-          | { error?: { message?: string; fields?: Record<string, string> } }
+          | {
+              error?: {
+                message?: string;
+                fields?: { field: string; message: string }[];
+              };
+            }
           | null;
         throw new ApiError(
           apiPayload?.error?.message ?? 'Yêu cầu không thành công.',

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useRooms } from '@/features/rooms/hooks/use-rooms';
@@ -7,16 +7,9 @@ import { Button, Card, EmptyState, Feedback, Screen, Title, colors, spacing } fr
 import { useProperties } from '../hooks/use-properties';
 
 export function PropertiesListScreen() {
-  const { properties } = useProperties();
+  const { properties, loading, error, refresh } = useProperties();
   const { rooms } = useRooms();
-  const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(false);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (loading) return <Screen><Feedback type="loading" /></Screen>;
   if (error) {
@@ -24,8 +17,8 @@ export function PropertiesListScreen() {
       <Screen>
         <Feedback
           type="error"
-          message="Không thể tải danh sách bất động sản"
-          onRetry={() => setError(false)}
+          message={error}
+          onRetry={() => void refresh()}
         />
       </Screen>
     );
@@ -41,9 +34,8 @@ export function PropertiesListScreen() {
           variant="secondary"
           onPress={() => setEmpty((value) => !value)}
         />
-        <Button label="Xem error state" variant="secondary" onPress={() => setError(true)} />
       </View>
-      {empty ? (
+      {empty || properties.length === 0 ? (
         <EmptyState
           title="Chưa có bất động sản"
           description="Thêm nhà trọ đầu tiên để bắt đầu."

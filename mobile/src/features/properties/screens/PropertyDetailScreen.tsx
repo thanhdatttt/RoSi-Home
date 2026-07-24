@@ -13,10 +13,10 @@ type PropertyTab = 'rooms' | 'utilities' | 'surcharges';
 type RoomFilter = 'all' | 'vacant' | 'occupied';
 
 export function PropertyDetailScreen() {
-  const { id = 'p1' } = useLocalSearchParams<{ id?: string }>();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const { properties } = useProperties();
   const { rooms } = useRooms();
-  const { surcharges, utilityRates, toggleSurcharge } = useSettingsData();
+  const { surcharges, utilityRates, toggleSurcharge, remote } = useSettingsData();
   const [tab, setTab] = useState<PropertyTab>('rooms');
   const [roomFilter, setRoomFilter] = useState<RoomFilter>('all');
   const property = properties.find((item) => item.id === id) ?? properties[0];
@@ -31,13 +31,25 @@ export function PropertyDetailScreen() {
       (roomFilter === 'vacant' && room.status === 'Trống') ||
       (roomFilter === 'occupied' && room.status === 'Đang thuê'),
   );
+  const runToggle = async (surchargeId: string) => {
+    try {
+      await toggleSurcharge(surchargeId);
+    } catch (requestError) {
+      Alert.alert(
+        'Không thể cập nhật phụ phí',
+        requestError instanceof Error
+          ? requestError.message
+          : 'Yêu cầu không thành công.',
+      );
+    }
+  };
   const stopSurcharge = (surchargeId: string) =>
     Alert.alert('Ngừng áp dụng phụ phí?', 'Dữ liệu cũ vẫn được giữ lại.', [
       { text: 'Hủy', style: 'cancel' },
       {
         text: 'Ngừng áp dụng',
         style: 'destructive',
-        onPress: () => toggleSurcharge(surchargeId),
+        onPress: () => void runToggle(surchargeId),
       },
     ]);
 
@@ -55,7 +67,15 @@ export function PropertyDetailScreen() {
             <Text style={styles.backIcon}>‹</Text>
           </Pressable>
           <Text numberOfLines={1} style={styles.detailTitle}>{property?.name ?? 'Bất động sản'}</Text>
-          <Pressable style={styles.headerAction} onPress={() => router.push('/property-form')}>
+          <Pressable
+            style={styles.headerAction}
+            onPress={() =>
+              router.push({
+                pathname: '/property-form',
+                params: { propertyId: property?.id },
+              })
+            }
+          >
             <Text style={styles.editText}>Sửa</Text>
           </Pressable>
         </View>
@@ -93,8 +113,25 @@ export function PropertyDetailScreen() {
         {tab === 'rooms' ? (
           <>
             <View style={styles.actions}>
-              <Button label="Thêm phòng" onPress={() => router.push('/room-form')} />
-              <Button label="Tạo nhiều phòng" variant="secondary" onPress={() => router.push('/bulk-rooms')} />
+              <Button
+                label="Thêm phòng"
+                onPress={() =>
+                  router.push({
+                    pathname: '/room-form',
+                    params: { propertyId: property?.id },
+                  })
+                }
+              />
+              <Button
+                label="Tạo nhiều phòng"
+                variant="secondary"
+                onPress={() =>
+                  router.push({
+                    pathname: '/bulk-rooms',
+                    params: { propertyId: property?.id },
+                  })
+                }
+              />
             </View>
             {filteredRooms.length === 0 ? (
               <EmptyState title="Không có phòng phù hợp" description="Thử chọn bộ lọc khác hoặc thêm phòng mới." />
@@ -128,12 +165,28 @@ export function PropertyDetailScreen() {
               <Text style={styles.rateValue}>{vnd(rate?.waterRate ?? 18000)} / m³</Text>
               <Text style={styles.muted}>Tính {rate?.waterMethod.toLowerCase() ?? 'theo đồng hồ'}</Text>
             </Card>
-            <Button label="Chỉnh sửa giá điện nước" onPress={() => router.push('/utility-rates')} />
+            <Button
+              label="Chỉnh sửa giá điện nước"
+              onPress={() =>
+                router.push({
+                  pathname: '/utility-rates',
+                  params: { propertyId: property?.id },
+                })
+              }
+            />
           </>
         ) : null}
         {tab === 'surcharges' ? (
           <>
-            <Button label="Thêm phụ phí" onPress={() => router.push('/surcharge-form')} />
+            <Button
+              label="Thêm phụ phí"
+              onPress={() =>
+                router.push({
+                  pathname: '/surcharge-form',
+                  params: { propertyId: property?.id },
+                })
+              }
+            />
             {propertySurcharges.length === 0 ? (
               <EmptyState title="Chưa có phụ phí" description="Thêm Internet, vệ sinh hoặc chi phí định kỳ khác." />
             ) : (
@@ -147,12 +200,19 @@ export function PropertyDetailScreen() {
                     <Badge label={item.status} />
                   </View>
                   <Button
-                    label={item.status === 'Đang áp dụng' ? 'Ngừng áp dụng' : 'Áp dụng lại'}
+                    label={
+                      item.status === 'Đang áp dụng'
+                        ? 'Ngừng áp dụng'
+                        : remote
+                          ? 'Backend chưa hỗ trợ áp dụng lại'
+                          : 'Áp dụng lại'
+                    }
                     variant="secondary"
+                    disabled={remote && item.status !== 'Đang áp dụng'}
                     onPress={() =>
                       item.status === 'Đang áp dụng'
                         ? stopSurcharge(item.id)
-                        : toggleSurcharge(item.id)
+                        : void runToggle(item.id)
                     }
                   />
                 </Card>

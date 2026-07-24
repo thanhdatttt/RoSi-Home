@@ -3,18 +3,28 @@ import { useMockAppData } from '@/core/data/MockAppDataProvider';
 import { Room } from '../models/room';
 
 export interface RoomsRepository {
+  remote: boolean;
   rooms: Room[];
-  createRoom(value: Omit<Room, 'id' | 'status'>): void;
+  loading: boolean;
+  error: string | null;
+  createRoom(value: Omit<Room, 'id' | 'status'>): Promise<Room>;
   createRooms(
     propertyId: string,
     prefix: string,
     start: number,
     count: number,
     rent: number,
-  ): void;
+  ): Promise<Room[]>;
 }
 
 export function useRoomsRepository(): RoomsRepository {
-  const { rooms, addRoom, addRooms } = useMockAppData();
-  return { rooms, createRoom: addRoom, createRooms: addRooms };
+  const { remote, rooms, loading, error, addRoom, addRooms } = useMockAppData();
+  return {
+    remote,
+    rooms,
+    loading,
+    error,
+    createRoom: addRoom,
+    createRooms: addRooms,
+  };
 }

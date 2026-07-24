@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
+import { useApiSession } from '@/core/api';
 import { useRooms } from '@/features/rooms/hooks/use-rooms';
 import {
   EmptyState,
@@ -18,18 +19,18 @@ import { MaintenanceStatus } from '../models/maintenance';
 type Filter = 'all' | MaintenanceStatus;
 
 export function MaintenanceListScreen() {
+  const { enabled } = useApiSession();
   const { roomId } = useLocalSearchParams<{ roomId?: string }>();
-  const { requests: maintenanceRequests } = useMaintenanceRequests();
+  const {
+    requests: maintenanceRequests,
+    loading,
+    error,
+  } = useMaintenanceRequests();
   const { rooms } = useRooms();
   const [filter, setFilter] = useState<Filter>('all');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (loading) return <Screen><Feedback type="loading" /></Screen>;
+  if (error) return <Screen><Feedback type="error" message={error} /></Screen>;
 
   const visible = maintenanceRequests.filter(
     (request) =>
@@ -41,8 +42,12 @@ export function MaintenanceListScreen() {
     <Screen>
       <Title subtitle={roomId ? 'Lọc theo phòng đã chọn' : 'Tất cả bất động sản'}>Bảo trì</Title>
       <Notice
-        title="CONCEPT · CHƯA TÍCH HỢP BACKEND"
-        message="Yêu cầu được tạo sẵn; chủ nhà chỉ cập nhật trạng thái mock."
+        title={enabled ? 'DỮ LIỆU BACKEND' : 'CHẾ ĐỘ MOCK'}
+        message={
+          enabled
+            ? 'Landlord chỉ xem và cập nhật yêu cầu thuộc bất động sản của mình.'
+            : 'Yêu cầu được tạo sẵn và chỉ cập nhật trong bộ nhớ.'
+        }
       />
       <SegmentedControl
         value={filter}

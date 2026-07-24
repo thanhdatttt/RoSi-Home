@@ -17,24 +17,46 @@ import {
 } from '@/ui';
 
 import { InvoiceLineItem } from '../components/InvoiceLineItem';
-import { useInvoices } from '../hooks/use-billing';
+import { useInvoice } from '../hooks/use-billing';
 import { invoiceTotal } from '../models/billing';
 
 export function InvoiceDetailScreen() {
-  const { invoiceId = 'i1' } = useLocalSearchParams<{ invoiceId?: string }>();
-  const { invoices, sendInvoice } = useInvoices();
+  const { invoiceId } = useLocalSearchParams<{ invoiceId?: string }>();
+  const { invoice, remote, loading, error, sendInvoice } = useInvoice(invoiceId ?? '');
   const { rooms } = useRooms();
   const [sent, setSent] = useState(false);
-  const invoice = invoices.find((item) => item.id === invoiceId);
-
+  const [sending, setSending] = useState(false);
+  const [sendingError, setSendingError] = useState<string | null>(null);
+  if (loading) {
+    return <Screen><Feedback type="loading" /></Screen>;
+  }
   if (!invoice) {
-    return <Screen><Feedback type="error" message="Không tìm thấy hóa đơn" /></Screen>;
+    return (
+      <Screen>
+        <Feedback
+          type="error"
+          message={error ?? 'Không tìm thấy hóa đơn'}
+        />
+      </Screen>
+    );
   }
 
   const room = rooms.find((item) => item.id === invoice.roomId);
-  const handleSend = () => {
-    sendInvoice(invoice.id);
-    setSent(true);
+  const handleSend = async () => {
+    setSending(true);
+    setSendingError(null);
+    try {
+      await sendInvoice(invoice.id);
+      setSent(true);
+    } catch (requestError) {
+      setSendingError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Không thể gửi hóa đơn.',
+      );
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -43,10 +65,13 @@ export function InvoiceDetailScreen() {
         Chi tiết hóa đơn
       </Title>
       <Notice
-        title="CONCEPT · CHƯA GỬI THÔNG BÁO THẬT"
-        message="Thao tác gửi chỉ cập nhật trạng thái trong bộ nhớ."
+        title="TRẠNG THÁI HÓA ĐƠN"
+        message="Backend chỉ cho gửi hóa đơn đang ở trạng thái Draft."
       />
-      {sent ? <Success message="Đã gửi hóa đơn mô phỏng" /> : null}
+      {sendingError ? (
+        <Notice title="Không thể gửi hóa đơn" message={sendingError} />
+      ) : null}
+      {sent ? <Success message="Đã gửi hóa đơn" /> : null}
       <Badge label={invoice.status} />
       <Card>
         {invoice.lines.map((line) => (
@@ -55,13 +80,14 @@ export function InvoiceDetailScreen() {
       </Card>
       <Text style={styles.total}>{vnd(invoiceTotal(invoice))}</Text>
       <Button
-        label="Xem VietQR"
+        label={remote ? 'VietQR chưa có API' : 'Xem VietQR'}
+        disabled={remote}
         onPress={() => router.push({ pathname: '/vietqr', params: { invoiceId: invoice.id } })}
       />
       <Button
-        label="Gửi cho người thuê"
+        label={sending ? 'Đang gửi hóa đơn…' : 'Gửi cho người thuê'}
         variant="secondary"
-        disabled={invoice.status !== 'Nháp'}
+        disabled={sending || invoice.status !== 'Nháp'}
         onPress={handleSend}
       />
     </Screen>

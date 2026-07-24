@@ -22,8 +22,8 @@ import { SectionLabel } from '@/ui/patterns';
 import { useRooms } from '../hooks/use-rooms';
 
 export function RoomDetailScreen() {
-  const { roomId = 'r2' } = useLocalSearchParams<{ roomId?: string }>();
-  const { rooms } = useRooms();
+  const { roomId } = useLocalSearchParams<{ roomId?: string }>();
+  const { rooms, remote } = useRooms();
   const { properties } = useProperties();
   const { leases } = useLeases();
   const { requests: maintenanceRequests } = useMaintenanceRequests();
@@ -53,8 +53,12 @@ export function RoomDetailScreen() {
     <Screen>
       <Title subtitle={property?.name}>Phòng {room.name}</Title>
       <Notice
-        title="CONCEPT · CHƯA TÍCH HỢP BACKEND"
-        message="Hợp đồng, chỉ số, bảo trì và hóa đơn dùng mock state cục bộ."
+        title={remote ? 'ĐÃ KẾT NỐI BACKEND' : 'CHẾ ĐỘ MOCK'}
+        message={
+          remote
+            ? 'Phòng, hợp đồng và bảo trì được đồng bộ. Backend chưa có API danh sách chỉ số và hóa đơn.'
+            : 'Hợp đồng, chỉ số, bảo trì và hóa đơn dùng dữ liệu trong bộ nhớ.'
+        }
       />
       <Card>
         <View style={styles.header}>
@@ -62,7 +66,6 @@ export function RoomDetailScreen() {
           <Badge label={room.status} />
         </View>
         <KeyValueRow label="Giá thuê" value={`${vnd(room.rent)} / tháng`} />
-        <KeyValueRow label="Diện tích" value={`${room.area} m²`} />
       </Card>
       <SectionLabel>Người thuê hiện tại</SectionLabel>
       {lease ? (

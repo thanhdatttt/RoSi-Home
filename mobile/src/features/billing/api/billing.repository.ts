@@ -5,13 +5,35 @@ import { Invoice, MeterReading } from '../models/billing';
 export interface BillingRepository {
   invoices: Invoice[];
   meterReadings: MeterReading[];
-  saveMeterReading(value: Omit<MeterReading, 'id'>): void;
-  createInvoice(value: Omit<Invoice, 'id' | 'status'>): string;
-  sendInvoice(id: string): void;
+  remote: boolean;
+  loading: boolean;
+  error: string | null;
+  saveMeterReading(value: Omit<MeterReading, 'id'>): Promise<void>;
+  createInvoice(
+    value: Omit<Invoice, 'id' | 'status'>,
+  ): Promise<string | null>;
+  sendInvoice(id: string): Promise<void>;
 }
 
 export function useBillingRepository(): BillingRepository {
-  const { invoices, meterReadings, saveMeterReading, createInvoice, sendInvoice } =
-    useMockAppData();
-  return { invoices, meterReadings, saveMeterReading, createInvoice, sendInvoice };
+  const {
+    invoices,
+    meterReadings,
+    remote,
+    loading,
+    error,
+    saveMeterReading,
+    createInvoice,
+    sendInvoice,
+  } = useMockAppData();
+  return {
+    invoices,
+    meterReadings,
+    remote,
+    loading,
+    error,
+    saveMeterReading,
+    createInvoice,
+    sendInvoice,
+  };
 }

@@ -4,10 +4,18 @@ import { MaintenanceRequest, MaintenanceStatus } from '../models/maintenance';
 
 export interface MaintenanceRepository {
   requests: MaintenanceRequest[];
-  updateStatus(id: string, status: MaintenanceStatus): void;
+  loading: boolean;
+  error: string | null;
+  updateStatus(id: string, status: MaintenanceStatus): Promise<void>;
 }
 
 export function useMaintenanceRepository(): MaintenanceRepository {
-  const { maintenanceRequests, updateMaintenanceStatus } = useMockAppData();
-  return { requests: maintenanceRequests, updateStatus: updateMaintenanceStatus };
+  const { maintenanceRequests, loading, error, updateMaintenanceStatus } =
+    useMockAppData();
+  return {
+    requests: maintenanceRequests,
+    loading,
+    error,
+    updateStatus: updateMaintenanceStatus,
+  };
 }

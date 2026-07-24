@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { vnd } from '@/core/formatters';
@@ -23,17 +23,12 @@ type Filter = 'all' | InvoiceStatus;
 
 export function InvoicesListScreen() {
   const { roomId } = useLocalSearchParams<{ roomId?: string }>();
-  const { invoices } = useInvoices();
+  const { invoices, remote, loading, error } = useInvoices();
   const { rooms } = useRooms();
   const [filter, setFilter] = useState<Filter>('all');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (loading) return <Screen><Feedback type="loading" /></Screen>;
+  if (error) return <Screen><Feedback type="error" message={error} /></Screen>;
 
   const visible = invoices.filter(
     (invoice) =>
@@ -45,8 +40,12 @@ export function InvoicesListScreen() {
     <Screen>
       <Title subtitle={roomId ? 'Lọc theo phòng đã chọn' : 'Tất cả bất động sản'}>Hóa đơn</Title>
       <Notice
-        title="CONCEPT · CHƯA TÍCH HỢP BACKEND"
-        message="Gửi hóa đơn và trạng thái thanh toán chỉ cập nhật mock state."
+        title={remote ? 'BACKEND CÒN THIẾU ENDPOINT' : 'CHẾ ĐỘ MOCK'}
+        message={
+          remote
+            ? 'Backend chưa có GET /api/v1/invoices nên chưa thể tải danh sách hóa đơn.'
+            : 'Gửi hóa đơn và trạng thái chỉ cập nhật trong dữ liệu mẫu.'
+        }
       />
       <SegmentedControl
         value={filter}
@@ -60,7 +59,11 @@ export function InvoicesListScreen() {
       {visible.length === 0 ? (
         <EmptyState
           title="Chưa có hóa đơn"
-          description="Nhập chỉ số cuối tháng để tạo hóa đơn dự kiến."
+          description={
+            remote
+              ? 'Cần bổ sung API danh sách hóa đơn để hiển thị dữ liệu đã sinh.'
+              : 'Nhập chỉ số cuối tháng để tạo hóa đơn dự kiến.'
+          }
         />
       ) : (
         visible.map((invoice) => {

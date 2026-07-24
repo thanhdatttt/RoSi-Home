@@ -4,6 +4,5 @@ export type Room = {
   propertyId: string;
   name: string;
   rent: number;
-  area: number;
   status: RoomStatus;
 };

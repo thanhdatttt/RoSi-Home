@@ -1,5 +1,5 @@
-import { mockAuthRepository } from '../api/auth.repository';
+import { useAuthRepository } from '../api/auth.repository';
 
 export function useAuth() {
-  return mockAuthRepository;
+  return useAuthRepository();
 }

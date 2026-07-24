@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
+import { useApiSession } from '@/core/api';
 import { vnd } from '@/core/formatters';
 import { useRooms } from '@/features/rooms/hooks/use-rooms';
 import {
@@ -18,7 +19,8 @@ import { SectionLabel, Timeline } from '@/ui/patterns';
 import { useLeases } from '../hooks/use-leases';
 
 export function LeaseDetailScreen() {
-  const { leaseId = 'l1' } = useLocalSearchParams<{ leaseId?: string }>();
+  const { enabled } = useApiSession();
+  const { leaseId } = useLocalSearchParams<{ leaseId?: string }>();
   const { leases } = useLeases();
   const { rooms } = useRooms();
   const [reminded, setReminded] = useState(false);
@@ -33,8 +35,12 @@ export function LeaseDetailScreen() {
         Chi tiết hợp đồng
       </Title>
       <Notice
-        title="CONCEPT · CHƯA TÍCH HỢP BACKEND"
-        message="Không có chữ ký điện tử hoặc gửi thông báo thật."
+        title={enabled ? 'DỮ LIỆU BACKEND' : 'CHẾ ĐỘ MOCK'}
+        message={
+          enabled
+            ? 'Backend đã trả chi tiết hợp đồng nhưng chưa có endpoint nhắc gia hạn thủ công.'
+            : 'Không có chữ ký điện tử hoặc gửi thông báo thật.'
+        }
       />
       {reminded ? <Success message="Đã gửi nhắc gia hạn mô phỏng" /> : null}
       <Badge label={lease.status} />
@@ -48,10 +54,19 @@ export function LeaseDetailScreen() {
       <Timeline
         items={[
           { title: 'Hợp đồng bắt đầu', date: lease.startDate },
-          { title: 'Tài khoản người thuê đã cấp', date: lease.startDate, detail: 'Dữ liệu mô phỏng' },
+          {
+            title: 'Tài khoản người thuê đã cấp',
+            date: lease.startDate,
+            detail: enabled ? 'Do backend cấp khi tạo hợp đồng' : 'Dữ liệu mô phỏng',
+          },
         ]}
       />
-      <Button label="Nhắc gia hạn" variant="secondary" onPress={() => setReminded(true)} />
+      <Button
+        label={enabled ? 'Chưa có API nhắc gia hạn' : 'Nhắc gia hạn'}
+        variant="secondary"
+        disabled={enabled}
+        onPress={() => setReminded(true)}
+      />
     </Screen>
   );
 }

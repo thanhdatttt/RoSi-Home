@@ -3,15 +3,25 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { vnd } from '@/core/formatters';
-import { Badge, Button, Card, EmptyState, Screen, Title, colors, spacing } from '@/ui';
+import { Badge, Button, Card, EmptyState, Feedback, Screen, Title, colors, spacing } from '@/ui';
 import { useRooms } from '../hooks/use-rooms';
 
 export function RoomsListScreen() {
-  const { rooms } = useRooms();
+  const { rooms, remote, loading, error } = useRooms();
   const [empty, setEmpty] = useState(false);
+  if (loading) return <Screen><Feedback type="loading" /></Screen>;
+  if (error) return <Screen><Feedback type="error" message={error} /></Screen>;
   return (
     <Screen>
-      <Title subtitle="Trạng thái thuê được cập nhật bằng mock state.">Danh sách phòng</Title>
+      <Title
+        subtitle={
+          remote
+            ? 'Trạng thái thuê được suy ra từ hợp đồng trên backend.'
+            : 'Trạng thái thuê được cập nhật bằng dữ liệu mẫu.'
+        }
+      >
+        Danh sách phòng
+      </Title>
       <View style={styles.actions}>
         <Button label="Thêm phòng" onPress={() => router.push('/room-form')} />
         <Button label="Tạo nhiều" variant="secondary" onPress={() => router.push('/bulk-rooms')} />

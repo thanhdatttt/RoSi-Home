@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
+import { useApiSession } from '@/core/api';
 import { useRooms } from '@/features/rooms/hooks/use-rooms';
 import {
   Button,
@@ -19,25 +20,27 @@ import { LeaseStatus } from '../models/lease';
 type Filter = 'all' | LeaseStatus;
 
 export function LeasesListScreen() {
-  const { leases } = useLeases();
+  const { enabled } = useApiSession();
+  const { leases, loading, error } = useLeases();
   const { rooms } = useRooms();
   const [filter, setFilter] = useState<Filter>('all');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (loading) return <Screen><Feedback type="loading" /></Screen>;
+  if (error) {
+    return <Screen><Feedback type="error" message={error} /></Screen>;
+  }
 
   const visible = leases.filter((lease) => filter === 'all' || lease.status === filter);
   return (
     <Screen>
       <Title subtitle="Người thuê, thời hạn và tiền cọc.">Hợp đồng</Title>
       <Notice
-        title="CONCEPT · CHƯA TÍCH HỢP BACKEND"
-        message="Tạo hợp đồng và nhắc gia hạn chỉ cập nhật mock state."
+        title={enabled ? 'DỮ LIỆU BACKEND' : 'CHẾ ĐỘ MOCK'}
+        message={
+          enabled
+            ? 'Danh sách được giới hạn theo tài khoản và quyền sở hữu.'
+            : 'Dữ liệu chỉ được lưu trong bộ nhớ.'
+        }
       />
       <Button label="Tạo hợp đồng" onPress={() => router.push('/lease-form')} />
       <SegmentedControl
