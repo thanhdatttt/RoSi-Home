@@ -24,9 +24,11 @@ The main estimates are:
 | Remaining backend time | 14.6 real-time forecast hours | 9.8–19.5 hours |
 | Remaining backend AI usage | 236.4M tokens | 157.6–315.2M tokens |
 | Backend token Estimate at Completion | 486.3M tokens | 407.5–565.1M tokens |
-| Frontend effort | 84.9 hours | 77.2–96.3 hours |
-| Frontend AI usage | 414.2M tokens | 398.3–446.1M tokens |
-| Full implementation AI usage | 900.5M tokens | 805.8M–1.0112B tokens |
+| Remaining frontend time | 49.1 real-time forecast hours | 44.7–55.7 hours |
+| Frontend time EAC | 75.1 real-time hours | 70.7–84.7 hours |
+| Remaining frontend AI usage | 247.2M tokens | 237.7–266.2M tokens |
+| Frontend AI usage EAC | 375.7M tokens | 366.2–394.7M tokens |
+| Full implementation AI usage EAC | 862.0M tokens | 773.7–959.8M tokens |
 | Development cash budget | VND 3,277,500 | VND 950,000–4,062,500 |
 | Economic labor | 787.5 hours × approved shadow rate | 600–1,000 hours × shadow rate |
 
@@ -138,8 +140,10 @@ Future data collection should record human effort, agent-active time, start time
 | Backend delivery baseline | Medium–High | CI/CD and successful deployment confirmed |
 | Backend token usage | Medium–High | Telemetry available for Maintenance; aggregates available for other work |
 | Combined backend time | Medium–High | Backend records are now normalized to real-time declarations, but the sample remains small |
-| Frontend effort | Medium | Batch 1 is calibrated with FE1/FE2 real-time ranges; later batches are extrapolated |
-| Frontend token usage | Medium | Batch 1 token data is available; later batches are extrapolated from the measured package rate |
+| Remaining frontend effort | Medium | Batch 1 is calibrated with FE1/FE2 real-time ranges; remaining packages are extrapolated separately |
+| Frontend time EAC | Medium | Actual Batch 1 time is combined with separately forecast remaining work |
+| Remaining frontend token usage | Medium | Batch 1 token data is available; remaining packages are extrapolated separately |
+| Frontend token usage EAC | Medium | Actual Batch 1 usage is combined with separately forecast remaining usage |
 | Cash budget | Medium | Based on existing budget assumptions; quotations are still required |
 
 The overall estimate is suitable for software-project-management planning. It should be updated when measurements for the remaining FE packages and standardized human-effort data become available.
@@ -205,21 +209,35 @@ Recorded work to date is approximately 60h23m50 in real time and 249.864626M tok
 
 Time EAC is an order-of-magnitude planning value and not a payroll total.
 
-### 6.3 Frontend Estimate
+### 6.3 Remaining Frontend
 
 FE1 and FE2 have now supplied separate Batch 1 measurements. FE1 completed four assigned packages using 10.5M tokens in 13–15 real-time hours; FE2 completed four assigned packages using 118.0M tokens in 13–14 real-time hours. The remaining five FE1 packages and six FE2 packages are forecast separately from each member's own measured rate and include an integration/rework reserve. No FE1/FE2 average is used to calculate either member's estimate.
 
-| Scenario | FE1 effort / tokens | FE2 effort / tokens | Combined total (sum only) |
+| Scenario | FE1 remaining time / tokens | FE2 remaining time / tokens | Combined remaining (sum only) |
 |---|---:|---:|---:|
-| Lean | 36.6 h / 29.5M | 40.6 h / 368.8M | 77.2 h / 398.3M |
-| Expected | 41.0 h / 30.7M | 43.9 h / 383.5M | 84.9 h / 414.2M |
-| Conservative | 47.3 h / 33.1M | 49.0 h / 413.0M | 96.3 h / 446.1M |
+| Lean | 20.3 h / 16.4M | 24.4 h / 221.3M | 44.7 h / 237.7M |
+| Expected | 22.8 h / 17.1M | 26.3 h / 230.1M | 49.1 h / 247.2M |
+| Conservative | 26.3 h / 18.4M | 29.4 h / 247.8M | 55.7 h / 266.2M |
 
-With two frontend members providing a combined 30–40 hours per week, this equals approximately:
+### 6.4 Frontend Estimate at Completion
 
-- 2.6 weeks in the lean case;
-- 2.8 weeks in the expected case;
-- 3.2 weeks in the conservative case.
+Frontend EAC follows the same formula as backend EAC:
+
+```text
+Frontend EAC = Batch 1 actual to date + Remaining frontend forecast
+```
+
+| Scenario | FE1 time / tokens EAC | FE2 time / tokens EAC | Combined EAC (sum only) |
+|---|---:|---:|---:|
+| Lean | 33.3 h / 26.9M | 37.4 h / 339.3M | 70.7 h / 366.2M |
+| Expected | 35.8 h / 27.6M | 39.3 h / 348.1M | 75.1 h / 375.7M |
+| Conservative | 41.3 h / 28.9M | 43.4 h / 365.8M | 84.7 h / 394.7M |
+
+With two frontend members providing a combined 30–40 hours per week, the frontend EAC equals approximately:
+
+- 1.8–2.4 weeks in the lean case;
+- 1.9–2.5 weeks in the expected case;
+- 2.1–2.8 weeks in the conservative case.
 
 For AI-capacity planning only, the measured Batch 1 data provides separate rates:
 
@@ -228,9 +246,9 @@ FE1: 10.5M tokens / 4 packages = 2.625M tokens/package
 FE2: 118.0M tokens / 4 packages = 29.50M tokens/package
 ```
 
-The combined FE values above are sums of the separately calculated FE1 and FE2 forecasts. They are not based on a blended average and remain forecasts, not API charges.
+The remaining and EAC FE values above are sums of the separately calculated FE1 and FE2 values. They are not based on a blended average and remain forecasts, not API charges.
 
-### 6.4 Complete MVP Duration
+### 6.5 Complete MVP Duration
 
 | Scenario | Duration | Gross Team Capacity | Main Assumption |
 |---|---:|---:|---|
@@ -238,7 +256,7 @@ The combined FE values above are sums of the separately calculated FE1 and FE2 f
 | Expected | 9 weeks | 787.5 hours | Normal integration and pilot feedback |
 | Conservative | 10 weeks | 1,000 hours | Additional integration and deployment reserve |
 
-The expected frontend effort produces a critical path of approximately 5.7 working weeks. When integration, testing, deployment, and pilot preparation are included, the complete MVP estimate remains **8–10 weeks**.
+The expected frontend EAC produces approximately 1.9–2.5 working weeks at the stated combined capacity. Backend sequencing, integration, testing, deployment, and pilot preparation remain the overall critical path, so the complete MVP estimate remains **8–10 weeks**.
 
 ## 7. Resource Estimate
 
@@ -355,7 +373,7 @@ Monthly operating TCO
 | Risk | Estimate Impact | Treatment |
 |---|---|---|
 | Different time definitions | Distorts effort and productivity comparison | Separate human effort, agent time, and cycle time |
-| Missing FE measurements | Reduces frontend-estimate confidence | Use bottom-up range and replace with actual data |
+| Missing measurements for remaining FE packages | Reduces frontend-estimate confidence | Collect member-level data and update Remaining/EAC forecasts |
 | AI benefit expiry or quota | Increases cash cost or delays work | Maintain conservative paid fallback |
 | Cross-module dependency | Increases backend and integration duration | Apply 1.5×–2.0× uncertainty factors |
 | Infrastructure quotation variance | Changes cash budget | Keep 15%–25% contingency |
@@ -379,9 +397,10 @@ Monthly operating TCO
 | Gross team capacity | 787.5 hours expected; 600–1,000 hour range |
 | Remaining backend | 14.6 real-time forecast hours and 236.4M tokens expected |
 | Backend token EAC | 486.3M expected; 407.5–565.1M range |
-| Frontend effort | 84.9 hours expected; 77.2–96.3 hour range |
-| Frontend AI usage | 414.2M expected; 398.3–446.1M range |
-| Full implementation AI usage | 900.5M expected; 805.8M–1.0112B range |
+| Remaining frontend | 49.1 real-time forecast hours and 247.2M tokens expected |
+| Frontend time EAC | 75.1 hours expected; 70.7–84.7 hour range |
+| Frontend AI usage EAC | 375.7M expected; 366.2–394.7M range |
+| Full implementation AI usage EAC | 862.0M expected; 773.7–959.8M range |
 | Development cash budget | VND 3,277,500 expected |
 | Conservative cash ceiling | Approximately VND 4,062,500 |
 | Economic labor | 787.5 hours × approved shadow rate |
