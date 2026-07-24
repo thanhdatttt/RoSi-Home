@@ -21,12 +21,12 @@ The main estimates are:
 |---|---:|---:|
 | Complete MVP duration | 9 weeks | 8–10 weeks |
 | Gross team capacity | 787.5 team-hours | 600–1,000 team-hours |
-| Remaining backend time | 14.6 proxy hours | 9.8–19.5 hours |
+| Remaining backend time | 14.6 real-time forecast hours | 9.8–19.5 hours |
 | Remaining backend AI usage | 236.4M tokens | 157.6–315.2M tokens |
 | Backend token Estimate at Completion | 486.3M tokens | 407.5–565.1M tokens |
-| Frontend effort | 198 hours | 143–266 hours |
-| Frontend AI usage | 690M tokens | 498–927M tokens |
-| Full implementation AI usage | 1.176B tokens | 905.5M–1.492B tokens |
+| Frontend effort | 84.9 hours | 77.2–96.3 hours |
+| Frontend AI usage | 414.2M tokens | 398.3–446.1M tokens |
+| Full implementation AI usage | 900.5M tokens | 805.8M–1.0112B tokens |
 | Development cash budget | VND 3,277,500 | VND 950,000–4,062,500 |
 | Economic labor | 787.5 hours × approved shadow rate | 600–1,000 hours × shadow rate |
 
@@ -123,11 +123,11 @@ The available time figures do not all measure the same quantity. The report ther
 | Measure | Definition | Estimation Use |
 |---|---|---|
 | Human effort | Person-hours spent on analysis, prompting, review, testing, correction, integration, deployment, and documentation | Resource and economic labor estimation |
-| Agent-active time | Time during which an AI agent processes a task, including reasoning and tool execution | AI speed and capacity analysis |
+| Real time | Elapsed working time reported by the member for the task, including human and AI-assisted work | Delivery-effort and capacity analysis |
 | Cycle time | Calendar time from story start to successful deployment, including waiting and blocked time | Completion-date forecasting |
 | Gross capacity | Total member availability during a period | Feasibility check for the overall schedule |
 
-The 35-hour and 10-hour member declarations may contain several activity types. The BE3 measurement is agent-active time. Their sum is therefore a **planning proxy**, not total human effort or a payroll measure.
+The current BE1, BE2, and BE3 records are reported in real time. FE1 and FE2 also reported real-time ranges for Batch 1. These are planning measurements and should not be interpreted as payroll totals unless the team explicitly confirms that they represent complete human effort.
 
 Future data collection should record human effort, agent-active time, start time, deployment time, and blocked time separately.
 
@@ -137,12 +137,12 @@ Future data collection should record human effort, agent-active time, start time
 |---|---|---|
 | Backend delivery baseline | Medium–High | CI/CD and successful deployment confirmed |
 | Backend token usage | Medium–High | Telemetry available for Maintenance; aggregates available for other work |
-| Combined backend time | Medium | Source records use different time definitions |
-| Frontend effort | Low–Medium | Bottom-up estimate without actual FE time logs |
-| Frontend token usage | Low | Derived from a provisional blended token/hour rate |
+| Combined backend time | Medium–High | Backend records are now normalized to real-time declarations, but the sample remains small |
+| Frontend effort | Medium | Batch 1 is calibrated with FE1/FE2 real-time ranges; later batches are extrapolated |
+| Frontend token usage | Medium | Batch 1 token data is available; later batches are extrapolated from the measured package rate |
 | Cash budget | Medium | Based on existing budget assumptions; quotations are still required |
 
-The overall estimate is suitable for software-project-management planning but should be updated when standardized FE and human-effort data becomes available.
+The overall estimate is suitable for software-project-management planning. It should be updated when measurements for the remaining FE packages and standardized human-effort data become available.
 
 ## 5. Calibration Data
 
@@ -150,10 +150,14 @@ The overall estimate is suitable for software-project-management planning but sh
 
 | Stream | Calibrated Scope | Stories | Time Basis | Tokens | Model/Access |
 |---|---|---:|---:|---:|---|
-| BE1 | Batch 1 + Batch 2 plus setup/testing/FE/docs overhead | 15 | 35 member-reported hours | 135.0M | `Hy3`, free |
-| BE2 | Batch 1, Batch 2+3, and Batch 4 | 14 | 10 member-reported hours | 21.8M | `Hy3`, free |
-| BE3 | Billing Foundation | 3 | 1h01 agent-active | 36.5M | GPT-5.6 Sol, Plus/trial |
-| BE3 | MAINT-01→05 | 5 | 2h22m50 agent-active | 56.564626M | GPT-5.6 Sol, Plus/trial |
+| BE1 | Batch 1 + Batch 2 plus setup/testing/FE/docs overhead | 15 | 35 real-time hours | 135.0M | `Hy3`, free |
+| BE2 | Batch 1 | 5 | 7 real-time hours | 6.3M | `Hy3`, free |
+| BE2 | Batch 2 + Batch 3 | 7 | 13 real-time hours | 13.0M | `Hy3`, free |
+| BE2 | Batch 4 | 2 | 2 real-time hours | 2.5M | `Hy3`, free |
+| FE1 | Batch 1 frontend work | 4 packages | 13–15 real-time hours | 10.5M | Gemini 3.1 Pro, student subscription free for 1 year |
+| FE2 | Batch 1 frontend work | 4 packages | 13–14 real-time hours | 118.0M | GPT-5.6 Sol High, Plus subscription |
+| BE3 | Billing Foundation | 3 | 1h01 real-time | 36.5M | GPT-5.6 Sol, Plus/trial |
+| BE3 | MAINT-01→05 | 5 | 2h22m50 real-time | 56.564626M | GPT-5.6 Sol, Plus/trial |
 
 The `Hy3` label is retained exactly as reported. The provider, exact model identifier, and product surface should be confirmed before formal model-efficiency comparison.
 
@@ -162,10 +166,12 @@ The `Hy3` label is retained exactly as reported. The provider, exact model ident
 | Stream | Time/Story | Tokens/Story | Forecast Application |
 |---|---:|---:|---|
 | BE1 blended | 2.33 hours | 9.00M | Remaining BE1 Dashboard work |
-| BE2 reported | 0.71 hours | 1.56M | Reference only; no BE2 backend story remains |
-| BE3 Billing | 0.34 agent-hours | 12.17M | Billing-configuration work |
-| BE3 Maintenance | 0.48 agent-hours | 11.31M | CRUD, workflow, and history work |
-| BE3 combined | 0.42 agent-hours | 11.63M | Payment, Reminder, and Report forecast |
+| BE2 combined | 1.57 real-time hours | 1.56M | Reference only; no BE2 backend story remains |
+| BE3 Billing | 0.34 real-time hours | 12.17M | Billing-configuration work |
+| BE3 Maintenance | 0.48 real-time hours | 11.31M | CRUD, workflow, and history work |
+| BE3 combined | 0.42 real-time hours | 11.63M | Payment, Reminder, and Report forecast |
+| FE1 Batch 1 | 3.25–3.75 real-time hours/package | 2.625M/package | FE1's remaining five packages |
+| FE2 Batch 1 | 3.25–3.50 real-time hours/package | 29.50M/package | FE2's remaining six packages |
 
 The substantial difference in tokens per story does not by itself prove that one model is more efficient. Story complexity, context size, caching, parallel agents, rework, and measurement method differ between streams.
 
@@ -176,8 +182,8 @@ The substantial difference in tokens per story does not by itself prove that one
 The linear estimate is:
 
 - BE1: `2 stories × 2.33 hours ≈ 4.7 hours` and approximately `18M tokens`;
-- BE3: `12 stories × 0.42 hours ≈ 5.1 agent-hours` and approximately `139.6M tokens`;
-- combined optimistic baseline: **9.8 proxy hours and 157.6M tokens**.
+- BE3: `12 stories × 0.42 hours ≈ 5.1 real-time hours` and approximately `139.6M tokens`;
+- combined optimistic baseline: **9.8 real-time forecast hours and 157.6M tokens**.
 
 Payment and Report have more cross-module dependencies than the completed BE3 stories. Uncertainty factors are therefore applied:
 
@@ -189,45 +195,40 @@ Payment and Report have more cross-module dependencies than the completed BE3 st
 
 ### 6.2 Backend Estimate at Completion
 
-Recorded work to date is approximately 48h23m50 across mixed time definitions and 249.864626M tokens.
+Recorded work to date is approximately 60h23m50 in real time and 249.864626M tokens.
 
-| Scenario | Backend Time EAC Proxy | Backend Token EAC |
+| Scenario | Backend Time EAC (real-time forecast) | Backend Token EAC |
 |---|---:|---:|
-| Optimistic | 58.2 hours | 407.5M |
-| Expected | 63.0 hours | 486.3M |
-| Conservative | 67.9 hours | 565.1M |
+| Optimistic | 70.2 hours | 407.5M |
+| Expected | 75.0 hours | 486.3M |
+| Conservative | 79.9 hours | 565.1M |
 
 Time EAC is an order-of-magnitude planning value and not a payroll total.
 
 ### 6.3 Frontend Estimate
 
-No standardized FE time or telemetry data is available. Frontend is therefore estimated bottom-up at 6–10 hours per module package, including UI implementation, validation, state handling, API integration, and relevant testing.
+FE1 and FE2 have now supplied separate Batch 1 measurements. FE1 completed four assigned packages using 10.5M tokens in 13–15 real-time hours; FE2 completed four assigned packages using 118.0M tokens in 13–14 real-time hours. The remaining five FE1 packages and six FE2 packages are forecast separately from each member's own measured rate and include an integration/rework reserve. No FE1/FE2 average is used to calculate either member's estimate.
 
-| Scenario | Base Package Effort | Integration/Rework Reserve | Total FE Effort |
+| Scenario | FE1 effort / tokens | FE2 effort / tokens | Combined total (sum only) |
 |---|---:|---:|---:|
-| Lean | 19 × 6 h = 114 h | 25% | 143 h |
-| Expected | 19 × 8 h = 152 h | 30% | 198 h |
-| Conservative | 19 × 10 h = 190 h | 40% | 266 h |
+| Lean | 36.6 h / 29.5M | 40.6 h / 368.8M | 77.2 h / 398.3M |
+| Expected | 41.0 h / 30.7M | 43.9 h / 383.5M | 84.9 h / 414.2M |
+| Conservative | 47.3 h / 33.1M | 49.0 h / 413.0M | 96.3 h / 446.1M |
 
 With two frontend members providing a combined 30–40 hours per week, this equals approximately:
 
-- 3.6 weeks in the lean case;
-- 5.7 weeks in the expected case;
-- 8.9 weeks in the conservative case.
+- 2.6 weeks in the lean case;
+- 2.8 weeks in the expected case;
+- 3.2 weeks in the conservative case.
 
-For AI-capacity planning only, the two reported `Hy3` streams provide a provisional rate:
+For AI-capacity planning only, the measured Batch 1 data provides separate rates:
 
 ```text
-156.8M tokens / 45 hours ≈ 3.48M tokens/hour
+FE1: 10.5M tokens / 4 packages = 2.625M tokens/package
+FE2: 118.0M tokens / 4 packages = 29.50M tokens/package
 ```
 
-| Scenario | Provisional FE Tokens |
-|---|---:|
-| Lean | 498M |
-| Expected | 690M |
-| Conservative | 927M |
-
-This token estimate has low confidence and should be replaced with FE1/FE2 measurements. It is not an API charge.
+The combined FE values above are sums of the separately calculated FE1 and FE2 forecasts. They are not based on a blended average and remain forecasts, not API charges.
 
 ### 6.4 Complete MVP Duration
 
@@ -364,7 +365,7 @@ Monthly operating TCO
 
 1. exact provider/model/product surface behind `Hy3`;
 2. standardized human-effort and cycle-time logs;
-3. FE1/FE2 time and token measurements by work package;
+3. FE1/FE2 time and token measurements for the remaining work packages;
 4. rework and blocked-time records;
 5. subscription invoices and benefit-expiry dates;
 6. cloud, database, storage, email, and notification quotations;
@@ -376,11 +377,11 @@ Monthly operating TCO
 |---|---|
 | Complete MVP duration | 9 weeks expected; 8–10 week range |
 | Gross team capacity | 787.5 hours expected; 600–1,000 hour range |
-| Remaining backend | 14.6 proxy hours and 236.4M tokens expected |
+| Remaining backend | 14.6 real-time forecast hours and 236.4M tokens expected |
 | Backend token EAC | 486.3M expected; 407.5–565.1M range |
-| Frontend effort | 198 hours expected; 143–266 hour range |
-| Frontend AI usage | 690M provisional expected; 498–927M range |
-| Full implementation AI usage | 1.176B expected; 905.5M–1.492B range |
+| Frontend effort | 84.9 hours expected; 77.2–96.3 hour range |
+| Frontend AI usage | 414.2M expected; 398.3–446.1M range |
+| Full implementation AI usage | 900.5M expected; 805.8M–1.0112B range |
 | Development cash budget | VND 3,277,500 expected |
 | Conservative cash ceiling | Approximately VND 4,062,500 |
 | Economic labor | 787.5 hours × approved shadow rate |
