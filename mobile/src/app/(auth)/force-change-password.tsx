@@ -75,7 +75,7 @@ export default function ForceChangePassword() {
         <ScrollView className="flex-1 px-6 pb-6">
           <Field 
             label="Temporary password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Enter temporary password" 
             icon={<Lock size={16} color="gray" />} 
@@ -85,7 +85,7 @@ export default function ForceChangePassword() {
           />
           <Field 
             label="New password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Choose a new password" 
             icon={<Lock size={16} color="gray" />} 
@@ -95,7 +95,7 @@ export default function ForceChangePassword() {
           />
           <Field 
             label="Confirm new password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Re-enter new password" 
             icon={<Lock size={16} color="gray" />} 

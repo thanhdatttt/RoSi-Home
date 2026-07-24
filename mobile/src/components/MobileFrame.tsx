@@ -1,37 +1,30 @@
 import React, { type ReactNode } from "react";
-import { SafeAreaView, View, StyleSheet, Platform } from "react-native";
+import { SafeAreaView, View, Platform, ViewStyle } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 /**
  * MobileFrame acts as a SafeArea container for React Native.
- * On web, it constrained the size, but in a real mobile app,
- * we just want it to take up the full screen and respect safe areas.
  */
 export function MobileFrame({ children }: { children: ReactNode }) {
+  // Enforce rigid styles on web to simulate a mobile screen
+  const webStyle = Platform.OS === 'web' ? { 
+    maxWidth: 440, 
+    width: '100%', 
+    marginHorizontal: 'auto',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#e2e8f0', // standard tailwind border color
+    minHeight: '100vh',
+  } as any : {};
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.inner}>
+    <SafeAreaView 
+      className="flex-1 bg-background"
+      style={webStyle}
+    >
+      <View className="flex-1">
         {children}
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'var(--background)',
-    // If we're on the web, constrain the layout to look like a mobile frame
-    ...(Platform.OS === 'web' && {
-      maxWidth: 440,
-      width: '100%',
-      marginHorizontal: 'auto',
-      borderLeftWidth: 1,
-      borderRightWidth: 1,
-      borderColor: 'var(--border)',
-      minHeight: '100vh',
-    }),
-  },
-  inner: {
-    flex: 1,
-  }
-});

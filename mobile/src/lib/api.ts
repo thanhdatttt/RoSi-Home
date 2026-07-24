@@ -6,7 +6,7 @@ import Constants from 'expo-constants';
 const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiUrl as string | undefined) ??
   process.env.API_BASE_URL ??
-  'https://rosi-home.onrender.com';
+  'http://localhost:3000';
 
 export type ApiRequestOptions = {
   method?: string;

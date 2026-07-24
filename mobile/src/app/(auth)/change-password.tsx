@@ -77,7 +77,7 @@ export default function ChangePassword() {
         <ScrollView className="flex-1 px-6 pb-6">
           <Field 
             label="Current password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Enter current password" 
             icon={<Lock size={16} color="gray" />} 
@@ -87,7 +87,7 @@ export default function ChangePassword() {
           />
           <Field 
             label="New password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Choose a new password" 
             icon={<Lock size={16} color="gray" />} 
@@ -97,7 +97,7 @@ export default function ChangePassword() {
           />
           <Field 
             label="Confirm new password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Re-enter new password" 
             icon={<Lock size={16} color="gray" />} 

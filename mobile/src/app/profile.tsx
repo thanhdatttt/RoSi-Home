@@ -9,32 +9,21 @@ import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/api";
 
 export default function Profile() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, refreshProfile } = useAuth();
   const router = useRouter();
   
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(user?.fullName || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Update local state if the global user context changes
   useEffect(() => {
-    async function loadProfile() {
-      if (!token) return;
-      try {
-        const data = await apiRequest<any>('/profile', { method: 'GET', token });
-        if (data) {
-          setName(data.fullName || "");
-          setEmail(data.email || "");
-        }
-      } catch (err) {
-        console.error("Failed to load profile", err);
-      } finally {
-        setLoading(false);
-      }
+    if (user) {
+      setName(user.fullName || "");
+      setEmail(user.email || "");
     }
-    loadProfile();
-  }, [token]);
+  }, [user]);
 
   const handleSave = async () => {
     if (!token) return;
@@ -45,6 +34,8 @@ export default function Profile() {
         token,
         body: { fullName: name }
       });
+      // Refresh the global profile cache so the new name appears everywhere
+      await refreshProfile();
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } catch (err) {
@@ -58,16 +49,6 @@ export default function Profile() {
     await logout();
     router.replace("/login");
   };
-
-  if (loading) {
-    return (
-      <MobileFrame>
-        <View className="flex-1 items-center justify-center bg-background">
-          <ActivityIndicator size="large" color="#2563eb" />
-        </View>
-      </MobileFrame>
-    );
-  }
 
   return (
     <MobileFrame>

@@ -1,11 +1,44 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Building2, Users, Wrench, Bell, TrendingUp, UserCircle2, UserPlus } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { apiRequest } from "../../lib/api";
 
 export default function LandlordDashboard() {
+  const { token, user } = useAuth();
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!token) return;
+      try {
+        const propertiesData = await apiRequest<any[]>('/properties?pageSize=3', { token });
+        setProperties(propertiesData);
+      } catch (err) {
+        console.error("Failed to load dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [token]);
+
+  const firstName = user?.fullName ? user.fullName.split(' ')[0] : "Landlord";
+
+  if (loading) {
+    return (
+      <MobileFrame>
+        <View className="flex-1 items-center justify-center bg-background">
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      </MobileFrame>
+    );
+  }
+
   return (
     <MobileFrame>
       <View className="flex-1 flex-col bg-background">
@@ -21,8 +54,8 @@ export default function LandlordDashboard() {
             <View className="flex-row items-start justify-between">
               <View className="flex-1 pr-4">
                 <Text className="text-[11px] uppercase tracking-widest text-[#60a5fa] font-semibold">Landlord</Text>
-                <Text className="text-2xl font-extrabold text-white mt-1" numberOfLines={1}>Hi, Amelia</Text>
-                <Text className="text-xs text-white/70 mt-1">4 properties · 11 tenants</Text>
+                <Text className="text-2xl font-extrabold text-white mt-1" numberOfLines={1}>Hi, {firstName}</Text>
+                <Text className="text-xs text-white/70 mt-1">{properties.length} properties · 11 tenants</Text>
               </View>
               <View className="flex-row items-center gap-2 shrink-0">
                 <TouchableOpacity className="h-10 w-10 rounded-full bg-white/10 items-center justify-center">
@@ -40,7 +73,7 @@ export default function LandlordDashboard() {
               <View className="flex-row items-center justify-between">
                 <View>
                   <Text className="text-xs text-white/70">This month collected</Text>
-                  <Text className="text-3xl font-extrabold text-white mt-1">GHS 12,450</Text>
+                  <Text className="text-3xl font-extrabold text-white mt-1">11,400,000 VNĐ</Text>
                 </View>
                 <View className="flex-row items-center gap-1 bg-[#2563eb]/30 px-2.5 py-1 rounded-full">
                   <TrendingUp size={12} color="#60a5fa" />
@@ -81,9 +114,20 @@ export default function LandlordDashboard() {
               </Link>
             </View>
             <View className="gap-3">
-              <PropertyCard id="ridge-villa-2b" title="Ridge Villa 2B" address="12 Palm Ave, East Legon" units={3} occupied={3} />
-              <PropertyCard id="adenta-court" title="Adenta Court" address="4 Cedar Rd, Adenta" units={6} occupied={5} />
-              <PropertyCard id="cantonments-lofts" title="Cantonments Lofts" address="9 Rose St, Cantonments" units={2} occupied={2} />
+              {properties.length > 0 ? (
+                properties.map((prop) => (
+                  <PropertyCard 
+                    key={prop.id} 
+                    id={prop.id} 
+                    title={prop.name} 
+                    address={prop.address} 
+                    units={0} 
+                    occupied={0} 
+                  />
+                ))
+              ) : (
+                <Text className="text-sm text-muted-foreground text-center py-4">No properties found.</Text>
+              )}
             </View>
           </View>
 
@@ -91,7 +135,7 @@ export default function LandlordDashboard() {
           <View className="px-6 mt-8">
             <Text className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Recent activity</Text>
             <View className="rounded-2xl border border-border bg-surface overflow-hidden">
-              <Activity title="Rent received" who="Kojo M. · Adenta Court #3" amount="+GHS 1,200" />
+              <Activity title="Rent received" who="Kojo M. · Adenta Court #3" amount="+3,800,000 VNĐ" />
               <View className="h-[1px] bg-border ml-4" />
               <Activity title="Maintenance request" who="Ridge Villa · Plumbing" amount="Open" muted />
               <View className="h-[1px] bg-border ml-4" />
