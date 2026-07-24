@@ -826,7 +826,7 @@
                 <td>✗</td>
                 <td>Yếu — không hướng dẫn</td>
                 <td>Yếu</td>
-                <td class="hl">✓</td>
+                <td class="hl">✗</td>
               </tr>
               <tr>
                 <td>Giá minh bạch trước khi dùng</td>
@@ -988,11 +988,11 @@
               </div>
               <div class="stat-row">
                 <div class="stat">
-                  <div class="num coral">4.25 triệu VND</div>
+                  <div class="num coral">4.25m VND</div>
                   <div class="lbl">Tổng ngân sách - tool &amp; hạ tầng, không tính công lao động</div>
                 </div>
                 <div class="stat">
-                  <div class="num">~850 nghìn VND</div>
+                  <div class="num">~850k VND</div>
                   <div class="lbl">Mỗi thành viên tự góp nếu không có tài trợ</div>
                 </div>
               </div>
@@ -1027,7 +1027,7 @@
               <div class="card" style="flex:1; background:var(--surface);">
                 <ul>
                   <li><b>Property → Room → Lease → Tenant</b> liên kết chặt chẽ</li>
-                  <li><b>Meter Reading → Invoice → Payment</b> tự động, có audit trail</li>
+                  <li><b>Meter Reading → Invoice → Payment</b> generate QR tự động, có audit trail</li>
                   <li><b>Maintenance Request</b> có trạng thái Pending/In Progress/Completed</li>
                   <li><b>Notification</b> &amp; <b>Dashboard</b> tổng hợp từ mọi entity</li>
                 </ul>
@@ -1165,25 +1165,25 @@
                 <td>Cao — ảnh hưởng cách tiếp cận kỹ thuật</td>
               </tr>
               <tr>
-                <td class="hl">Landlords (Product Owner)</td>
-                <td>Cung cấp yêu cầu, xác thực quy trình, UAT</td>
+                <td class="hl">Landlords (Chủ nhà)</td>
+                <td>Cung cấp yêu cầu, xác thực quy trình</td>
                 <td>Không chịu trách nhiệm giao hàng, chỉ tư vấn</td>
-                <td>Hạn chế — nhận bản tóm tắt, prototype</td>
+                <td>Hạn chế - nhận bản tóm tắt, prototype</td>
                 <td>Cao cho quyết định sản phẩm</td>
               </tr>
               <tr>
-                <td class="hl">Tenants</td>
+                <td class="hl">Tenants (Khách thuê)</td>
                 <td>Đánh giá usability, test luồng thanh toán</td>
                 <td>Không chịu trách nhiệm giao hàng</td>
                 <td>Hạn chế — chỉ phần liên quan tenant</td>
-                <td>Thấp–Trung bình</td>
+                <td>Thấp - Trung bình</td>
               </tr>
               <tr>
                 <td class="hl">Banking (VietQR)</td>
                 <td>Chuẩn mã QR chuyển khoản</td>
                 <td>Chỉ chịu trách nhiệm về tính đúng của chuẩn</td>
                 <td>Không có quyền truy cập artifact</td>
-                <td>Trung bình — thay đổi chuẩn buộc đổi thiết kế</td>
+                <td>Trung bình - thay đổi chuẩn buộc đổi thiết kế</td>
               </tr>
             </table>
           </div>
@@ -1202,11 +1202,11 @@
               </div>
               <div class="cards c2" style="flex:1;">
                 <div class="card">
-                  <h4>Trong phạm vi (MVP)</h4>
+                  <h4>Phạm vi</h4>
                   <ul>
                     <li>Auth &amp; RBAC</li>
                     <li>Property/Room/Tenant/Lease</li>
-                    <li>Utility &amp; Billing + VietQR</li>
+                    <li>Utility &amp; Billing + VietQR generation</li>
                     <li>Maintenance, Dashboard, Notification</li>
                   </ul>
                 </div>
@@ -1232,7 +1232,7 @@
                     <th>Số US</th>
                   </tr>
                   <tr>
-                    <td>1. Infrastructure &amp; User Mgmt</td>
+                    <td>1. Infrastructure &amp; User Management</td>
                     <td>Auth, Profile, RBAC</td>
                     <td>~6</td>
                   </tr>
@@ -1259,7 +1259,7 @@
                   <tr>
                     <td class="hl">Tổng</td>
                     <td class="hl">51 User Stories</td>
-                    <td class="hl">MVP</td>
+                    <td class="hl">Final</td>
                   </tr>
                 </table>
               </div>
@@ -1299,10 +1299,10 @@
       <section class="slide">
         <div class="eyebrow"><span class="dot" style="background:var(--s3)"></span><span class="label">3 · Architecture
             & Proof of Concept</span><span class="rule"></span></div>
-        <h1 class="title">Kiến trúc <span class="accent">3 lớp — monolith</span></h1>
+        <h1 class="title">Kiến trúc <span class="accent">3 lớp - monolith</span></h1>
         <div class="content">
           <div class="cards c3">
-            <div class="diagram-box">Presentation<br><span style="font-weight:500; font-size:12px;">Web (React) + Mobile
+            <div class="diagram-box">Presentation<br><span style="font-weight:500; font-size:12px;">Mobile
                 (React Native)</span></div>
             <div class="diagram-box accent">Application / API<br><span style="font-weight:500; font-size:12px;">1 REST
                 API — Node.js/Express</span></div>
@@ -1312,12 +1312,12 @@
           <div class="cards c2">
             <div class="card">
               <h4>Vì sao Monolith, không Microservices?</h4>
-              <p>Microservices chỉ có giá trị khi cần scale độc lập &amp; nhiều team sở hữu riêng — không áp dụng cho
-                đội 5 người trong 8–10 tuần. Monolith dễ build, test, deploy, debug hơn nhiều.</p>
+              <p>Microservices chỉ có giá trị khi cần scale độc lập &amp; nhiều team sở hữu riêng - không áp dụng cho
+                đội 5 người trong 8 - 10 tuần. Monolith dễ build, test, deploy, debug hơn nhiều.</p>
             </div>
             <div class="card">
               <h4>Vì sao REST, không GraphQL?</h4>
-              <p>REST đơn giản để học và để AI coding tool scaffold chính xác — đủ dùng cho quy mô ứng dụng này; GraphQL
+              <p>REST đơn giản và AI coding tool scaffold chính xác - đủ dùng cho quy mô ứng dụng này; GraphQL
                 giải quyết vấn đề RosiHome không gặp phải.</p>
             </div>
           </div>
@@ -1340,12 +1340,12 @@
               <tr>
                 <td>Backend</td>
                 <td>Node.js + Express</td>
-                <td>Cùng ngôn ngữ với FE/Mobile — AI scaffold chính xác</td>
+                <td>Cùng ngôn ngữ với FE/Mobile - AI scaffold chính xác</td>
               </tr>
               <tr>
-                <td>Web / Mobile</td>
-                <td>React / React Native</td>
-                <td>Phổ biến nhất, dùng chung kiến thức &amp; code</td>
+                <td>Mobile</td>
+                <td>React Native</td>
+                <td>Phổ biến, dùng chung kiến thức &amp; code</td>
               </tr>
               <tr>
                 <td>Database / ORM</td>
@@ -1370,7 +1370,7 @@
               <tr>
                 <td>CI/CD · Hosting</td>
                 <td>GitHub Actions · Render/Railway/Vercel</td>
-                <td>Miễn phí, một sinh viên có thể tự vận hành</td>
+                <td>Miễn phí, có thể tự vận hành</td>
               </tr>
             </table>
           </div>
@@ -1383,8 +1383,8 @@
             & Proof of Concept</span><span class="rule"></span></div>
         <h1 class="title">Sơ đồ <span class="accent">luồng dữ liệu</span></h1>
         <div class="content" style="justify-content:center;">
-          <div class="cards c2" style="align-items:center;">
-            <div class="diagram-box">Web App (React)</div>
+          <div class="cards c1" style="align-items:center;">
+            <!-- <div class="diagram-box">Web App (React)</div> -->
             <div class="diagram-box">Mobile App (React Native)</div>
           </div>
           <div style="text-align:center; font-size:22px; color:var(--ink-soft);">↓ &nbsp;&nbsp; HTTP / REST &nbsp;&nbsp;
@@ -1392,14 +1392,15 @@
           <div class="diagram-box accent" style="max-width:420px; margin:0 auto;">Backend API (Node.js / Express)</div>
           <div style="text-align:center; font-size:22px; color:var(--ink-soft);">↓</div>
           <div class="cards c3">
-            <div class="diagram-box dark">PostgreSQL</div>
+            <div class="diagram-box dark">PostgreSQL - Supabase
+            </div>
             <div class="diagram-box dark">Cloud Storage<br><span style="font-weight:500;font-size:11.5px;">photos,
                 proofs</span></div>
             <div class="diagram-box dark">VietQR Generator</div>
           </div>
-          <div class="quote-box" style="margin-top:8px;">Đường nét đứt quan trọng nhất: <b>tiền chuyển thẳng ngân
-              hàng-tới-ngân hàng</b> giữa tenant và landlord — RosiHome chỉ sinh mã QR và lưu ảnh chứng minh, <b>không
-              giữ tiền của ai</b>.</div>
+          <div class="quote-box" style="margin-top:8px;">Quan trọng: <b>tiền chuyển thẳng ngân hàng - tới - ngân
+              hàng</b> giữa tenant và landlord - RosiHome chỉ sinh mã QR và lưu ảnh chứng minh, <b>không giữ tiền</b>.
+          </div>
         </div>
       </section>
 
@@ -1410,7 +1411,7 @@
         <div class="eyebrow"><span class="dot" style="background:var(--s4)"></span><span class="label">4 · Development
             Method</span><span class="rule"></span></div>
         <h1 class="title">Quy trình phát triển: <span class="accent">Kanban</span></h1>
-        <p class="subtitle">Kanban phù hợp vì công việc AI-assisted hoàn thành ở nhịp độ không đều — không cần chờ ranh
+        <p class="subtitle">Kanban phù hợp vì công việc AI-assisted hoàn thành ở nhịp độ không đều - không cần chờ ranh
           giới sprint cố định.</p>
         <div class="content">
           <div class="flow" style="justify-content:center;">
@@ -1541,14 +1542,14 @@
         <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
             Planning & Monitoring</span><span class="rule"></span></div>
         <h1 class="title">Phương pháp <span class="accent">ước lượng</span></h1>
-        <p class="subtitle">Empirical, flow-based forecasting bằng Kanban — dữ liệu thực tế thay cho giả định ban đầu.
+        <p class="subtitle">Empirical, flow-based forecasting bằng Kanban - dữ liệu thực tế thay cho giả định ban đầu.
         </p>
         <div class="content">
           <div class="cards c2">
             <div class="card">
               <h4>Nguyên tắc cốt lõi</h4>
               <ul>
-                <li>Bằng chứng trước khi ngoại suy — proposal ban đầu chỉ là giả thuyết</li>
+                <li>Bằng chứng trước khi ngoại suy - proposal ban đầu chỉ là giả thuyết</li>
                 <li>Chỉ tính story "Accepted Done" là throughput thật</li>
                 <li>Elapsed time ≠ AI active time ≠ Human effort</li>
                 <li>Dự báo là khoảng (P50/P80/P90), không phải một mốc cố định</li>
@@ -1600,17 +1601,17 @@
               <tr>
                 <td>Thời gian còn lại backend</td>
                 <td>14.6 giờ proxy</td>
-                <td>9.8 – 19.5 giờ</td>
+                <td>9.8 - 19.5 giờ</td>
               </tr>
               <tr>
                 <td>Nỗ lực frontend</td>
                 <td>198 giờ</td>
-                <td>143 – 266 giờ</td>
+                <td>143 - 266 giờ</td>
               </tr>
               <tr>
                 <td>Ngân sách phát triển (cash)</td>
-                <td>3.277.500 đ</td>
-                <td>950.000 – 4.062.500 đ</td>
+                <td>3.277.500 VND</td>
+                <td>950.000 - 4.062.500 VND</td>
               </tr>
             </table>
           </div>
@@ -1623,7 +1624,7 @@
       <section class="slide">
         <div class="eyebrow"><span class="dot" style="background:var(--s5)"></span><span class="label">5 · Estimation,
             Planning & Monitoring</span><span class="rule"></span></div>
-        <h1 class="title">Chi tiết <span class="accent">ngân sách</span> (4.250.000 đ)</h1>
+        <h1 class="title">Chi tiết <span class="accent">ngân sách</span> (4.250.000 VND)</h1>
         <div class="content">
           <div class="table-wrap">
             <table class="compact">
@@ -1637,7 +1638,7 @@
                 <td>Development Tools</td>
                 <td>1.600.000 đ</td>
                 <td class="hl">38%</td>
-                <td>Claude Code/Pro — công cụ nhân bội cho cả 5 người</td>
+                <td>AI agents - công cụ nhân bội cho cả 5 người</td>
               </tr>
               <tr>
                 <td>AI Agent Infra (LLM API)</td>
@@ -1666,7 +1667,7 @@
             </table>
           </div>
           <div class="quote-box">Không tính chi phí nhân công — công sức sinh viên là đóng góp học tập, không phải lao
-            động trả phí. Mọi con số trên là <b>tiền mặt thật sự</b> đội sẽ chi.</div>
+            động trả phí. Mọi con số trên là tiền đội sẽ chi.</div>
         </div>
       </section>
 
@@ -1734,7 +1735,7 @@
             </div>
             <div class="card">
               <h4>Roles &amp; Responsibilities</h4>
-              <p>Ai làm gì — tránh chồng chéo hoặc bỏ sót trách nhiệm giữa các thành viên.</p>
+              <p>Ai sẽ làm gì - tránh chồng chéo hoặc bỏ sót trách nhiệm giữa các thành viên.</p>
             </div>
             <div class="card">
               <h4>Resource &amp; Budget Baseline</h4>
@@ -1801,7 +1802,7 @@
           <div class="cards c3">
             <div class="card" style="background:var(--surface)">
               <h4>Đủ nhỏ để hoàn thành</h4>
-              <p>Phạm vi MVP rõ ràng trong 8–10 tuần, 5 thành viên, ngân sách 4,25 triệu đồng.</p>
+              <p>Phạm vi rõ ràng trong 8 - 10 tuần, 5 thành viên, ngân sách 4,25 triệu đồng.</p>
             </div>
             <div class="card" style="background:var(--surface)">
               <h4>Đủ thực tế để có người dùng</h4>
@@ -1809,7 +1810,7 @@
             </div>
             <div class="card" style="background:var(--surface)">
               <h4>Đủ lớn để phát triển tiếp</h4>
-              <p>Grand Vision: AI Landlord Assistant &amp; Rental Benchmark Data sau MVP.</p>
+              <p>Grand Vision: AI Landlord Assistant &amp; Rental Benchmark Data về sau.</p>
             </div>
           </div>
           <div class="quote-box" style="margin-top:auto;">Cảm ơn thầy/cô đã lắng nghe. Nhóm sẵn sàng cho phần hỏi đáp.
