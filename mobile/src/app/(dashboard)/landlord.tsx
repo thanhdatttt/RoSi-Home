@@ -73,7 +73,7 @@ export default function LandlordDashboard() {
               <View className="flex-row items-center justify-between">
                 <View>
                   <Text className="text-xs text-white/70">This month collected</Text>
-                  <Text className="text-3xl font-extrabold text-white mt-1">GHS 12,450</Text>
+                  <Text className="text-3xl font-extrabold text-white mt-1">11,400,000 VNĐ</Text>
                 </View>
                 <View className="flex-row items-center gap-1 bg-[#2563eb]/30 px-2.5 py-1 rounded-full">
                   <TrendingUp size={12} color="#60a5fa" />
@@ -135,7 +135,7 @@ export default function LandlordDashboard() {
           <View className="px-6 mt-8">
             <Text className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Recent activity</Text>
             <View className="rounded-2xl border border-border bg-surface overflow-hidden">
-              <Activity title="Rent received" who="Kojo M. · Adenta Court #3" amount="+GHS 1,200" />
+              <Activity title="Rent received" who="Kojo M. · Adenta Court #3" amount="+3,800,000 VNĐ" />
               <View className="h-[1px] bg-border ml-4" />
               <Activity title="Maintenance request" who="Ridge Villa · Plumbing" amount="Open" muted />
               <View className="h-[1px] bg-border ml-4" />

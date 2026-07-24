@@ -14,8 +14,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const currentPath = segments[segments.length - 1];
-    const isIndex = segments.length === 0 || segments[0] === 'index';
+    const currentSegments = segments as string[];
+    const currentPath = currentSegments[currentSegments.length - 1];
+    const isIndex = currentSegments.length === 0 || currentSegments[0] === 'index';
     const allowedUnauthPaths = ['login', 'register', 'forgot-password', 'reset-sent'];
     
     const isAllowedUnauth = isIndex || (currentPath && allowedUnauthPaths.includes(currentPath));
