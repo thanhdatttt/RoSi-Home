@@ -141,7 +141,7 @@ Token = 200 × 30,000
 
 ## Quy trình thực hiện
 
-Với mỗi Epic/User Story, team đưa ra 3 giá trị:
+Với mỗi Epic/User Story, team đưa ra 3 giá trị (bằng phương pháp Expert Judgment): 
 
 |Giá trị|Ý nghĩa|
 |---|---|

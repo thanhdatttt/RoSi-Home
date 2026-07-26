@@ -148,12 +148,12 @@ The overall estimate is suitable for software-project-management planning but sh
 
 ### 5.1 Observed Delivery Inputs
 
-| Stream | Calibrated Scope | Stories | Time Basis | Tokens | Model/Access |
-|---|---|---:|---:|---:|---|
-| BE1 | Batch 1 + Batch 2 plus setup/testing/FE/docs overhead | 15 | 35 member-reported hours | 135.0M | `Hy3`, free |
-| BE2 | Batch 1, Batch 2+3, and Batch 4 | 14 | 10 member-reported hours | 21.8M | `Hy3`, free |
-| BE3 | Billing Foundation | 3 | 1h01 agent-active | 36.5M | GPT-5.6 Sol, Plus/trial |
-| BE3 | MAINT-01→05 | 5 | 2h22m50 agent-active | 56.564626M | GPT-5.6 Sol, Plus/trial |
+| Stream | Calibrated Scope                                   | Stories |               Time Basis |     Tokens | Model/Access            |
+| ------ | -------------------------------------------------- | ------: | -----------------------: | ---------: | ----------------------- |
+| BE1    | Batch 1 + Batch 2 + setup/testing/FE/docs overhead |      15 | 35 member-reported hours |     135.0M | Hy3, free               |
+| BE2    | Batch 1, Batch 2+3, and Batch 4                    |      14 | 10 member-reported hours |      21.8M | Hy3, free               |
+| BE3    | Billing Foundation                                 |       3 |        1h01 agent-active |      36.5M | GPT-5.6 Sol, Plus/trial |
+| BE3    | MAINT-01→05                                        |       5 |     2h22m50 agent-active | 56.564626M | GPT-5.6 Sol, Plus/trial |
 
 The `Hy3` label is retained exactly as reported. The provider, exact model identifier, and product surface should be confirmed before formal model-efficiency comparison.
 
