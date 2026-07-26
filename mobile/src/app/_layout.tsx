@@ -14,8 +14,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const currentPath = segments[segments.length - 1];
-    const isIndex = segments.length === 0 || segments[0] === 'index';
+    const currentSegments = segments as string[];
+    const currentPath = currentSegments[currentSegments.length - 1];
+    const isIndex = currentSegments.length === 0 || currentSegments[0] === 'index';
     const allowedUnauthPaths = ['login', 'register', 'forgot-password', 'reset-sent'];
     
     const isAllowedUnauth = isIndex || (currentPath && allowedUnauthPaths.includes(currentPath));
@@ -24,13 +25,28 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace('/login');
     } else if (user) {
       const isAuthScreen = isIndex || (currentPath && allowedUnauthPaths.includes(currentPath));
+      
+      // If user MUST change password, strictly restrict them to the force-change-password screen
+      if (user.mustChangePassword && currentPath !== 'force-change-password') {
+        router.replace('/force-change-password');
+        return;
+      }
+
       if (isAuthScreen) {
+        // Redirect authenticated users away from login/register screens
         if (user.mustChangePassword) {
           router.replace('/force-change-password');
         } else if (user.role === 'Tenant') {
           router.replace('/tenant');
         } else {
           router.replace('/landlord');
+        }
+      } else if (!user.mustChangePassword) {
+        // Strictly prevent cross-role access to dashboards
+        if (user.role === 'Landlord' && currentPath === 'tenant') {
+          router.replace('/landlord');
+        } else if (user.role === 'Tenant' && currentPath === 'landlord') {
+          router.replace('/tenant');
         }
       }
     }

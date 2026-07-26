@@ -23,7 +23,7 @@ export default function Login() {
     }
     setErr(null);
     try {
-      const user = await login(email.trim(), password);
+      const user = await login(email.trim(), password, rememberMe);
       if (user.mustChangePassword) {
         router.push("/force-change-password");
       } else if (user.role === 'Tenant') {
@@ -91,7 +91,7 @@ export default function Login() {
           </View>
 
           {err && (
-            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
+            <View className="rounded-lg bg-destructive/10 px-3 py-2 mb-4">
               <Text className="text-xs text-destructive">{err}</Text>
             </View>
           )}

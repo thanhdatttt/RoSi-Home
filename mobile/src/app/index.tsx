@@ -20,7 +20,7 @@ export default function Welcome() {
         colors={['#0c1a3a', '#0a1228', '#060d1e']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
       
       <View style={{ flex: 1, overflow: 'hidden' }}>

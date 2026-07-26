@@ -19,8 +19,8 @@ export default function ChangePassword() {
 
   const rules = [
     { label: "At least 8 characters", ok: next.length >= 8 },
-    { label: "One uppercase letter", ok: /[A-Z]/.test(next) },
-    { label: "One number", ok: /\\d/.test(next) },
+    { label: "At least 1 letter", ok: /[a-zA-Z]/.test(next) },
+    { label: "At least 1 number", ok: /\d/.test(next) },
     { label: "Different from current password", ok: next.length > 0 && next !== current },
   ];
 
@@ -77,7 +77,7 @@ export default function ChangePassword() {
         <ScrollView className="flex-1 px-6 pb-6">
           <Field 
             label="Current password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Enter current password" 
             icon={<Lock size={16} color="gray" />} 
@@ -87,7 +87,7 @@ export default function ChangePassword() {
           />
           <Field 
             label="New password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Choose a new password" 
             icon={<Lock size={16} color="gray" />} 
@@ -97,7 +97,7 @@ export default function ChangePassword() {
           />
           <Field 
             label="Confirm new password" 
-            type="password" 
+             
             secureTextEntry 
             placeholder="Re-enter new password" 
             icon={<Lock size={16} color="gray" />} 

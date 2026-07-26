@@ -40,7 +40,7 @@ export default function TenantDashboard() {
             <View className="mt-6 rounded-3xl bg-white/10 border border-white/20 p-5">
               <Text className="text-xs text-white/70">Next payment due</Text>
               <View className="flex-row items-baseline justify-between mt-1">
-                <Text className="text-3xl font-extrabold text-white">GHS 1,200</Text>
+                <Text className="text-3xl font-extrabold text-white">3,800,000 VNĐ</Text>
                 <Text className="text-xs text-[#60a5fa] font-semibold">in 6 days</Text>
               </View>
               <View className="mt-4">
