@@ -7,16 +7,17 @@
 
 ### Bước 1 — Expert Judgment (estimate ban đầu)
 
-- Mỗi thành viên đọc User Story.
-- Gán **Story Point ban đầu** dựa trên:
+- 1 thành viên đọc User Story.
+- Gán **Story Point ban đầu** (theo Fibonacci estimation scale từ 1 tới 13) dựa trên:
     - độ phức tạp logic
     - UI
     - database
     - API/integration
     - testing
     - kinh nghiệm từ project trước
+    - Gợi ý của AI
 
-Output:
+Output: 
 
 |User Story|Initial Story Point|
 |---|--:|
@@ -45,6 +46,7 @@ Output:
 ### Bước 3 — Tính Velocity từ 50% MVP đã làm
 
 Dữ liệu đã có:
+(SP là story points)
 
 |Metric|Value|
 |---|--:|
@@ -88,7 +90,7 @@ Token = 200 × 30,000
 
 ---
 
-## Checklist kiểm tra team đã làm đủ chưa
+## Checklist
 
 ✅ 51 User Stories đều có Story Point  
 ✅ Có ghi lại Initial SP và Final SP  
@@ -99,10 +101,11 @@ Token = 200 × 30,000
 - model AI sử dụng  
     ✅ Có tính Velocity  
     ✅ Có tính Token/SP  
-    ✅ Có estimate cuối cùng cho:
-- thời gian
-- effort
-- token
+    ✅ Có estimate cuối cùng cần bao nhiêu:
+	- thời gian
+	- effort
+	- token
+		để hoàn thành MVP
 
 ---
 
@@ -113,7 +116,7 @@ Token = 200 × 30,000
 **Mục tiêu:** Estimate khi chưa có đủ dữ liệu lịch sử hoặc có nhiều yếu tố không chắc chắn.
 ## Quy trình thực hiện
 
-Với mỗi Epic/User Story, team đưa ra 3 giá trị (bằng phương pháp Expert Judgment): 
+Với mỗi Epic/User Story, team đưa ra 3 giá trị (bằng phương pháp Expert Judgment - 1 thành viên kết hợp sự hỗ trợ của AI để gán OMP cho tất cả feature): 
 
 |Giá trị|Ý nghĩa|
 |---|---|
@@ -149,7 +152,6 @@ Lặp lại cho các Feature/User Story rồi cộng tổng.
 ## Checklist kiểm tra team đã làm đủ chưa
 
 ✅ Mỗi Feature/User Story có:
-
 - Optimistic
 - Most likely
 - Pessimistic
@@ -157,12 +159,10 @@ Lặp lại cho các Feature/User Story rồi cộng tổng.
 ✅ Có công thức tính Expected Value
 
 ✅ Có tổng:
-
 - Expected time
 - Expected token
 
 ✅ Có giải thích các trường hợp rủi ro:
-
 - AI sinh code lỗi
 - cần refactor
 - API không ổn định
