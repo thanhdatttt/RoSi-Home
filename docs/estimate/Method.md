@@ -28,7 +28,6 @@ Output:
 ---
 
 ### Bước 2 — Planning Poker (chốt Story Point)
-
 - Team vote Story Point.
 - Nếu chênh lệch lớn → thảo luận.
 - Vote lại đến khi thống nhất.
@@ -109,14 +108,12 @@ Token = 200 × 30,000
 
 ---
 
----
-
 # Phương pháp 2: Three-Point Estimation (PERT)
 
 **Mục tiêu:** Estimate khi chưa có đủ dữ liệu lịch sử hoặc có nhiều yếu tố không chắc chắn.
 ## Quy trình thực hiện
 
-Với mỗi Epic/User Story, team đưa ra 3 giá trị (bằng phương pháp Expert Judgment - 1 thành viên kết hợp sự hỗ trợ của AI để gán OMP cho tất cả feature): 
+Với mỗi Epic/User Story, team đưa ra 3 giá trị (bằng phương pháp Expert Judgment - team leader kết hợp sự hỗ trợ của AI để gán OMP cho tất cả feature): 
 
 |Giá trị|Ý nghĩa|
 |---|---|
@@ -200,7 +197,7 @@ Song song:
 
 PERT
         ↓
-Estimate theo best/normal/worst case
+Estimate theo best/most likely/worst case
         ↓
 So sánh với kết quả chính
         ↓
