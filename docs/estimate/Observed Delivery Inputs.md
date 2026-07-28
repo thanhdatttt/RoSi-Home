@@ -9,17 +9,6 @@
 | BE3    | Billing Foundation    |       3 |          2h real-time |      36.5M | GPT-5.6 Sol, Plus/trial                              |
 | BE3    | MAINT-01→05           |       5 |          3h real-time | 56.564626M | GPT-5.6 Sol, Plus/trial                              |
 
-| Stream | Calibrated Scope                                             | Stories | Time Basis |     Tokens | Model/Access                                         |
-| ------ | ------------------------------------------------------------ | ------: | ---------: | ---------: | ---------------------------------------------------- |
-| BE1    | setup backend infrastructure + frontend infrastructure       |       0 |     2 days |       30 M | `Hy3`, free                                          |
-| BE1    | Batch 1 + Batch 2 + resolve docs overhead compared with code |      15 |     3 days |     105.0M | `Hy3`, free                                          |
-| BE2    | Batch 1                                                      |       5 |     1 days |       6.3M | `Hy3`, free                                          |
-| BE2    | Batch 2 + Batch 3                                            |       7 |     2 days |      13.0M | `Hy3`, free                                          |
-| FE1    | Batch 1 frontend work                                        |       7 |     2 days |      10.5M | Gemini 3.1 Pro, student subscription free for 1 year |
-| FE2    | Batch 1 frontend work                                        |       8 |     2 days |     118.0M | GPT-5.6 Sol High, Plus subscription                  |
-| BE3    | Billing Foundation                                           |       3 |   0.5 days |      36.5M | GPT-5.6 Sol, Plus/trial                              |
-| BE3    | MAINT-01→05                                                  |       5 |   0.5 days | 56.564626M | GPT-5.6 Sol, Plus/trial                              |
-
  The first 2 day, BE1 also setup backend infrastructure + frontend infrastructure + resolve docs overhead : those are not counted towards user story
 
 The whole team have to wait for infrastructure set up and FE have to wait for backend to finish the batch before doing the FE part of the batch. Thus, the whole process took 7 days in total. BE don't need to wait for anything so they work at their own pace.
