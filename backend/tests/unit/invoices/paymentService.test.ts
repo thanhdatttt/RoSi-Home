@@ -60,9 +60,9 @@ describe("paymentService unit tests", () => {
     status: "Sent",
     totalAmount: 5000000,
     propertyName: "P1",
-    roomName: "R1",
+    roomId: "12345678-abcd",
     billingPeriod: "2025-01",
-    tenantName: "Tenant A",
+    tenantFullName: "Tenant A",
   };
 
   describe("getVietqrService", () => {
