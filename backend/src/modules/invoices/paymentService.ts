@@ -29,7 +29,7 @@ export async function getVietqrService(actorId: string, role: "Landlord" | "Tena
     throw new UnprocessableError("Landlord payment configuration is missing.");
   }
 
-  const description = `Rent ${detail.propertyName} ${detail.roomName} ${detail.billingPeriod}`;
+  const description = `Rent ${detail.propertyName} Room ${detail.roomId.substring(0, 4)} ${detail.billingPeriod}`;
 
   const qr = await generateVietQR(
     config.bankCode,
@@ -87,7 +87,7 @@ export async function uploadPaymentProofService(
     userId: detail.landlordId,
     type: "payment.proofUploaded",
     title: "Payment proof uploaded",
-    body: `${detail.tenantName} uploaded payment proof for ${detail.roomName} (${detail.billingPeriod})`,
+    body: `${detail.tenantFullName} uploaded payment proof for Room ${detail.roomId.substring(0, 4)} (${detail.billingPeriod})`,
     linkRef: `invoices/${invoiceId}`,
   });
 

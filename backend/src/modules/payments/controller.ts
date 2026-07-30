@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { PaymentService } from "./service.js";
-import { AppError } from "../../lib/errors.js";
+import { NotFoundError, UnprocessableError, ForbiddenError } from "../../lib/errors.js";
 
 export async function getPaymentConfig(req: Request, res: Response) {
   if (req.user!.role !== "Landlord") {
-    throw new AppError(403, "Only landlords can view payment configs");
+    throw new ForbiddenError("Only landlords can view payment configs");
   }
   const config = await PaymentService.getPaymentConfig(req.user!.id);
   res.json({ data: config });
@@ -12,7 +12,7 @@ export async function getPaymentConfig(req: Request, res: Response) {
 
 export async function updatePaymentConfig(req: Request, res: Response) {
   if (req.user!.role !== "Landlord") {
-    throw new AppError(403, "Only landlords can update payment configs");
+    throw new ForbiddenError("Only landlords can update payment configs");
   }
   const { bankCode, accountNumber, accountHolderName } = req.body;
   const config = await PaymentService.upsertPaymentConfig(req.user!.id, {
@@ -25,7 +25,7 @@ export async function updatePaymentConfig(req: Request, res: Response) {
 
 export async function getPendingProofs(req: Request, res: Response) {
   if (req.user!.role !== "Landlord") {
-    throw new AppError(403, "Only landlords can view pending payment proofs");
+    throw new ForbiddenError("Only landlords can view pending payment proofs");
   }
   // status is validated by schema, implicitly Pending for landlord queue
   const proofs = await PaymentService.getPendingProofs(req.user!.id);

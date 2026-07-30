@@ -9,7 +9,7 @@ import {
   rooms,
   leases,
 } from "../../db/schema.js";
-import { AppError } from "../../lib/errors.js";
+import { NotFoundError, UnprocessableError, ForbiddenError } from "../../lib/errors.js";
 
 export const PaymentRepository = {
   async getPaymentConfig(landlordId: string) {
