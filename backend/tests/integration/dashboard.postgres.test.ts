@@ -71,16 +71,16 @@ beforeEach(async () => {
   nextWeek.setDate(today.getDate() + 7);
 
   await dbPool.query(
-    `INSERT INTO leases (id, room_id, tenant_info_id, status, start_date, end_date, rent_amount, deposit_amount)
-     VALUES ($1, $2, $3, 'Active', '2026-01-01', $4, 5000000, 5000000)`,
-    [LEASE_ID, ROOM_ID, TENANT_INFO_ID, nextWeek.toISOString().split("T")[0]]
+    `INSERT INTO leases (id, room_id, tenant_info_id, status, start_date, end_date, agreed_rent, deposit, created_by)
+     VALUES ($1, $2, $3, 'Active', '2026-01-01', $4, 5000000, 5000000, $5)`,
+    [LEASE_ID, ROOM_ID, TENANT_INFO_ID, nextWeek.toISOString().split("T")[0], LANDLORD_ID]
   );
 
   // Invoice 1: Overdue
   await dbPool.query(
-    `INSERT INTO invoices (id, lease_id, type, billing_period, total_amount, due_date, status)
-     VALUES ($1, $2, 'Rent', '2026-06', 5500000, '2026-06-30', 'Sent')`,
-    [INVOICE_ID, LEASE_ID]
+    `INSERT INTO invoices (id, lease_id, room_id, billing_period, issue_date, due_date, total_amount, status)
+     VALUES ($1, $2, $3, '2026-06', '2026-06-25', '2026-06-30', 5500000, 'Sent')`,
+    [INVOICE_ID, LEASE_ID, ROOM_ID]
   );
   
   await dbPool.query(
@@ -92,9 +92,9 @@ beforeEach(async () => {
 
   // Invoice 2: Paid (Current month)
   await dbPool.query(
-    `INSERT INTO invoices (id, lease_id, type, billing_period, total_amount, due_date, status)
-     VALUES ($1, $2, 'Rent', '2026-07', 5200000, '2026-07-31', 'Paid')`,
-    [INVOICE_2_ID, LEASE_ID]
+    `INSERT INTO invoices (id, lease_id, room_id, billing_period, issue_date, due_date, total_amount, status)
+     VALUES ($1, $2, $3, '2026-07', '2026-07-25', '2026-07-31', 5200000, 'Paid')`,
+    [INVOICE_2_ID, LEASE_ID, ROOM_ID]
   );
 
   await dbPool.query(
@@ -106,9 +106,9 @@ beforeEach(async () => {
 
   // Payment for Invoice 2 in July
   await dbPool.query(
-    `INSERT INTO payments (id, invoice_id, amount, status, method, verified_at)
-     VALUES ($1, $2, 5200000, 'Verified', 'Bank Transfer', '2026-07-15T12:00:00Z')`,
-    [PAYMENT_ID, INVOICE_2_ID]
+    `INSERT INTO payments (id, invoice_id, amount, verified_by, verified_at)
+     VALUES ($1, $2, 5200000, $3, '2026-07-15T12:00:00Z')`,
+    [PAYMENT_ID, INVOICE_2_ID, LANDLORD_ID]
   );
 });
 
