@@ -324,7 +324,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, address]
+              required: [name, address, utilityRates]
               properties:
                 name:
                   type: string
@@ -332,6 +332,19 @@ paths:
                   type: string
                 locality:
                   type: string
+                utilityRates:
+                  type: object
+                  required: [electricityRatePerKwh, waterBillingMethod]
+                  properties:
+                    electricityRatePerKwh:
+                      type: integer
+                    waterBillingMethod:
+                      type: string
+                      enum: [Metered, Flat]
+                    waterRatePerM3:
+                      type: integer
+                    waterFlatAmountPerTenant:
+                      type: integer
       responses:
         "201":
           description: Property created
@@ -648,9 +661,21 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Utility rates
+          description: Utility rates containing both current and upcoming rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        type: object
+                      upcoming:
+                        type: object
     post:
-      summary: Set utility rates
+      summary: Set or update upcoming utility rates
       tags: [Utilities]
       parameters:
         - in: path
@@ -715,6 +740,15 @@ paths:
                     type: array
                     items:
                       type: object
+                      properties:
+                        name:
+                          type: string
+                        current:
+                          type: object
+                          nullable: true
+                        upcoming:
+                          type: object
+                          nullable: true
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
     post:

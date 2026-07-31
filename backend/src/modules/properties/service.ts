@@ -33,12 +33,27 @@ function serialize(row: PropertyRow): PropertyView {
   };
 }
 
+import { insertInitialUtilityRate } from "../utilities/repository.js";
+import { businessDate } from "../../lib/businessDate.js";
+import { db } from "../../db/index.js";
+
 export async function createPropertyService(
   landlordId: string,
   input: CreatePropertyInput,
 ): Promise<PropertyView> {
   try {
-    const row = await createProperty(landlordId, input);
+    const row = await db.transaction(async (tx) => {
+      const prop = await createProperty(landlordId, input, tx);
+      await insertInitialUtilityRate(
+        prop.id,
+        landlordId,
+        input.utilityRates,
+        businessDate(),
+        tx
+      );
+      return prop;
+    });
+    
     await writeAudit({
       actorUserId: landlordId,
       action: "property.created",

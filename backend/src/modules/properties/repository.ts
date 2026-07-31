@@ -9,8 +9,9 @@ export type PropertyRow = typeof properties.$inferSelect;
 export async function createProperty(
   landlordId: string,
   input: CreatePropertyInput,
+  executor: any = db,
 ): Promise<PropertyRow> {
-  const [row] = await db
+  const [row] = await executor
     .insert(properties)
     .values({
       landlordId,

@@ -1,4 +1,4 @@
-import { and, asc, count, eq, getTableColumns, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { properties, surcharges } from "../../db/schema.js";
 import { findProperty } from "../properties/repository.js";
@@ -15,12 +15,43 @@ export async function assertPropertyOwned(
   if (!prop) throw new NotFoundError("Property not found.");
 }
 
-export async function createSurcharge(
+export async function upsertUpcomingSurcharge(
   propertyId: string,
   createdBy: string,
   input: CreateSurchargeInput,
-  executor: typeof db = db,
+  today: string,
+  executor: any = db,
 ): Promise<SurchargeRow> {
+  const existing = await executor
+    .select()
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, input.name),
+        sql`${surcharges.effectiveFrom} > ${today}`,
+        isNull(surcharges.deletedAt),
+      ),
+    )
+    .orderBy(desc(surcharges.createdAt))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const [row] = await executor
+      .update(surcharges)
+      .set({
+        createdBy,
+        monthlyAmount: input.monthlyAmount,
+        effectiveFrom: input.effectiveFrom,
+        effectiveTo: input.effectiveTo ?? null,
+        active: true,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(surcharges.id, existing[0].id))
+      .returning();
+    return row;
+  }
+
   const [row] = await executor
     .insert(surcharges)
     .values({
