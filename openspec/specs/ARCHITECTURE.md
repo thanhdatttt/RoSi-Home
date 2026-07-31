@@ -369,7 +369,7 @@ erDiagram
 |---|---|---|
 | id | uuid PK | |
 | propertyId | uuid, FK properties | |
-| name | text | UNIQUE(propertyId, name, active + overlapping period) |
+| name | text | Name of the surcharge (e.g. Internet) |
 | monthlyAmount | integer (VND) | ≥ 0 |
 | effectiveFrom | date | |
 | effectiveTo | date nullable | |

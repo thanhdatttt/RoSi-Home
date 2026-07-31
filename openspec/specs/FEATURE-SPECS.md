@@ -88,9 +88,9 @@
 #### US-PROPERTY-01 — Create a property
 - **Endpoint:** `POST /api/v1/properties`
 - **Auth:** Landlord
-- **Request:** `{ name, address, locality? }`
+- **Request:** `{ name, address, locality?, utilityRates, surcharges? }`
 - **Response:** `201 { data: property }`
-- **Business rules:** `name` and `address` required; `locality` optional (province/city code, used as the locality key for `regulatory_rate_defaults` fallback in US-METER-02); `UNIQUE(landlordId, name)` and `UNIQUE(landlordId, address)` among active rows → `409` on violation; `landlordId` always taken from `req.user.id`.
+- **Business rules:** `name`, `address`, and `utilityRates` (without `effectiveFrom`) are required; `locality` optional (province/city code, used as the locality key for `regulatory_rate_defaults` fallback in US-METER-02); `surcharges` (array, without `effectiveFrom` or `effectiveTo`) is optional; `UNIQUE(landlordId, name)` and `UNIQUE(landlordId, address)` among active rows → `409` on violation; `landlordId` always taken from `req.user.id`. The backend will automatically set the `effectiveFrom` of the initial `utilityRates` and any initial `surcharges` to the current date (`today`).
 
 #### US-PROPERTY-02 — View and update owned properties
 - **Endpoints:** `GET /api/v1/properties`, `GET /api/v1/properties/:id`, `PATCH /api/v1/properties/:id`
@@ -161,13 +161,15 @@
 - **Business rules:** a rate change never touches already-generated `invoice_line_items` (those snapshot `sourceRateId` and `unitRate` at generation time — immutable history). Future invoice generation runs pick up the new effective row automatically.
 
 #### US-CHARGE-01 — Configure recurring property surcharges
-- **Endpoints:** `POST /api/v1/properties/:propertyId/surcharges`, `GET .../surcharges`, `PATCH /api/v1/surcharges/:id`, `DELETE /api/v1/surcharges/:id` (soft, sets `active=false`/`deletedAt`)
+- **Endpoints:** `POST /api/v1/charges/properties/:propertyId/surcharges`, `GET /api/v1/charges/properties/:propertyId/surcharges`, `PATCH /api/v1/charges/:id`, `DELETE /api/v1/charges/:id` (soft, sets `active=false`/`deletedAt`)
 - **Auth:** Landlord, must own property
 - **Request (POST):** `{ name, monthlyAmount, effectiveFrom, effectiveTo? }`
 - **Business rules:**
-  - `monthlyAmount >= 0`; no two **active** surcharges in the same property with the same `name` and overlapping `[effectiveFrom, effectiveTo ?? +inf)` → `409`.
+  - `monthlyAmount >= 0`; `effectiveFrom` must be strictly in the future (`> today`).
+  - At most one future/upcoming surcharge may exist per `name`. If an upcoming surcharge already exists (`effectiveFrom > today`), update it in place. Otherwise, insert a new row. (Surcharges with `effectiveFrom <= today` are never updated in place to protect billing history).
   - Deactivation/update is **prospective only**: an invoice already `Sent`/`Paid` keeps its already-snapshotted surcharge line item untouched; only future invoice generation runs see the change.
-  - `DELETE` sets `active=false` + `deletedAt`/`deletedBy` (soft) and records the responsible landlord/time via the shared audit mechanism (architecture §4.3).
+  - `PATCH` is only allowed on upcoming surcharges (`effectiveFrom > today`).
+  - `DELETE` allows deleting either the current or upcoming surcharge version. It sets `active=false` + `deletedAt`/`deletedBy` (soft) and records the responsible landlord/time via the shared audit mechanism (architecture §4.3).
 
 ---
 
