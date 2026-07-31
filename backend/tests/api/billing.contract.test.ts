@@ -87,7 +87,7 @@ describe("Billing Foundation HTTP contract", () => {
     mocks.getRatesService.mockResolvedValue({ current: utilityView, upcoming: null });
     mocks.createSurchargeService.mockResolvedValue(surchargeView);
     mocks.listSurchargesService.mockResolvedValue({
-      data: [surchargeView],
+      data: [{ name: surchargeView.name, current: surchargeView, upcoming: null }],
       meta: { page: 1, pageSize: 20, total: 1 },
     });
     mocks.updateSurchargeService.mockResolvedValue({
@@ -218,7 +218,7 @@ describe("Billing Foundation HTTP contract", () => {
     const body = {
       name: "Internet",
       monthlyAmount: 100000,
-      effectiveFrom: "2026-07-01",
+      effectiveFrom: "2099-07-01",
     };
 
     const response = await request(app)
@@ -242,7 +242,7 @@ describe("Billing Foundation HTTP contract", () => {
       .expect(200);
 
     expect(response.body).toEqual({
-      data: [surchargeView],
+      data: [{ name: surchargeView.name, current: surchargeView, upcoming: null }],
       meta: { page: 1, pageSize: 20, total: 1 },
     });
     expect(mocks.listSurchargesService).toHaveBeenCalledWith(

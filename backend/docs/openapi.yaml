@@ -727,6 +727,15 @@ paths:
                     type: array
                     items:
                       type: object
+                      properties:
+                        name:
+                          type: string
+                        current:
+                          type: object
+                          nullable: true
+                        upcoming:
+                          type: object
+                          nullable: true
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
     post:

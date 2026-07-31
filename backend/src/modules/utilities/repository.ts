@@ -66,6 +66,28 @@ export async function upsertUpcomingRate(
   return row;
 }
 
+export async function insertInitialUtilityRate(
+  propertyId: string,
+  createdBy: string,
+  input: Omit<UtilityRateInput, "effectiveFrom">,
+  effectiveFrom: string,
+  executor: any = db,
+): Promise<UtilityRateRow> {
+  const [row] = await executor
+    .insert(utilityRateHistory)
+    .values({
+      propertyId,
+      createdBy,
+      electricityRatePerKwh: input.electricityRatePerKwh,
+      waterBillingMethod: input.waterBillingMethod,
+      waterRatePerM3: input.waterRatePerM3 ?? null,
+      waterFlatAmountPerTenant: input.waterFlatAmountPerTenant ?? null,
+      effectiveFrom,
+    })
+    .returning();
+  return row;
+}
+
 export async function getCurrentRate(
   propertyId: string,
   today: string,
