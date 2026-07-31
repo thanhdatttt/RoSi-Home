@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Platform } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
+import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Receipt, Plus, Trash2, Power } from "lucide-react-native";
 
@@ -24,10 +24,6 @@ export default function SurchargesConfig() {
   const [form, setForm] = useState({ name: "", amount: "", start: new Date(), end: new Date() });
   const [useEnd, setUseEnd] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
-
   function toggle(sid: number) {
     setList((l) => l.map((s) => (s.id === sid ? { ...s, active: !s.active } : s)));
   }
@@ -70,15 +66,6 @@ export default function SurchargesConfig() {
     setAdding(false);
   }
 
-  const onChangeStart = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowStartPicker(Platform.OS === 'ios');
-    if (selectedDate) setForm({ ...form, start: selectedDate });
-  };
-  
-  const onChangeEnd = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowEndPicker(Platform.OS === 'ios');
-    if (selectedDate) setForm({ ...form, end: selectedDate });
-  };
 
   return (
     <MobileFrame>
@@ -139,22 +126,12 @@ export default function SurchargesConfig() {
               {/* Date row */}
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Start</Text>
-                  {Platform.OS === 'web' ? (
-                    React.createElement('input', {
-                      type: 'date',
-                      value: form.start.toISOString().slice(0, 10),
-                      onChange: (e: any) => setForm({ ...form, start: new Date(e.target.value) }),
-                      style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, fontSize: 14, outline: 'none' }
-                    })
-                  ) : (
-                    <>
-                      <TouchableOpacity onPress={() => setShowStartPicker(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 14 }}>{form.start.toISOString().slice(0, 10)}</Text>
-                      </TouchableOpacity>
-                      {showStartPicker && <DateTimePicker value={form.start} mode="date" display="default" onChange={onChangeStart} />}
-                    </>
-                  )}
+                  <DatePicker 
+                    label="Start"
+                    value={form.start}
+                    onChange={(d) => setForm({ ...form, start: d })}
+                    compact
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -165,21 +142,11 @@ export default function SurchargesConfig() {
                       <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '500' }}>+ Add End Date</Text>
                     </TouchableOpacity>
                   ) : (
-                    Platform.OS === 'web' ? (
-                      React.createElement('input', {
-                        type: 'date',
-                        value: form.end.toISOString().slice(0, 10),
-                        onChange: (e: any) => setForm({ ...form, end: new Date(e.target.value) }),
-                        style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, fontSize: 14, outline: 'none' }
-                      })
-                    ) : (
-                      <>
-                        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center' }}>
-                          <Text style={{ fontSize: 14 }}>{form.end.toISOString().slice(0, 10)}</Text>
-                        </TouchableOpacity>
-                        {showEndPicker && <DateTimePicker value={form.end} mode="date" display="default" onChange={onChangeEnd} />}
-                      </>
-                    )
+                    <DatePicker 
+                      value={form.end}
+                      onChange={(d) => setForm({ ...form, end: d })}
+                      compact
+                    />
                   )}
                 </View>
               </View>

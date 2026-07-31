@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, TextInput } from "react-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
+import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
-import { ArrowLeft, Zap, Droplets, Info, Calendar } from "lucide-react-native";
+import { ArrowLeft, Zap, Droplets, Info } from "lucide-react-native";
 
 export default function UtilitiesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,7 +19,6 @@ export default function UtilitiesConfig() {
   const [waterFlat, setWaterFlat] = useState("100000");
   
   const [effective, setEffective] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
   
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -49,12 +49,6 @@ export default function UtilitiesConfig() {
     }, 800);
   };
 
-  const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setEffective(selectedDate);
-    }
-  };
 
   const isMetered = waterMethod === "metered";
 
@@ -170,48 +164,11 @@ export default function UtilitiesConfig() {
 
           {/* Effective date */}
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Effective from</Text>
-            {Platform.OS === 'web' ? (
-              React.createElement('input', {
-                type: 'date',
-                value: effective.toISOString().slice(0, 10),
-                onChange: (e: any) => setEffective(new Date(e.target.value)),
-                style: {
-                  width: '100%',
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: '#ffffff',
-                  borderWidth: 1,
-                  borderColor: '#e2e8f0',
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  fontSize: 14,
-                  fontWeight: '500',
-                  outline: 'none',
-                }
-              })
-            ) : (
-              <>
-                <TouchableOpacity 
-                  onPress={() => setShowPicker(true)}
-                  style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: '500' }}>
-                    {effective.toISOString().slice(0, 10)}
-                  </Text>
-                  <Calendar size={18} color="gray" />
-                </TouchableOpacity>
-                
-                {showPicker && (
-                  <DateTimePicker
-                    value={effective}
-                    mode="date"
-                    display="default"
-                    onChange={onChangeDate}
-                  />
-                )}
-              </>
-            )}
+            <DatePicker 
+              label="Effective from"
+              value={effective} 
+              onChange={setEffective} 
+            />
           </View>
 
           {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}

@@ -25,7 +25,7 @@ const Storage = {
   },
 };
 
-import { apiRequest } from '@/lib/api';
+import { apiRequest, onApiError } from '@/lib/api';
 
 export type AuthUser = {
   id: string;
@@ -94,6 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Globally intercept 401 Unauthorized errors to automatically log the user out
+  useEffect(() => {
+    return onApiError((error) => {
+      if (error.status === 401) {
+        logout();
+      }
+    });
   }, []);
 
   async function login(username: string, password: string, rememberMe: boolean = false) {

@@ -37,6 +37,17 @@ export class ApiRequestError extends Error {
   }
 }
 
+type ErrorInterceptor = (error: ApiRequestError) => void;
+const interceptors: ErrorInterceptor[] = [];
+
+export function onApiError(handler: ErrorInterceptor) {
+  interceptors.push(handler);
+  return () => {
+    const idx = interceptors.indexOf(handler);
+    if (idx > -1) interceptors.splice(idx, 1);
+  };
+}
+
 /**
  * Thin fetch wrapper around the RosiHome REST API. Resolves to the `data`
  * field of the standard success envelope (`{ data: ... }`, or `{ data, meta }`
@@ -65,7 +76,12 @@ export async function apiRequest<T = unknown>(
     const errPayload = json as ApiErrorPayload;
     const message =
       errPayload.error?.message ?? `Request failed with status ${res.status}`;
-    throw new ApiRequestError(res.status, message, errPayload);
+    const err = new ApiRequestError(res.status, message, errPayload);
+    
+    // Notify global interceptors (like AuthProvider for auto-logout)
+    interceptors.forEach((fn) => fn(err));
+    
+    throw err;
   }
 
   return json.data as T;
