@@ -60,8 +60,8 @@ beforeEach(async () => {
   );
 
   await dbPool.query(
-    `INSERT INTO rooms (id, property_id, name, status, base_rent, created_at, updated_at)
-     VALUES ($1, $2, 'Room Dash 1', 'Occupied', 5000000, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`,
+    `INSERT INTO rooms (id, property_id, name, base_rent, created_at, updated_at)
+     VALUES ($1, $2, 'Room Dash 1', 5000000, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`,
     [ROOM_ID, PROPERTY_ID]
   );
 
