@@ -13,11 +13,15 @@ const LEASE_ID = "66666666-6666-4666-8666-666666666666";
 const mocks = vi.hoisted(() => ({
   getOutstandingSummaryService: vi.fn(),
   getUpcomingExpirationsService: vi.fn(),
+  getOccupancyService: vi.fn(),
+  getRevenueService: vi.fn(),
 }));
 
 vi.mock("../../src/modules/dashboard/service.js", () => ({
   getOutstandingSummaryService: mocks.getOutstandingSummaryService,
   getUpcomingExpirationsService: mocks.getUpcomingExpirationsService,
+  getOccupancyService: mocks.getOccupancyService,
+  getRevenueService: mocks.getRevenueService,
 }));
 
 function token(sub: string, role: "Landlord" | "Tenant"): string {
@@ -38,6 +42,9 @@ const outstandingSummary = {
     },
   ],
 };
+
+const occupancyCount = { occupiedRooms: 5, totalRooms: 10 };
+const revenueSummary = { expectedRevenue: 5000000, collectedRevenue: 2000000, month: "2026-07" };
 
 const upcomingExpirations = [
   {
@@ -68,6 +75,54 @@ describe("Dashboard HTTP contract", () => {
   beforeEach(() => {
     mocks.getOutstandingSummaryService.mockResolvedValue(outstandingSummary);
     mocks.getUpcomingExpirationsService.mockResolvedValue(upcomingExpirations);
+    mocks.getOccupancyService.mockResolvedValue(occupancyCount);
+    mocks.getRevenueService.mockResolvedValue(revenueSummary);
+  });
+
+  // --- US-DASH-01: GET /api/v1/dashboard/occupancy --------------------------
+
+  describe("US-DASH-01 — occupancy count", () => {
+    it("returns occupied and total rooms for the landlord", async () => {
+      const response = await request(app)
+        .get("/api/v1/dashboard/occupancy")
+        .set("Authorization", `Bearer ${landlordToken}`)
+        .expect(200);
+
+      expect(response.body.data).toEqual(occupancyCount);
+      expect(mocks.getOccupancyService).toHaveBeenCalledWith(LANDLORD_ID);
+    });
+  });
+
+  // --- US-DASH-02: GET /api/v1/dashboard/revenue ----------------------------
+
+  describe("US-DASH-02 — monthly revenue", () => {
+    it("returns revenue summary when month is provided", async () => {
+      const response = await request(app)
+        .get("/api/v1/dashboard/revenue?month=2026-07")
+        .set("Authorization", `Bearer ${landlordToken}`)
+        .expect(200);
+
+      expect(response.body.data).toEqual(revenueSummary);
+      expect(mocks.getRevenueService).toHaveBeenCalledWith(LANDLORD_ID, "2026-07");
+    });
+
+    it("rejects when month is missing", async () => {
+      const response = await request(app)
+        .get("/api/v1/dashboard/revenue")
+        .set("Authorization", `Bearer ${landlordToken}`)
+        .expect(400);
+
+      expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    });
+
+    it("rejects when month format is invalid", async () => {
+      const response = await request(app)
+        .get("/api/v1/dashboard/revenue?month=2026")
+        .set("Authorization", `Bearer ${landlordToken}`)
+        .expect(400);
+
+      expect(response.body.error).toMatchObject({ code: "VALIDATION_ERROR" });
+    });
   });
 
   // --- US-DASH-03: GET /api/v1/dashboard/outstanding ----------------------
