@@ -34,6 +34,7 @@ function serialize(row: PropertyRow): PropertyView {
 }
 
 import { insertInitialUtilityRate } from "../utilities/repository.js";
+import { insertInitialSurcharge } from "../charges/repository.js";
 import { businessDate } from "../../lib/businessDate.js";
 import { db } from "../../db/index.js";
 
@@ -44,13 +45,25 @@ export async function createPropertyService(
   try {
     const row = await db.transaction(async (tx) => {
       const prop = await createProperty(landlordId, input, tx);
+      const today = businessDate();
       await insertInitialUtilityRate(
         prop.id,
         landlordId,
         input.utilityRates,
-        businessDate(),
+        today,
         tx
       );
+      if (input.surcharges) {
+        for (const surcharge of input.surcharges) {
+          await insertInitialSurcharge(
+            prop.id,
+            landlordId,
+            surcharge,
+            today,
+            tx
+          );
+        }
+      }
       return prop;
     });
     

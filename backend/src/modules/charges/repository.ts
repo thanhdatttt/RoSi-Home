@@ -66,6 +66,26 @@ export async function upsertUpcomingSurcharge(
   return row;
 }
 
+export async function insertInitialSurcharge(
+  propertyId: string,
+  createdBy: string,
+  input: Omit<CreateSurchargeInput, "effectiveFrom" | "effectiveTo">,
+  effectiveFrom: string,
+  executor: any = db,
+): Promise<SurchargeRow> {
+  const [row] = await executor
+    .insert(surcharges)
+    .values({
+      propertyId,
+      createdBy,
+      name: input.name,
+      monthlyAmount: input.monthlyAmount,
+      effectiveFrom,
+    })
+    .returning();
+  return row;
+}
+
 export async function listActiveSurcharges(
   propertyId: string,
   options: { limit?: number; offset?: number } = {},
