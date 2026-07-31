@@ -93,7 +93,7 @@ beforeEach(async () => {
 
   await dbPool.query(
     `INSERT INTO maintenance_requests (id, room_id, tenant_info_id, title, description, status, submitted_at, completed_at)
-     VALUES ($1, $2, $3, 'Fix tap', 'Leaking', 'Resolved', '2026-07-10T10:00:00Z', '2026-07-12T10:00:00Z')`,
+     VALUES ($1, $2, $3, 'Fix tap', 'Leaking', 'Completed', '2026-07-10T10:00:00Z', '2026-07-12T10:00:00Z')`,
     [MAINT_ID, ROOM_ID, TENANT_INFO_ID]
   );
 });
