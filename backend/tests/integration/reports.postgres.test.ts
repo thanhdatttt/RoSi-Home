@@ -158,7 +158,7 @@ describe("Reports Integration (US-REPORT-01 to 05)", () => {
       })
       .expect(200);
 
-    const reportId = genRes.body.data.id;
+    const reportId = genRes.body.data.reportId;
 
     const pdfRes = await request(app)
       .get(`/api/v1/reports/${reportId}/pdf`)
@@ -170,6 +170,6 @@ describe("Reports Integration (US-REPORT-01 to 05)", () => {
     expect(pdfRes.status).toBe(200);
 
     expect(pdfRes.headers["content-type"]).toBe("application/pdf");
-    expect(pdfRes.headers["content-disposition"]).toContain(`attachment; filename="report-2026-07`);
+    expect(pdfRes.headers["content-disposition"]).toContain(`attachment; filename="Business_Report_2026-07.pdf"`);
   });
 });
