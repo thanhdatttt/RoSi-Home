@@ -1,7 +1,15 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { errorHandler } from "./middleware/errorHandler.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const swaggerDocument = YAML.load(path.join(__dirname, "../docs/openapi.yaml"));
 import { authRouter } from "./modules/auth/router.js";
 import { profileRouter } from "./modules/profile/router.js";
 import { propertiesRouter } from "./modules/properties/router.js";
@@ -14,6 +22,8 @@ import { metersRouter } from "./modules/meters/router.js";
 import { invoicesRouter } from "./modules/invoices/router.js";
 import { notificationsRouter } from "./modules/notifications/router.js";
 import { dashboardRouter } from "./modules/dashboard/router.js";
+import { reportsRouter } from "./modules/reports/router.js";
+import { paymentsRouter } from "./modules/payments/router.js";
 import {
   maintenanceRouter,
   roomMaintenanceRouter,
@@ -29,6 +39,7 @@ export function createApp(): express.Express {
     res.json({ status: "ok", service: "rosihome-backend" });
   });
 
+  app.use("/api/v1/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/profile", profileRouter);
   app.use("/api/v1/properties", propertiesRouter);
@@ -46,6 +57,8 @@ export function createApp(): express.Express {
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/maintenance-requests", maintenanceRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
+  app.use("/api/v1/reports", reportsRouter);
+  app.use("/api/v1", paymentsRouter);
 
   app.use(errorHandler);
   return app;

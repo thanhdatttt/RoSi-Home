@@ -3,7 +3,12 @@ import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import { generateInvoicesQuerySchema } from "./schema.js";
-import { get, download, send, generate } from "./controller.js";
+import { get, download, send, generate, getVietqr, uploadProof, confirmPayment, remind } from "./controller.js";
+import multer from "multer";
+
+const upload = multer({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
 export const invoicesRouter = Router();
 
@@ -30,4 +35,29 @@ invoicesRouter.post(
   requireRole("Landlord"),
   validate(generateInvoicesQuerySchema, "query"),
   asyncHandler(generate),
+);
+
+// US-VIETQR-02
+invoicesRouter.get("/invoices/:id/vietqr", asyncHandler(getVietqr));
+
+// US-PAYMENT-01
+invoicesRouter.post(
+  "/invoices/:id/payment-proofs",
+  requireRole("Tenant"),
+  upload.single("proof"),
+  asyncHandler(uploadProof),
+);
+
+// US-PAYMENT-02
+invoicesRouter.post(
+  "/invoices/:id/confirm-payment",
+  requireRole("Landlord"),
+  asyncHandler(confirmPayment),
+);
+
+// US-REMINDER-02
+invoicesRouter.post(
+  "/invoices/:id/remind",
+  requireRole("Landlord"),
+  asyncHandler(remind),
 );
