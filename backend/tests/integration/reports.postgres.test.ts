@@ -53,15 +53,15 @@ beforeEach(async () => {
   );
 
   await dbPool.query(
-    `INSERT INTO properties (id, landlord_id, name, address)
-     VALUES ($1, $2, 'Prop A', 'Add A')`,
-    [PROPERTY_ID, LANDLORD_ID],
+    `INSERT INTO properties (id, landlord_id, name, address, created_at, updated_at)
+     VALUES ($1, $2, 'Test Property', '123 Main St', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`,
+    [PROPERTY_ID, LANDLORD_ID]
   );
 
   await dbPool.query(
-    `INSERT INTO rooms (id, property_id, name, base_rent)
-     VALUES ($1, $2, 'Room 1', 5000000)`,
-    [ROOM_ID, PROPERTY_ID],
+    `INSERT INTO rooms (id, property_id, name, rent_price, size, max_occupants, status, created_at, updated_at)
+     VALUES ($1, $2, 'Room 101', 5000000, 25, 2, 'Occupied', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`,
+    [ROOM_ID, PROPERTY_ID]
   );
 
   await dbPool.query(
