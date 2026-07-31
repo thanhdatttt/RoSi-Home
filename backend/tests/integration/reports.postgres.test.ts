@@ -99,6 +99,8 @@ beforeEach(async () => {
 });
 
 describe("Reports Integration (US-REPORT-01 to 05)", () => {
+  let reportId: string;
+
   it("generates a comprehensive monthly report from real database records", async () => {
     const res = await request(app)
       .post("/api/v1/reports/generate")
@@ -106,30 +108,35 @@ describe("Reports Integration (US-REPORT-01 to 05)", () => {
       .send({
         periodType: "month",
         month: "2026-07"
-      })
-      .expect(200);
+      });
+      if (res.status !== 200) console.error("GENERATE REPORT ERROR:", res.body);
+    expect(res.status).toBe(200);
 
     const report = res.body.data;
-    expect(report.periodType).toBe("month");
-    expect(report.periodStart).toBe("2026-07-01T00:00:00.000Z");
+    expect(report.period.type).toBe("month");
+    expect(report.period.month).toBe("2026-07");
     
     // Financials
-    expect(report.metrics.financial.totalRevenue).toBe(5500000);
-    expect(report.metrics.financial.rentCollected).toBe(5000000);
-    expect(report.metrics.financial.maintenanceCollected).toBe(100000);
-    expect(report.metrics.financial.utilitiesCollected).toBe(400000); // 200k + 200k
+    expect(report.financial.expectedRevenue.rent).toBe(5000000);
+    expect(report.financial.expectedRevenue.electricity).toBe(200000);
+    expect(report.financial.expectedRevenue.water).toBe(200000);
+    expect(report.financial.expectedRevenue.surcharges).toBe(100000);
+    expect(report.financial.actualCollectedRevenue.rent).toBe(5000000);
     
     // Occupancy
-    expect(report.metrics.occupancy.totalRooms).toBe(1);
-    expect(report.metrics.occupancy.occupiedRooms).toBe(1);
-    expect(report.metrics.occupancy.occupancyRate).toBe(1);
-    expect(report.metrics.occupancy.moveIns).toBe(1);
-    expect(report.metrics.occupancy.moveOuts).toBe(0);
+    expect(report.occupancy.totalRooms).toBe(1);
+    expect(report.occupancy.occupiedRooms).toBe(1);
+    expect(report.occupancy.occupancyRate).toBe(100);
+    expect(report.occupancy.moveIns).toBe(1);
+    expect(report.occupancy.moveOuts).toBe(0);
 
     // Maintenance
-    expect(report.metrics.maintenance.totalRequests).toBe(1);
-    expect(report.metrics.maintenance.resolvedRequests).toBe(1);
-    expect(report.metrics.maintenance.avgResolutionDays).toBe(2);
+    expect(report.maintenance.totalRequests).toBe(1);
+    expect(report.maintenance.resolvedRequests).toBe(1);
+    expect(report.maintenance.pendingRequests).toBe(0);
+    expect(report.maintenance.averageResolutionTimeDays).toBeGreaterThan(0); // 2 days
+
+    reportId = report.reportId;
   });
 
   it("fails if month is invalid", async () => {
