@@ -81,7 +81,7 @@ describe("paymentService unit tests", () => {
 
     it("throws UnprocessableError if config missing", async () => {
       vi.mocked(getInvoiceDetail).mockResolvedValue(invoiceMock as any);
-      vi.mocked(PaymentRepository.getPaymentConfig).mockResolvedValue(null);
+      vi.mocked(PaymentRepository.getPaymentConfig).mockResolvedValue(null as any);
 
       await expect(getVietqrService("tenant-1", "Tenant", "inv-1")).rejects.toThrow(UnprocessableError);
     });
