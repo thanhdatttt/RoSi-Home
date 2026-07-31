@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Platform } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Receipt, Plus, Trash2, Power } from "lucide-react-native";
@@ -16,6 +17,7 @@ const INITIAL: Surcharge[] = [
 
 export default function SurchargesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
 
   const [list, setList] = useState<Surcharge[]>(INITIAL);
   const [adding, setAdding] = useState(false);
@@ -80,83 +82,87 @@ export default function SurchargesConfig() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
-          <View className="flex-1">
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Property</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Surcharges</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Property</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Surcharges</Text>
           </View>
           <TouchableOpacity 
             onPress={() => setAdding(!adding)}
-            className="h-10 w-10 rounded-full bg-[#2563eb] items-center justify-center"
+            style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}
           >
             <Plus size={16} color="white" style={{ transform: [{ rotate: adding ? '45deg' : '0deg' }] }} />
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 px-6 mt-2 pb-8" showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
           
-          <View className="rounded-xl border border-[#2563eb]/40 bg-[#2563eb]/10 p-3.5 flex-row gap-2 mb-4">
-            <Text className="text-xs text-foreground/80 leading-relaxed pr-4">
+          {/* Info banner */}
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+            <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
               Active surcharges appear as separate line items on every invoice. Deactivation only affects future invoices.
             </Text>
           </View>
 
+          {/* Add form */}
           {adding && (
-            <View className="rounded-2xl border border-border bg-surface p-4 space-y-3 mb-4">
-              <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">New surcharge</Text>
+            <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>New surcharge</Text>
               
               <TextInput
                 value={form.name}
                 onChangeText={(text) => setForm({ ...form, name: text })}
                 placeholder="e.g. Internet"
-                className="w-full h-11 rounded-lg bg-background border border-border px-3 text-sm font-medium"
+                style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14, fontWeight: '500', marginTop: 12 }}
               />
               
-              <View className="relative justify-center">
-                <View className="absolute left-3 z-10">
-                  <Text className="text-xs font-bold text-muted-foreground">Amt</Text>
+              <View style={{ position: 'relative', justifyContent: 'center', marginTop: 12 }}>
+                <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>Amt</Text>
                 </View>
                 <TextInput
                   keyboardType="decimal-pad"
                   value={formatMoney(form.amount)}
                   onChangeText={(text) => setForm({ ...form, amount: text })}
                   placeholder="500,000"
-                  className="w-full h-11 rounded-lg bg-background border border-border pl-12 pr-3 text-sm font-medium"
+                  style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 48, paddingRight: 12, fontSize: 14, fontWeight: '500' }}
                 />
               </View>
 
-              <View className="flex-row gap-2">
-                <View className="flex-1 space-y-1">
-                  <Text className="text-[11px] text-muted-foreground">Start</Text>
+              {/* Date row */}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Start</Text>
                   {Platform.OS === 'web' ? (
                     React.createElement('input', {
                       type: 'date',
                       value: form.start.toISOString().slice(0, 10),
                       onChange: (e: any) => setForm({ ...form, start: new Date(e.target.value) }),
-                      style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: 'var(--background)', borderWidth: 1, borderColor: 'var(--border)', paddingHorizontal: 8, fontSize: 14, outline: 'none', color: 'var(--foreground)' }
+                      style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, fontSize: 14, outline: 'none' }
                     })
                   ) : (
                     <>
-                      <TouchableOpacity onPress={() => setShowStartPicker(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center">
-                        <Text className="text-sm">{form.start.toISOString().slice(0, 10)}</Text>
+                      <TouchableOpacity onPress={() => setShowStartPicker(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 14 }}>{form.start.toISOString().slice(0, 10)}</Text>
                       </TouchableOpacity>
                       {showStartPicker && <DateTimePicker value={form.start} mode="date" display="default" onChange={onChangeStart} />}
                     </>
                   )}
                 </View>
-                <View className="flex-1 space-y-1">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-[11px] text-muted-foreground">End (optional)</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#94a3b8' }}>End (optional)</Text>
                   </View>
                   {!useEnd ? (
-                    <TouchableOpacity onPress={() => setUseEnd(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center items-center">
-                      <Text className="text-xs text-muted-foreground font-medium">+ Add End Date</Text>
+                    <TouchableOpacity onPress={() => setUseEnd(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '500' }}>+ Add End Date</Text>
                     </TouchableOpacity>
                   ) : (
                     Platform.OS === 'web' ? (
@@ -164,12 +170,12 @@ export default function SurchargesConfig() {
                         type: 'date',
                         value: form.end.toISOString().slice(0, 10),
                         onChange: (e: any) => setForm({ ...form, end: new Date(e.target.value) }),
-                        style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: 'var(--background)', borderWidth: 1, borderColor: 'var(--border)', paddingHorizontal: 8, fontSize: 14, outline: 'none', color: 'var(--foreground)' }
+                        style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, fontSize: 14, outline: 'none' }
                       })
                     ) : (
                       <>
-                        <TouchableOpacity onPress={() => setShowEndPicker(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center">
-                          <Text className="text-sm">{form.end.toISOString().slice(0, 10)}</Text>
+                        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center' }}>
+                          <Text style={{ fontSize: 14 }}>{form.end.toISOString().slice(0, 10)}</Text>
                         </TouchableOpacity>
                         {showEndPicker && <DateTimePicker value={form.end} mode="date" display="default" onChange={onChangeEnd} />}
                       </>
@@ -178,41 +184,42 @@ export default function SurchargesConfig() {
                 </View>
               </View>
 
-              {err && <Text className="text-xs text-destructive mt-1">{err}</Text>}
+              {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}
               
-              <View className="mt-2">
+              <View style={{ marginTop: 12 }}>
                 <PrimaryButton onPress={add}>Add surcharge</PrimaryButton>
               </View>
             </View>
           )}
 
-          <View className="space-y-2 mb-8">
+          {/* Surcharge list */}
+          <View style={{ gap: 8, marginBottom: 32 }}>
             {list.map((s) => (
               <View 
                 key={s.id} 
-                className={`rounded-2xl border border-border bg-surface p-4 flex-row items-center gap-3 ${s.active ? "" : "opacity-60"}`}
+                style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: s.active ? 1 : 0.6 }}
               >
-                <View className="h-10 w-10 rounded-xl bg-primary/15 items-center justify-center shrink-0">
+                <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Receipt size={20} color="#2563eb" />
                 </View>
-                <View className="flex-1 pr-2">
-                  <Text className="text-sm font-semibold truncate" numberOfLines={1}>{s.name}</Text>
-                  <Text className="text-[11px] text-muted-foreground truncate" numberOfLines={1}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{s.name}</Text>
+                  <Text style={{ fontSize: 11, color: '#94a3b8' }} numberOfLines={1}>
                     {s.start}{s.end ? ` → ${s.end}` : " · ongoing"}
                   </Text>
                 </View>
-                <View className="items-end gap-2 shrink-0">
-                  <Text className="text-sm font-bold">{s.amount.toLocaleString()} VNĐ</Text>
-                  <View className="flex-row gap-1">
+                <View style={{ alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700' }}>{s.amount.toLocaleString()} VNĐ</Text>
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
                     <TouchableOpacity 
                       onPress={() => toggle(s.id)} 
-                      className="h-8 w-8 rounded-lg bg-secondary items-center justify-center"
+                      style={{ height: 32, width: 32, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <Power size={14} color={s.active ? "#2563eb" : "gray"} />
                     </TouchableOpacity>
                     <TouchableOpacity 
                       onPress={() => remove(s.id)} 
-                      className="h-8 w-8 rounded-lg bg-secondary items-center justify-center"
+                      style={{ height: 32, width: 32, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <Trash2 size={14} color="gray" />
                     </TouchableOpacity>

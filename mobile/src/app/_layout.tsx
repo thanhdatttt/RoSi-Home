@@ -1,8 +1,10 @@
 import '../global.css';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';
+
+export { ErrorBoundary } from 'expo-router';
 
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 
