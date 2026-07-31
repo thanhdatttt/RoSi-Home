@@ -14,6 +14,7 @@ import { metersRouter } from "./modules/meters/router.js";
 import { invoicesRouter } from "./modules/invoices/router.js";
 import { notificationsRouter } from "./modules/notifications/router.js";
 import { dashboardRouter } from "./modules/dashboard/router.js";
+import { reportsRouter } from "./modules/reports/router.js";
 import { paymentsRouter } from "./modules/payments/router.js";
 import {
   maintenanceRouter,
@@ -47,6 +48,7 @@ export function createApp(): express.Express {
   app.use("/api/v1/notifications", notificationsRouter);
   app.use("/api/v1/maintenance-requests", maintenanceRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
+  app.use("/api/v1/reports", reportsRouter);
   app.use("/api/v1", paymentsRouter);
 
   app.use(errorHandler);
