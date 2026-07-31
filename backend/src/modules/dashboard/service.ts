@@ -6,6 +6,8 @@ import {
 } from "./repository.js";
 import { listUpcomingExpirationsService } from "../leases/service.js";
 import type { UpcomingExpirationView } from "../leases/service.js";
+import { getOccupiedRoomCount } from "./repository.js";
+import { getRevenueSummary } from "../reports/repository.js";
 
 export type OverdueInvoiceView = {
   invoiceId: string;
@@ -47,4 +49,24 @@ export async function getUpcomingExpirationsService(
   landlordId: string,
 ): Promise<UpcomingExpirationView[]> {
   return listUpcomingExpirationsService(landlordId);
+}
+
+// US-DASH-01
+export async function getOccupancyService(landlordId: string) {
+  return getOccupiedRoomCount(landlordId);
+}
+
+// US-DASH-02
+export async function getRevenueService(landlordId: string, month: string) {
+  const [year, monthStr] = month.split("-");
+  const periodStart = new Date(Number(year), Number(monthStr) - 1, 1);
+  const periodEnd = new Date(Number(year), Number(monthStr), 0, 23, 59, 59, 999);
+  
+  const revenue = await getRevenueSummary(landlordId, "month", periodStart, periodEnd, month);
+  
+  return {
+    expectedRevenue: revenue.expectedRevenue,
+    collectedRevenue: revenue.actualCollectedRevenue,
+    month
+  };
 }
