@@ -324,7 +324,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, address]
+              required: [name, address, utilityRates]
               properties:
                 name:
                   type: string
@@ -332,6 +332,19 @@ paths:
                   type: string
                 locality:
                   type: string
+                utilityRates:
+                  type: object
+                  required: [electricityRatePerKwh, waterBillingMethod]
+                  properties:
+                    electricityRatePerKwh:
+                      type: integer
+                    waterBillingMethod:
+                      type: string
+                      enum: [Metered, Flat]
+                    waterRatePerM3:
+                      type: integer
+                    waterFlatAmountPerTenant:
+                      type: integer
       responses:
         "201":
           description: Property created
