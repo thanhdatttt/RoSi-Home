@@ -50,7 +50,8 @@ export async function generateReportPdf(snapshot: any): Promise<Uint8Array> {
     line(`Period: ${snapshot.period.startDate} to ${snapshot.period.endDate}`);
   }
   
-  line(`Generated At: ${new Date(snapshot.generatedAt).toLocaleString("en-US", { timeZone: snapshot.timezone })}`);
+  const tz = snapshot.timezone || "UTC";
+  line(`Generated At: ${new Date(snapshot.generatedAt).toLocaleString("en-US", { timeZone: tz })}`);
   line(`Landlord ID: ${snapshot.landlordId}`);
   
   y -= 10;
