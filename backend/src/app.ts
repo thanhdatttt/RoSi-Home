@@ -1,7 +1,15 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { errorHandler } from "./middleware/errorHandler.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const swaggerDocument = YAML.load(path.join(__dirname, "../docs/openapi.yaml"));
 import { authRouter } from "./modules/auth/router.js";
 import { profileRouter } from "./modules/profile/router.js";
 import { propertiesRouter } from "./modules/properties/router.js";
@@ -31,6 +39,7 @@ export function createApp(): express.Express {
     res.json({ status: "ok", service: "rosihome-backend" });
   });
 
+  app.use("/api/v1/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/profile", profileRouter);
   app.use("/api/v1/properties", propertiesRouter);
