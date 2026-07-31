@@ -162,8 +162,12 @@ describe("Reports Integration (US-REPORT-01 to 05)", () => {
 
     const pdfRes = await request(app)
       .get(`/api/v1/reports/${reportId}/pdf`)
-      .set(auth(sign("Landlord", LANDLORD_ID)))
-      .expect(200);
+      .set(auth(sign("Landlord", LANDLORD_ID)));
+      
+    if (pdfRes.status !== 200) {
+      console.error("PDF ERROR BODY:", pdfRes.body);
+    }
+    expect(pdfRes.status).toBe(200);
 
     expect(pdfRes.headers["content-type"]).toBe("application/pdf");
     expect(pdfRes.headers["content-disposition"]).toContain(`attachment; filename="report-2026-07`);
