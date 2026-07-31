@@ -1,6 +1,7 @@
 import { config } from "./config.js";
 
 const MAINTENANCE_BUCKET = "maintenance-photos";
+const PAYMENT_PROOFS_BUCKET = "payment-proofs";
 
 export type MaintenancePhotoStorageInput = {
   objectPath: string;
@@ -132,3 +133,98 @@ export async function createSignedMaintenancePhotoUrl(
     : `/${payload.signedURL}`;
   return `${baseUrl}/storage/v1${storagePath}`;
 }
+
+export type PaymentProofStorageInput = {
+  objectPath: string;
+  buffer: Buffer;
+  contentType: "image/png" | "image/jpeg";
+};
+
+export type StoredPaymentProof = {
+  objectPath: string;
+  fileUrl: string;
+};
+
+/** Uploads to a private Supabase Storage bucket and returns a storage path. */
+export async function uploadPaymentProof(
+  input: PaymentProofStorageInput,
+): Promise<StoredPaymentProof> {
+  const { baseUrl, serviceKey } = settings();
+  const response = await fetch(
+    `${baseUrl}/storage/v1/object/${PAYMENT_PROOFS_BUCKET}/${encodedObjectPath(input.objectPath)}`,
+    {
+      method: "POST",
+      headers: {
+        ...headers(serviceKey),
+        "Content-Type": input.contentType,
+        "x-upsert": "false",
+      },
+      body: input.buffer,
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Payment proof upload failed with storage status ${response.status}.`,
+    );
+  }
+  return {
+    objectPath: input.objectPath,
+    fileUrl: `${PAYMENT_PROOFS_BUCKET}/${input.objectPath}`,
+  };
+}
+
+export async function createSignedPaymentProofUrl(
+  fileUrl: string,
+  expiresIn = 300,
+): Promise<string> {
+  const prefix = `${PAYMENT_PROOFS_BUCKET}/`;
+  if (!fileUrl.startsWith(prefix)) {
+    throw new Error("Invalid payment proof storage path.");
+  }
+  const objectPath = fileUrl.slice(prefix.length);
+  const segments = objectPath.split("/");
+  if (
+    !objectPath ||
+    segments.some((segment) => segment === "" || segment === "." || segment === "..")
+  ) {
+    throw new Error("Invalid payment proof storage path.");
+  }
+
+  const { baseUrl, serviceKey } = settings();
+  const response = await fetch(
+    `${baseUrl}/storage/v1/object/sign/${PAYMENT_PROOFS_BUCKET}/${encodedObjectPath(objectPath)}`,
+    {
+      method: "POST",
+      headers: {
+        ...headers(serviceKey),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ expiresIn }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Payment proof signed URL failed with storage status ${response.status}.`,
+    );
+  }
+
+  const payload = (await response.json()) as { signedURL?: unknown };
+  if (typeof payload.signedURL !== "string" || payload.signedURL.length === 0) {
+    throw new Error("Payment proof storage did not return a signed URL.");
+  }
+  if (
+    payload.signedURL.startsWith("http://") ||
+    payload.signedURL.startsWith("https://")
+  ) {
+    return payload.signedURL;
+  }
+  if (payload.signedURL.startsWith("/storage/v1/")) {
+    return `${baseUrl}${payload.signedURL}`;
+  }
+  const storagePath = payload.signedURL.startsWith("/")
+    ? payload.signedURL
+    : `/${payload.signedURL}`;
+  return `${baseUrl}/storage/v1${storagePath}`;
+}
+
