@@ -12,7 +12,7 @@ const SURCHARGE_ID = "11111111-1111-4111-8111-111111111111";
 
 const mocks = vi.hoisted(() => ({
   createUtilityRateService: vi.fn(),
-  getCurrentRateService: vi.fn(),
+  getRatesService: vi.fn(),
   createSurchargeService: vi.fn(),
   listSurchargesService: vi.fn(),
   updateSurchargeService: vi.fn(),
@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../src/modules/utilities/service.js", () => ({
   createUtilityRateService: mocks.createUtilityRateService,
-  getCurrentRateService: mocks.getCurrentRateService,
+  getRatesService: mocks.getRatesService,
 }));
 
 vi.mock("../../src/modules/charges/service.js", () => ({
@@ -49,7 +49,7 @@ const utilityView = {
   waterBillingMethod: "Metered" as const,
   waterRatePerM3: 15000,
   waterFlatAmountPerTenant: null,
-  effectiveFrom: "2026-07-01",
+  effectiveFrom: "2099-07-01",
   createdBy: LANDLORD_ID,
   createdAt: "2026-07-01T00:00:00.000Z",
 };
@@ -84,7 +84,7 @@ describe("Billing Foundation HTTP contract", () => {
 
   beforeEach(() => {
     mocks.createUtilityRateService.mockResolvedValue(utilityView);
-    mocks.getCurrentRateService.mockResolvedValue(utilityView);
+    mocks.getRatesService.mockResolvedValue({ current: utilityView, upcoming: null });
     mocks.createSurchargeService.mockResolvedValue(surchargeView);
     mocks.listSurchargesService.mockResolvedValue({
       data: [surchargeView],
@@ -138,7 +138,7 @@ describe("Billing Foundation HTTP contract", () => {
         electricityRatePerKwh: -1,
         waterBillingMethod: "Metered",
         waterRatePerM3: 15000,
-        effectiveFrom: "2026-07-01",
+        effectiveFrom: "2099-07-01",
       })
       .expect(400);
 
@@ -153,7 +153,7 @@ describe("Billing Foundation HTTP contract", () => {
       electricityRatePerKwh: 3500,
       waterBillingMethod: "Metered",
       waterRatePerM3: 15000,
-      effectiveFrom: "2026-07-01",
+      effectiveFrom: "2099-07-01",
     };
 
     const response = await request(app)
@@ -189,7 +189,7 @@ describe("Billing Foundation HTTP contract", () => {
       .send({
         electricityRatePerKwh: 3500,
         waterBillingMethod: "Metered",
-        effectiveFrom: "2026-07-01",
+        effectiveFrom: "2099-07-01",
       })
       .expect(422);
 
@@ -200,13 +200,15 @@ describe("Billing Foundation HTTP contract", () => {
   });
 
   it("returns the current utility rate", async () => {
+    mocks.getRatesService.mockResolvedValue({ current: utilityView, upcoming: null });
+
     const response = await request(app)
       .get(`/api/v1/utilities/properties/${PROPERTY_ID}/utility-rates`)
       .set("Authorization", `Bearer ${landlordToken}`)
       .expect(200);
 
-    expect(response.body).toEqual({ data: utilityView });
-    expect(mocks.getCurrentRateService).toHaveBeenCalledWith(
+    expect(response.body).toEqual({ data: { current: utilityView, upcoming: null } });
+    expect(mocks.getRatesService).toHaveBeenCalledWith(
       LANDLORD_ID,
       PROPERTY_ID,
     );

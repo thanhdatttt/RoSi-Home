@@ -648,9 +648,21 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Utility rates
+          description: Utility rates containing both current and upcoming rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        type: object
+                      upcoming:
+                        type: object
     post:
-      summary: Set utility rates
+      summary: Set or update upcoming utility rates
       tags: [Utilities]
       parameters:
         - in: path

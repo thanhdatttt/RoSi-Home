@@ -152,11 +152,12 @@
 - **Response:** `201 { data: utilityRateRow }`
 - **Business rules:**
   - `waterBillingMethod=Metered` requires `waterRatePerM3 >= 0`; `=Flat` requires `waterFlatAmountPerTenant >= 0`; the other field must be omitted/null — `422` if both or neither supplied.
-  - All rates non-negative integers (VND). Insert as a **new row** in `utility_rate_history` (append-only versioning, architecture §5.2) — never update an old row in place.
+  - All rates non-negative integers (VND). `effectiveFrom` must be strictly in the future (`> today`).
+  - At most one future/upcoming rate may exist per property. If an upcoming rate already exists (`effectiveFrom > today`), update it in place. Otherwise, insert a new row. (Rates with `effectiveFrom <= today` are never updated in place to protect billing history).
   - If no rate exists yet for the property and none is created, calculations fall back to `regulatory_rate_defaults` (see US-METER-02) — that fallback is read-only reference data, never auto-copied into `utility_rate_history`.
 
 #### US-UTILITY-02 — View and update utility rates
-- **Endpoints:** `GET /api/v1/properties/:propertyId/utility-rates` (returns current effective rate: latest row with `effectiveFrom <= today`), `POST /api/v1/properties/:propertyId/utility-rates` (an "update" is simply a new versioned row per above, `effectiveFrom` in the future or today)
+- **Endpoints:** `GET /api/v1/properties/:propertyId/utility-rates` (returns both the `current` effective rate where `effectiveFrom <= today`, and the `upcoming` rate where `effectiveFrom > today`), `POST /api/v1/properties/:propertyId/utility-rates` (creates or updates the single future rate, `effectiveFrom` must be > today)
 - **Business rules:** a rate change never touches already-generated `invoice_line_items` (those snapshot `sourceRateId` and `unitRate` at generation time — immutable history). Future invoice generation runs pick up the new effective row automatically.
 
 #### US-CHARGE-01 — Configure recurring property surcharges
