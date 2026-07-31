@@ -1,186 +1,300 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, TextInput } from "react-native";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
-
+import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
 import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
-import { ArrowLeft, Zap, Droplets, Info } from "lucide-react-native";
+import { ArrowLeft, Zap, Droplets, Info, CalendarClock, CheckCircle2, X, Pencil } from "lucide-react-native";
+
+type Schedule = {
+  elec: string;
+  waterMethod: "metered" | "flat";
+  waterMetered: string;
+  waterFlat: string;
+  effectiveMonth: Date; // e.g. 2026-07-01
+};
+
+const thisMonth1st = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+};
+
+const fmtMonth = (d: Date) => {
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+// Mock "active" rate
+const ACTIVE: Schedule = {
+  elec: "4000",
+  waterMethod: "metered",
+  waterMetered: "8000",
+  waterFlat: "100000",
+  effectiveMonth: new Date(2026, 6, 1), // July 2026
+};
+
+const rateSummary = (s: Schedule) =>
+  `${Number(s.elec).toLocaleString()} VNĐ/kWh · ${
+    s.waterMethod === "metered"
+      ? `${Number(s.waterMetered).toLocaleString()} VNĐ/m³`
+      : `${Number(s.waterFlat).toLocaleString()} VNĐ flat`
+  }`;
 
 export default function UtilitiesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  const [active] = useState<Schedule>(ACTIVE);
+  const [upcoming, setUpcoming] = useState<Schedule | null>(null);
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [saved, setSaved] = useState<string | null>(null);
 
-  const [elec, setElec] = useState("4000");
+  // Edit Mode State
+  const [elec, setElec] = useState("");
   const [waterMethod, setWaterMethod] = useState<"metered" | "flat">("metered");
-  const [waterMetered, setWaterMetered] = useState("8000");
-  const [waterFlat, setWaterFlat] = useState("100000");
-  
-  const [effective, setEffective] = useState(new Date());
-  
-  const [saving, setSaving] = useState(false);
+  const [waterMetered, setWaterMetered] = useState("");
+  const [waterFlat, setWaterFlat] = useState("");
+  const [month, setMonth] = useState(new Date());
   const [err, setErr] = useState<string | null>(null);
 
-  const formatMoney = (val: string) => {
-    if (!val) return "";
-    const numeric = val.replace(/\D/g, "");
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-  
-  const getRawNumber = (val: string) => val.replace(/,/g, "");
-
-  const handleSave = () => {
-    const rawElec = getRawNumber(elec);
-    const rawWaterM = getRawNumber(waterMetered);
-    const rawWaterF = getRawNumber(waterFlat);
+  function openEdit() {
+    const initial = upcoming ?? active;
+    setElec(initial.elec);
+    setWaterMethod(initial.waterMethod);
+    setWaterMetered(initial.waterMetered);
+    setWaterFlat(initial.waterFlat);
     
-    if (Number(rawElec) < 0 || rawElec === "") return setErr("Electricity rate must be a non-negative amount.");
-    if (waterMethod === "metered" && (rawWaterM === "" || Number(rawWaterM) < 0)) return setErr("Water rate must be a non-negative amount.");
-    if (waterMethod === "flat" && (rawWaterF === "" || Number(rawWaterF) < 0)) return setErr("Flat water amount must be non-negative.");
+    if (upcoming) {
+      setMonth(upcoming.effectiveMonth);
+    } else {
+      // Default to next month
+      const d = new Date();
+      setMonth(new Date(d.getFullYear(), d.getMonth() + 1, 1));
+    }
+    setMode("edit");
+  }
 
-    setSaving(true);
+  function submit() {
     setErr(null);
-    // Simulate save
-    setTimeout(() => {
-      setSaving(false);
-      router.back();
-    }, 800);
-  };
+    if (elec === "" || Number(elec) < 0) return setErr("Electricity rate must be non-negative.");
+    if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr("Water rate must be non-negative.");
+    if (waterMethod === "flat" && (waterFlat === "" || Number(waterFlat) < 0)) return setErr("Flat water amount must be non-negative.");
+    
+    const d1st = new Date(month.getFullYear(), month.getMonth(), 1);
+    const curr1st = thisMonth1st();
+    
+    if (d1st <= curr1st) return setErr("Rate changes must take effect in a future month.");
 
-
-  const isMetered = waterMethod === "metered";
+    setUpcoming({
+      elec, waterMethod, waterMetered, waterFlat, effectiveMonth: d1st
+    });
+    setSaved(`Saved. New rates start ${fmtMonth(d1st)}.`);
+    setMode("view");
+  }
 
   return (
     <MobileFrame>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"} 
-        style={{ flex: 1, backgroundColor: '#f5f8ff' }}
-      >
-        <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
+          {mode === "view" ? (
+            <Link href={`/landlord/properties/${id}`} asChild>
+              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                <ArrowLeft size={16} color="black" />
+              </TouchableOpacity>
+            </Link>
+          ) : (
+            <TouchableOpacity onPress={() => setMode("view")} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
-          </Link>
+          )}
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Utilities</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Rates</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>
+              {mode === "view" ? "Rates" : upcoming ? "Edit schedule" : "New rates"}
+            </Text>
           </View>
         </View>
 
-        <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-          
-          {/* Info banner */}
-          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 20 }}>
-            <Info size={16} color="#2563eb" />
-            <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
-              Rate changes apply to new calculations only. Finalized invoices stay untouched.
-            </Text>
-          </View>
-
-          {/* Electricity card */}
-          <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, marginBottom: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                <Zap size={16} color="#2563eb" />
-              </View>
-              <View>
-                <Text style={{ fontSize: 14, fontWeight: '600' }}>Electricity</Text>
-                <Text style={{ fontSize: 11, color: '#94a3b8' }}>Price per kWh</Text>
-              </View>
-            </View>
-            <View style={{ marginTop: 12, position: 'relative', justifyContent: 'center' }}>
-              <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ</Text>
-              </View>
-              <TextInput
-                keyboardType="decimal-pad"
-                value={formatMoney(elec)}
-                onChangeText={setElec}
-                style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 48, paddingRight: 16, fontSize: 14, fontWeight: '500' }}
-              />
-            </View>
-          </View>
-
-          {/* Water card */}
-          <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, marginBottom: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ height: 36, width: 36, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                <Droplets size={16} color="#2563eb" />
-              </View>
-              <View>
-                <Text style={{ fontSize: 14, fontWeight: '600' }}>Water</Text>
-                <Text style={{ fontSize: 11, color: '#94a3b8' }}>Choose one billing method</Text>
-              </View>
-            </View>
-            
-            {/* Toggle - using style props only, no dynamic classNames */}
-            <View style={{ marginTop: 16, flexDirection: 'row', borderRadius: 12, backgroundColor: '#f1f5f9', padding: 4 }}>
-              <TouchableOpacity 
-                style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: isMetered ? '#ffffff' : 'transparent', ...(isMetered ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
-                onPress={() => setWaterMethod("metered")}
-              >
-                <Text style={{ fontSize: 12, fontWeight: '600', color: isMetered ? '#0f172a' : '#94a3b8' }}>Metered per m³</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: !isMetered ? '#ffffff' : 'transparent', ...(!isMetered ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
-                onPress={() => setWaterMethod("flat")}
-              >
-                <Text style={{ fontSize: 12, fontWeight: '600', color: !isMetered ? '#0f172a' : '#94a3b8' }}>Flat per tenant</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Water input - always render both, use display to toggle */}
-            <View style={{ marginTop: 16, display: isMetered ? 'flex' : 'none' }}>
-              <View style={{ position: 'relative', justifyContent: 'center' }}>
-                <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ/m³</Text>
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+          {mode === "view" ? (
+            <View style={{ gap: 16 }}>
+              {saved && (
+                <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.15)', padding: 14, flexDirection: 'row', gap: 8 }}>
+                  <CheckCircle2 size={16} color="#2563eb" style={{ marginTop: 2 }} />
+                  <Text style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{saved}</Text>
+                  <TouchableOpacity onPress={() => setSaved(null)}>
+                    <X size={16} color="#64748b" />
+                  </TouchableOpacity>
                 </View>
-                <TextInput
-                  keyboardType="decimal-pad"
-                  value={formatMoney(waterMetered)}
-                  onChangeText={setWaterMetered}
-                  style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 72, paddingRight: 16, fontSize: 14, fontWeight: '500' }}
-                />
-              </View>
-            </View>
-            <View style={{ marginTop: isMetered ? 0 : 16, display: !isMetered ? 'flex' : 'none' }}>
-              <View style={{ position: 'relative', justifyContent: 'center' }}>
-                <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ</Text>
+              )}
+
+              <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                
+                <View style={{ padding: 16, flexDirection: 'row', gap: 12 }}>
+                  <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: '#10b981', marginTop: 6 }} />
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600' }}>Active now</Text>
+                      <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#059669' }}>In effect</Text>
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(active)}</Text>
+                    <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Since {fmtMonth(active.effectiveMonth)}</Text>
+                  </View>
                 </View>
-                <TextInput
-                  keyboardType="decimal-pad"
-                  value={formatMoney(waterFlat)}
-                  onChangeText={setWaterFlat}
-                  style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 48, paddingRight: 16, fontSize: 14, fontWeight: '500' }}
-                />
+
+                {upcoming && (
+                  <View style={{ padding: 16, flexDirection: 'row', gap: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+                    <View style={{ height: 10, width: 10, borderRadius: 5, borderWidth: 2, borderColor: '#3b82f6', marginTop: 6 }} />
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600' }}>Scheduled</Text>
+                        <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, backgroundColor: '#f1f5f9' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#64748b' }}>Pending</Text>
+                        </View>
+                      </View>
+                      <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(upcoming)}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                        <CalendarClock size={12} color="#94a3b8" />
+                        <Text style={{ fontSize: 11, color: '#94a3b8' }}>Starts {fmtMonth(upcoming.effectiveMonth)}</Text>
+                      </View>
+                      <TouchableOpacity onPress={() => { setUpcoming(null); setSaved(null); }} style={{ marginTop: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: '#ef4444' }}>Cancel scheduled change</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
               </View>
-              <Text style={{ marginTop: 8, fontSize: 11, color: '#94a3b8' }}>Charged per tenant per month — unlimited usage.</Text>
+
+              <View style={{ borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8 }}>
+                <Info size={16} color="#2563eb" style={{ marginTop: 2, flexShrink: 0 }} />
+                <Text style={{ flex: 1, fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18 }}>
+                  Rate changes always start on the 1st of a future month. The current month keeps its rates so invoices in progress stay consistent.
+                </Text>
+              </View>
+
+              <PrimaryButton onPress={openEdit}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <Pencil size={16} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                    {upcoming ? "Edit scheduled change" : "Schedule rate change"}
+                  </Text>
+                </View>
+              </PrimaryButton>
+
             </View>
-          </View>
+          ) : (
+            <View style={{ gap: 20 }}>
+              
+              <View>
+                <DatePicker 
+                  label="Applies from (Future month)"
+                  value={month}
+                  onChange={(d) => setMonth(d)}
+                  monthOnly
+                />
+                <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                  Takes effect on 1 {fmtMonth(month)}. Earlier months are closed for billing.
+                </Text>
+              </View>
 
-          {/* Effective date */}
-          <View style={{ marginBottom: 16 }}>
-            <DatePicker 
-              label="Effective from"
-              value={effective} 
-              onChange={setEffective} 
-            />
-          </View>
+              <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <View style={{ height: 36, width: 36, borderRadius: 10, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={16} color="#2563eb" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 14, fontWeight: '600' }}>Electricity</Text>
+                    <Text style={{ fontSize: 11, color: '#94a3b8' }}>Price per kWh</Text>
+                  </View>
+                </View>
+                <View style={{ position: 'relative', justifyContent: 'center' }}>
+                  <Text style={{ position: 'absolute', left: 12, zIndex: 10, fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ</Text>
+                  <TextInput
+                    keyboardType="decimal-pad"
+                    value={elec}
+                    onChangeText={setElec}
+                    placeholder="4,000"
+                    style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 44, paddingRight: 12, fontSize: 14, fontWeight: '500' }}
+                  />
+                </View>
+              </View>
 
-          {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}
+              <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <View style={{ height: 36, width: 36, borderRadius: 10, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Droplets size={16} color="#2563eb" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 14, fontWeight: '600' }}>Water</Text>
+                    <Text style={{ fontSize: 11, color: '#94a3b8' }}>Choose one billing method</Text>
+                  </View>
+                </View>
+                
+                <View style={{ flexDirection: 'row', borderRadius: 12, backgroundColor: '#f1f5f9', padding: 4, marginBottom: 12 }}>
+                  <TouchableOpacity 
+                    style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: waterMethod === "metered" ? '#ffffff' : 'transparent', ...(waterMethod === "metered" ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
+                    onPress={() => setWaterMethod("metered")}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: waterMethod === "metered" ? '#0f172a' : '#64748b' }}>Metered per m³</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: waterMethod === "flat" ? '#ffffff' : 'transparent', ...(waterMethod === "flat" ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
+                    onPress={() => setWaterMethod("flat")}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: waterMethod === "flat" ? '#0f172a' : '#64748b' }}>Flat per tenant</Text>
+                  </TouchableOpacity>
+                </View>
 
-          <View style={{ marginTop: 32, marginBottom: 32 }}>
-            <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Saving rates..." : "Save rates"}
-            </PrimaryButton>
-          </View>
+                {waterMethod === "metered" ? (
+                  <View style={{ position: 'relative', justifyContent: 'center' }}>
+                    <Text style={{ position: 'absolute', left: 12, zIndex: 10, fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ/m³</Text>
+                    <TextInput
+                      keyboardType="decimal-pad"
+                      value={waterMetered}
+                      onChangeText={setWaterMetered}
+                      placeholder="8,000"
+                      style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 64, paddingRight: 12, fontSize: 14, fontWeight: '500' }}
+                    />
+                  </View>
+                ) : (
+                  <View>
+                    <View style={{ position: 'relative', justifyContent: 'center' }}>
+                      <Text style={{ position: 'absolute', left: 12, zIndex: 10, fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>VNĐ</Text>
+                      <TextInput
+                        keyboardType="decimal-pad"
+                        value={waterFlat}
+                        onChangeText={setWaterFlat}
+                        placeholder="100,000"
+                        style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 44, paddingRight: 12, fontSize: 14, fontWeight: '500' }}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>Charged per tenant per month — unlimited usage.</Text>
+                  </View>
+                )}
+              </View>
+
+              {err && <Text style={{ fontSize: 12, color: '#ef4444', textAlign: 'center' }}>{err}</Text>}
+
+              <View style={{ gap: 8, marginTop: 8 }}>
+                <PrimaryButton onPress={submit}>
+                  {`Schedule for ${fmtMonth(month)}`}
+                </PrimaryButton>
+                <TouchableOpacity 
+                  onPress={() => setMode("view")}
+                  style={{ height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569' }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+
+            </View>
+          )}
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
     </MobileFrame>
   );
 }
-

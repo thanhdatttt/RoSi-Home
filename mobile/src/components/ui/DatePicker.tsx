@@ -8,17 +8,31 @@ interface DatePickerProps {
   onChange: (date: Date) => void;
   label?: string;
   compact?: boolean;
+  monthOnly?: boolean;
 }
 
-export function DatePicker({ value, onChange, label, compact = false }: DatePickerProps) {
+export function DatePicker({ value, onChange, label, compact = false, monthOnly = false }: DatePickerProps) {
   const [show, setShow] = useState(false);
 
   const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShow(false);
-    if (selectedDate) onChange(selectedDate);
+    if (selectedDate) {
+      if (monthOnly) {
+        const ny = selectedDate.getFullYear();
+        const nm = selectedDate.getMonth();
+        onChange(new Date(ny, nm, 1));
+      } else {
+        onChange(selectedDate);
+      }
+    }
   };
 
-  const formatted = value.toISOString().slice(0, 10);
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, '0');
+  const d = String(value.getDate()).padStart(2, '0');
+  
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const formatted = monthOnly ? `${MONTHS[value.getMonth()]} ${y}` : `${y}-${m}-${d}`;
 
   if (Platform.OS === 'web') {
     return (
@@ -35,8 +49,14 @@ export function DatePicker({ value, onChange, label, compact = false }: DatePick
           type="date"
           value={formatted}
           onChange={(e: any) => {
-            const parsed = new Date(e.target.value);
-            if (!isNaN(parsed.getTime())) onChange(parsed);
+            const parsed = new Date(e.target.value + "T00:00:00");
+            if (!isNaN(parsed.getTime())) {
+              if (monthOnly) {
+                onChange(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+              } else {
+                onChange(new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+              }
+            }
           }}
           style={compact 
             ? { width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 8, paddingRight: 8, fontSize: 14, outline: 'none' }
