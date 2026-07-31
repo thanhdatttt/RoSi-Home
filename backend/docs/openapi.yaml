@@ -345,6 +345,17 @@ paths:
                       type: integer
                     waterFlatAmountPerTenant:
                       type: integer
+                surcharges:
+                  type: array
+                  description: Optional initial surcharges for this property. These will be effective from the current date.
+                  items:
+                    type: object
+                    required: [name, monthlyAmount]
+                    properties:
+                      name:
+                        type: string
+                      monthlyAmount:
+                        type: integer
       responses:
         "201":
           description: Property created

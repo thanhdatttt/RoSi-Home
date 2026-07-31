@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { utilityRateSchema } from "../utilities/schema.js";
+import { createSurchargeSchema } from "../charges/schema.js";
 
 export const createPropertySchema = z
   .object({
@@ -7,6 +8,7 @@ export const createPropertySchema = z
     address: z.string().min(1, "Address is required."),
     locality: z.string().trim().min(1).optional(),
     utilityRates: utilityRateSchema.omit({ effectiveFrom: true }),
+    surcharges: z.array(createSurchargeSchema.omit({ effectiveFrom: true, effectiveTo: true })).optional(),
   })
   .strict();
 
