@@ -124,17 +124,14 @@ describe("Reports Integration (US-REPORT-01 to 05)", () => {
     expect(report.financial.actualCollectedRevenue.rent).toBe(5000000);
     
     // Occupancy
-    expect(report.occupancy.totalRooms).toBe(1);
-    expect(report.occupancy.occupiedRooms).toBe(1);
-    expect(report.occupancy.occupancyRate).toBe(100);
+    expect(report.occupancy.averageOccupancyRate).toBe(100);
     expect(report.occupancy.moveIns).toBe(1);
     expect(report.occupancy.moveOuts).toBe(0);
 
     // Maintenance
-    expect(report.maintenance.totalRequests).toBe(1);
-    expect(report.maintenance.resolvedRequests).toBe(1);
-    expect(report.maintenance.pendingRequests).toBe(0);
-    expect(report.maintenance.averageResolutionTimeDays).toBeGreaterThan(0); // 2 days
+    expect(report.maintenance.newRequests).toBe(1);
+    expect(report.maintenance.completedRequests).toBe(1);
+    expect(report.maintenance.averageResolutionTime).toBeGreaterThan(0);
 
     reportId = report.reportId;
   });
