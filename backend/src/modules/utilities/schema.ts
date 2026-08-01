@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { businessDate } from "../../lib/businessDate.js";
 
 const dateStr = z
   .string()
@@ -12,7 +13,10 @@ const dateStr = z
       );
     },
     { message: "effectiveFrom must be a valid calendar date." },
-  );
+  )
+  .refine((value) => value > businessDate(), {
+    message: "effectiveFrom must be strictly in the future (greater than today).",
+  });
 
 export const utilityRateSchema = z
   .object({
