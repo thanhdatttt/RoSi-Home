@@ -20,6 +20,7 @@ export default function NewRooms() {
   const [start, setStart] = useState("101");
   const [count, setCount] = useState("6");
   const [rent, setRent] = useState("1200000");
+  const [existingRooms, setExistingRooms] = useState<{ prefix: string; num: number }[]>([]);
   
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -45,17 +46,22 @@ export default function NewRooms() {
           .filter(Boolean) as { prefix: string; num: number }[];
 
         if (!parsed.length) return;
+        setExistingRooms(parsed);
 
         // Use the most common prefix
         const prefixCounts: Record<string, number> = {};
         parsed.forEach(p => { prefixCounts[p.prefix] = (prefixCounts[p.prefix] || 0) + 1; });
         const mostCommonPrefix = Object.entries(prefixCounts).sort((a, b) => b[1] - a[1])[0][0];
 
-        // Find the highest number among rooms with that prefix
-        const highestNum = Math.max(...parsed.filter(p => p.prefix === mostCommonPrefix).map(p => p.num));
+        // Find the lowest available missing number
+        const prefixNums = parsed.filter(p => p.prefix === mostCommonPrefix).map(p => p.num).sort((a, b) => a - b);
+        let firstMissing = prefixNums.length > 0 ? prefixNums[0] : 101;
+        while (prefixNums.includes(firstMissing)) {
+          firstMissing++;
+        }
 
         setPrefix(mostCommonPrefix || "P");
-        setStart(String(highestNum + 1));
+        setStart(String(firstMissing));
       } catch {
         // If fetching fails, keep defaults
       }
@@ -83,8 +89,25 @@ export default function NewRooms() {
   const names = useMemo(() => {
     if (Number.isNaN(startNum) || Number.isNaN(countNum)) return [];
     const n = Math.min(Math.max(countNum || 0, 0), MAX_ROOMS);
-    return Array.from({ length: n }, (_, i) => `${prefix.trim()}${startNum + i}`);
-  }, [prefix, startNum, countNum]);
+    
+    const taken = new Set(
+      existingRooms
+        .filter(r => r.prefix === prefix.trim())
+        .map(r => r.num)
+    );
+
+    const generated: string[] = [];
+    let currentNum = startNum;
+
+    while (generated.length < n) {
+      if (!taken.has(currentNum)) {
+        generated.push(`${prefix.trim()}${currentNum}`);
+      }
+      currentNum++;
+    }
+
+    return generated;
+  }, [prefix, startNum, countNum, existingRooms]);
 
   const formatMoney = (val: string) => {
     if (!val) return "";
