@@ -15,37 +15,51 @@ export default function PropertiesList() {
   const [q, setQ] = useState("");
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      async function fetchProperties() {
-        if (!token) return;
-        setLoading(true);
-        try {
-          const data = await apiRequest<any[]>('/properties', { token });
-          setProperties(data);
-        } catch (err) {
-          console.error("Failed to load properties", err);
-        } finally {
-          setLoading(false);
-        }
-      }
-      fetchProperties();
-    }, [token])
-  );
-
-  const fetchPropertiesRef = useCallback(async () => {
+  const fetchPropertiesInitial = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await apiRequest<any[]>('/properties', { token });
+      const data = await apiRequest<any[]>('/properties?page=1&pageSize=5', { token });
       setProperties(data);
+      setPage(1);
+      setHasMore(data.length === 5);
     } catch (err) {
       console.error("Failed to load properties", err);
     } finally {
       setLoading(false);
     }
   }, [token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPropertiesInitial();
+    }, [fetchPropertiesInitial])
+  );
+
+  const loadMore = async () => {
+    if (!token || !hasMore || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const data = await apiRequest<any[]>(`/properties?page=${nextPage}&pageSize=5`, { token });
+      setProperties(prev => {
+        // Filter out duplicates just in case
+        const existingIds = new Set(prev.map(p => p.id));
+        const newItems = data.filter(d => !existingIds.has(d.id));
+        return [...prev, ...newItems];
+      });
+      setPage(nextPage);
+      setHasMore(data.length === 5);
+    } catch (err) {
+      console.error("Failed to load more properties", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const confirmDelete = (property: any) => {
     Alert.alert(
@@ -59,7 +73,7 @@ export default function PropertiesList() {
           onPress: async () => {
             try {
               await apiRequest(`/properties/${property.id}`, { token, method: 'DELETE' });
-              fetchPropertiesRef();
+              fetchPropertiesInitial();
             } catch (err: any) {
               Alert.alert("Error", err.message || "Failed to delete property");
             }
@@ -162,6 +176,15 @@ export default function PropertiesList() {
                 </Link>
               </Swipeable>
             ))
+          )}
+          {!loading && hasMore && items.length > 0 && (
+            <TouchableOpacity 
+              onPress={loadMore} 
+              disabled={loadingMore}
+              style={{ paddingVertical: 12, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+            >
+              {loadingMore ? <ActivityIndicator size="small" color="#2563eb" /> : <Text style={{ color: '#2563eb', fontWeight: '600', fontSize: 14 }}>Load More</Text>}
+            </TouchableOpacity>
           )}
         </ScrollView>
       </View>

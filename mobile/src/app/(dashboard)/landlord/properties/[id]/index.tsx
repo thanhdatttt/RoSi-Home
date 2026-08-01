@@ -17,38 +17,56 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState<any>(null);
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const fetchInitialData = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const [propData, roomsData] = await Promise.all([
+        apiRequest<any>(`/properties/${id}`, { token }),
+        apiRequest<any>(`/rooms/properties/${id}?page=1&pageSize=5`, { token })
+      ]);
+      setProperty(propData);
+      const fetchedRooms = roomsData.data || roomsData;
+      setRooms(fetchedRooms);
+      setPage(1);
+      setHasMore(fetchedRooms.length === 5);
+    } catch (err) {
+      console.error("Failed to load property details", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, token]);
 
   useFocusEffect(
     useCallback(() => {
-      async function loadData() {
-        if (!token) return;
-        try {
-          const [propData, roomsData] = await Promise.all([
-            apiRequest<any>(`/properties/${id}`, { token }),
-            apiRequest<any>(`/rooms/properties/${id}`, { token })
-          ]);
-          // API returns { data: [...], meta: ... } for paginated list endpoints
-          setProperty(propData);
-          setRooms(roomsData.data || roomsData);
-        } catch (err) {
-          console.error("Failed to load property details", err);
-        } finally {
-          setLoading(false);
-        }
-      }
-      loadData();
-    }, [id, token])
+      fetchInitialData();
+    }, [fetchInitialData])
   );
 
-  const fetchRooms = useCallback(async () => {
-    if (!token) return;
+  const loadMoreRooms = async () => {
+    if (!token || !hasMore || loadingMore) return;
+    setLoadingMore(true);
     try {
-      const roomsData = await apiRequest<any>(`/rooms/properties/${id}`, { token });
-      setRooms(roomsData.data || roomsData);
+      const nextPage = page + 1;
+      const roomsData = await apiRequest<any>(`/rooms/properties/${id}?page=${nextPage}&pageSize=5`, { token });
+      const newItems = roomsData.data || roomsData;
+      setRooms(prev => {
+        const existingIds = new Set(prev.map(r => r.id));
+        const filteredNew = newItems.filter((d: any) => !existingIds.has(d.id));
+        return [...prev, ...filteredNew];
+      });
+      setPage(nextPage);
+      setHasMore(newItems.length === 5);
     } catch (err) {
-      console.error("Failed to load rooms", err);
+      console.error("Failed to load more rooms", err);
+    } finally {
+      setLoadingMore(false);
     }
-  }, [id, token]);
+  };
 
   const confirmDeleteRoom = (room: any) => {
     Alert.alert(
@@ -62,7 +80,7 @@ export default function PropertyDetail() {
           onPress: async () => {
             try {
               await apiRequest(`/rooms/${room.id}`, { token, method: 'DELETE' });
-              fetchRooms();
+              fetchInitialData();
             } catch (err: any) {
               Alert.alert("Error", err.message || "Failed to delete room");
             }
@@ -225,6 +243,15 @@ export default function PropertyDetail() {
                     </Link>
                   </Swipeable>
                 ))
+              )}
+              {!loading && hasMore && rooms.length > 0 && (
+                <TouchableOpacity 
+                  onPress={loadMoreRooms} 
+                  disabled={loadingMore}
+                  style={{ paddingVertical: 12, borderRadius: 16, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' }}
+                >
+                  {loadingMore ? <ActivityIndicator size="small" color="#2563eb" /> : <Text style={{ color: '#2563eb', fontWeight: '600', fontSize: 14 }}>Load More</Text>}
+                </TouchableOpacity>
               )}
             </View>
           </View>
