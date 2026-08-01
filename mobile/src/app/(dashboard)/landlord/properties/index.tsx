@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from "react-native";
+import React, { useState, useCallback, useRef } from "react";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert } from "react-native";
 import { Link, useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
-import { ArrowLeft, Plus, Building2, MapPin, Search } from "lucide-react-native";
+import { ArrowLeft, Plus, Building2, MapPin, Search, Trash2 } from "lucide-react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../../../contexts/auth-context";
 import { apiRequest } from "../../../../lib/api";
 
@@ -32,6 +33,41 @@ export default function PropertiesList() {
       fetchProperties();
     }, [token])
   );
+
+  const fetchPropertiesRef = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const data = await apiRequest<any[]>('/properties', { token });
+      setProperties(data);
+    } catch (err) {
+      console.error("Failed to load properties", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const confirmDelete = (property: any) => {
+    Alert.alert(
+      "Delete Property",
+      `Are you sure you want to delete "${property.name}"? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiRequest(`/properties/${property.id}`, { token, method: 'DELETE' });
+              fetchPropertiesRef();
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete property");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const items = properties.filter((p) => 
     p.name.toLowerCase().includes(q.toLowerCase()) || 
@@ -87,24 +123,44 @@ export default function PropertiesList() {
             </View>
           ) : (
             items.map((p) => (
-              <Link key={p.id} href={`/landlord/properties/${p.id}`} asChild>
-                <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ height: 48, width: 48, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Building2 size={20} color="#2563eb" />
-                  </View>
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{p.name}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                      <MapPin size={12} color="gray" />
-                      <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>{p.address}</Text>
+              <Swipeable
+                key={p.id}
+                containerStyle={{ overflow: 'visible' }}
+                renderRightActions={() => (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#ef4444',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: 80,
+                      borderRadius: 16,
+                      marginLeft: 12,
+                    }}
+                    onPress={() => confirmDelete(p)}
+                  >
+                    <Trash2 size={24} color="white" />
+                  </TouchableOpacity>
+                )}
+              >
+                <Link href={`/landlord/properties/${p.id}`} asChild>
+                  <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ height: 48, width: 48, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Building2 size={20} color="#2563eb" />
                     </View>
-                  </View>
-                  <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700' }}>0/0</Text>
-                    <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>occupied</Text>
-                  </View>
-                </TouchableOpacity>
-              </Link>
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{p.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <MapPin size={12} color="gray" />
+                        <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>{p.address}</Text>
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700' }}>0/0</Text>
+                      <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>occupied</Text>
+                    </View>
+                  </TouchableOpacity>
+                </Link>
+              </Swipeable>
             ))
           )}
         </ScrollView>

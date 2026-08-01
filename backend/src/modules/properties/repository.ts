@@ -71,3 +71,21 @@ export async function updateProperty(
     .returning();
   return row ?? null;
 }
+
+export async function softDeleteProperty(
+  landlordId: string,
+  id: string,
+  deletedBy: string,
+): Promise<PropertyRow | null> {
+  const [row] = await db
+    .update(properties)
+    .set({
+      deletedAt: new Date(),
+      deletedBy,
+    })
+    .where(
+      and(eq(properties.id, id), eq(properties.landlordId, landlordId), isNull(properties.deletedAt)),
+    )
+    .returning();
+  return row ?? null;
+}

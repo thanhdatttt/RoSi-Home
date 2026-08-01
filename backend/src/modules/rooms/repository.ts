@@ -83,6 +83,21 @@ export async function updateRoom(
   return row ?? null;
 }
 
+export async function softDeleteRoom(
+  id: string,
+  deletedBy: string,
+): Promise<RoomRow | null> {
+  const [row] = await db
+    .update(rooms)
+    .set({
+      deletedAt: new Date(),
+      deletedBy,
+    })
+    .where(and(eq(rooms.id, id), isNull(rooms.deletedAt)))
+    .returning();
+  return row ?? null;
+}
+
 export async function listActiveRoomNames(propertyId: string): Promise<string[]> {
   const rows = await db
     .select({ name: rooms.name })

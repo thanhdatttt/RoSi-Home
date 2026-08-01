@@ -12,6 +12,7 @@ import {
   findProperty,
   listPropertiesByLandlord,
   updateProperty,
+  softDeleteProperty,
   type PropertyRow,
 } from "./repository.js";
 
@@ -128,4 +129,22 @@ export async function updatePropertyService(
     }
     throw err;
   }
+}
+
+export async function deletePropertyService(
+  landlordId: string,
+  id: string,
+): Promise<void> {
+  const existing = await findProperty(landlordId, id);
+  if (!existing) throw new NotFoundError("Property not found.");
+
+  const deleted = await softDeleteProperty(landlordId, id, landlordId);
+  if (!deleted) throw new NotFoundError("Property not found.");
+
+  await writeAudit({
+    actorUserId: landlordId,
+    action: "property.deleted",
+    entityType: "properties",
+    entityId: id,
+  });
 }

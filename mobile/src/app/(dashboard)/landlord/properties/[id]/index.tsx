@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Link, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
-import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight } from "lucide-react-native";
+import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight, Trash2 } from "lucide-react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../../../../contexts/auth-context";
 import { apiRequest } from "../../../../../lib/api";
 
@@ -38,6 +39,38 @@ export default function PropertyDetail() {
       loadData();
     }, [id, token])
   );
+
+  const fetchRooms = useCallback(async () => {
+    if (!token) return;
+    try {
+      const roomsData = await apiRequest<any>(`/rooms/properties/${id}`, { token });
+      setRooms(roomsData.data || roomsData);
+    } catch (err) {
+      console.error("Failed to load rooms", err);
+    }
+  }, [id, token]);
+
+  const confirmDeleteRoom = (room: any) => {
+    Alert.alert(
+      "Delete Room",
+      `Are you sure you want to delete "${room.name || 'Unnamed Room'}"? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiRequest(`/rooms/${room.id}`, { token, method: 'DELETE' });
+              fetchRooms();
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete room");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (loading) {
     return (
@@ -150,27 +183,47 @@ export default function PropertyDetail() {
                 </View>
               ) : (
                 rooms.map((r) => (
-                  <Link key={r.id} href={`/landlord/properties/${id}/rooms/${r.id}`} asChild>
-                    <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View style={{ height: 44, width: 44, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <DoorOpen size={20} color="#2563eb" />
-                      </View>
-                      <View style={{ flex: 1, paddingRight: 8 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || "Unnamed Room"}</Text>
-                        <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>
-                          {r.occupied ? "Occupied" : "No active lease"}
-                        </Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{r.rentAmount?.toLocaleString() || 0} VNĐ</Text>
-                        <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: r.occupied ? 'rgba(37,99,235,0.2)' : '#f1f5f9' }}>
-                          <Text style={{ fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, color: r.occupied ? '#2563eb' : '#94a3b8' }}>
-                            {r.occupied ? "Occupied" : "Vacant"}
+                  <Swipeable
+                    key={r.id}
+                    containerStyle={{ overflow: 'visible' }}
+                    renderRightActions={() => (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#ef4444',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: 80,
+                          borderRadius: 16,
+                          marginLeft: 12,
+                        }}
+                        onPress={() => confirmDeleteRoom(r)}
+                      >
+                        <Trash2 size={24} color="white" />
+                      </TouchableOpacity>
+                    )}
+                  >
+                    <Link href={`/landlord/properties/${id}/rooms/${r.id}`} asChild>
+                      <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <View style={{ height: 44, width: 44, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <DoorOpen size={20} color="#2563eb" />
+                        </View>
+                        <View style={{ flex: 1, paddingRight: 8 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || "Unnamed Room"}</Text>
+                          <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>
+                            {r.occupied ? "Occupied" : "No active lease"}
                           </Text>
                         </View>
-                      </View>
-                    </TouchableOpacity>
-                  </Link>
+                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '700' }}>{r.rentAmount?.toLocaleString() || 0} VNĐ</Text>
+                          <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: r.occupied ? 'rgba(37,99,235,0.2)' : '#f1f5f9' }}>
+                            <Text style={{ fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, color: r.occupied ? '#2563eb' : '#94a3b8' }}>
+                              {r.occupied ? "Occupied" : "Vacant"}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </Link>
+                  </Swipeable>
                 ))
               )}
             </View>

@@ -17,6 +17,7 @@ import {
   updateRoom,
   listActiveRoomNames,
   insertRoomsInTransaction,
+  softDeleteRoom,
   type RoomRow,
   type RoomWithStatus,
 } from "./repository.js";
@@ -121,6 +122,29 @@ export async function updateRoomService(
     }
     throw err;
   }
+}
+
+export async function deleteRoomService(
+  landlordId: string,
+  roomId: string,
+): Promise<void> {
+  const room = await findActiveRoomWithStatus(roomId);
+  if (!room) throw new NotFoundError("Room not found.");
+  await assertPropertyOwned(room.propertyId, landlordId);
+
+  if (room.status === "Occupied") {
+    throw new ConflictError("Cannot delete an occupied room. Terminate the active lease first.");
+  }
+
+  const deleted = await softDeleteRoom(roomId, landlordId);
+  if (!deleted) throw new NotFoundError("Room not found.");
+
+  await writeAudit({
+    actorUserId: landlordId,
+    action: "room.deleted",
+    entityType: "rooms",
+    entityId: roomId,
+  });
 }
 
 function maxNumericSuffix(names: string[]): number {
