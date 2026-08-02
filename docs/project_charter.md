@@ -27,7 +27,6 @@ The project aims to:
 - Improve lease and maintenance management.
 - Deliver a functional MVP within the planned academic schedule.
 
-
 ---
 
 # 3. Project Scope
@@ -55,30 +54,100 @@ The project aims to:
 - Multi-landlord collaboration
 - Advanced accounting features
 
-
 ---
 
 # 4. Project Management and Governance
 
-|Role|Name|Responsibilities|
+The team consists of **five part-time student developers**. One of the five, **Chí**, holds the dual role of **Project Manager / Team Leader** in addition to his individual delivery workstream (**BE1**). This dual assignment is reflected explicitly throughout the RACI matrix in Section 5, since "Project Manager" is a role Chí carries alongside — not instead of — his own delivery responsibilities.
+
+| Role | Name | Responsibilities |
 |---|---|---|
-|Project Sponsor|University Supervisor / Lecturer|Approves the project, provides academic guidance, reviews progress, approves final deliverables.|
-|Project Manager|Project Director (Team Leader)|Plans the project, manages schedule, coordinates communication, assigns tasks, manages risks, reports project progress.|
-|Development Team|Four Student Developers|Design, implement, test, document and deploy the application according to project requirements.|
-|Product Owner|Self-Managing Landlords (Representative Users)|Provide business requirements, validate workflows, participate in user acceptance testing, provide feedback.|
-|End Users|Landlords and Tenants|Use the system during pilot testing and evaluate usability and functionality.|
+| Project Sponsor | University Supervisor / Lecturer | Approves the project, provides academic guidance, reviews progress, approves final deliverables. |
+| Project Manager / Team Leader | **Chí** (also BE1) | Plans the project, maintains the schedule and baseline, coordinates communication, assigns/records integration ownership, manages risks and changes, reports project progress to the Sponsor. |
+| Backend Developer 1 (BE1) | **Chí** | Owns Auth, Profile, Tenant, Lease, Dashboard 01–02, and backend stabilization. |
+| Backend Developer 2 (BE2) | **Đạt** | Owns Property, Room, Meter, Invoice, Dashboard 03–04. |
+| Backend Developer 3 (BE3) | **Minh** | Owns Utility, Charge, Maintenance, Payment, Reminder, Report. |
+| Frontend Developer 1 (FE1) | **Hung** | Owns Auth/Profile/Property/Room UI, Tenant/Lease UI, Invoice/Payment UI, Dashboard UI. |
+| Frontend Developer 2 (FE2) | **Quân** | Owns the Design System, Utility UI, Meter/Maintenance UI, VietQR/Notification UI, Report UI. |
+| Product Owner | Self-Managing Landlords (Representative Users) | Provide business requirements, validate workflows, participate in user acceptance testing, provide feedback. |
+| End Users | Landlords and Tenants | Use the system during pilot testing and evaluate usability and functionality. |
 
 ---
 
-# 5. Stakeholder Analysis
+# 5. RACI Matrix — Task-to-Member Responsibility Assignment
 
-Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the work they actually perform), and how the team communicates with them and manages the associated risks. It also captures **accountability** (who is ultimately answerable if that work is not done or not done correctly — normally one person/role per item, not a group), **access** (how directly they can reach project information/decisions), and **level of influence** (how much power they have to change the direction, scope, or outcome of the project).
+### 5.1 Purpose
+
+A Responsibility Assignment Matrix (RACI) maps every deliverable to the people involved in it, using four designations: **R**esponsible (does the work), **A**ccountable (owns the outcome and signs off — exactly one per row), **C**onsulted (gives input before the work is done), and **I**nformed (told after the work is done). Establishing the RACI as part of the Project Charter, rather than leaving it implicit, is standard PMI practice and is the main gap this rewrite closes: the previous charter described roles in prose but never assigned individual project tasks to individual members. The matrix below is organized at **feature level** rather than at individual user-story level, so it stays readable as a charter-level reference; each row is traceable to the team's own delivery plan and can be expanded back to its underlying user stories in the backlog if finer-grained tracking is needed during a sprint.
+
+### 5.2 Legend
+
+| Abbreviation | Full Name | Role |
+|---|---|---|
+| **PM** | Trần Khôn Chí | Project Manager / Team Leader (coordination-level involvement only) |
+| **Chí** | Trần Khôn Chí| Backend Developer 1 (BE1) |
+| **Đạt** | Phạm Thành Đạt | Backend Developer 2 (BE2) |
+| **Minh** | Nguyễn Văn Minh | Backend Developer 3 (BE3) |
+| **MXH** | Mai Xuân Hưng | Frontend Developer 1 (FE1) |
+| **Quân** | Nguyễn Huy Quân | Frontend Developer 2 (FE2) |
+| **SPN** | — | Project Sponsor / Lecturer |
+| **LR** | — | Landlord Representatives (Product Owner group) |
+| **TN** | — | Tenants (secondary end users, consulted during pilot) |
+
+### 5.3 Governance-Level RACI
+
+| Decision / Activity | Responsible | Accountable | Consulted | Informed |
+|---|---|---|---|---|
+| Charter approval | PM | SPN | Dev Team, LR | — |
+| Scope, deadline, architecture, or budget baseline change | PM | SPN | Dev Team | LR |
+| Story clarification within approved scope | Assigned member + affected API/UI owner | PM | — | SPN |
+| Risk identification and mitigation planning | PM | PM | Dev Team | SPN |
+| Batch/integration ownership assignment | PM | PM | Batch owners | Dev Team |
+| Sponsor progress review | PM | SPN | — | Dev Team |
+| Final deliverable acceptance | Dev Team | SPN | PM, LR | Dev Team |
+
+### 5.4 Delivery-Level RACI
+
+| Feature | Responsible | Accountable | Consulted | Informed |
+|---|---|---|---|---|
+| F-01 User Registration, Authentication, and Profile Management (AUTH-01→06, PROFILE-01) | Chí, MXH | Chí | LR (role/ownership rules only) | SPN |
+| F-02 Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Đạt, MXH | Đạt | LR | SPN |
+| F-03 Tenant Information and Account Management (TENANT-01→02) | Chí, MXH | Chí | LR, TN | SPN |
+| F-04 Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Minh, Quân | Minh | LR | SPN |
+| F-05 Utility Meter Reading and Calculation (METER-01→03) | Đạt, Quân | Đạt | LR | SPN |
+| F-06 Billing and Invoice Generation (INVOICE-01→04) | Đạt, MXH | Đạt | LR | TN, SPN |
+| F-07 VietQR Payment Integration (VIETQR-01→02) | Minh, Quân | Minh | LR | TN, SPN |
+| F-08 Payment Verification and Tracking (PAYMENT-01→03) | Minh, Quân | Minh | LR, TN | SPN |
+| F-09 Rent Payment Reminders (REMINDER-01→02) | Minh, Quân | Minh | LR | TN, SPN |
+| F-10 Digital Lease Tracking (LEASE-01→04) | Chí, MXH | Chí | LR | TN, SPN |
+| F-11 Automated Lease Renewal Reminders (LEASE-05→06) | Chí, MXH | Chí | LR | TN, SPN |
+| F-12 Maintenance Request Submission (MAINT-01→02) | Minh, Quân | Minh | TN, LR | SPN |
+| F-13 Maintenance Status Tracking (MAINT-03→05) | Minh, Quân | Minh | LR | TN, SPN |
+| F-14 Centralized Business Dashboard (DASH-01→04) | Chí, Đạt, MXH | Chí (DASH-01→02) / Đạt (DASH-03→04) — see note | LR | SPN |
+| F-15 Monthly Business Report and Analytics (REPORT-01→05) | Minh, Quân | Minh | LR | SPN |
+
+### 5.5 Cross-Cutting and Shared Activities RACI
+
+These activities recur across every batch and are not tied to a single user story.
+
+| Activity | Responsible | Accountable | Consulted | Informed |
+|---|---|---|---|---|
+| Pull-request review | all members |  all members | Author | PM |
+| Shared API/schema decision | Minh, Chí, Đạt | Integration owner appointed for the batch | PM | Dev Team |
+| Backend CI maintenance | Minh, Chí, Đạt | Chí (BE1, infrastructure owner) | — | PM |
+| Mobile validation | MXH, Quân | MXH, Quân | — | PM |
+| Documentation authoring and updates | All members, for their own or affected work | all members | — | PM |
+| Documentation review and approval | All members | All members  | — | PM |
+
+---
+
+# 6. Stakeholder Analysis
 
 | Stakeholder | Role in Project | Responsibilities | Accountability (answerable for the outcome) | Access to Project Information/Decisions | Level of Influence | Communication Method | Risks Associated |
 |---|---|---|---|---|---|---|---|
 | **Project Supervisor / Lecturer** | Project Sponsor | Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met. | **Accountable** for certifying the project meets academic requirements and for the final grade decision | Full — receives all deliverables, attends milestone reviews | **High** — can require rework, reject milestones, or fail the deliverable | Weekly meetings, Email | Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions. |
-| **Project Manager (Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, oversees project delivery. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. |
-| **Development Team** | System Development | Design architecture, develop features, perform testing, fix defects, maintain documentation. | Each member is **accountable** for their assigned User Stories/modules; collectively accountable to the PM for sprint commitments | Full internal access (codebase, backlog, CI); no direct access to Supervisor grading decisions | **High** — can influence technical approach and estimates, project scope | GitHub, Discord, Daily stand-up meetings | Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework. |
+| **Project Manager (Chí, Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, oversees project delivery — alongside his own BE1 delivery workstream. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. Dual PM/BE1 role creates a single point of overload risk. |
+| **Development Team (Đạt, Minh, MXH, Quân)** | System Development | Design architecture, develop features, perform testing, fix defects, maintain documentation, per the named workstreams in Section 4 and the RACI in Section 5. | Each member is **accountable** for their assigned user stories/modules (see Section 5.4); collectively accountable to the PM for sprint commitments | Full internal access (codebase, backlog, CI); no direct access to Supervisor grading decisions | **High** — can influence technical approach, estimates, and project scope | GitHub, Discord, Daily stand-up meetings | Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework. |
 | **Self-Managing Landlords** | Primary Client / Product Owner | Provide business requirements, validate business processes, evaluate prototypes, participate in user acceptance testing. | **Not accountable** for project outcomes (they are consulted, not responsible for delivery), but their acceptance is the qualitative measure of product-market fit | Limited — receives summarized findings, prototypes, and surveys; no access to internal project management artifacts | **High for product decisions** — negative feedback on core workflows (e.g., billing, payment) can force a scope or design change; **no influence** over academic schedule or grading | Face-to-face interviews, Phone calls, Zalo, Google Forms | Limited availability, changing requirements, resistance to adopting digital systems, limited pilot participation. |
 | **Tenants** | Secondary End Users | Evaluate usability, test payment workflow, submit maintenance requests, provide feedback on transparency and user experience. | Not accountable for delivery | Limited — receives only the parts of the prototype relevant to the tenant-facing app | **Low–Medium** — feedback can adjust tenant-facing UX details, but does not drive core project scope | Mobile application, Zalo, Google Forms | Limited engagement during testing, incomplete feedback, inconsistent system usage. |
 | **Cloud Service Provider** | Technology Provider | Provides cloud hosting, databases, application deployment services. | Accountable only for the availability/SLA of the infrastructure it provides, not for project delivery | No access to project artifacts; interaction limited to service dashboards/support | **Low** — an outage or quota limit can constrain the team's options, but the provider does not influence project decisions | Cloud management portals, documentation, support tickets | Service outages, quota limitations, student credit expiration, infrastructure downtime. |
@@ -86,14 +155,15 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 | **Banking System (VietQR Standard)** | External Integration | Generates standardized QR codes for bank transfers between tenants and landlords. | Accountable only for the correctness of the standard it publishes, not for RosiHome's implementation | No access to project artifacts | **Medium** — RosiHome's payment workflow must conform to VietQR's format, so changes to the standard can force a design change, even though the bank has no direct involvement in the project | Banking applications, VietQR standard documentation | QR generation format changes, incorrect bank information entered by landlords, manual payment verification required. |
 | **University** | Academic Stakeholder | Provides project environment, computing resources, academic supervision, and evaluation. | **Accountable** for setting and enforcing the academic requirements the project must satisfy | Access limited to official reporting/evaluation channels | **High** — sets the non-negotiable constraints (deadlines, assessment criteria) the whole project must operate within | Official university communication channels, meetings | Changes to assessment requirements or project deadlines may affect planning. |
 
+---
 
-# 6. Project Facilities and Resources
+# 7. Project Facilities and Resources
 
 ## Human Resources
 
 - Project Supervisor
-- Project Manager
-- Four Software Engineering Students
+- Project Manager (Chí)
+- Four additional Software Engineering Students (Đạt, Minh, Hung, Quân)
 - Pilot Landlords
 - Pilot Tenants
 
@@ -119,7 +189,7 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 
 ---
 
-# 7. Major Milestones
+# 8. Major Milestones
 
 | Milestone                        | Expected Outcome                                |
 | -------------------------------- | ----------------------------------------------- |
@@ -132,7 +202,7 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 
 ---
 
-# 8. Impact Analysis
+# 9. Impact Analysis
 
 | Stakeholder      | Expected Impact                                                                                                                          |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
@@ -144,7 +214,7 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 
 ---
 
-# 9. Assumptions
+# 10. Assumptions
 
 - Landlords and tenants have internet-enabled smartphones or computers.
 - Landlords are willing to adopt a digital management system.
@@ -155,16 +225,16 @@ Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the wo
 - Pilot users are available to provide feedback during testing.
 - Development will be completed within the academic project timeline.
 
-
 ---
 
-# 10. Project Risks (Summary)
+# 11. Project Risks (Summary)
 
 | Risk                        | Mitigation                                          |
-| --------------------------- | --------------------------------------------------- |
+| --------------------------- | ----------------------------------------------------- |
 | Schedule delays             | Agile sprint planning and scope prioritization      |
 | Scope creep                 | Freeze MVP requirements after approval              |
 | Low user participation      | Recruit pilot users early                           |
 | Manual payment verification | Clearly define landlord verification responsibility |
-| Cloud service interruption  | Use reliable providers and maintain backups         |
-| Team member availability    | Regular progress monitoring and workload balancing  |
+| Cloud service interruption  | Use reliable providers and maintain backups          |
+| Team member availability    | Regular progress monitoring and workload balancing   |
+| PM/BE1 dual-role overload   | PM tracks own capacity explicitly; escalate to Sponsor if coordination load displaces BE1 delivery |
