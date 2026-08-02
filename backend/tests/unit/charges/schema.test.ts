@@ -23,7 +23,7 @@ describe("surcharge request schemas", () => {
     const result = createSurchargeSchema.parse({
       name: "  Internet  ",
       monthlyAmount: 100000,
-      effectiveFrom: "2026-07-01",
+      effectiveFrom: "2099-07-01",
     });
 
     expect(result.name).toBe("Internet");

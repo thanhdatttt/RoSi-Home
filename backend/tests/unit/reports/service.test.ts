@@ -114,7 +114,7 @@ describe("Reports Service", () => {
     });
 
     it("should throw NotFoundError if report doesn't exist", async () => {
-      vi.mocked(repo.getReportById).mockResolvedValue(undefined);
+      vi.mocked(repo.getReportById).mockResolvedValue(undefined as any);
       await expect(getReportPdfService("L1", "R1")).rejects.toThrow(NotFoundError);
     });
 

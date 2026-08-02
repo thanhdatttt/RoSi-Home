@@ -333,6 +333,8 @@ The team has resolved the following cross-cutting product decisions. Their outco
 - [ ] Every rate must be a valid non-negative monetary amount and include its unit/method.
 - [ ] The landlord cannot create or change rates for another landlord's property.
 - [ ] A saved configuration identifies the property and effective time from which the rate applies.
+- [ ] The `effectiveFrom` date must be strictly in the future (greater than today). Rates for the current day or past cannot be edited to protect billing history.
+- [ ] There can be at most one future/upcoming rate scheduled per property. If one already exists, a new submission will overwrite it.
 - [ ] When a property has no landlord-defined rate, the system can use only an applicable developer-seeded default whose source, locality, and effective date are recorded.
 
 #### US-UTILITY-02 — View and update utility rates
