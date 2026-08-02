@@ -74,3 +74,41 @@ export async function sumOutstandingAmountForLandlord(
     );
   return Number(row?.total ?? 0);
 }
+
+// US-DASH-01
+export async function getOccupiedRoomCount(landlordId: string, executor: Db = db) {
+  const [totalRow] = await executor
+    .select({
+      totalRooms: sql<number>`count(distinct ${rooms.id})`
+    })
+    .from(rooms)
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(
+      and(
+        isNull(rooms.deletedAt),
+        isNull(properties.deletedAt),
+        eq(properties.landlordId, landlordId)
+      )
+    );
+
+  const [occupiedRow] = await executor
+    .select({
+      occupiedRooms: sql<number>`count(distinct ${rooms.id})`
+    })
+    .from(rooms)
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .innerJoin(leases, eq(leases.roomId, rooms.id))
+    .where(
+      and(
+        isNull(rooms.deletedAt),
+        isNull(properties.deletedAt),
+        eq(properties.landlordId, landlordId),
+        eq(leases.status, "Active")
+      )
+    );
+
+  return {
+    totalRooms: Number(totalRow?.totalRooms ?? 0),
+    occupiedRooms: Number(occupiedRow?.occupiedRooms ?? 0),
+  };
+}

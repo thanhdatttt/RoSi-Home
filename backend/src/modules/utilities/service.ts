@@ -3,8 +3,9 @@ import { db } from "../../db/index.js";
 import { businessDate } from "../../lib/businessDate.js";
 import {
   assertPropertyOwned,
-  createUtilityRate,
+  upsertUpcomingRate,
   getCurrentRate,
+  getUpcomingRate,
   type UtilityRateRow,
 } from "./repository.js";
 import type { UtilityRateInput } from "./schema.js";
@@ -36,7 +37,7 @@ function serialize(row: UtilityRateRow): UtilityRateView {
   };
 }
 
-// US-UTILITY-01 — append a new versioned rate row (never update in place).
+// US-UTILITY-01 — upsert a future rate row.
 export async function createUtilityRateService(
   landlordId: string,
   propertyId: string,
@@ -46,11 +47,11 @@ export async function createUtilityRateService(
   await assertPropertyOwned(propertyId, landlordId);
   return db.transaction(async (rawTrx) => {
     const trx = rawTrx as unknown as typeof db;
-    const row = await createUtilityRate(propertyId, landlordId, input, trx);
+    const row = await upsertUpcomingRate(propertyId, landlordId, input, businessDate(), trx);
     await writeAudit(
       {
         actorUserId: landlordId,
-        action: "utility_rate.created",
+        action: "utility_rate.created_or_updated",
         entityType: "utility_rate_history",
         entityId: row.id,
       },
@@ -60,12 +61,20 @@ export async function createUtilityRateService(
   });
 }
 
-// US-UTILITY-02 — current effective rate: latest row with effectiveFrom <= today.
-export async function getCurrentRateService(
+// US-UTILITY-02 — returns both current effective rate (<= today) and upcoming rate (> today).
+export async function getRatesService(
   landlordId: string,
   propertyId: string,
-): Promise<UtilityRateView | null> {
+): Promise<{ current: UtilityRateView | null; upcoming: UtilityRateView | null }> {
   await assertPropertyOwned(propertyId, landlordId);
-  const row = await getCurrentRate(propertyId, businessDate());
-  return row ? serialize(row) : null;
+  const today = businessDate();
+  const [currentRow, upcomingRow] = await Promise.all([
+    getCurrentRate(propertyId, today),
+    getUpcomingRate(propertyId, today),
+  ]);
+  
+  return {
+    current: currentRow ? serialize(currentRow) : null,
+    upcoming: upcomingRow ? serialize(upcomingRow) : null,
+  };
 }

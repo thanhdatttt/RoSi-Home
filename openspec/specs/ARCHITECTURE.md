@@ -340,7 +340,7 @@ erDiagram
 | name | text | UNIQUE(propertyId, name) active rows |
 | baseRent | integer (VND) | ≥ 0 |
 
-**utility_rate_history** (US-UTILITY-01/02) — append rows, never update in place; "current" = latest row with `effectiveFrom <= today` and no later row
+**utility_rate_history** (US-UTILITY-01/02) — append rows for currently effective rates; "current" = latest row with `effectiveFrom <= today`. At most one future rate (`effectiveFrom > today`) may exist, and it is updated in place to prevent duplicate scheduled rates.
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
@@ -369,7 +369,7 @@ erDiagram
 |---|---|---|
 | id | uuid PK | |
 | propertyId | uuid, FK properties | |
-| name | text | UNIQUE(propertyId, name, active + overlapping period) |
+| name | text | Name of the surcharge (e.g. Internet) |
 | monthlyAmount | integer (VND) | ≥ 0 |
 | effectiveFrom | date | |
 | effectiveTo | date nullable | |

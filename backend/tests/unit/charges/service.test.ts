@@ -8,10 +8,8 @@ const mocks = vi.hoisted(() => {
       callback(trx),
     ),
     assertPropertyOwned: vi.fn(),
-    createSurcharge: vi.fn(),
-    findActiveSurchargesByName: vi.fn(),
+    upsertUpcomingSurcharge: vi.fn(),
     findSurchargeScoped: vi.fn(),
-    lockSurchargeName: vi.fn(),
     listActiveSurcharges: vi.fn(),
     softDeleteSurcharge: vi.fn(),
     updateSurcharge: vi.fn(),
@@ -29,10 +27,8 @@ vi.mock("../../../src/db/audit.js", () => ({
 
 vi.mock("../../../src/modules/charges/repository.js", () => ({
   assertPropertyOwned: mocks.assertPropertyOwned,
-  createSurcharge: mocks.createSurcharge,
-  findActiveSurchargesByName: mocks.findActiveSurchargesByName,
+  upsertUpcomingSurcharge: mocks.upsertUpcomingSurcharge,
   findSurchargeScoped: mocks.findSurchargeScoped,
-  lockSurchargeName: mocks.lockSurchargeName,
   listActiveSurcharges: mocks.listActiveSurcharges,
   softDeleteSurcharge: mocks.softDeleteSurcharge,
   updateSurcharge: mocks.updateSurcharge,
@@ -49,7 +45,7 @@ const existingSurcharge = {
   propertyId: "22222222-2222-4222-8222-222222222222",
   name: "Internet",
   monthlyAmount: 100000,
-  effectiveFrom: "2026-07-01",
+  effectiveFrom: "2099-07-01",
   effectiveTo: null,
   active: true,
   createdBy: "33333333-3333-4333-8333-333333333333",
@@ -62,10 +58,8 @@ const existingSurcharge = {
 describe("createSurchargeService", () => {
   beforeEach(() => {
     mocks.assertPropertyOwned.mockResolvedValue(undefined);
-    mocks.findActiveSurchargesByName.mockResolvedValue([]);
-    mocks.lockSurchargeName.mockResolvedValue(undefined);
     mocks.writeAudit.mockResolvedValue(undefined);
-    mocks.createSurcharge.mockResolvedValue(existingSurcharge);
+    mocks.upsertUpcomingSurcharge.mockResolvedValue(existingSurcharge);
     mocks.findSurchargeScoped.mockResolvedValue(existingSurcharge);
     mocks.updateSurcharge.mockResolvedValue({
       ...existingSurcharge,
@@ -75,76 +69,28 @@ describe("createSurchargeService", () => {
     mocks.softDeleteSurcharge.mockResolvedValue(undefined);
   });
 
-  it("locks the surcharge name before the conflict query, create, and audit", async () => {
+  it("upserts and audits with the same transaction executor", async () => {
     await createSurchargeService(
       "33333333-3333-4333-8333-333333333333",
       "22222222-2222-4222-8222-222222222222",
       {
         name: "Internet",
         monthlyAmount: 100000,
-        effectiveFrom: "2026-07-01",
+        effectiveFrom: "2099-07-01",
       },
     );
 
-    expect(mocks.lockSurchargeName).toHaveBeenCalledWith(
-      "22222222-2222-4222-8222-222222222222",
-      "Internet",
-      mocks.trx,
-    );
-    expect(mocks.findActiveSurchargesByName).toHaveBeenCalledWith(
-      "22222222-2222-4222-8222-222222222222",
-      "Internet",
-      mocks.trx,
-    );
-    expect(
-      mocks.lockSurchargeName.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      mocks.findActiveSurchargesByName.mock.invocationCallOrder[0],
-    );
-    expect(mocks.createSurcharge).toHaveBeenCalledWith(
+    expect(mocks.upsertUpcomingSurcharge).toHaveBeenCalledWith(
       "22222222-2222-4222-8222-222222222222",
       "33333333-3333-4333-8333-333333333333",
       expect.any(Object),
+      expect.any(String), // today date
       mocks.trx,
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "surcharge.created" }),
+      expect.objectContaining({ action: "surcharge.upserted" }),
       mocks.trx,
     );
-  });
-
-  it("rejects an overlapping version without creating or auditing", async () => {
-    mocks.findActiveSurchargesByName.mockResolvedValue([
-      {
-        id: "44444444-4444-4444-8444-444444444444",
-        propertyId: "22222222-2222-4222-8222-222222222222",
-        name: "Internet",
-        monthlyAmount: 90000,
-        effectiveFrom: "2026-01-01",
-        effectiveTo: null,
-        active: true,
-        createdBy: "33333333-3333-4333-8333-333333333333",
-        createdAt: new Date("2026-01-01T00:00:00.000Z"),
-        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-        deletedAt: null,
-        deletedBy: null,
-      },
-    ]);
-
-    await expect(
-      createSurchargeService(
-        "33333333-3333-4333-8333-333333333333",
-        "22222222-2222-4222-8222-222222222222",
-        {
-          name: "Internet",
-          monthlyAmount: 100000,
-          effectiveFrom: "2026-07-01",
-        },
-      ),
-    ).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
-
-    expect(mocks.createSurcharge).not.toHaveBeenCalled();
-    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it("updates and audits with the same transaction executor", async () => {
@@ -161,7 +107,7 @@ describe("createSurchargeService", () => {
     );
     expect(mocks.updateSurcharge).toHaveBeenCalledWith(
       "11111111-1111-4111-8111-111111111111",
-      { monthlyAmount: 120000 },
+      expect.any(Object),
       mocks.trx,
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -170,33 +116,19 @@ describe("createSurchargeService", () => {
     );
   });
 
-  it("locks the resulting name before checking an overlap-changing update", async () => {
-    await updateSurchargeService(
-      "33333333-3333-4333-8333-333333333333",
-      "11111111-1111-4111-8111-111111111111",
-      { effectiveTo: "2026-12-31" },
-    );
+  it("rejects an update if the surcharge is already in effect", async () => {
+    mocks.findSurchargeScoped.mockResolvedValueOnce({
+      ...existingSurcharge,
+      effectiveFrom: "2000-01-01", // Past date
+    });
 
-    expect(mocks.lockSurchargeName).toHaveBeenCalledWith(
-      "22222222-2222-4222-8222-222222222222",
-      "Internet",
-      mocks.trx,
-    );
-    expect(
-      mocks.lockSurchargeName.mock.invocationCallOrder[0],
-    ).toBeLessThan(
-      mocks.findActiveSurchargesByName.mock.invocationCallOrder[0],
-    );
-  });
-
-  it("rejects an update that makes the effective period invalid", async () => {
     await expect(
       updateSurchargeService(
         "33333333-3333-4333-8333-333333333333",
         "11111111-1111-4111-8111-111111111111",
         { effectiveTo: "2026-06-30" },
       ),
-    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+    ).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
 
     expect(mocks.updateSurcharge).not.toHaveBeenCalled();
   });
