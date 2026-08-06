@@ -17,6 +17,7 @@ import {
   renameSurchargeGroup,
   softDeleteSurcharge,
   updateSurcharge,
+  findOverlappingSurcharges,
   type SurchargeRow,
 } from "./repository.js";
 import type { CreateSurchargeInput, UpdateSurchargeInput } from "./schema.js";
@@ -57,6 +58,18 @@ export async function createSurchargeService(
   input: CreateSurchargeInput,
 ): Promise<SurchargeView> {
   await assertPropertyOwned(propertyId, landlordId);
+  assertSurchargePeriod(input.effectiveFrom, input.effectiveTo ?? null);
+
+  const overlaps = await findOverlappingSurcharges(
+    propertyId,
+    input.name,
+    input.effectiveFrom,
+    input.effectiveTo ?? null
+  );
+
+  if (overlaps.length > 0) {
+    throw new ConflictError(`This conflicts with an existing rate for '${input.name}'. Please end the active rate before scheduling a new one for this period.`);
+  }
 
   return db.transaction(async (rawTrx) => {
     const trx = rawTrx as unknown as typeof db;
@@ -126,6 +139,27 @@ export async function updateSurchargeService(
     const trx = rawTrx as unknown as typeof db;
     const existing = await findSurchargeScoped(id, landlordId, trx);
     if (!existing) throw new NotFoundError("Surcharge not found.");
+
+    const finalName = input.name ?? existing.name;
+    const finalFrom = input.effectiveFrom ?? existing.effectiveFrom;
+    
+    // Check if effectiveTo is provided in the input, even if it is null
+    const finalTo = input.effectiveTo !== undefined ? input.effectiveTo : existing.effectiveTo;
+
+    assertSurchargePeriod(finalFrom, finalTo);
+
+    const overlaps = await findOverlappingSurcharges(
+      existing.propertyId,
+      finalName,
+      finalFrom,
+      finalTo,
+      id,
+      trx
+    );
+
+    if (overlaps.length > 0) {
+      throw new ConflictError(`This conflicts with another rate for '${finalName}'. Please adjust the dates so they do not overlap.`);
+    }
 
     if (input.name && input.name !== existing.name) {
       // User is renaming the surcharge. Update ALL records with the old name for this property to keep them grouped together.

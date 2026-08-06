@@ -140,10 +140,51 @@ export async function findActiveSurchargesForPropertyPeriod(
         eq(surcharges.active, true),
         isNull(surcharges.deletedAt),
         sql`${surcharges.effectiveFrom} <= ${periodEnd}`,
-        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} > ${periodStart})`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${periodStart})`,
       ),
     )
     .orderBy(asc(surcharges.name));
+}
+
+export async function findOverlappingSurcharges(
+  propertyId: string,
+  name: string,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  excludeId?: string,
+  executor: typeof db = db,
+): Promise<SurchargeRow[]> {
+  const resolvedEffectiveTo = effectiveTo ?? "9999-12-31";
+  
+  const query = executor
+    .select()
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, name),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+        sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`
+      ),
+    );
+    
+  if (excludeId) {
+    query.where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, name),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+        sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`,
+        sql`${surcharges.id} != ${excludeId}`
+      )
+    );
+  }
+  
+  return query;
 }
 
 export async function findActiveSurchargesByName(

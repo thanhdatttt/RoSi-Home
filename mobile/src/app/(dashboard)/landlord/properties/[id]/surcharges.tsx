@@ -63,6 +63,7 @@ export default function SurchargesConfig() {
   const [form, setForm] = useState({ name: "", amount: "", start: new Date(), end: new Date() });
   const [useEnd, setUseEnd] = useState(false);
   const [editingIsActive, setEditingIsActive] = useState(false);
+  const [originalStartStr, setOriginalStartStr] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
   const fetchSurcharges = useCallback(async () => {
@@ -93,6 +94,7 @@ export default function SurchargesConfig() {
     const isActive = s.effectiveFrom <= todayStr;
     setEditingId(s.id);
     setEditingIsActive(isActive);
+    setOriginalStartStr(s.effectiveFrom);
     setForm({ name: s.name, amount: s.monthlyAmount.toString(), start: parseDate(s.effectiveFrom), end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date() });
     setUseEnd(!!s.effectiveTo);
     setFormMode("edit");
@@ -158,17 +160,38 @@ export default function SurchargesConfig() {
     setSubmitting(true);
     setErr(null);
     try {
-      if (formMode === "edit") {
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const startStr = toLocalISOString(form.start);
+      const endStr = useEnd ? toLocalISOString(form.end) : null;
+      
+      if (useEnd && startStr > endStr!) {
+        setSubmitting(false);
+        return setErr("End date cannot be before start date.");
+      }
+      if (rawAmt === "" || Number(rawAmt) < 0) {
+        setSubmitting(false);
+        return setErr("Amount must be non-negative.");
+      }
+
+      // If we are editing an active surcharge but we change the start date to a future month, 
+      // we are actually trying to SCHEDULE a new change, not mutate the active one's start date.
+      if (formMode === "edit" && editingIsActive && startStr > todayStr && startStr !== originalStartStr) {
+        // Create new instead of updating
+        const body: any = {
+          name: form.name.trim(),
+          monthlyAmount: Number(rawAmt),
+          effectiveFrom: startStr,
+          effectiveTo: endStr,
+        };
+        await apiRequest(`/charges/properties/${id}/surcharges`, { method: "POST", token, body });
+      } else if (formMode === "edit") {
         const payload: any = { 
           name: form.name,
           monthlyAmount: Number(rawAmt),
-          effectiveTo: useEnd ? toLocalISOString(form.end) : null,
+          effectiveFrom: startStr,
+          effectiveTo: endStr,
         };
-        // Only send effectiveFrom when editing a scheduled (non-active) surcharge
-        if (!editingIsActive) {
-          payload.effectiveFrom = toLocalISOString(form.start);
-        }
-        if (rawAmt === "" || Number(rawAmt) < 0) return setErr("Amount must be non-negative.");
         await apiRequest(`/charges/${editingId}`, { method: "PATCH", token, body: payload });
       } else {
         if (rawAmt === "" || Number(rawAmt) < 0) return setErr("Amount must be non-negative.");
@@ -247,17 +270,15 @@ export default function SurchargesConfig() {
               </View>
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                {!editingIsActive && (
-                  <View style={{ flex: 1 }}>
-                    <DatePicker 
-                      label="Applies from"
-                      value={form.start}
-                      onChange={(d) => setForm({ ...form, start: d })}
-                      compact
-                      monthOnly
-                    />
-                  </View>
-                )}
+                <View style={{ flex: 1 }}>
+                  <DatePicker 
+                    label="Applies from"
+                    value={form.start}
+                    onChange={(d) => setForm({ ...form, start: d })}
+                    compact
+                    monthOnly
+                  />
+                </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <Text style={{ fontSize: 11, color: '#94a3b8' }}>End (optional)</Text>
@@ -279,7 +300,7 @@ export default function SurchargesConfig() {
 
               <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
                 {editingIsActive 
-                  ? "You are editing an active surcharge. Start date cannot be changed."
+                  ? "Changing the start date to a future month will schedule a new rate change."
                   : "Rate changes strictly take effect on the 1st of the selected month."}
               </Text>
 
