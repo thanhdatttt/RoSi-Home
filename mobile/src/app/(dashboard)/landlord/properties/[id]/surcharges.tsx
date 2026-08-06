@@ -16,6 +16,8 @@ const toLocalISOString = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
+const fmtMoney = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
 const parseDate = (s: string): Date => {
   const [y, m, d] = s.split('-');
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
@@ -60,6 +62,7 @@ export default function SurchargesConfig() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", start: new Date(), end: new Date() });
   const [useEnd, setUseEnd] = useState(false);
+  const [editingIsActive, setEditingIsActive] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const fetchSurcharges = useCallback(async () => {
@@ -85,7 +88,11 @@ export default function SurchargesConfig() {
   const getRawNumber = (val: string) => val.replace(/,/g, "");
 
   const openEdit = (s: SurchargeView) => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const isActive = s.effectiveFrom <= todayStr;
     setEditingId(s.id);
+    setEditingIsActive(isActive);
     setForm({ name: s.name, amount: s.monthlyAmount.toString(), start: parseDate(s.effectiveFrom), end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date() });
     setUseEnd(!!s.effectiveTo);
     setFormMode("edit");
@@ -104,6 +111,7 @@ export default function SurchargesConfig() {
     
     setForm({ name: prefill?.name || "", amount: prefill?.amount || "", start: nextMonth, end: nextMonth });
     setUseEnd(false);
+    setEditingIsActive(false);
     setErr(null);
   }
 
@@ -117,6 +125,7 @@ export default function SurchargesConfig() {
       end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date(),
     });
     setUseEnd(!!s.effectiveTo);
+    setEditingIsActive(false);
     setErr(null);
   }
 
@@ -153,9 +162,12 @@ export default function SurchargesConfig() {
         const payload: any = { 
           name: form.name,
           monthlyAmount: Number(rawAmt),
-          effectiveFrom: toLocalISOString(form.start),
           effectiveTo: useEnd ? toLocalISOString(form.end) : null,
         };
+        // Only send effectiveFrom when editing a scheduled (non-active) surcharge
+        if (!editingIsActive) {
+          payload.effectiveFrom = toLocalISOString(form.start);
+        }
         if (rawAmt === "" || Number(rawAmt) < 0) return setErr("Amount must be non-negative.");
         await apiRequest(`/charges/${editingId}`, { method: "PATCH", token, body: payload });
       } else {
@@ -204,7 +216,7 @@ export default function SurchargesConfig() {
           
           <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 16 }}>
             <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
-              Surcharges are grouped by name. Each group can have an active rate and a scheduled future rate. Only future rates can be edited.
+              Surcharges take effect on the 1st of each month. Active surcharges can be edited (name, amount, end date) but their start date is locked.
             </Text>
           </View>
 
@@ -235,15 +247,17 @@ export default function SurchargesConfig() {
               </View>
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                <View style={{ flex: 1 }}>
-                  <DatePicker 
-                    label="Applies from"
-                    value={form.start}
-                    onChange={(d) => setForm({ ...form, start: d })}
-                    compact
-                    monthOnly
-                  />
-                </View>
+                {!editingIsActive && (
+                  <View style={{ flex: 1 }}>
+                    <DatePicker 
+                      label="Applies from"
+                      value={form.start}
+                      onChange={(d) => setForm({ ...form, start: d })}
+                      compact
+                      monthOnly
+                    />
+                  </View>
+                )}
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <Text style={{ fontSize: 11, color: '#94a3b8' }}>End (optional)</Text>
@@ -264,7 +278,9 @@ export default function SurchargesConfig() {
               </View>
 
               <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
-                Rate changes strictly take effect on the 1st of the selected month.
+                {editingIsActive 
+                  ? "You are editing an active surcharge. Start date cannot be changed."
+                  : "Rate changes strictly take effect on the 1st of the selected month."}
               </Text>
 
               {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}
@@ -316,7 +332,7 @@ export default function SurchargesConfig() {
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{g.current.monthlyAmount.toLocaleString()} VNĐ</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.current.monthlyAmount)} VNĐ</Text>
                         <View style={{ flexDirection: 'row', gap: 4 }}>
                           <TouchableOpacity 
                             onPress={() => openEdit(g.current!)} 
@@ -353,7 +369,7 @@ export default function SurchargesConfig() {
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{g.upcoming.monthlyAmount.toLocaleString()} VNĐ</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.upcoming.monthlyAmount)} VNĐ</Text>
                         <View style={{ flexDirection: 'row', gap: 4 }}>
                           <TouchableOpacity 
                             onPress={() => openEditUpcoming(g.upcoming!)} 

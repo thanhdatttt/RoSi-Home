@@ -45,11 +45,11 @@ export default function TenantsList() {
             </TouchableOpacity>
           </Link>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#10b981', fontWeight: '600' }}>Portfolio</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Portfolio</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>Tenants</Text>
           </View>
           <Link href="/landlord/leases/new" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
               <UserPlus size={16} color="white" />
             </TouchableOpacity>
           </Link>
@@ -72,7 +72,7 @@ export default function TenantsList() {
 
         <ScrollView style={{ flex: 1, marginTop: 16, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32), gap: 8 }}>
           {loading ? (
-            <ActivityIndicator size="large" color="#10b981" style={{ marginTop: 32 }} />
+            <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
           ) : items.length === 0 ? (
             <View style={{ borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e2e8f0', padding: 32, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center' }}>
@@ -82,8 +82,8 @@ export default function TenantsList() {
           ) : (
             items.map((t) => (
               <View key={t.id} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ height: 44, width: 44, borderRadius: 22, backgroundColor: 'rgba(16,185,129,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <User size={20} color="#059669" />
+                <View style={{ height: 44, width: 44, borderRadius: 22, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <User size={20} color="#2563eb" />
                 </View>
                 <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{t.fullName}</Text>

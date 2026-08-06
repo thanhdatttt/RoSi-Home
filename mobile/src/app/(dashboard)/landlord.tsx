@@ -8,6 +8,11 @@ import { Building2, Users, Wrench, Bell, TrendingUp, UserCircle2, UserPlus } fro
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
 
+const formatVND = (n: number) => {
+  if (n == null || isNaN(n)) return '0';
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
 export default function LandlordDashboard() {
   const { token, user } = useAuth();
   const insets = useSafeAreaInsets();
@@ -92,7 +97,7 @@ export default function LandlordDashboard() {
                 <View>
                   <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>This month collected</Text>
                   <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', marginTop: 4 }}>
-                    {revenue?.collectedRevenue?.toLocaleString('en-US') || 0} VNĐ
+                    {formatVND(revenue?.collectedRevenue ?? 0)} VNĐ
                   </Text>
                 </View>
                 {revenue?.growthPercentage !== undefined && (
