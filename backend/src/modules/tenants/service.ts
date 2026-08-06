@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
-import { tenantInfo, users } from "../../db/schema.js";
+import { tenantInfo, users, leases } from "../../db/schema.js";
 import { hashPassword } from "../../lib/auth.js";
 import { sendEmail } from "../../lib/email.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
@@ -145,6 +145,15 @@ export async function archiveTenantService(
 ): Promise<{ success: true }> {
   const tenant = await getTenantScoped(landlordId, id);
   if (!tenant) throw new NotFoundError("Tenant not found.");
+
+  const [activeLease] = await db
+    .select({ id: leases.id })
+    .from(leases)
+    .where(and(eq(leases.tenantInfoId, id), eq(leases.status, "Active")));
+
+  if (activeLease) {
+    throw new ConflictError("Cannot archive a tenant with an active lease. Please end the lease first.");
+  }
 
   const archived = await softDeleteTenant(id, landlordId);
   if (!archived) throw new NotFoundError("Tenant not found.");

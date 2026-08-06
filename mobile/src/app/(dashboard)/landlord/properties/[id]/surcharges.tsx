@@ -26,7 +26,7 @@ const parseDate = (s: string): Date => {
 const fmtDate = (s: string) => {
   const d = parseDate(s);
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 
 type SurchargeView = {
@@ -349,7 +349,7 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          Since {fmtDate(g.current.effectiveFrom)}{g.current.effectiveTo ? ` · ends ${fmtDate(g.current.effectiveTo)}` : " · ongoing"}
+                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : "ongoing"}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
@@ -386,7 +386,7 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          Starts {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` · ends ${fmtDate(g.upcoming.effectiveTo)}` : ""}
+                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : " - ongoing"}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>

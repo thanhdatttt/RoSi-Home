@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
 import { ArrowLeft, Search, UserPlus, User, Phone } from "lucide-react-native";
@@ -9,6 +9,7 @@ import { apiRequest } from "../../../../lib/api";
 
 export default function TenantsList() {
   const { token } = useAuth();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState("");
   const [tenants, setTenants] = useState<any[]>([]);
@@ -81,7 +82,7 @@ export default function TenantsList() {
             </View>
           ) : (
             items.map((t) => (
-              <View key={t.id} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <TouchableOpacity key={t.id} onPress={() => router.push({ pathname: "/(dashboard)/landlord/tenants/[id]", params: { id: t.id } } as any)} activeOpacity={0.7} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ height: 44, width: 44, borderRadius: 22, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <User size={20} color="#2563eb" />
                 </View>
@@ -93,7 +94,7 @@ export default function TenantsList() {
                   <Phone size={12} color="#94a3b8" />
                   <Text style={{ fontSize: 11, color: '#94a3b8' }}>{t.phone}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>
