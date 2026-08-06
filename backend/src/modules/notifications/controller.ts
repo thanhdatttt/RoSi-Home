@@ -2,7 +2,9 @@ import type { Request, Response } from "express";
 import {
   registerDeviceTokenService,
   sendTestNotificationService,
+  sendTestNotificationService,
   unregisterDeviceTokenService,
+  listNotificationsService,
 } from "./service.js";
 import type { RegisterDeviceTokenInput, UnregisterDeviceTokenInput } from "./schema.js";
 
@@ -23,4 +25,9 @@ async function sendTest(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: result });
 }
 
-export { registerDeviceToken, unregisterDeviceToken, sendTest };
+async function listNotifications(req: Request, res: Response): Promise<void> {
+  const data = await listNotificationsService(req.user!.id);
+  res.status(200).json({ data });
+}
+
+export { registerDeviceToken, unregisterDeviceToken, sendTest, listNotifications };

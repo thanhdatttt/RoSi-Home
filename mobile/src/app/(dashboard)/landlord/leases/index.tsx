@@ -41,6 +41,14 @@ export default function LeasesList() {
     }, [fetchLeases])
   );
 
+  const getDaysLeft = (endDateStr: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [y, m, d] = endDateStr.split('-');
+    const end = new Date(Number(y), Number(m) - 1, Number(d));
+    return Math.round((end.getTime() - today.getTime()) / 86400000);
+  };
+
   const items = leases
     .filter((l) => (tab === "All" ? true : tab === "Active" ? l.status === "Active" : l.status !== "Active"))
     .filter((l) => {
@@ -97,7 +105,11 @@ export default function LeasesList() {
 
         <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32), gap: 8 }}>
           
-          <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <TouchableOpacity 
+            onPress={() => router.push("/(dashboard)/landlord/leases/expiring" as any)}
+            activeOpacity={0.7}
+            style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}
+          >
             <CalendarClock size={16} color="#2563eb" />
             <Text style={{ fontSize: 12, color: '#0f172a', flex: 1 }}>Upcoming expirations (next 30 days)</Text>
             <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#2563eb' }}>View</Text>
@@ -112,31 +124,36 @@ export default function LeasesList() {
               </Text>
             </View>
           ) : (
-            items.map((l) => (
-              <TouchableOpacity 
-                key={l.id} 
-                onPress={() => router.push({ pathname: "/(dashboard)/landlord/leases/[id]", params: { id: l.id } } as any)}
-                activeOpacity={0.7}
-                style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-              >
-                <View style={{ height: 44, width: 44, borderRadius: 22, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <FileSignature size={20} color="#2563eb" />
-                </View>
-                <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                  <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{l.tenant?.fullName || "Unknown"}</Text>
-                  <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
-                  <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }} numberOfLines={1}>{l.startDate} → {l.endDate}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(l.agreedRent)}</Text>
-                  <View style={{ marginTop: 6, backgroundColor: l.status === "Active" ? 'rgba(37,99,235,0.15)' : '#e2e8f0', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
-                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: l.status === "Active" ? '#2563eb' : '#64748b' }}>
-                      {l.status}
-                    </Text>
+            items.map((l) => {
+              const days = getDaysLeft(l.endDate);
+              const badgeLabel = l.status === "Active" ? (days <= 30 ? `${days}d left` : "Active") : l.status;
+              
+              return (
+                <TouchableOpacity 
+                  key={l.id} 
+                  onPress={() => router.push({ pathname: "/(dashboard)/landlord/leases/[id]", params: { id: l.id } } as any)}
+                  activeOpacity={0.7}
+                  style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                >
+                  <View style={{ height: 44, width: 44, borderRadius: 22, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileSignature size={20} color="#2563eb" />
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))
+                  <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                    <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{l.tenant?.fullName || "Unknown"}</Text>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
+                    <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }} numberOfLines={1}>{l.startDate} → {l.endDate}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(l.agreedRent)}</Text>
+                    <View style={{ marginTop: 6, backgroundColor: l.status === "Active" ? 'rgba(37,99,235,0.15)' : '#e2e8f0', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                      <Text style={{ fontSize: 10, fontWeight: 'bold', color: l.status === "Active" ? '#2563eb' : '#64748b' }}>
+                        {badgeLabel}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
       </View>

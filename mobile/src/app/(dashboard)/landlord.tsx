@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import { Link } from "expo-router";
+import { useFocusEffect, Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
-import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus } from "lucide-react-native";
+import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus, CalendarClock, ChevronRight, Users } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
 
@@ -19,32 +19,37 @@ export default function LandlordDashboard() {
   const [properties, setProperties] = useState<any[]>([]);
   const [revenue, setRevenue] = useState<any>(null);
   const [occupancy, setOccupancy] = useState<any>(null);
+  const [expiring, setExpiring] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!token) return;
-      try {
-        const today = new Date();
-        const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-        
-        const [propertiesData, revData, occData] = await Promise.all([
-          apiRequest<any[]>('/properties?pageSize=3', { token }),
-          apiRequest<any>(`/dashboard/revenue?month=${monthStr}`, { token }),
-          apiRequest<any>('/dashboard/occupancy', { token })
-        ]);
-        
-        setProperties(propertiesData);
-        setRevenue(revData);
-        setOccupancy(occData);
-      } catch (err) {
-        console.error("Failed to load dashboard data", err);
-      } finally {
-        setLoading(false);
+  useFocusEffect(
+    React.useCallback(() => {
+      async function loadData() {
+        if (!token) return;
+        try {
+          const today = new Date();
+          const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+          
+          const [propertiesData, revData, occData, expiringData] = await Promise.all([
+            apiRequest<any[]>('/properties?pageSize=3', { token }),
+            apiRequest<any>(`/dashboard/revenue?month=${monthStr}`, { token }),
+            apiRequest<any>('/dashboard/occupancy', { token }),
+            apiRequest<any[]>('/leases/upcoming-expirations', { token })
+          ]);
+          
+          setProperties(propertiesData);
+          setRevenue(revData);
+          setOccupancy(occData);
+          setExpiring(expiringData ? expiringData.slice(0, 3) : []);
+        } catch (err) {
+          console.error("Failed to load dashboard data", err);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-    loadData();
-  }, [token]);
+      loadData();
+    }, [token])
+  );
 
   const firstName = user?.fullName ? user.fullName.split(' ')[0] : "Landlord";
 
@@ -80,9 +85,11 @@ export default function LandlordDashboard() {
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bell size={16} color="white" />
-                </TouchableOpacity>
+                <Link href="/(dashboard)/landlord/notifications" asChild>
+                  <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bell size={16} color="white" />
+                  </TouchableOpacity>
+                </Link>
                 <Link href="/profile" asChild>
                   <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
                     <UserCircle2 size={16} color="white" />
@@ -132,13 +139,54 @@ export default function LandlordDashboard() {
                 <QuickActionLink to="/landlord/leases" icon={<FileText size={16} color="#2563eb" />} label="Leases" />
               </View>
               <View style={{ width: '25%' }}>
-                <QuickActionLink to="/landlord/invoices" icon={<Receipt size={16} color="#2563eb" />} label="Invoices" />
+                <QuickActionLink to="/landlord/tenants" icon={<Users size={16} color="#2563eb" />} label="Tenants" />
               </View>
               <View style={{ width: '25%' }}>
-                <QuickActionLink to="/landlord/leases/new" icon={<FilePlus size={16} color="white" />} label="New lease" blue />
+                <QuickActionLink to="/landlord/invoices" icon={<Receipt size={16} color="#2563eb" />} label="Invoices" />
               </View>
             </View>
           </View>
+
+          {/* Expiring Leases section */}
+          {expiring.length > 0 && (
+            <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>Expiring Leases</Text>
+                <Link href={"/(dashboard)/landlord/leases/expiring" as any} asChild>
+                  <TouchableOpacity>
+                    <Text style={{ fontSize: 13, color: '#2563eb', fontWeight: '600' }}>See all</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+              <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                {expiring.map((l, index) => {
+                  const [y, m, d] = l.endDate.split('-');
+                  const end = new Date(Number(y), Number(m) - 1, Number(d));
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const days = Math.max(0, Math.round((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+                  const isUrgent = days <= 15;
+                  
+                  return (
+                    <Link key={l.leaseId} href={{ pathname: "/(dashboard)/landlord/leases/[id]", params: { id: l.leaseId } } as any} asChild>
+                      <TouchableOpacity style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, borderBottomWidth: index < expiring.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
+                        <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: isUrgent ? 'rgba(239,68,68,0.1)' : 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <CalendarClock size={20} color={isUrgent ? '#ef4444' : '#2563eb'} />
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text style={{ fontWeight: '600', fontSize: 15, color: '#0f172a' }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
+                          <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.tenantFullName} · expires {l.endDate}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: isUrgent ? '#ef4444' : '#0f172a' }}>{days}d</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </Link>
+                  );
+                })}
+              </View>
+            </View>
+          )}
 
           {/* Properties section */}
           <View style={{ paddingHorizontal: 24, marginTop: 32 }}>

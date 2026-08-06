@@ -40,6 +40,7 @@ function serialize(row: PropertyRow): PropertyView {
 
 import { insertInitialUtilityRate } from "../utilities/repository.js";
 import { insertInitialSurcharge } from "../charges/repository.js";
+import { upsertLeaseReminderConfig } from "../leases/repository.js";
 import { businessDate } from "../../lib/businessDate.js";
 import { db } from "../../db/index.js";
 
@@ -69,6 +70,11 @@ export async function createPropertyService(
           );
         }
       }
+      await upsertLeaseReminderConfig(
+        prop.id,
+        { remindAt30Days: true },
+        tx
+      );
       return prop;
     });
     

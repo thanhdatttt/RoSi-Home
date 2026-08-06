@@ -111,7 +111,7 @@ function serializeReminderConfig(
 ): LeaseReminderConfigView {
   return {
     propertyId,
-    remindAt30Days: row?.remindAt30Days ?? false,
+    remindAt30Days: row?.remindAt30Days ?? true,
     remindAt15Days: row?.remindAt15Days ?? false,
     remindAt7Days: row?.remindAt7Days ?? false,
   };

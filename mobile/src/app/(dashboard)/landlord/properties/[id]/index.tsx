@@ -4,7 +4,7 @@ import { Link, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
-import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight, Trash2 } from "lucide-react-native";
+import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight, Trash2, BellRing } from "lucide-react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../../../../contexts/auth-context";
 import { apiRequest } from "../../../../../lib/api";
@@ -179,7 +179,10 @@ export default function PropertyDetail() {
                 <ConfigLink href={`/landlord/properties/${id}/surcharges`} icon={<Receipt size={16} color="#2563eb" />} label="Surcharges" />
               </View>
               <View style={{ flex: 1 }}>
-                <ConfigLink href={`/landlord/properties/${id}/rooms/new`} icon={<Plus size={16} color="white" />} label="Add rooms" highlight />
+                <ConfigLink href={`/landlord/properties/${id}/reminders`} icon={<BellRing size={16} color="#2563eb" />} label="Reminders" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <ConfigLink href={`/landlord/properties/${id}/rooms/new`} icon={<Plus size={16} color="white" />} label="Add room" highlight />
               </View>
             </View>
           </View>
