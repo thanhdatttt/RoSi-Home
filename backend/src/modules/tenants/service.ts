@@ -172,7 +172,7 @@ export async function archiveTenantService(
 export async function provisionTenantAccount(
   tenant: { id: string; fullName: string; phone: string; email: string },
   tx: Db = db,
-): Promise<{ userId: string; provisioned: boolean }> {
+): Promise<{ userId: string; provisioned: boolean; tempPassword?: string }> {
   // Idempotency guard: a returning tenant already has an account; do not re-provision.
   const info = await findTenantById(tenant.id, tx);
   if (!info) throw new NotFoundError("Tenant not found.");
@@ -217,5 +217,5 @@ export async function provisionTenantAccount(
     `Welcome to RosiHome.\nUsername (phone): ${tenant.phone}\nTemporary password: ${tempPassword}\nPlease sign in and change your password.`,
   ).catch(() => undefined);
 
-  return { userId: user.id, provisioned: true };
+  return { userId: user.id, provisioned: true, tempPassword };
 }

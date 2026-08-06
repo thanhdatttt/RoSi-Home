@@ -4,7 +4,7 @@ import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
-import { Building2, Users, Wrench, Bell, TrendingUp, UserCircle2, UserPlus } from "lucide-react-native";
+import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
 
@@ -129,13 +129,13 @@ export default function LandlordDashboard() {
                 <QuickActionLink to="/landlord/properties" icon={<Building2 size={16} color="#2563eb" />} label="Properties" />
               </View>
               <View style={{ width: '25%' }}>
-                <QuickActionLink to="/landlord/tenants" icon={<Users size={16} color="#2563eb" />} label="Tenants" />
+                <QuickActionLink to="/landlord/leases" icon={<FileText size={16} color="#2563eb" />} label="Leases" />
               </View>
               <View style={{ width: '25%' }}>
-                <QuickActionLink to="/landlord/leases/new" icon={<UserPlus size={16} color="white" />} label="Add tenant" blue />
+                <QuickActionLink to="/landlord/invoices" icon={<Receipt size={16} color="#2563eb" />} label="Invoices" />
               </View>
               <View style={{ width: '25%' }}>
-                <QuickAction icon={<Wrench size={16} color="#2563eb" />} label="Repairs" />
+                <QuickActionLink to="/landlord/leases/new" icon={<FilePlus size={16} color="white" />} label="New lease" blue />
               </View>
             </View>
           </View>
@@ -165,18 +165,6 @@ export default function LandlordDashboard() {
               ) : (
                 <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', paddingVertical: 16 }}>No properties found.</Text>
               )}
-            </View>
-          </View>
-
-          {/* Recent activity */}
-          <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 12 }}>Recent activity</Text>
-            <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-              <Activity title="Rent received" who="Kojo M. · Adenta Court #3" amount="+3,800,000 VNĐ" />
-              <View style={{ height: 1, backgroundColor: '#e2e8f0', marginLeft: 16 }} />
-              <Activity title="Maintenance request" who="Ridge Villa · Plumbing" amount="Open" muted />
-              <View style={{ height: 1, backgroundColor: '#e2e8f0', marginLeft: 16 }} />
-              <Activity title="New tenant onboarded" who="Ama D. · Cantonments Lofts" amount="Done" muted />
             </View>
           </View>
         </ScrollView>

@@ -10,10 +10,6 @@ import { ArrowLeft, Mail, User, Phone, IdCard, Building2, DoorOpen, Calendar, Wa
 import { apiRequest } from "../../../../lib/api";
 import { useAuth } from "../../../../contexts/auth-context";
 
-function generatePassword() {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-}
 
 type Option = { id: string; label: string };
 
@@ -33,6 +29,11 @@ export default function NewLease() {
   const [roomId, setRoomId] = useState("");
   
   const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  });
   const [rent, setRent] = useState("");
   const [deposit, setDeposit] = useState("");
   
@@ -40,7 +41,7 @@ export default function NewLease() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
   
-  const [tempPassword] = useState(generatePassword());
+  const [tempPassword, setTempPassword] = useState("");
   const [copied, setCopied] = useState(false);
 
   // Fetch properties on mount
@@ -105,12 +106,10 @@ export default function NewLease() {
     setErr(null);
     setLoading(true);
 
-    // Compute endDate as 1 year from startDate to satisfy backend requirement
-    const end = new Date(startDate);
-    end.setFullYear(end.getFullYear() + 1);
+    if (endDate <= startDate) return setErr("End date must be after start date.");
 
     try {
-      await apiRequest('/leases', {
+      const res = await apiRequest<any>('/leases', {
         method: 'POST',
         token,
         body: {
@@ -122,11 +121,14 @@ export default function NewLease() {
             email: email.trim(),
           },
           startDate: startDate.toISOString().slice(0, 10),
-          endDate: end.toISOString().slice(0, 10),
+          endDate: endDate.toISOString().slice(0, 10),
           agreedRent: Number(rentRaw),
           deposit: Number(depositRaw),
         }
       });
+      if (res.tempPassword) {
+        setTempPassword(res.tempPassword);
+      }
       setCreated(true);
     } catch (e: any) {
       setErr(e.message || "Failed to create lease and provision account.");
@@ -260,12 +262,21 @@ export default function NewLease() {
               />
             </View>
             
-            <View style={{ marginBottom: 16 }}>
-              <DatePicker 
-                label="Lease start date"
-                value={startDate}
-                onChange={setStartDate}
-              />
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+              <View style={{ flex: 1 }}>
+                <DatePicker 
+                  label="Lease start date"
+                  value={startDate}
+                  onChange={setStartDate}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <DatePicker 
+                  label="Lease end date"
+                  value={endDate}
+                  onChange={setEndDate}
+                />
+              </View>
             </View>
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
