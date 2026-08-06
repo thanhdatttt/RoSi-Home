@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createUtilityRateService, getRatesService } from "./service.js";
+import { createUtilityRateService, getRatesService, deleteUtilityRateService } from "./service.js";
 
 async function create(req: Request, res: Response): Promise<void> {
   const view = await createUtilityRateService(req.user!.id, req.params.propertyId, req.body);
@@ -11,4 +11,9 @@ async function get(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: views });
 }
 
-export { create, get };
+async function remove(req: Request, res: Response): Promise<void> {
+  const result = await deleteUtilityRateService(req.user!.id, req.params.propertyId, req.params.id);
+  res.status(200).json({ data: result });
+}
+
+export { create, get, remove };

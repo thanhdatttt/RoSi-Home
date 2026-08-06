@@ -14,6 +14,7 @@ import {
   findSurchargeScoped,
   listActiveSurcharges,
   lockSurchargeName,
+  renameSurchargeGroup,
   softDeleteSurcharge,
   updateSurcharge,
   type SurchargeRow,
@@ -126,9 +127,9 @@ export async function updateSurchargeService(
     const existing = await findSurchargeScoped(id, landlordId, trx);
     if (!existing) throw new NotFoundError("Surcharge not found.");
 
-    const today = businessDate();
-    if (toDateStr(existing.effectiveFrom)! <= today) {
-      throw new ConflictError("Cannot update a surcharge that is already in effect. Create a new upcoming surcharge instead.");
+    if (input.name && input.name !== existing.name) {
+      // User is renaming the surcharge. Update ALL records with the old name for this property to keep them grouped together.
+      await renameSurchargeGroup(existing.propertyId, existing.name, input.name, trx);
     }
 
     const row = await updateSurcharge(

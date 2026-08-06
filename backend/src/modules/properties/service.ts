@@ -22,6 +22,8 @@ export type PropertyView = {
   address: string;
   createdAt: string;
   updatedAt: string;
+  units: number;
+  occupied: number;
 };
 
 function serialize(row: PropertyRow): PropertyView {
@@ -31,6 +33,8 @@ function serialize(row: PropertyRow): PropertyView {
     address: row.address,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    units: row.units ?? 0,
+    occupied: row.occupied ?? 0,
   };
 }
 

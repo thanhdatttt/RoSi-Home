@@ -1,13 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
 import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Zap, Droplets, Info, CalendarClock, CheckCircle2, X, Pencil } from "lucide-react-native";
+import { ActivityIndicator } from "react-native";
+import { useAuth } from "../../../../../contexts/auth-context";
+import { apiRequest } from "../../../../../lib/api";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 
 type Schedule = {
+  id: string;
   elec: string;
   waterMethod: "metered" | "flat";
   waterMetered: string;
@@ -20,19 +26,33 @@ const thisMonth1st = () => {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 };
 
+const toLocalISOString = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const parseDate = (s: string): Date => {
+  const [y, m, d] = s.split('-');
+  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+};
+
 const fmtMonth = (d: Date) => {
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 };
 
-// Mock "active" rate
-const ACTIVE: Schedule = {
-  elec: "4000",
-  waterMethod: "metered",
-  waterMetered: "8000",
-  waterFlat: "100000",
-  effectiveMonth: new Date(2026, 6, 1), // July 2026
-};
+function mapRate(r: any): Schedule {
+  return {
+    id: r.id,
+    elec: r.electricityRatePerKwh.toString(),
+    waterMethod: r.waterBillingMethod.toLowerCase() as "metered" | "flat",
+    waterMetered: r.waterRatePerM3 ? r.waterRatePerM3.toString() : "",
+    waterFlat: r.waterFlatAmountPerTenant ? r.waterFlatAmountPerTenant.toString() : "",
+    effectiveMonth: parseDate(r.effectiveFrom),
+  };
+}
 
 const rateSummary = (s: Schedule) =>
   `${Number(s.elec).toLocaleString()} VNĐ/kWh · ${
@@ -45,10 +65,33 @@ export default function UtilitiesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   
-  const [active] = useState<Schedule>(ACTIVE);
+  const { token } = useAuth();
+  
+  const [active, setActive] = useState<Schedule | null>(null);
   const [upcoming, setUpcoming] = useState<Schedule | null>(null);
+  const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [saved, setSaved] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadData() {
+        if (!token) return;
+        setLoading(true);
+        try {
+          const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
+          if (res.current) setActive(mapRate(res.current));
+          if (res.upcoming) setUpcoming(mapRate(res.upcoming));
+          else setUpcoming(null);
+        } catch (err) {
+          console.error("Failed to load rates", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+      loadData();
+    }, [id, token])
+  );
 
   // Edit Mode State
   const [elec, setElec] = useState("");
@@ -60,6 +103,7 @@ export default function UtilitiesConfig() {
 
   function openEdit() {
     const initial = upcoming ?? active;
+    if (!initial) return;
     setElec(initial.elec);
     setWaterMethod(initial.waterMethod);
     setWaterMetered(initial.waterMetered);
@@ -75,7 +119,7 @@ export default function UtilitiesConfig() {
     setMode("edit");
   }
 
-  function submit() {
+  async function submit() {
     setErr(null);
     if (elec === "" || Number(elec) < 0) return setErr("Electricity rate must be non-negative.");
     if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr("Water rate must be non-negative.");
@@ -86,11 +130,63 @@ export default function UtilitiesConfig() {
     
     if (d1st <= curr1st) return setErr("Rate changes must take effect in a future month.");
 
-    setUpcoming({
-      elec, waterMethod, waterMetered, waterFlat, effectiveMonth: d1st
-    });
-    setSaved(`Saved. New rates start ${fmtMonth(d1st)}.`);
-    setMode("view");
+    const payload = {
+      electricityRatePerKwh: Number(elec),
+      waterBillingMethod: waterMethod === "metered" ? "Metered" : "Flat",
+      waterRatePerM3: waterMethod === "metered" ? Number(waterMetered) : null,
+      waterFlatAmountPerTenant: waterMethod === "flat" ? Number(waterFlat) : null,
+      effectiveFrom: toLocalISOString(d1st),
+    };
+
+    try {
+      await apiRequest(`/utilities/properties/${id}/utility-rates`, {
+        method: "POST",
+        token,
+        body: payload
+      });
+      
+      const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
+      if (res.current) setActive(mapRate(res.current));
+      if (res.upcoming) setUpcoming(mapRate(res.upcoming));
+      else setUpcoming(null);
+      
+      setSaved(`Saved. New rates start ${fmtMonth(d1st)}.`);
+      setMode("view");
+    } catch (error: any) {
+      setErr(error.message || "Failed to save rate");
+    }
+  }
+
+  async function handleCancelUpcoming() {
+    if (!upcoming) return;
+    Alert.alert(
+      "Cancel Scheduled Change",
+      "Are you sure you want to cancel the scheduled rate change?",
+      [
+        { text: "No", style: "cancel" },
+        { 
+          text: "Yes, cancel it", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await apiRequest(`/utilities/properties/${id}/utility-rates/${upcoming.id}`, {
+                method: "DELETE",
+                token
+              });
+              const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
+              if (res.current) setActive(mapRate(res.current));
+              if (res.upcoming) setUpcoming(mapRate(res.upcoming));
+              else setUpcoming(null);
+            } catch (error: any) {
+              setErr(error.message || "Failed to cancel change");
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
   }
 
   return (
@@ -117,7 +213,9 @@ export default function UtilitiesConfig() {
         </View>
 
         <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-          {mode === "view" ? (
+          {loading ? (
+            <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
+          ) : mode === "view" && active ? (
             <View style={{ gap: 16 }}>
               {saved && (
                 <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.15)', padding: 14, flexDirection: 'row', gap: 8 }}>
@@ -160,7 +258,7 @@ export default function UtilitiesConfig() {
                         <CalendarClock size={12} color="#94a3b8" />
                         <Text style={{ fontSize: 11, color: '#94a3b8' }}>Starts {fmtMonth(upcoming.effectiveMonth)}</Text>
                       </View>
-                      <TouchableOpacity onPress={() => { setUpcoming(null); setSaved(null); }} style={{ marginTop: 8 }}>
+                      <TouchableOpacity onPress={handleCancelUpcoming} style={{ marginTop: 10 }}>
                         <Text style={{ fontSize: 11, fontWeight: '600', color: '#ef4444' }}>Cancel scheduled change</Text>
                       </TouchableOpacity>
                     </View>

@@ -140,7 +140,7 @@ export async function findActiveSurchargesForPropertyPeriod(
         eq(surcharges.active, true),
         isNull(surcharges.deletedAt),
         sql`${surcharges.effectiveFrom} <= ${periodEnd}`,
-        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${periodStart})`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} > ${periodStart})`,
       ),
     )
     .orderBy(asc(surcharges.name));
@@ -206,6 +206,24 @@ export async function updateSurcharge(
     .where(and(eq(surcharges.id, id), isNull(surcharges.deletedAt)))
     .returning();
   return row ?? null;
+}
+
+export async function renameSurchargeGroup(
+  propertyId: string,
+  oldName: string,
+  newName: string,
+  executor: typeof db = db,
+): Promise<void> {
+  await executor
+    .update(surcharges)
+    .set({ name: newName, updatedAt: new Date() })
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, oldName),
+        isNull(surcharges.deletedAt)
+      )
+    );
 }
 
 export async function softDeleteSurcharge(

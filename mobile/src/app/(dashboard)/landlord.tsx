@@ -12,14 +12,26 @@ export default function LandlordDashboard() {
   const { token, user } = useAuth();
   const insets = useSafeAreaInsets();
   const [properties, setProperties] = useState<any[]>([]);
+  const [revenue, setRevenue] = useState<any>(null);
+  const [occupancy, setOccupancy] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       if (!token) return;
       try {
-        const propertiesData = await apiRequest<any[]>('/properties?pageSize=3', { token });
+        const today = new Date();
+        const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        
+        const [propertiesData, revData, occData] = await Promise.all([
+          apiRequest<any[]>('/properties?pageSize=3', { token }),
+          apiRequest<any>(`/dashboard/revenue?month=${monthStr}`, { token }),
+          apiRequest<any>('/dashboard/occupancy', { token })
+        ]);
+        
         setProperties(propertiesData);
+        setRevenue(revData);
+        setOccupancy(occData);
       } catch (err) {
         console.error("Failed to load dashboard data", err);
       } finally {
@@ -58,7 +70,9 @@ export default function LandlordDashboard() {
               <View style={{ flex: 1, paddingRight: 16 }}>
                 <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Landlord</Text>
                 <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginTop: 4 }} numberOfLines={1}>Hi, {firstName}</Text>
-                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>{properties.length} properties · 11 tenants</Text>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
+                  {properties.length} properties · {occupancy?.occupiedRooms || 0} occupied units
+                </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
@@ -77,17 +91,29 @@ export default function LandlordDashboard() {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View>
                   <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>This month collected</Text>
-                  <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', marginTop: 4 }}>11,400,000 VNĐ</Text>
+                  <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', marginTop: 4 }}>
+                    {revenue?.collectedRevenue?.toLocaleString('en-US') || 0} VNĐ
+                  </Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(37,99,235,0.3)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                  <TrendingUp size={12} color="#60a5fa" />
-                  <Text style={{ fontSize: 12, color: '#60a5fa', fontWeight: '600' }}>+8%</Text>
-                </View>
+                {revenue?.growthPercentage !== undefined && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(37,99,235,0.3)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                    <TrendingUp size={12} color="#60a5fa" />
+                    <Text style={{ fontSize: 12, color: '#60a5fa', fontWeight: '600' }}>
+                      {revenue.growthPercentage > 0 ? '+' : ''}{revenue.growthPercentage}%
+                    </Text>
+                  </View>
+                )}
               </View>
               <View style={{ marginTop: 16, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <View style={{ height: '100%', width: '72%', backgroundColor: '#60a5fa' }} />
+                <View style={{ 
+                  height: '100%', 
+                  width: `${revenue?.expectedRevenue > 0 ? Math.min(Math.round((revenue.collectedRevenue / revenue.expectedRevenue) * 100), 100) : 0}%`, 
+                  backgroundColor: '#60a5fa' 
+                }} />
               </View>
-              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>72% of expected rent received</Text>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>
+                {revenue?.expectedRevenue > 0 ? Math.round((revenue.collectedRevenue / revenue.expectedRevenue) * 100) : 0}% of expected rent received
+              </Text>
             </View>
           </View>
 
@@ -127,8 +153,8 @@ export default function LandlordDashboard() {
                     id={prop.id} 
                     title={prop.name} 
                     address={prop.address} 
-                    units={0} 
-                    occupied={0} 
+                    units={prop.units || 0} 
+                    occupied={prop.occupied || 0} 
                   />
                 ))
               ) : (

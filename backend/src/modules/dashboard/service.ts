@@ -59,14 +59,31 @@ export async function getOccupancyService(landlordId: string) {
 // US-DASH-02
 export async function getRevenueService(landlordId: string, month: string) {
   const [year, monthStr] = month.split("-");
-  const periodStart = new Date(Number(year), Number(monthStr) - 1, 1);
-  const periodEnd = new Date(Number(year), Number(monthStr), 0, 23, 59, 59, 999);
+  const currentMonthDate = new Date(Number(year), Number(monthStr) - 1, 1);
+  
+  const periodStart = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), 1);
+  const periodEnd = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 0, 23, 59, 59, 999);
   
   const revenue = await getRevenueSummary(landlordId, "month", periodStart, periodEnd, month);
+  
+  const lastMonthDate = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1);
+  const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+  const lastPeriodStart = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth(), 1);
+  const lastPeriodEnd = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 0, 23, 59, 59, 999);
+  
+  const lastMonthRevenue = await getRevenueSummary(landlordId, "month", lastPeriodStart, lastPeriodEnd, lastMonthStr);
+  
+  let growth = 0;
+  if (lastMonthRevenue.actualCollectedRevenue > 0) {
+    growth = ((revenue.actualCollectedRevenue - lastMonthRevenue.actualCollectedRevenue) / lastMonthRevenue.actualCollectedRevenue) * 100;
+  } else if (revenue.actualCollectedRevenue > 0) {
+    growth = 100;
+  }
   
   return {
     expectedRevenue: revenue.expectedRevenue,
     collectedRevenue: revenue.actualCollectedRevenue,
+    growthPercentage: Math.round(growth),
     month
   };
 }

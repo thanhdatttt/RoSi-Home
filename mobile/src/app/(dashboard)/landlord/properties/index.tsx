@@ -169,7 +169,7 @@ export default function PropertiesList() {
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '700' }}>0/0</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '700' }}>{p.occupied || 0}/{p.units || 0}</Text>
                       <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>occupied</Text>
                     </View>
                   </TouchableOpacity>
