@@ -13,7 +13,7 @@ export const roomStatusExpr = sql`
   CASE
     WHEN EXISTS (
       SELECT 1 FROM ${leases} l
-      WHERE l.room_id = ${rooms.id}
+      WHERE l.room_id = "rooms"."id"
         AND l.status = 'Active'
         AND l.deleted_at IS NULL
     ) THEN 'Occupied'::text

@@ -98,11 +98,6 @@ describe("Properties and Rooms Delete endpoints (PostgreSQL Integration)", () =>
       const res = await request(handles.app)
         .delete(`/api/v1/rooms/${ROOM_ID}`)
         .set(auth(token));
-        
-      const { findActiveRoomWithStatus } = await import("../../../src/modules/rooms/repository.js");
-      const room = await findActiveRoomWithStatus(ROOM_ID);
-      throw new Error("DEBUG_DRIZZLE: " + JSON.stringify(room) + " | res.status=" + res.status);
-      
       expect(res.status).toBe(409);
       expect(res.body.error.message).toContain("occupied room");
     });
