@@ -2,11 +2,13 @@ import { businessDate } from "../../lib/businessDate.js";
 import {
   findOutstandingInvoicesForLandlord,
   sumOutstandingAmountForLandlord,
+  getOccupiedRoomCount,
+  findActiveLeaseForTenantUser,
+  findNextPaymentDueForLease,
   type OutstandingInvoiceRow,
 } from "./repository.js";
 import { listUpcomingExpirationsService } from "../leases/service.js";
 import type { UpcomingExpirationView } from "../leases/service.js";
-import { getOccupiedRoomCount } from "./repository.js";
 import { getRevenueSummary } from "../reports/repository.js";
 
 export type OverdueInvoiceView = {
@@ -16,6 +18,45 @@ export type OverdueInvoiceView = {
   dueDate: string;
   amount: number;
 };
+
+export type TenantDashboardSummary = {
+  leaseId: string;
+  propertyName: string;
+  roomName: string;
+  startDate: string;
+  endDate: string;
+  agreedRent: number;
+  deposit: number;
+  status: string;
+  nextPayment: {
+    invoiceId: string;
+    amount: number;
+    dueDate: string;
+  } | null;
+} | null;
+
+export async function getTenantDashboardSummaryService(
+  userId: string,
+): Promise<TenantDashboardSummary> {
+  const activeLease = await findActiveLeaseForTenantUser(userId);
+  if (!activeLease) {
+    return null;
+  }
+
+  const nextPayment = await findNextPaymentDueForLease(activeLease.leaseId);
+
+  return {
+    leaseId: activeLease.leaseId,
+    propertyName: activeLease.propertyName,
+    roomName: activeLease.roomName,
+    startDate: String(activeLease.startDate),
+    endDate: String(activeLease.endDate),
+    agreedRent: activeLease.agreedRent,
+    deposit: activeLease.deposit,
+    status: activeLease.status,
+    nextPayment,
+  };
+}
 
 export type OutstandingSummary = {
   outstandingTotal: number;
@@ -73,16 +114,22 @@ export async function getRevenueService(landlordId: string, month: string) {
   
   const lastMonthRevenue = await getRevenueSummary(landlordId, "month", lastPeriodStart, lastPeriodEnd, lastMonthStr);
   
+  const sumRevenue = (r: { rent: number, electricity: number, water: number, surcharges: number }) => r.rent + r.electricity + r.water + r.surcharges;
+  
+  const currentExpected = sumRevenue(revenue.expectedRevenue);
+  const currentCollected = sumRevenue(revenue.actualCollectedRevenue);
+  const lastCollected = sumRevenue(lastMonthRevenue.actualCollectedRevenue);
+  
   let growth = 0;
-  if (lastMonthRevenue.actualCollectedRevenue > 0) {
-    growth = ((revenue.actualCollectedRevenue - lastMonthRevenue.actualCollectedRevenue) / lastMonthRevenue.actualCollectedRevenue) * 100;
-  } else if (revenue.actualCollectedRevenue > 0) {
+  if (lastCollected > 0) {
+    growth = ((currentCollected - lastCollected) / lastCollected) * 100;
+  } else if (currentCollected > 0) {
     growth = 100;
   }
   
   return {
-    expectedRevenue: revenue.expectedRevenue,
-    collectedRevenue: revenue.actualCollectedRevenue,
+    expectedRevenue: currentExpected,
+    collectedRevenue: currentCollected,
     growthPercentage: Math.round(growth),
     month
   };

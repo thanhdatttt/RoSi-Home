@@ -75,6 +75,81 @@ export async function sumOutstandingAmountForLandlord(
   return Number(row?.total ?? 0);
 }
 
+// TENANT DASHBOARD REPOSITORY
+
+export type ActiveTenantLeaseRow = {
+  leaseId: string;
+  propertyName: string;
+  roomName: string;
+  startDate: string;
+  endDate: string;
+  agreedRent: number;
+  deposit: number;
+  status: string;
+};
+
+export async function findActiveLeaseForTenantUser(
+  userId: string,
+  executor: Db = db,
+): Promise<ActiveTenantLeaseRow | null> {
+  const [row] = await executor
+    .select({
+      leaseId: leases.id,
+      propertyName: properties.name,
+      roomName: rooms.name,
+      startDate: leases.startDate,
+      endDate: leases.endDate,
+      agreedRent: leases.agreedRent,
+      deposit: leases.deposit,
+      status: leases.status,
+    })
+    .from(leases)
+    .innerJoin(tenantInfo, eq(leases.tenantInfoId, tenantInfo.id))
+    .innerJoin(rooms, eq(leases.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .where(
+      and(
+        eq(tenantInfo.userId, userId),
+        eq(leases.status, "Active"),
+        isNull(leases.deletedAt),
+        isNull(rooms.deletedAt),
+        isNull(properties.deletedAt),
+      )
+    );
+  
+  return row ?? null;
+}
+
+export type NextPaymentRow = {
+  invoiceId: string;
+  amount: number;
+  dueDate: string;
+};
+
+export async function findNextPaymentDueForLease(
+  leaseId: string,
+  executor: Db = db,
+): Promise<NextPaymentRow | null> {
+  const [row] = await executor
+    .select({
+      invoiceId: invoices.id,
+      amount: invoices.totalAmount,
+      dueDate: invoices.dueDate,
+    })
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.leaseId, leaseId),
+        eq(invoices.status, "Sent"),
+        isNull(invoices.deletedAt),
+      )
+    )
+    .orderBy(sql`${invoices.dueDate} asc`)
+    .limit(1);
+
+  return row ?? null;
+}
+
 // US-DASH-01
 export async function getOccupiedRoomCount(landlordId: string, executor: Db = db) {
   const [totalRow] = await executor

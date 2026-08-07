@@ -3,7 +3,7 @@ import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import { generateInvoicesQuerySchema } from "./schema.js";
-import { get, list, download, send, generate, getVietqr, uploadProof, confirmPayment, remind } from "./controller.js";
+import { get, list, listForTenant, download, send, generate, getVietqr, uploadProof, confirmPayment, remind } from "./controller.js";
 import multer from "multer";
 
 const upload = multer({
@@ -17,7 +17,8 @@ export const invoicesRouter = Router();
 invoicesRouter.use(requireAuth);
 
 // US-INVOICE-02
-invoicesRouter.get("/invoices", asyncHandler(list));
+invoicesRouter.get("/invoices", requireRole("Landlord"), asyncHandler(list));
+invoicesRouter.get("/tenant-invoices", requireRole("Tenant"), asyncHandler(listForTenant));
 invoicesRouter.get("/invoices/:id", asyncHandler(get));
 
 // US-INVOICE-03

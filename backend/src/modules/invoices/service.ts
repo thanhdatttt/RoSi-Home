@@ -106,6 +106,12 @@ export async function listInvoicesService(landlordId: string): Promise<InvoiceVi
   return details.map(d => serializeInvoice(d, []));
 }
 
+export async function listInvoicesForTenantService(tenantUserId: string): Promise<InvoiceView[]> {
+  const { listInvoicesForTenant } = await import("./repository.js");
+  const details = await listInvoicesForTenant(tenantUserId);
+  return details.map(d => serializeInvoice(d, []));
+}
+
 // US-AUTH-04 — ownership/role enforcement for invoice access.
 function authorizeDetail(
   detail: InvoiceDetail,

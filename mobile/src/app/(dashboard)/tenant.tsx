@@ -1,14 +1,54 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { Link } from "expo-router";
+import React, { useState, useCallback } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { Link, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { Bell, UserCircle2, Wallet, Wrench, FileText, ChevronRight } from "lucide-react-native";
+import { Bell, UserCircle2, Wallet, Wrench, FileText, ChevronRight, Receipt } from "lucide-react-native";
+import { useAuth } from "../../contexts/auth-context";
+import { apiRequest } from "../../lib/api";
+
+const formatVND = (n: number) => {
+  if (n == null || isNaN(n)) return '0';
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
 
 export default function TenantDashboard() {
   const insets = useSafeAreaInsets();
+  const { token, user } = useAuth();
+  
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadData() {
+        if (!token) return;
+        try {
+          const res = await apiRequest<any>('/dashboard/tenant', { token });
+          setData(res);
+        } catch (err) {
+          console.error("Failed to load tenant dashboard", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+      loadData();
+    }, [token])
+  );
+
+  const firstName = user?.fullName ? user.fullName.split(' ')[0] : "Tenant";
+
+  if (loading) {
+    return (
+      <MobileFrame>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f8ff' }}>
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      </MobileFrame>
+    );
+  }
 
   return (
     <MobileFrame>
@@ -26,8 +66,10 @@ export default function TenantDashboard() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flex: 1, paddingRight: 16 }}>
                 <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Tenant</Text>
-                <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginTop: 4 }} numberOfLines={1}>Welcome, Kojo</Text>
-                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>Adenta Court · Unit #3</Text>
+                <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginTop: 4 }} numberOfLines={1}>Welcome, {firstName}</Text>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
+                  {data ? `${data.propertyName} · ${data.roomName}` : "No active lease"}
+                </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
@@ -43,22 +85,41 @@ export default function TenantDashboard() {
 
             {/* Payment card */}
             <View style={{ marginTop: 24, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', padding: 20 }}>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Next payment due</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4 }}>
-                <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff' }}>3,800,000 VNĐ</Text>
-                <Text style={{ fontSize: 12, color: '#60a5fa', fontWeight: '600' }}>in 6 days</Text>
-              </View>
-              <View style={{ marginTop: 16 }}>
-                <PrimaryButton variant="primary">Pay now</PrimaryButton>
-              </View>
+              {data?.nextPayment ? (
+                <>
+                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Next payment due</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4 }}>
+                    <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff' }}>{formatVND(data.nextPayment.amount)} VNĐ</Text>
+                    <Text style={{ fontSize: 12, color: '#60a5fa', fontWeight: '600' }}>
+                      {(() => {
+                        const [y, m, d] = data.nextPayment.dueDate.split('-');
+                        const end = new Date(Number(y), Number(m) - 1, Number(d));
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const days = Math.round((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        return days < 0 ? 'overdue' : days === 0 ? 'today' : `in ${days} days`;
+                      })()}
+                    </Text>
+                  </View>
+                  <View style={{ marginTop: 16 }}>
+                    <PrimaryButton variant="primary">Pay now</PrimaryButton>
+                  </View>
+                </>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>All caught up!</Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>No payments due right now.</Text>
+                </View>
+              )}
             </View>
           </View>
 
           {/* Menu rows */}
           <View style={{ paddingHorizontal: 24, marginTop: 32, gap: 12 }}>
+            <TenantRow href="/(dashboard)/tenant/invoices" icon={<Receipt size={16} color="#2563eb" />} title="My invoices" sub="Sent and paid bills only" />
+            <TenantRow href="/(dashboard)/tenant/lease" icon={<FileText size={16} color="#2563eb" />} title="My lease" sub="Room, period, rent and deposit" />
             <TenantRow icon={<Wallet size={16} color="#2563eb" />} title="Payment history" sub="View last 12 months" />
             <TenantRow icon={<Wrench size={16} color="#2563eb" />} title="Report a repair" sub="Plumbing, electricity, etc." />
-            <TenantRow icon={<FileText size={16} color="#2563eb" />} title="My lease & documents" sub="Signed 12 Jan 2026" />
           </View>
 
           {/* Announcements */}
@@ -77,15 +138,33 @@ export default function TenantDashboard() {
   );
 }
 
-function TenantRow({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
-  return (
-    <TouchableOpacity style={{ width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</View>
-      <View style={{ flex: 1, paddingRight: 8 }}>
-        <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{title}</Text>
-        <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>{sub}</Text>
+function TenantRow({ icon, title, sub, href }: { icon: React.ReactNode; title: string; sub: string; href?: string }) {
+  const content = (
+    <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: 20, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' }}>
+      <View style={{ height: 44, width: 44, borderRadius: 16, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {icon}
       </View>
-      <ChevronRight size={16} color="gray" />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontWeight: '600', fontSize: 15, color: '#0f172a' }}>{title}</Text>
+        <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{sub}</Text>
+      </View>
+      <ChevronRight size={16} color="#94a3b8" />
+    </View>
+  );
+
+  if (href) {
+    return (
+      <Link href={href as any} asChild>
+        <TouchableOpacity>
+          {content}
+        </TouchableOpacity>
+      </Link>
+    );
+  }
+
+  return (
+    <TouchableOpacity>
+      {content}
     </TouchableOpacity>
   );
 }
