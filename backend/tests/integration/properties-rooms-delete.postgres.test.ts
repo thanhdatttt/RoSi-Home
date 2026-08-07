@@ -91,7 +91,7 @@ describe("Properties and Rooms Delete endpoints (PostgreSQL Integration)", () =>
         [TENANT_INFO_ID, LANDLORD_ID],
       );
       await handles.dbPool.query(
-        `INSERT INTO leases (id, room_id, tenant_info_id, status, start_date, end_date, agreed_rent, created_by, created_at, updated_at) VALUES ($1, $2, $3, 'Active', '2020-01-01', '2030-01-01', 1000, $4, now(), now())`,
+        `INSERT INTO leases (id, room_id, tenant_info_id, status, start_date, end_date, agreed_rent, deposit, created_by, created_at, updated_at) VALUES ($1, $2, $3, 'Active', '2020-01-01', '2030-01-01', 1000, 1000, $4, now(), now())`,
         [LEASE_ID, ROOM_ID, TENANT_INFO_ID, LANDLORD_ID],
       );
 
