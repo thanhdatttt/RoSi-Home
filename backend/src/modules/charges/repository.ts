@@ -15,6 +15,27 @@ export async function assertPropertyOwned(
   if (!prop) throw new NotFoundError("Property not found.");
 }
 
+export async function getUpcomingSurchargeId(
+  propertyId: string,
+  name: string,
+  today: string,
+  executor: typeof db = db,
+): Promise<string | undefined> {
+  const existing = await executor
+    .select({ id: surcharges.id })
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, name),
+        sql`${surcharges.effectiveFrom} > ${today}`,
+        isNull(surcharges.deletedAt),
+      ),
+    )
+    .limit(1);
+  return existing.length > 0 ? existing[0].id : undefined;
+}
+
 export async function upsertUpcomingSurcharge(
   propertyId: string,
   createdBy: string,

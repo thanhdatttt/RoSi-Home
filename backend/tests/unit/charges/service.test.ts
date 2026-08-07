@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
     softDeleteSurcharge: vi.fn(),
     updateSurcharge: vi.fn(),
     findOverlappingSurcharges: vi.fn().mockResolvedValue([]),
+    getUpcomingSurchargeId: vi.fn().mockResolvedValue(undefined),
     writeAudit: vi.fn(),
   };
 });
@@ -34,6 +35,7 @@ vi.mock("../../../src/modules/charges/repository.js", () => ({
   softDeleteSurcharge: mocks.softDeleteSurcharge,
   updateSurcharge: mocks.updateSurcharge,
   findOverlappingSurcharges: mocks.findOverlappingSurcharges,
+  getUpcomingSurchargeId: mocks.getUpcomingSurchargeId,
 }));
 
 import {
