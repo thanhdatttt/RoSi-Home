@@ -98,6 +98,16 @@ describe("Properties and Rooms Delete endpoints (PostgreSQL Integration)", () =>
       const res = await request(handles.app)
         .delete(`/api/v1/rooms/${ROOM_ID}`)
         .set(auth(token));
+        
+      const { rows } = await handles.dbPool.query("SELECT * FROM leases");
+      const { rows: roomRows } = await handles.dbPool.query(`
+        SELECT 1 FROM leases l
+        WHERE l.room_id = $1
+          AND l.status = 'Active'
+          AND l.deleted_at IS NULL
+      `, [ROOM_ID]);
+      throw new Error("DEBUG_LEASES: " + JSON.stringify(rows) + " | MATCHING: " + JSON.stringify(roomRows));
+      
       expect(res.status).toBe(409);
       expect(res.body.error.message).toContain("occupied room");
     });
