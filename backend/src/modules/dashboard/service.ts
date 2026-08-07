@@ -5,6 +5,8 @@ import {
   getOccupiedRoomCount,
   findActiveLeaseForTenantUser,
   findNextPaymentDueForLease,
+  getActiveUtilitiesForProperty,
+  getActiveSurchargesForProperty,
   type OutstandingInvoiceRow,
 } from "./repository.js";
 import { listUpcomingExpirationsService } from "../leases/service.js";
@@ -33,6 +35,16 @@ export type TenantDashboardSummary = {
     amount: number;
     dueDate: string;
   } | null;
+  utilities: {
+    electricityRatePerKwh: number;
+    waterBillingMethod: string;
+    waterRatePerM3: number | null;
+    waterFlatAmountPerTenant: number | null;
+  } | null;
+  surcharges: {
+    name: string;
+    monthlyAmount: number;
+  }[];
 } | null;
 
 export async function getTenantDashboardSummaryService(
@@ -44,6 +56,8 @@ export async function getTenantDashboardSummaryService(
   }
 
   const nextPayment = await findNextPaymentDueForLease(activeLease.leaseId);
+  const utilities = await getActiveUtilitiesForProperty(activeLease.propertyId);
+  const surcharges = await getActiveSurchargesForProperty(activeLease.propertyId);
 
   return {
     leaseId: activeLease.leaseId,
@@ -55,6 +69,8 @@ export async function getTenantDashboardSummaryService(
     deposit: activeLease.deposit,
     status: activeLease.status,
     nextPayment,
+    utilities,
+    surcharges,
   };
 }
 

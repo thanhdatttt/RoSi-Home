@@ -117,6 +117,35 @@ export default function TenantLease() {
               Lease information is maintained by your landlord. RosiHome stores the record only — it isn't an electronic signature.
             </Text>
           </View>
+
+          {/* Utilities & Services */}
+          {(data.utilities || data.surcharges?.length > 0) && (
+            <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 12 }}>Utilities & Services</Text>
+              <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                {data.utilities && (
+                  <>
+                    <Row icon={<Wallet size={16} color="#2563eb" />} label="Electricity" value={`${formatVND(data.utilities.electricityRatePerKwh)} VNĐ / kWh`} isFirst={true} />
+                    <Row icon={<Wallet size={16} color="#2563eb" />} label="Water" value={
+                      data.utilities.waterBillingMethod === 'Flat'
+                        ? `${formatVND(data.utilities.waterFlatAmountPerTenant ?? 0)} VNĐ / person`
+                        : `${formatVND(data.utilities.waterRatePerM3 ?? 0)} VNĐ / m³`
+                    } />
+                  </>
+                )}
+                
+                {data.surcharges?.map((surcharge: any, idx: number) => (
+                  <Row 
+                    key={surcharge.name} 
+                    icon={<Wallet size={16} color="#2563eb" />} 
+                    label={surcharge.name} 
+                    value={`${formatVND(surcharge.monthlyAmount)} VNĐ / month`} 
+                    isFirst={!data.utilities && idx === 0} 
+                  />
+                ))}
+              </View>
+            </View>
+          )}
         </ScrollView>
       </View>
     </MobileFrame>

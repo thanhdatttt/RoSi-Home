@@ -1,11 +1,14 @@
 import { and, eq, isNull, lt, sql, inArray } from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
+import { businessDate } from "../../lib/businessDate.js";
 import {
   invoices,
   leases,
   properties,
   rooms,
   tenantInfo,
+  utilityRateHistory,
+  surcharges,
 } from "../../db/schema.js";
 
 export type OutstandingInvoiceRow = {
@@ -79,6 +82,7 @@ export async function sumOutstandingAmountForLandlord(
 
 export type ActiveTenantLeaseRow = {
   leaseId: string;
+  propertyId: string;
   propertyName: string;
   roomName: string;
   startDate: string;
@@ -95,6 +99,7 @@ export async function findActiveLeaseForTenantUser(
   const [row] = await executor
     .select({
       leaseId: leases.id,
+      propertyId: properties.id,
       propertyName: properties.name,
       roomName: rooms.name,
       startDate: leases.startDate,
@@ -118,6 +123,50 @@ export async function findActiveLeaseForTenantUser(
     );
   
   return row ?? null;
+}
+
+export async function getActiveUtilitiesForProperty(propertyId: string, executor: Db = db) {
+  const today = businessDate();
+  const [row] = await executor
+    .select({
+      electricityRatePerKwh: utilityRateHistory.electricityRatePerKwh,
+      waterBillingMethod: utilityRateHistory.waterBillingMethod,
+      waterRatePerM3: utilityRateHistory.waterRatePerM3,
+      waterFlatAmountPerTenant: utilityRateHistory.waterFlatAmountPerTenant,
+    })
+    .from(utilityRateHistory)
+    .where(
+      and(
+        eq(utilityRateHistory.propertyId, propertyId),
+        sql`${utilityRateHistory.effectiveFrom} <= ${today}`
+      )
+    )
+    .orderBy(
+      sql`${utilityRateHistory.effectiveFrom} desc`,
+      sql`${utilityRateHistory.createdAt} desc`,
+      sql`${utilityRateHistory.id} desc`
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getActiveSurchargesForProperty(propertyId: string, executor: Db = db) {
+  const today = businessDate();
+  return executor
+    .select({
+      name: surcharges.name,
+      monthlyAmount: surcharges.monthlyAmount,
+    })
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.active, true),
+        isNull(surcharges.deletedAt),
+        sql`${surcharges.effectiveFrom} <= ${today}`,
+        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${today})`
+      )
+    );
 }
 
 export type NextPaymentRow = {

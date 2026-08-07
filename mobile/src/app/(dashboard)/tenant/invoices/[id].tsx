@@ -8,6 +8,7 @@ import { ArrowLeft, Download, ShieldAlert, Check } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
 import { apiRequest, API_BASE } from "../../../../lib/api";
 import * as WebBrowser from "expo-web-browser";
+import { LinearGradient } from "expo-linear-gradient";
 
 const formatVND = (n: number) => {
   if (n == null || isNaN(n)) return '0';
@@ -90,7 +91,13 @@ export default function TenantInvoiceDetail() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 32, 96) }} showsVerticalScrollIndicator={false}>
           {/* Header */}
-          <View style={{ backgroundColor: '#2563eb', paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 24 }}>
+          <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 24, overflow: 'hidden' }}>
+            <LinearGradient 
+              colors={["#1e3a8a", "#0f172a"]} 
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Link href={"/(dashboard)/tenant/invoices" as any} asChild>
                 <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
