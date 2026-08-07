@@ -190,4 +190,65 @@ export async function apiRequest<T = unknown>(
   return json.data as T;
 }
 
+/**
+ * Same as apiRequest, but returns the full envelope including meta data.
+ */
+export async function apiRequestWithEnvelope<T = unknown, M = unknown>(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<{ data: T; meta?: M }> {
+  const { method = 'GET', token, body, headers = {} } = options;
+
+  const finalHeaders: Record<string, string> = { ...headers };
+  if (body !== undefined) finalHeaders['Content-Type'] = 'application/json';
+  if (token) finalHeaders.Authorization = `Bearer ${token}`;
+
+  let res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+    method,
+    headers: finalHeaders,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  if (res.status === 401 && token) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshTokens().then(newToken => {
+        isRefreshing = false;
+        if (newToken) {
+          onRefreshed(newToken);
+        } else {
+          onRefreshed("");
+        }
+      });
+    }
+
+    const newToken = await new Promise<string>((resolve) => {
+      refreshSubscribers.push(resolve);
+    });
+
+    if (newToken) {
+      finalHeaders.Authorization = `Bearer ${newToken}`;
+      res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+        method,
+        headers: finalHeaders,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    }
+  }
+
+  const text = await res.text();
+  const json = text ? (JSON.parse(text) as Record<string, unknown> & ApiErrorPayload) : {};
+
+  if (!res.ok) {
+    const errPayload = json as ApiErrorPayload;
+    const message =
+      errPayload.error?.message ?? `Request failed with status ${res.status}`;
+    const err = new ApiRequestError(res.status, message, errPayload);
+    interceptors.forEach((fn) => fn(err));
+    throw err;
+  }
+
+  return json as { data: T; meta?: M };
+}
+
 export const API_BASE = API_BASE_URL;

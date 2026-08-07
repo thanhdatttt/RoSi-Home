@@ -13,7 +13,7 @@ import {
 
 async function create(req: Request, res: Response): Promise<void> {
   const { lease, tenantAccountProvisioned, tempPassword } = await createLeaseService(req.user!.id, req.body);
-  res.status(201).json({ data: { ...lease, tenantAccountProvisioned, tempPassword } });
+  res.status(201).json({ data: lease, meta: { tenantAccountProvisioned, tempPassword } });
 }
 
 async function list(req: Request, res: Response): Promise<void> {

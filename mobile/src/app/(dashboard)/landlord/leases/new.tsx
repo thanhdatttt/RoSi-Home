@@ -7,7 +7,7 @@ import { Field } from "../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { DatePicker } from "../../../../components/ui/DatePicker";
 import { ArrowLeft, Mail, User, Phone, IdCard, Building2, DoorOpen, Calendar, Wallet, ShieldCheck, Copy, Check, KeyRound } from "lucide-react-native";
-import { apiRequest } from "../../../../lib/api";
+import { apiRequest, apiRequestWithEnvelope } from "../../../../lib/api";
 import { useAuth } from "../../../../contexts/auth-context";
 
 
@@ -126,8 +126,8 @@ export default function NewLease() {
           deposit: Number(depositRaw),
         }
       });
-      if (res.tempPassword) {
-        setTempPassword(res.tempPassword);
+      if (res.meta?.tempPassword) {
+        setTempPassword(res.meta.tempPassword);
       }
       setCreated(true);
     } catch (e: any) {

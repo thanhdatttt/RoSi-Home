@@ -130,7 +130,7 @@ export async function getRevenueService(landlordId: string, month: string) {
   
   const lastMonthRevenue = await getRevenueSummary(landlordId, "month", lastPeriodStart, lastPeriodEnd, lastMonthStr);
   
-  const sumRevenue = (r: { rent: number, electricity: number, water: number, surcharges: number }) => r.rent + r.electricity + r.water + r.surcharges;
+  const sumRevenue = (r: any) => (r?.rent || 0) + (r?.electricity || 0) + (r?.water || 0) + (r?.surcharges || 0);
   
   const currentExpected = sumRevenue(revenue.expectedRevenue);
   const currentCollected = sumRevenue(revenue.actualCollectedRevenue);

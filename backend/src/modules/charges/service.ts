@@ -140,6 +140,11 @@ export async function updateSurchargeService(
     const existing = await findSurchargeScoped(id, landlordId, trx);
     if (!existing) throw new NotFoundError("Surcharge not found.");
 
+    const today = businessDate();
+    if (existing.effectiveFrom <= today) {
+      throw new ConflictError("Cannot update a surcharge that is already in effect. Please schedule a new rate instead.");
+    }
+
     const finalName = input.name ?? existing.name;
     const finalFrom = input.effectiveFrom ?? existing.effectiveFrom;
     
