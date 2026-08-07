@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import {
   registerDeviceTokenService,
   sendTestNotificationService,
-  sendTestNotificationService,
   unregisterDeviceTokenService,
   listNotificationsService,
 } from "./service.js";

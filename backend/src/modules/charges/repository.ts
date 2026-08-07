@@ -156,35 +156,23 @@ export async function findOverlappingSurcharges(
 ): Promise<SurchargeRow[]> {
   const resolvedEffectiveTo = effectiveTo ?? "9999-12-31";
   
-  const query = executor
-    .select()
-    .from(surcharges)
-    .where(
-      and(
-        eq(surcharges.propertyId, propertyId),
-        eq(surcharges.name, name),
-        eq(surcharges.active, true),
-        isNull(surcharges.deletedAt),
-        sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
-        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`
-      ),
-    );
-    
+  const conditions = [
+    eq(surcharges.propertyId, propertyId),
+    eq(surcharges.name, name),
+    eq(surcharges.active, true),
+    isNull(surcharges.deletedAt),
+    sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
+    sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`
+  ];
+  
   if (excludeId) {
-    query.where(
-      and(
-        eq(surcharges.propertyId, propertyId),
-        eq(surcharges.name, name),
-        eq(surcharges.active, true),
-        isNull(surcharges.deletedAt),
-        sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
-        sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`,
-        sql`${surcharges.id} != ${excludeId}`
-      )
-    );
+    conditions.push(sql`${surcharges.id} != ${excludeId}`);
   }
   
-  return query;
+  return executor
+    .select()
+    .from(surcharges)
+    .where(and(...conditions));
 }
 
 export async function findActiveSurchargesByName(
