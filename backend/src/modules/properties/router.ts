@@ -13,6 +13,7 @@ import {
   get,
   list,
   update,
+  remove,
 } from "./controller.js";
 import {
   getReminderConfig,
@@ -28,6 +29,7 @@ propertiesRouter.post("/", validate(createPropertySchema), asyncHandler(create))
 propertiesRouter.get("/", validate(paginationQuerySchema, "query"), asyncHandler(list));
 propertiesRouter.get("/:id", asyncHandler(get));
 propertiesRouter.patch("/:id", validate(updatePropertySchema), asyncHandler(update));
+propertiesRouter.delete("/:id", asyncHandler(remove));
 
 propertiesRouter.get(
   "/:propertyId/lease-reminder-config",

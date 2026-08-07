@@ -15,6 +15,27 @@ export async function assertPropertyOwned(
   if (!prop) throw new NotFoundError("Property not found.");
 }
 
+export async function getUpcomingSurchargeId(
+  propertyId: string,
+  name: string,
+  today: string,
+  executor: typeof db = db,
+): Promise<string | undefined> {
+  const existing = await executor
+    .select({ id: surcharges.id })
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, name),
+        sql`${surcharges.effectiveFrom} > ${today}`,
+        isNull(surcharges.deletedAt),
+      ),
+    )
+    .limit(1);
+  return existing.length > 0 ? existing[0].id : undefined;
+}
+
 export async function upsertUpcomingSurcharge(
   propertyId: string,
   createdBy: string,
@@ -146,6 +167,35 @@ export async function findActiveSurchargesForPropertyPeriod(
     .orderBy(asc(surcharges.name));
 }
 
+export async function findOverlappingSurcharges(
+  propertyId: string,
+  name: string,
+  effectiveFrom: string,
+  effectiveTo: string | null,
+  excludeId?: string,
+  executor: typeof db = db,
+): Promise<SurchargeRow[]> {
+  const resolvedEffectiveTo = effectiveTo ?? "9999-12-31";
+  
+  const conditions = [
+    eq(surcharges.propertyId, propertyId),
+    eq(surcharges.name, name),
+    eq(surcharges.active, true),
+    isNull(surcharges.deletedAt),
+    sql`${surcharges.effectiveFrom} <= ${resolvedEffectiveTo}`,
+    sql`(${surcharges.effectiveTo} IS NULL OR ${surcharges.effectiveTo} >= ${effectiveFrom})`
+  ];
+  
+  if (excludeId) {
+    conditions.push(sql`${surcharges.id} != ${excludeId}`);
+  }
+  
+  return executor
+    .select()
+    .from(surcharges)
+    .where(and(...conditions));
+}
+
 export async function findActiveSurchargesByName(
   propertyId: string,
   name: string,
@@ -206,6 +256,24 @@ export async function updateSurcharge(
     .where(and(eq(surcharges.id, id), isNull(surcharges.deletedAt)))
     .returning();
   return row ?? null;
+}
+
+export async function renameSurchargeGroup(
+  propertyId: string,
+  oldName: string,
+  newName: string,
+  executor: typeof db = db,
+): Promise<void> {
+  await executor
+    .update(surcharges)
+    .set({ name: newName, updatedAt: new Date() })
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, oldName),
+        isNull(surcharges.deletedAt)
+      )
+    );
 }
 
 export async function softDeleteSurcharge(

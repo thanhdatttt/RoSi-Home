@@ -8,7 +8,7 @@ import {
   updateRoomSchema,
   bulkRoomsSchema,
 } from "./schema.js";
-import { create, bulk, list, get, update } from "./controller.js";
+import { create, bulk, list, get, update, remove } from "./controller.js";
 
 export const roomsRouter = Router();
 
@@ -42,3 +42,4 @@ roomsRouter.patch(
   validate(updateRoomSchema),
   asyncHandler(update),
 );
+roomsRouter.delete("/:id", requireRole("Landlord"), asyncHandler(remove));

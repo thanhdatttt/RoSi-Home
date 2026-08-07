@@ -5,6 +5,7 @@ import {
   getPropertyService,
   listPropertiesService,
   updatePropertyService,
+  deletePropertyService,
 } from "./service.js";
 
 async function create(req: Request, res: Response): Promise<void> {
@@ -27,4 +28,9 @@ async function update(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: view });
 }
 
-export { create, list, get, update };
+async function remove(req: Request, res: Response): Promise<void> {
+  await deletePropertyService(req.user!.id, req.params.id);
+  res.status(200).json({ data: { success: true } });
+}
+
+export { create, list, get, update, remove };

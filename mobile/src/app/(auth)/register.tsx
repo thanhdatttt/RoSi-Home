@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
@@ -11,6 +12,8 @@ import { ApiRequestError } from "../../lib/api";
 export default function Register() {
   const router = useRouter();
   const { register, loading } = useAuth();
+  const insets = useSafeAreaInsets();
+  
   const [values, setValues] = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -63,26 +66,29 @@ export default function Register() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href="/" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Landlord sign-up</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Create your account</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Landlord sign-up</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Create your account</Text>
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 pb-6">
-          <View className="rounded-xl border border-[#2563eb]/30 bg-[#2563eb]/10 p-3.5 flex-row items-start gap-3 mb-4">
-            <View className="h-9 w-9 rounded-lg bg-[#2563eb] items-center justify-center shrink-0">
+        {/* Form */}
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 24) }}>
+          {/* Info banner */}
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.3)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+            <View style={{ height: 36, width: 36, borderRadius: 8, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Building2 size={16} color="#ffffff" />
             </View>
-            <Text className="text-xs text-foreground/80 leading-relaxed flex-1">
-              This creates a <Text className="font-bold">Landlord</Text> account. Tenant accounts are created by their landlord — tenants can't self-register.
+            <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1 }}>
+              This creates a <Text style={{ fontWeight: '700' }}>Landlord</Text> account. Tenant accounts are created by their landlord — tenants can't self-register.
             </Text>
           </View>
 
@@ -94,53 +100,59 @@ export default function Register() {
             onChangeText={(text) => set("name", text)} 
             error={errors.name} 
           />
-          <Field 
-            label="Email address" 
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholder="you@email.com" 
-            icon={<Mail size={16} color="gray" />} 
-            value={values.email} 
-            onChangeText={(text) => set("email", text)} 
-            error={errors.email} 
-            hint="Used as your unique login identifier" 
-          />
-          <Field 
-            label="Password" 
-            secureTextEntry 
-            placeholder="At least 8 characters" 
-            icon={<Lock size={16} color="gray" />} 
-            value={values.password} 
-            onChangeText={(text) => set("password", text)} 
-            error={errors.password} 
-          />
-          <Field 
-            label="Confirm password" 
-            secureTextEntry 
-            placeholder="Re-enter password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={values.confirm} 
-            onChangeText={(text) => set("confirm", text)} 
-            error={errors.confirm} 
-          />
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="Email address" 
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="you@email.com" 
+              icon={<Mail size={16} color="gray" />} 
+              value={values.email} 
+              onChangeText={(text) => set("email", text)} 
+              error={errors.email} 
+              hint="Used as your unique login identifier" 
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="Password" 
+              secureTextEntry 
+              placeholder="At least 8 characters" 
+              icon={<Lock size={16} color="gray" />} 
+              value={values.password} 
+              onChangeText={(text) => set("password", text)} 
+              error={errors.password} 
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="Confirm password" 
+              secureTextEntry 
+              placeholder="Re-enter password" 
+              icon={<Lock size={16} color="gray" />} 
+              value={values.confirm} 
+              onChangeText={(text) => set("confirm", text)} 
+              error={errors.confirm} 
+            />
+          </View>
 
           {apiError && (
-            <View className="rounded-lg bg-destructive/10 px-3 py-2 mb-4">
-              <Text className="text-xs text-destructive">{apiError}</Text>
+            <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 12, paddingVertical: 8, marginTop: 16 }}>
+              <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
           )}
 
-          <View className="pt-2">
+          <View style={{ marginTop: 16 }}>
             <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
               {loading ? "Creating account..." : "Create landlord account"}
             </PrimaryButton>
           </View>
           
-          <View className="flex-row justify-center items-center gap-1 mt-4">
-            <Text className="text-xs text-muted-foreground">Already registered?</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>Already registered?</Text>
             <Link href="/login" asChild>
               <TouchableOpacity>
-                <Text className="text-primary font-semibold text-xs underline">Sign in</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Sign in</Text>
               </TouchableOpacity>
             </Link>
           </View>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
@@ -10,6 +11,7 @@ import { ApiRequestError } from "../../lib/api";
 
 export default function Forgot() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { forgotPassword, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
@@ -35,54 +37,54 @@ export default function Forgot() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href="/login" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
         </View>
 
-        <View className="px-6 pb-4">
-          <View className="h-14 w-14 rounded-2xl bg-[#2563eb]/15 items-center justify-center mb-4">
-            <Mail size={24} color="black" />
+        {/* Content */}
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 24) }}>
+          <View style={{ height: 56, width: 56, borderRadius: 16, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <Mail size={24} color="#2563eb" />
           </View>
-          <Text className="text-2xl font-extrabold">Forgot password?</Text>
-          <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
+          <Text style={{ fontSize: 24, fontWeight: '800' }}>Forgot password?</Text>
+          <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 8, lineHeight: 20 }}>
             Enter the email linked to your RosiHome account. If it matches an account, we'll send a time-limited reset link — we won't confirm either way for security.
           </Text>
-        </View>
-
-        <View className="flex-1 px-6 pb-6">
-          <Field 
-            label="Email address" 
-            placeholder="you@email.com" 
-            keyboardType="email-address"
-            autoCapitalize="none"
-            icon={<Mail size={16} color="gray" />} 
-            value={email} 
-            onChangeText={setEmail} 
-          />
-          <View className="mb-4" />
+          <View style={{ marginTop: 24, marginBottom: 24 }}>
+            <Field 
+              label="Email address" 
+              placeholder="you@email.com" 
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon={<Mail size={16} color="gray" />} 
+              value={email} 
+              onChangeText={setEmail} 
+            />
+          </View>
           {apiError && (
-            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
-              <Text className="text-xs text-destructive">{apiError}</Text>
+            <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
           )}
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
             {loading ? "Sending..." : "Send reset link"}
           </PrimaryButton>
           
-          <View className="flex-row justify-center items-center gap-1 mt-4">
-            <Text className="text-xs text-muted-foreground">Remembered it?</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>Remembered it?</Text>
             <Link href="/login" asChild>
               <TouchableOpacity>
-                <Text className="text-primary font-semibold text-xs underline">Back to sign in</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Back to sign in</Text>
               </TouchableOpacity>
             </Link>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </MobileFrame>
   );
