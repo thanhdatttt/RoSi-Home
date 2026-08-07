@@ -22,6 +22,8 @@ import {
 } from "./repository.js";
 import type { CreateSurchargeInput, UpdateSurchargeInput } from "./schema.js";
 import { assertSurchargePeriod, rangesOverlap } from "./rules.js";
+import { surcharges } from "../../db/schema.js";
+import { and, eq, sql, isNull } from "drizzle-orm";
 import { businessDate } from "../../lib/businessDate.js";
 
 export type SurchargeView = {
@@ -60,11 +62,27 @@ export async function createSurchargeService(
   await assertPropertyOwned(propertyId, landlordId);
   assertSurchargePeriod(input.effectiveFrom, input.effectiveTo ?? null);
 
+  const today = businessDate();
+  const existingUpcoming = await db
+    .select({ id: surcharges.id })
+    .from(surcharges)
+    .where(
+      and(
+        eq(surcharges.propertyId, propertyId),
+        eq(surcharges.name, input.name),
+        sql`${surcharges.effectiveFrom} > ${today}`,
+        isNull(surcharges.deletedAt),
+      ),
+    )
+    .limit(1);
+  const excludeId = existingUpcoming.length > 0 ? existingUpcoming[0].id : undefined;
+
   const overlaps = await findOverlappingSurcharges(
     propertyId,
     input.name,
     input.effectiveFrom,
-    input.effectiveTo ?? null
+    input.effectiveTo ?? null,
+    excludeId
   );
 
   if (overlaps.length > 0) {

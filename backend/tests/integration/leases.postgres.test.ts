@@ -226,7 +226,7 @@ describe("Leases (US-LEASE-01/02/03/04/05/06)", () => {
       .expect(200);
     expect(getResponse.body.data).toMatchObject({
       propertyId: PROPERTY_ID,
-      remindAt30Days: false,
+      remindAt30Days: true,
       remindAt15Days: false,
       remindAt7Days: false,
     });

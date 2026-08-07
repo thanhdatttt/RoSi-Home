@@ -31,7 +31,7 @@ describe("Properties and Rooms Delete endpoints (PostgreSQL Integration)", () =>
     await resetCommonFixtures(handles.dbPool);
     // Seed Landlord
     await handles.dbPool.query(
-      `INSERT INTO users (id, name, email, phone, encrypted_password, role, created_at, updated_at) VALUES ($1, 'Landlord', 'landlord@test.com', '1111', 'pass', 'Landlord', now(), now())`,
+      `INSERT INTO users (id, full_name, email, phone, encrypted_password, role, created_at, updated_at) VALUES ($1, 'Landlord', 'landlord@test.com', '1111', 'pass', 'Landlord', now(), now())`,
       [LANDLORD_ID],
     );
     // Seed Property
