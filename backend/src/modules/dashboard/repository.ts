@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, eq, isNull, lt, sql, inArray } from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
 import {
   invoices,
@@ -44,7 +44,7 @@ export async function findOutstandingInvoicesForLandlord(
         isNull(invoices.deletedAt),
         isNull(properties.deletedAt),
         eq(properties.landlordId, landlordId),
-        eq(invoices.status, "Sent"),
+        inArray(invoices.status, ["Sent", "Draft"]),
       ),
     )
     .orderBy(sql`${invoices.dueDate} asc`);

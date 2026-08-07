@@ -4,7 +4,7 @@ import { useFocusEffect, Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
-import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus, CalendarClock, ChevronRight, Users } from "lucide-react-native";
+import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus, CalendarClock, ChevronRight, Users, AlertTriangle, Wallet } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
 
@@ -20,6 +20,7 @@ export default function LandlordDashboard() {
   const [revenue, setRevenue] = useState<any>(null);
   const [occupancy, setOccupancy] = useState<any>(null);
   const [expiring, setExpiring] = useState<any[]>([]);
+  const [outstanding, setOutstanding] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -30,17 +31,26 @@ export default function LandlordDashboard() {
           const today = new Date();
           const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
           
-          const [propertiesData, revData, occData, expiringData] = await Promise.all([
+          const [propertiesData, revData, occData, expiringData, outstandingData] = await Promise.all([
             apiRequest<any[]>('/properties?pageSize=3', { token }),
             apiRequest<any>(`/dashboard/revenue?month=${monthStr}`, { token }),
             apiRequest<any>('/dashboard/occupancy', { token }),
-            apiRequest<any[]>('/leases/upcoming-expirations', { token })
+            apiRequest<any[]>('/leases/upcoming-expirations', { token }),
+            apiRequest<any>('/dashboard/outstanding', { token }),
           ]);
           
           setProperties(propertiesData);
           setRevenue(revData);
           setOccupancy(occData);
           setExpiring(expiringData ? expiringData.slice(0, 3) : []);
+          setOutstanding(
+            outstandingData
+              ? {
+                  ...outstandingData,
+                  overdueInvoices: outstandingData.overdueInvoices?.slice(0, 3) || [],
+                }
+              : null
+          );
         } catch (err) {
           console.error("Failed to load dashboard data", err);
         } finally {
@@ -146,6 +156,51 @@ export default function LandlordDashboard() {
               </View>
             </View>
           </View>
+
+          {/* Outstanding invoices section (US-DASH-03) */}
+          {outstanding && (outstanding.outstandingTotal > 0 || (outstanding.overdueInvoices && outstanding.overdueInvoices.length > 0)) && (
+            <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>Outstanding</Text>
+                <Link href={"/(dashboard)/landlord/invoices" as any} asChild>
+                  <TouchableOpacity>
+                    <Text style={{ fontSize: 13, color: '#2563eb', fontWeight: '600' }}>All invoices</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+              <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                {/* Total outstanding banner */}
+                <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderBottomWidth: outstanding.overdueInvoices?.length > 0 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
+                  <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: 'rgba(249,115,22,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Wallet size={20} color="#f97316" />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontSize: 12, color: '#64748b' }}>Total outstanding</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '800', color: '#f97316', marginTop: 2 }}>{formatVND(outstanding.outstandingTotal)} VNĐ</Text>
+                  </View>
+                </View>
+
+                {/* Overdue invoice rows */}
+                {outstanding.overdueInvoices?.map((inv: any, idx: number) => (
+                  <Link key={inv.invoiceId} href={{ pathname: "/(dashboard)/landlord/invoices/[id]", params: { id: inv.invoiceId } } as any} asChild>
+                    <TouchableOpacity style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderBottomWidth: idx < outstanding.overdueInvoices.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={{ fontWeight: '600', fontSize: 14, color: '#0f172a' }} numberOfLines={1}>{inv.tenant} · {inv.room}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                          <AlertTriangle size={12} color="#ef4444" />
+                          <Text style={{ fontSize: 12, color: '#ef4444' }}>Due {inv.dueDate} · overdue</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(inv.amount)} VNĐ</Text>
+                        <ChevronRight size={14} color="#94a3b8" />
+                      </View>
+                    </TouchableOpacity>
+                  </Link>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Expiring Leases section */}
           {expiring.length > 0 && (
