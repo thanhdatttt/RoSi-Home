@@ -62,7 +62,10 @@ export type InvoiceView = {
   sentAt: string | null;
   createdAt: string;
   updatedAt: string;
-  lineItems: LineItemView[];
+  tenantName: string;
+  propertyName: string;
+  roomName: string;
+  lineItems?: LineItemView[];
 };
 
 function serializeInvoice(
@@ -82,7 +85,10 @@ function serializeInvoice(
     sentAt: detail.sentAt ? detail.sentAt.toISOString() : null,
     createdAt: detail.createdAt.toISOString(),
     updatedAt: detail.updatedAt.toISOString(),
-    lineItems: lineItems.map((li) => ({
+    tenantName: detail.tenantFullName,
+    propertyName: detail.propertyName,
+    roomName: detail.roomName,
+    lineItems: lineItems?.map((li) => ({
       id: li.id,
       type: li.type,
       description: li.description,
@@ -92,6 +98,12 @@ function serializeInvoice(
       sourceRateId: li.sourceRateId,
     })),
   };
+}
+
+export async function listInvoicesService(landlordId: string): Promise<InvoiceView[]> {
+  const { listInvoicesForLandlord } = await import("./repository.js");
+  const details = await listInvoicesForLandlord(landlordId);
+  return details.map(d => serializeInvoice(d, []));
 }
 
 // US-AUTH-04 — ownership/role enforcement for invoice access.
