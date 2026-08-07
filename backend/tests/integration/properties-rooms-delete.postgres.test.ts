@@ -87,7 +87,7 @@ describe("Properties and Rooms Delete endpoints (PostgreSQL Integration)", () =>
     it("should return 409 if the room is occupied", async () => {
       // Seed Tenant Info and Lease
       await handles.dbPool.query(
-        `INSERT INTO tenant_info (id, landlord_id, full_name, created_at, updated_at) VALUES ($1, $2, 'Tenant', now(), now())`,
+        `INSERT INTO tenant_info (id, created_by_landlord_id, full_name, created_at, updated_at) VALUES ($1, $2, 'Tenant', now(), now())`,
         [TENANT_INFO_ID, LANDLORD_ID],
       );
       await handles.dbPool.query(
