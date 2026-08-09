@@ -39,13 +39,31 @@ export async function findActiveReading(
   return row ?? null;
 }
 
+export async function listActiveReadings(
+  roomId: string,
+  billingPeriod: string,
+): Promise<MeterReadingRow[]> {
+  return db
+    .select()
+    .from(meterReadings)
+    .where(
+      and(
+        eq(meterReadings.roomId, roomId),
+        eq(meterReadings.billingPeriod, billingPeriod),
+        isNull(meterReadings.supersededAt),
+      ),
+    )
+    .orderBy(meterReadings.utilityType);
+}
+
 // Immediately preceding applicable reading for consumption calculation.
 export async function findPreviousReading(
   roomId: string,
   utilityType: "Electricity" | "Water",
   billingPeriod: string,
+  executor: typeof db = db,
 ): Promise<MeterReadingRow | null> {
-  const [row] = await db
+  const [row] = await executor
     .select()
     .from(meterReadings)
     .where(
@@ -89,6 +107,7 @@ export async function createMeterReading(
     rateEffectiveFrom: string | null;
     locality: string | null;
     tenantCount: number | null;
+    correctionOf?: string | null;
     recordedBy: string;
   },
   executor: typeof db = db,

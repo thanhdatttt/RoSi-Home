@@ -14,6 +14,8 @@ const INVOICE_ID = "77777777-7777-4777-8777-777777777777";
 
 const mocks = vi.hoisted(() => ({
   recordMeterReadingService: vi.fn(),
+  listMeterReadingsService: vi.fn(),
+  calculateMeterReadingsService: vi.fn(),
   correctMeterReadingService: vi.fn(),
   getInvoiceService: vi.fn(),
   sendInvoiceService: vi.fn(),
@@ -23,6 +25,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../src/modules/meters/service.js", () => ({
   recordMeterReadingService: mocks.recordMeterReadingService,
+  listMeterReadingsService: mocks.listMeterReadingsService,
+  calculateMeterReadingsService: mocks.calculateMeterReadingsService,
   correctMeterReadingService: mocks.correctMeterReadingService,
 }));
 
@@ -59,6 +63,7 @@ const meterReadingView = {
   rateEffectiveFrom: "2026-07-01",
   locality: "Ho Chi Minh City",
   tenantCount: null,
+  correctionOf: null,
   recordedBy: LANDLORD_ID,
   createdAt: "2026-07-05T00:00:00.000Z",
 };
@@ -96,6 +101,25 @@ describe("Meters + Invoices HTTP contract", () => {
 
   beforeEach(() => {
     mocks.recordMeterReadingService.mockResolvedValue(meterReadingView);
+    mocks.listMeterReadingsService.mockResolvedValue([meterReadingView]);
+    mocks.calculateMeterReadingsService.mockResolvedValue({
+      electricity: meterReadingView,
+      water: {
+        method: "Metered",
+        reading: {
+          ...meterReadingView,
+          id: "99999999-9999-4999-8999-999999999999",
+          utilityType: "Water",
+          value: 15,
+          previousValue: 10,
+          consumption: 5,
+          unitRate: 15000,
+          amount: 75000,
+        },
+        amount: 75000,
+      },
+      previousReadings: { electricity: 100, water: 10 },
+    });
     mocks.correctMeterReadingService.mockResolvedValue({
       ...meterReadingView,
       value: 160,
@@ -182,6 +206,70 @@ describe("Meters + Invoices HTTP contract", () => {
       .expect(409);
 
     expect(response.body.error).toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("US-METER-02: lists active readings for an owned room and billing period", async () => {
+    const response = await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/meter-readings`)
+      .query({ billingPeriod: "2026-07" })
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual({ data: [meterReadingView] });
+    expect(mocks.listMeterReadingsService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      ROOM_ID,
+      "2026-07",
+    );
+  });
+
+  it("US-METER-02: records and calculates the complete monthly reading payload", async () => {
+    const body = {
+      billingPeriod: "2026-07",
+      electricityReading: 150,
+      waterReading: 15,
+    };
+    const response = await request(app)
+      .post(`/api/v1/rooms/${ROOM_ID}/meter-readings/calculate`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send(body)
+      .expect(201);
+
+    expect(response.body.data).toMatchObject({
+      electricity: { consumption: 50, amount: 175000 },
+      water: { method: "Metered", amount: 75000 },
+      previousReadings: { electricity: 100, water: 10 },
+    });
+    expect(mocks.calculateMeterReadingsService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      ROOM_ID,
+      body,
+    );
+  });
+
+  it("US-METER-02: rejects malformed monthly readings before the service", async () => {
+    await request(app)
+      .post(`/api/v1/rooms/${ROOM_ID}/meter-readings/calculate`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ billingPeriod: "July", electricityReading: -1 })
+      .expect(400);
+
+    expect(mocks.calculateMeterReadingsService).not.toHaveBeenCalled();
+  });
+
+  it("US-METER-03: supports the specified PATCH contract", async () => {
+    const response = await request(app)
+      .patch(`/api/v1/meter-readings/${READING_ID}/correct`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .send({ correctedValue: 160 })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({ value: 160 });
+    expect(mocks.correctMeterReadingService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      READING_ID,
+      160,
+    );
   });
 
   it("US-METER-03: corrects a reading and returns the success envelope", async () => {

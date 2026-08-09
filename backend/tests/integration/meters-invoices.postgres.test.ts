@@ -222,6 +222,33 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(response.body.error.code).toBe("CONFLICT");
   });
 
+  it("US-METER-01: commits only one of two concurrent duplicate baselines", async () => {
+    const body = {
+      utilityType: "Electricity",
+      billingPeriod: "2026-06",
+      value: 100,
+      isInitial: true,
+    };
+    const responses = await Promise.all([
+      recordReading(landlordToken, ROOM_ID, body),
+      recordReading(landlordToken, ROOM_ID, body),
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      201,
+      409,
+    ]);
+    const rows = await dbPool.query(
+      `SELECT id FROM meter_readings
+       WHERE room_id = $1
+         AND utility_type = 'Electricity'
+         AND billing_period = '2026-06'
+         AND superseded_at IS NULL`,
+      [ROOM_ID],
+    );
+    expect(rows.rows).toHaveLength(1);
+  });
+
   it("US-METER-01: a landlord cannot record a reading for a room they don't own", async () => {
     const response = await recordReading(otherLandlordToken, ROOM_ID, {
       utilityType: "Electricity",
@@ -275,6 +302,92 @@ describe("Meters + Invoices PostgreSQL integration", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("UNPROCESSABLE");
+  });
+
+  it("US-METER-02: atomically records electricity and metered water with one reproducible response", async () => {
+    await recordReading(landlordToken, ROOM_ID, {
+      utilityType: "Electricity",
+      billingPeriod: "2026-06",
+      value: 100,
+      isInitial: true,
+    }).expect(201);
+    await recordReading(landlordToken, ROOM_ID, {
+      utilityType: "Water",
+      billingPeriod: "2026-06",
+      value: 10,
+      isInitial: true,
+    }).expect(201);
+
+    const response = await request(app)
+      .post(`/api/v1/rooms/${ROOM_ID}/meter-readings/calculate`)
+      .set(auth(landlordToken))
+      .send({
+        billingPeriod: "2026-07",
+        electricityReading: 150,
+        waterReading: 15,
+      })
+      .expect(201);
+
+    expect(response.body.data).toMatchObject({
+      electricity: {
+        previousValue: 100,
+        consumption: 50,
+        unitRate: 3500,
+        amount: 175000,
+      },
+      water: {
+        method: "Metered",
+        reading: {
+          previousValue: 10,
+          consumption: 5,
+          unitRate: 15000,
+          amount: 75000,
+        },
+      },
+      previousReadings: { electricity: 100, water: 10 },
+    });
+    const rows = await dbPool.query(
+      `SELECT utility_type, value, amount
+       FROM meter_readings
+       WHERE room_id = $1 AND billing_period = '2026-07'
+       ORDER BY utility_type`,
+      [ROOM_ID],
+    );
+    expect(rows.rows).toEqual([
+      { utility_type: "Electricity", value: "150.0000", amount: 175000 },
+      { utility_type: "Water", value: "15.0000", amount: 75000 },
+    ]);
+  });
+
+  it("US-METER-02: rolls back electricity when the water reading fails validation", async () => {
+    await recordReading(landlordToken, ROOM_ID, {
+      utilityType: "Electricity",
+      billingPeriod: "2026-06",
+      value: 100,
+      isInitial: true,
+    }).expect(201);
+    await recordReading(landlordToken, ROOM_ID, {
+      utilityType: "Water",
+      billingPeriod: "2026-06",
+      value: 10,
+      isInitial: true,
+    }).expect(201);
+
+    await request(app)
+      .post(`/api/v1/rooms/${ROOM_ID}/meter-readings/calculate`)
+      .set(auth(landlordToken))
+      .send({
+        billingPeriod: "2026-07",
+        electricityReading: 150,
+        waterReading: 5,
+      })
+      .expect(422);
+
+    const rows = await dbPool.query(
+      "SELECT id FROM meter_readings WHERE room_id = $1 AND billing_period = '2026-07'",
+      [ROOM_ID],
+    );
+    expect(rows.rows).toEqual([]);
   });
 
   it("US-INVOICE-01 end-to-end: generates a Draft invoice with itemized rent + electricity + water", async () => {
@@ -452,11 +565,33 @@ describe("Meters + Invoices PostgreSQL integration", () => {
 
     // Correct the electricity reading from 150 -> 160 (consumption 50 -> 60).
     const correction = await request(app)
-      .post(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
+      .patch(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
       .set(auth(landlordToken))
-      .send({ value: 160 });
+      .send({ correctedValue: 160 });
     expect(correction.status).toBe(200);
-    expect(correction.body.data).toMatchObject({ consumption: 60 });
+    expect(correction.body.data).toMatchObject({
+      consumption: 60,
+      correctionOf: julyElectricity.body.data.id,
+    });
+
+    const correctionRows = await dbPool.query<{
+      id: string;
+      correction_of: string | null;
+      superseded_at: Date | null;
+    }>(
+      `SELECT id, correction_of, superseded_at
+       FROM meter_readings
+       WHERE room_id = $1
+         AND utility_type = 'Electricity'
+         AND billing_period = '2026-07'
+       ORDER BY created_at`,
+      [ROOM_ID],
+    );
+    expect(correctionRows.rows).toHaveLength(2);
+    expect(correctionRows.rows[0]!.superseded_at).not.toBeNull();
+    expect(correctionRows.rows[1]!.correction_of).toBe(
+      julyElectricity.body.data.id,
+    );
 
     const recalculated = await dbPool.query<{ total_amount: number }>(
         "SELECT total_amount FROM invoices WHERE id = $1",
@@ -472,10 +607,11 @@ describe("Meters + Invoices PostgreSQL integration", () => {
       .expect(200);
 
     const blockedCorrection = await request(app)
-      .post(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
+      .patch(`/api/v1/meter-readings/${correction.body.data.id}/correct`)
       .set(auth(landlordToken))
-      .send({ value: 170 });
+      .send({ correctedValue: 170 });
     expect(blockedCorrection.status).toBe(422);
+    expect(blockedCorrection.body.error.code).toBe("INVOICE_NOT_DRAFT");
   });
 
   it("US-INVOICE-01/US-METER-01: flat-per-tenant water billing does not require a water meter reading", async () => {
