@@ -79,6 +79,7 @@ export type LeaseReminderConfigView = {
   remindAt30Days: boolean;
   remindAt15Days: boolean;
   remindAt7Days: boolean;
+  overdueReminderEveryDays: number;
 };
 
 function serialize(row: LeaseDetailRow): LeaseView {
@@ -114,6 +115,7 @@ function serializeReminderConfig(
     remindAt30Days: row?.remindAt30Days ?? false,
     remindAt15Days: row?.remindAt15Days ?? false,
     remindAt7Days: row?.remindAt7Days ?? false,
+    overdueReminderEveryDays: row?.overdueReminderEveryDays ?? 1,
   };
 }
 

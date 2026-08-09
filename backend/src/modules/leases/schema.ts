@@ -74,6 +74,7 @@ export const leaseReminderConfigSchema = z
     remindAt30Days: z.boolean().optional(),
     remindAt15Days: z.boolean().optional(),
     remindAt7Days: z.boolean().optional(),
+    overdueReminderEveryDays: z.number().int().min(1).max(30).optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, {
