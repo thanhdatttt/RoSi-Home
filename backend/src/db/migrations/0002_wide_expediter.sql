@@ -1,0 +1,1 @@
+ALTER TABLE "lease_reminder_configs" ADD COLUMN "overdue_reminder_every_days" integer DEFAULT 1 NOT NULL;

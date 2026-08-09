@@ -379,7 +379,7 @@ paths:
           description: Property updated
   /properties/{propertyId}/lease-reminder-config:
     get:
-      summary: Get lease reminder config for a property
+      summary: Get lease and overdue-payment reminder config for a property
       tags: [Properties]
       parameters:
         - in: path
@@ -392,7 +392,7 @@ paths:
         "200":
           description: Reminder config
     patch:
-      summary: Update lease reminder config
+      summary: Update lease and overdue-payment reminder config
       tags: [Properties]
       parameters:
         - in: path
@@ -407,12 +407,17 @@ paths:
           application/json:
             schema:
               type: object
-              required: [daysBefore]
               properties:
-                daysBefore:
-                  type: array
-                  items:
-                    type: integer
+                remindAt30Days:
+                  type: boolean
+                remindAt15Days:
+                  type: boolean
+                remindAt7Days:
+                  type: boolean
+                overdueReminderEveryDays:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
       responses:
         "200":
           description: Config updated
@@ -959,8 +964,27 @@ paths:
         "200":
           description: Lease ended
   /rooms/{roomId}/meter-readings:
+    get:
+      summary: List active meter readings for a room and billing period
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: billingPeriod
+          required: true
+          schema:
+            type: string
+            example: "2024-05"
+      responses:
+        "200":
+          description: Active readings returned
     post:
-      summary: Record a meter reading
+      summary: Record an initial or individual meter reading
       tags: [Meters]
       parameters:
         - in: path
@@ -991,9 +1015,67 @@ paths:
       responses:
         "201":
           description: Reading recorded
-  /meter-readings/{id}/correct:
+  /rooms/{roomId}/meter-readings/calculate:
     post:
+      summary: Record monthly readings and calculate utility charges
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [billingPeriod, electricityReading]
+              properties:
+                billingPeriod:
+                  type: string
+                  example: "2024-05"
+                electricityReading:
+                  type: number
+                  minimum: 0
+                waterReading:
+                  type: number
+                  minimum: 0
+                  description: Required only when the property uses metered water.
+      responses:
+        "201":
+          description: Readings recorded and reproducible charge breakdown returned
+  /meter-readings/{id}/correct:
+    patch:
       summary: Correct a meter reading
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctedValue]
+              properties:
+                correctedValue:
+                  type: number
+      responses:
+        "200":
+          description: Reading corrected
+        "422":
+          description: Related invoice is not Draft or the corrected value is invalid
+    post:
+      deprecated: true
+      summary: Correct a meter reading using the legacy request shape
       tags: [Meters]
       parameters:
         - in: path

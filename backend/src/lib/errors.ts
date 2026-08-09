@@ -5,6 +5,7 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "CONFLICT"
   | "UNPROCESSABLE"
+  | "INVOICE_NOT_DRAFT"
   | "INTERNAL_ERROR";
 
 export class HttpError extends Error {
