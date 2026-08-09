@@ -324,7 +324,11 @@ paths:
           application/json:
             schema:
               type: object
+<<<<<<< HEAD
               required: [name, address]
+=======
+              required: [name, address, utilityRates]
+>>>>>>> origin/main
               properties:
                 name:
                   type: string
@@ -332,6 +336,33 @@ paths:
                   type: string
                 locality:
                   type: string
+<<<<<<< HEAD
+=======
+                utilityRates:
+                  type: object
+                  required: [electricityRatePerKwh, waterBillingMethod]
+                  properties:
+                    electricityRatePerKwh:
+                      type: integer
+                    waterBillingMethod:
+                      type: string
+                      enum: [Metered, Flat]
+                    waterRatePerM3:
+                      type: integer
+                    waterFlatAmountPerTenant:
+                      type: integer
+                surcharges:
+                  type: array
+                  description: Optional initial surcharges for this property. These will be effective from the current date.
+                  items:
+                    type: object
+                    required: [name, monthlyAmount]
+                    properties:
+                      name:
+                        type: string
+                      monthlyAmount:
+                        type: integer
+>>>>>>> origin/main
       responses:
         "201":
           description: Property created
@@ -379,7 +410,11 @@ paths:
           description: Property updated
   /properties/{propertyId}/lease-reminder-config:
     get:
+<<<<<<< HEAD
       summary: Get lease and overdue-payment reminder config for a property
+=======
+      summary: Get lease reminder config for a property
+>>>>>>> origin/main
       tags: [Properties]
       parameters:
         - in: path
@@ -392,7 +427,11 @@ paths:
         "200":
           description: Reminder config
     patch:
+<<<<<<< HEAD
       summary: Update lease and overdue-payment reminder config
+=======
+      summary: Update lease reminder config
+>>>>>>> origin/main
       tags: [Properties]
       parameters:
         - in: path
@@ -407,6 +446,7 @@ paths:
           application/json:
             schema:
               type: object
+<<<<<<< HEAD
               properties:
                 remindAt30Days:
                   type: boolean
@@ -418,6 +458,14 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 30
+=======
+              required: [daysBefore]
+              properties:
+                daysBefore:
+                  type: array
+                  items:
+                    type: integer
+>>>>>>> origin/main
       responses:
         "200":
           description: Config updated
@@ -653,9 +701,27 @@ paths:
             format: uuid
       responses:
         "200":
+<<<<<<< HEAD
           description: Utility rates
     post:
       summary: Set utility rates
+=======
+          description: Utility rates containing both current and upcoming rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        type: object
+                      upcoming:
+                        type: object
+    post:
+      summary: Set or update upcoming utility rates
+>>>>>>> origin/main
       tags: [Utilities]
       parameters:
         - in: path
@@ -720,6 +786,18 @@ paths:
                     type: array
                     items:
                       type: object
+<<<<<<< HEAD
+=======
+                      properties:
+                        name:
+                          type: string
+                        current:
+                          type: object
+                          nullable: true
+                        upcoming:
+                          type: object
+                          nullable: true
+>>>>>>> origin/main
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
     post:
@@ -964,6 +1042,7 @@ paths:
         "200":
           description: Lease ended
   /rooms/{roomId}/meter-readings:
+<<<<<<< HEAD
     get:
       summary: List active meter readings for a room and billing period
       tags: [Meters]
@@ -985,6 +1064,10 @@ paths:
           description: Active readings returned
     post:
       summary: Record an initial or individual meter reading
+=======
+    post:
+      summary: Record a meter reading
+>>>>>>> origin/main
       tags: [Meters]
       parameters:
         - in: path
@@ -1015,6 +1098,7 @@ paths:
       responses:
         "201":
           description: Reading recorded
+<<<<<<< HEAD
   /rooms/{roomId}/meter-readings/calculate:
     post:
       summary: Record monthly readings and calculate utility charges
@@ -1076,6 +1160,11 @@ paths:
     post:
       deprecated: true
       summary: Correct a meter reading using the legacy request shape
+=======
+  /meter-readings/{id}/correct:
+    post:
+      summary: Correct a meter reading
+>>>>>>> origin/main
       tags: [Meters]
       parameters:
         - in: path

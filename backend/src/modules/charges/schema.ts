@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { businessDate } from "../../lib/businessDate.js";
 
 const dateStr = z
   .string()
@@ -14,6 +15,10 @@ const dateStr = z
     { message: "Date must be a valid calendar date." },
   );
 
+const futureDateStr = dateStr.refine((value) => value > businessDate(), {
+  message: "effectiveFrom must be strictly in the future (greater than today).",
+});
+
 export const createSurchargeSchema = z
   .object({
     name: z.string().trim().min(1, "Name is required."),
@@ -21,7 +26,7 @@ export const createSurchargeSchema = z
       .number()
       .int("Amount must be a whole-number VND amount.")
       .min(0, "Amount cannot be negative."),
-    effectiveFrom: dateStr,
+    effectiveFrom: futureDateStr,
     effectiveTo: dateStr.nullable().optional(),
   })
   .strict();
@@ -34,7 +39,7 @@ export const updateSurchargeSchema = z
       .int("Amount must be a whole-number VND amount.")
       .min(0, "Amount cannot be negative.")
       .optional(),
-    effectiveFrom: dateStr.optional(),
+    effectiveFrom: futureDateStr.optional(),
     effectiveTo: dateStr.nullable().optional(),
   })
   .strict()

@@ -16,6 +16,7 @@ export const meterReadingSchema = z
 
 export type MeterReadingInput = z.infer<typeof meterReadingSchema>;
 
+<<<<<<< HEAD
 export const meterReadingListQuerySchema = z
   .object({
     billingPeriod: periodStr,
@@ -39,6 +40,8 @@ export type CalculateMeterReadingsInput = z.infer<
   typeof calculateMeterReadingsSchema
 >;
 
+=======
+>>>>>>> origin/main
 export const correctMeterReadingSchema = z
   .object({
     value: z.number().min(0, "Reading value cannot be negative."),
@@ -46,6 +49,7 @@ export const correctMeterReadingSchema = z
   .strict();
 
 export type CorrectMeterReadingInput = z.infer<typeof correctMeterReadingSchema>;
+<<<<<<< HEAD
 
 export const correctMeterReadingContractSchema = z
   .object({
@@ -54,3 +58,5 @@ export const correctMeterReadingContractSchema = z
       .min(0, "Corrected reading value cannot be negative."),
   })
   .strict();
+=======
+>>>>>>> origin/main

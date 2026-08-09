@@ -14,8 +14,11 @@ const INVOICE_ID = "77777777-7777-4777-8777-777777777777";
 
 const mocks = vi.hoisted(() => ({
   recordMeterReadingService: vi.fn(),
+<<<<<<< HEAD
   listMeterReadingsService: vi.fn(),
   calculateMeterReadingsService: vi.fn(),
+=======
+>>>>>>> origin/main
   correctMeterReadingService: vi.fn(),
   getInvoiceService: vi.fn(),
   sendInvoiceService: vi.fn(),
@@ -25,8 +28,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../src/modules/meters/service.js", () => ({
   recordMeterReadingService: mocks.recordMeterReadingService,
+<<<<<<< HEAD
   listMeterReadingsService: mocks.listMeterReadingsService,
   calculateMeterReadingsService: mocks.calculateMeterReadingsService,
+=======
+>>>>>>> origin/main
   correctMeterReadingService: mocks.correctMeterReadingService,
 }));
 
@@ -63,7 +69,10 @@ const meterReadingView = {
   rateEffectiveFrom: "2026-07-01",
   locality: "Ho Chi Minh City",
   tenantCount: null,
+<<<<<<< HEAD
   correctionOf: null,
+=======
+>>>>>>> origin/main
   recordedBy: LANDLORD_ID,
   createdAt: "2026-07-05T00:00:00.000Z",
 };
@@ -101,6 +110,7 @@ describe("Meters + Invoices HTTP contract", () => {
 
   beforeEach(() => {
     mocks.recordMeterReadingService.mockResolvedValue(meterReadingView);
+<<<<<<< HEAD
     mocks.listMeterReadingsService.mockResolvedValue([meterReadingView]);
     mocks.calculateMeterReadingsService.mockResolvedValue({
       electricity: meterReadingView,
@@ -120,6 +130,8 @@ describe("Meters + Invoices HTTP contract", () => {
       },
       previousReadings: { electricity: 100, water: 10 },
     });
+=======
+>>>>>>> origin/main
     mocks.correctMeterReadingService.mockResolvedValue({
       ...meterReadingView,
       value: 160,
@@ -208,6 +220,7 @@ describe("Meters + Invoices HTTP contract", () => {
     expect(response.body.error).toMatchObject({ code: "CONFLICT" });
   });
 
+<<<<<<< HEAD
   it("US-METER-02: lists active readings for an owned room and billing period", async () => {
     const response = await request(app)
       .get(`/api/v1/rooms/${ROOM_ID}/meter-readings`)
@@ -272,6 +285,8 @@ describe("Meters + Invoices HTTP contract", () => {
     );
   });
 
+=======
+>>>>>>> origin/main
   it("US-METER-03: corrects a reading and returns the success envelope", async () => {
     const response = await request(app)
       .post(`/api/v1/meter-readings/${READING_ID}/correct`)

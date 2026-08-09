@@ -67,13 +67,17 @@ async function uploadProof(req: Request, res: Response): Promise<void> {
   if (!req.file) {
     throw new UnprocessableError("Payment proof file is required");
   }
+<<<<<<< HEAD
   if (req.file.buffer.length === 0) {
     throw new UnprocessableError("Payment proof file cannot be empty");
   }
+=======
+>>>>>>> origin/main
   const contentType = req.file.mimetype as "image/png" | "image/jpeg";
   if (contentType !== "image/png" && contentType !== "image/jpeg") {
     throw new UnprocessableError("Unsupported file type");
   }
+<<<<<<< HEAD
   const isPng =
     req.file.buffer.length >= 8 &&
     req.file.buffer.subarray(0, 8).equals(
@@ -90,6 +94,8 @@ async function uploadProof(req: Request, res: Response): Promise<void> {
   ) {
     throw new UnprocessableError("File content does not match its image type");
   }
+=======
+>>>>>>> origin/main
   
   const result = await uploadPaymentProofService(
     req.user!.id,

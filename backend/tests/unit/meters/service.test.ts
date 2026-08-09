@@ -22,7 +22,10 @@ const mocks = vi.hoisted(() => {
     supersedeReading: vi.fn(),
     resolveElectricityRate: vi.fn(),
     resolveWaterRate: vi.fn(),
+<<<<<<< HEAD
     countActiveLeasesForRoomPeriod: vi.fn(),
+=======
+>>>>>>> origin/main
     findActiveInvoiceForRoomPeriod: vi.fn(),
     recalculateDraftInvoice: vi.fn(),
   };
@@ -41,10 +44,13 @@ vi.mock("../../../src/modules/utilities/rateResolver.js", () => ({
   resolveWaterRate: mocks.resolveWaterRate,
 }));
 
+<<<<<<< HEAD
 vi.mock("../../../src/modules/leases/repository.js", () => ({
   countActiveLeasesForRoomPeriod: mocks.countActiveLeasesForRoomPeriod,
 }));
 
+=======
+>>>>>>> origin/main
 vi.mock("../../../src/modules/meters/repository.js", () => ({
   assertRoomOwned: mocks.assertRoomOwned,
   createMeterReading: mocks.createMeterReading,
@@ -63,9 +69,14 @@ vi.mock("../../../src/modules/invoices/service.js", () => ({
 }));
 
 import {
+<<<<<<< HEAD
   calculateMeterReadingsService,
   correctMeterReadingService,
   recordMeterReadingService,
+=======
+  recordMeterReadingService,
+  correctMeterReadingService,
+>>>>>>> origin/main
 } from "../../../src/modules/meters/service.js";
 
 function baseRow(overrides: Record<string, unknown> = {}) {
@@ -86,7 +97,10 @@ function baseRow(overrides: Record<string, unknown> = {}) {
     rateEffectiveFrom: "2026-07-01",
     locality: "Ho Chi Minh City",
     tenantCount: null,
+<<<<<<< HEAD
     correctionOf: null,
+=======
+>>>>>>> origin/main
     recordedBy: LANDLORD_ID,
     createdAt: new Date("2026-07-05T00:00:00.000Z"),
     supersededAt: null,
@@ -305,6 +319,7 @@ describe("recordMeterReadingService", () => {
   });
 });
 
+<<<<<<< HEAD
 describe("calculateMeterReadingsService", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -447,6 +462,8 @@ describe("calculateMeterReadingsService", () => {
   });
 });
 
+=======
+>>>>>>> origin/main
 describe("correctMeterReadingService", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -484,7 +501,10 @@ describe("correctMeterReadingService", () => {
         previousValue: "100.0000",
         consumption: "60.0000",
         amount: 210000,
+<<<<<<< HEAD
         correctionOf: READING_ID,
+=======
+>>>>>>> origin/main
       }),
       mocks.trx,
     );
@@ -497,7 +517,10 @@ describe("correctMeterReadingService", () => {
           value: 160,
         }),
       }),
+<<<<<<< HEAD
       mocks.trx,
+=======
+>>>>>>> origin/main
     );
   });
 
@@ -519,7 +542,11 @@ describe("correctMeterReadingService", () => {
 
     await expect(
       correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
+<<<<<<< HEAD
     ).rejects.toMatchObject({ status: 422, code: "INVOICE_NOT_DRAFT" });
+=======
+    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+>>>>>>> origin/main
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
     expect(mocks.recalculateDraftInvoice).not.toHaveBeenCalled();
@@ -533,7 +560,11 @@ describe("correctMeterReadingService", () => {
 
     await expect(
       correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
+<<<<<<< HEAD
     ).rejects.toMatchObject({ status: 422, code: "INVOICE_NOT_DRAFT" });
+=======
+    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
+>>>>>>> origin/main
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
   });
@@ -544,7 +575,11 @@ describe("correctMeterReadingService", () => {
     ).rejects.toMatchObject({
       status: 422,
       code: "UNPROCESSABLE",
+<<<<<<< HEAD
       fields: [{ field: "correctedValue" }],
+=======
+      fields: [{ field: "value" }],
+>>>>>>> origin/main
     });
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
@@ -562,6 +597,7 @@ describe("correctMeterReadingService", () => {
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
   });
 
+<<<<<<< HEAD
   it("US-METER-03: requires an existing draft invoice", async () => {
     mocks.findActiveInvoiceForRoomPeriod.mockResolvedValue(null);
 
@@ -585,6 +621,8 @@ describe("correctMeterReadingService", () => {
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
   });
 
+=======
+>>>>>>> origin/main
   it("returns 404 for a reading that does not exist", async () => {
     mocks.findMeterReadingById.mockResolvedValue(null);
 

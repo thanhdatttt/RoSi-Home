@@ -11,10 +11,15 @@ import {
 } from "../../db/schema.js";
 import { NotFoundError, UnprocessableError, ForbiddenError } from "../../lib/errors.js";
 
+<<<<<<< HEAD
 type PaymentConfigRow = typeof landlordPaymentConfigs.$inferSelect;
 
 export const PaymentRepository = {
   async getPaymentConfig(landlordId: string): Promise<PaymentConfigRow | null> {
+=======
+export const PaymentRepository = {
+  async getPaymentConfig(landlordId: string) {
+>>>>>>> origin/main
     const config = await db
       .select()
       .from(landlordPaymentConfigs)
@@ -98,6 +103,7 @@ export const PaymentRepository = {
           verifiedBy,
           proofId,
         })
+<<<<<<< HEAD
         .onConflictDoNothing({ target: payments.invoiceId })
         .returning();
 
@@ -113,6 +119,10 @@ export const PaymentRepository = {
         return { payment: existing, created: false as const };
       }
 
+=======
+        .returning();
+
+>>>>>>> origin/main
       // Update invoice status
       await tx
         .update(invoices)
@@ -133,7 +143,11 @@ export const PaymentRepository = {
           .where(and(eq(paymentProofs.invoiceId, invoiceId), eq(paymentProofs.status, "Pending")));
       }
 
+<<<<<<< HEAD
       return { payment, created: true as const };
+=======
+      return payment;
+>>>>>>> origin/main
     });
   },
 

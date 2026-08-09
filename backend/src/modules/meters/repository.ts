@@ -39,6 +39,7 @@ export async function findActiveReading(
   return row ?? null;
 }
 
+<<<<<<< HEAD
 export async function listActiveReadings(
   roomId: string,
   billingPeriod: string,
@@ -56,14 +57,21 @@ export async function listActiveReadings(
     .orderBy(meterReadings.utilityType);
 }
 
+=======
+>>>>>>> origin/main
 // Immediately preceding applicable reading for consumption calculation.
 export async function findPreviousReading(
   roomId: string,
   utilityType: "Electricity" | "Water",
   billingPeriod: string,
+<<<<<<< HEAD
   executor: typeof db = db,
 ): Promise<MeterReadingRow | null> {
   const [row] = await executor
+=======
+): Promise<MeterReadingRow | null> {
+  const [row] = await db
+>>>>>>> origin/main
     .select()
     .from(meterReadings)
     .where(
@@ -107,7 +115,10 @@ export async function createMeterReading(
     rateEffectiveFrom: string | null;
     locality: string | null;
     tenantCount: number | null;
+<<<<<<< HEAD
     correctionOf?: string | null;
+=======
+>>>>>>> origin/main
     recordedBy: string;
   },
   executor: typeof db = db,

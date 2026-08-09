@@ -240,7 +240,10 @@ export const leaseReminderConfigs = pgTable("lease_reminder_configs", {
   remindAt30Days: boolean("remind_at_30_days").notNull().default(false),
   remindAt15Days: boolean("remind_at_15_days").notNull().default(false),
   remindAt7Days: boolean("remind_at_7_days").notNull().default(false),
+<<<<<<< HEAD
   overdueReminderEveryDays: integer("overdue_reminder_every_days").notNull().default(1),
+=======
+>>>>>>> origin/main
 });
 
 export const meterReadings = pgTable(
@@ -274,9 +277,18 @@ export const meterReadings = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
+<<<<<<< HEAD
     uniqueReading: uniqueIndex("meter_readings_unique")
       .on(t.roomId, t.utilityType, t.billingPeriod)
       .where(sql`${t.supersededAt} IS NULL`),
+=======
+    uniqueReading: uniqueIndex("meter_readings_unique").on(
+      t.roomId,
+      t.utilityType,
+      t.billingPeriod,
+      t.supersededAt,
+    ),
+>>>>>>> origin/main
     correctionFk: foreignKey({
       columns: [t.correctionOf],
       foreignColumns: [t.id],

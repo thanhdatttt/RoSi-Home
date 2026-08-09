@@ -3,8 +3,11 @@ import { NotFoundError, UnprocessableError, ForbiddenError } from "../../lib/err
 import { db } from "../../db/index.js";
 import { tenantInfo } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
+<<<<<<< HEAD
 import { createSignedPaymentProofUrl } from "../../lib/storage.js";
 import { VIETQR_BANK_BINS, type VietQrBankCode } from "../../lib/vietqr.js";
+=======
+>>>>>>> origin/main
 
 export const PaymentService = {
   async getPaymentConfig(landlordId: string) {
@@ -19,6 +22,7 @@ export const PaymentService = {
     landlordId: string,
     data: { bankCode: string; accountNumber: string; accountHolderName: string }
   ) {
+<<<<<<< HEAD
     const bankCode = data.bankCode.trim().toUpperCase() as VietQrBankCode;
     if (!VIETQR_BANK_BINS[bankCode]) {
       throw new UnprocessableError("Unsupported bank code for VietQR");
@@ -39,6 +43,20 @@ export const PaymentService = {
         fileUrl: await createSignedPaymentProofUrl(proof.fileUrl),
       })),
     );
+=======
+    // Validate bank code - hardcode popular VietQR supported banks for now.
+    // E.g. VCB, TCB, MB, VPB, ACB, STB, BIDV, CTG, etc.
+    const supportedBanks = ["VCB", "TCB", "MB", "VPB", "ACB", "STB", "BIDV", "CTG", "VIB", "TPB", "HDB"];
+    if (!supportedBanks.includes(data.bankCode.toUpperCase())) {
+      throw new UnprocessableError("Unsupported bank code for VietQR");
+    }
+
+    return PaymentRepository.upsertPaymentConfig(landlordId, data);
+  },
+
+  async getPendingProofs(landlordId: string) {
+    return PaymentRepository.getPendingProofsForLandlord(landlordId);
+>>>>>>> origin/main
   },
 
   async getPaymentHistory(user: { id: string; role: string }) {

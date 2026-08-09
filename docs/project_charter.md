@@ -72,19 +72,20 @@ The project aims to:
 
 # 5. Stakeholder Analysis
 
-|Stakeholder|Role in Project|Responsibilities|Communication Method|Risks Associated|
-|---|---|---|---|---|
-|**Project Supervisor / Lecturer**|Project Sponsor|Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met.|Weekly meetings, Microsoft Teams, Email|Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions.|
-|**Project Manager (Team Leader)**|Project Management|Coordinates the team, monitors schedule, manages risks, communicates with supervisor, oversees project delivery.|Daily team meetings, Discord, Microsoft Teams, GitHub Projects|Poor coordination may delay development, create scope creep, or reduce team productivity.|
-|**Development Team**|System Development|Design architecture, develop features, perform testing, fix defects, maintain documentation.|GitHub, Discord, Daily stand-up meetings|Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework.|
-|**Self-Managing Landlords**|Primary Client / Product Owner|Provide business requirements, validate business processes, evaluate prototypes, participate in user acceptance testing.|Face-to-face interviews, Phone calls, Zalo, Google Forms|Limited availability, changing requirements, resistance to adopting digital systems, limited pilot participation.|
-|**Tenants**|Secondary End Users|Evaluate usability, test payment workflow, submit maintenance requests, provide feedback on transparency and user experience.|Mobile application, Zalo, Google Forms|Limited engagement during testing, incomplete feedback, inconsistent system usage.|
-|**Cloud Service Provider (Azure/AWS)**|Technology Provider|Provides cloud hosting, databases, application deployment services.|Cloud management portals, documentation, support tickets|Service outages, quota limitations, student credit expiration, infrastructure downtime.|
-|**GitHub**|Development Platform|Source code repository, version control, collaboration, issue tracking, continuous integration.|GitHub platform|Repository access issues, merge conflicts, accidental code deletion, service interruption.|
-|**Banking System (VietQR Standard)**|External Integration|Generates standardized QR codes for bank transfers between tenants and landlords.|Banking applications, VietQR standard documentation|QR generation format changes, incorrect bank information entered by landlords, manual payment verification required.|
-|**University**|Academic Stakeholder|Provides project environment, computing resources, academic supervision, and evaluation.|Official university communication channels, meetings|Changes to assessment requirements or project deadlines may affect planning.|
+Section 5 lists each stakeholder's role, day-to-day **responsibilities** (the work they actually perform), and how the team communicates with them and manages the associated risks. It also captures **accountability** (who is ultimately answerable if that work is not done or not done correctly — normally one person/role per item, not a group), **access** (how directly they can reach project information/decisions), and **level of influence** (how much power they have to change the direction, scope, or outcome of the project).
 
----
+| Stakeholder | Role in Project | Responsibilities | Accountability (answerable for the outcome) | Access to Project Information/Decisions | Level of Influence | Communication Method | Risks Associated |
+|---|---|---|---|---|---|---|---|
+| **Project Supervisor / Lecturer** | Project Sponsor | Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met. | **Accountable** for certifying the project meets academic requirements and for the final grade decision | Full — receives all deliverables, attends milestone reviews | **High** — can require rework, reject milestones, or fail the deliverable | Weekly meetings, Email | Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions. |
+| **Project Manager (Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, oversees project delivery. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. |
+| **Development Team** | System Development | Design architecture, develop features, perform testing, fix defects, maintain documentation. | Each member is **accountable** for their assigned User Stories/modules; collectively accountable to the PM for sprint commitments | Full internal access (codebase, backlog, CI); no direct access to Supervisor grading decisions | **High** — can influence technical approach and estimates, project scope | GitHub, Discord, Daily stand-up meetings | Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework. |
+| **Self-Managing Landlords** | Primary Client / Product Owner | Provide business requirements, validate business processes, evaluate prototypes, participate in user acceptance testing. | **Not accountable** for project outcomes (they are consulted, not responsible for delivery), but their acceptance is the qualitative measure of product-market fit | Limited — receives summarized findings, prototypes, and surveys; no access to internal project management artifacts | **High for product decisions** — negative feedback on core workflows (e.g., billing, payment) can force a scope or design change; **no influence** over academic schedule or grading | Face-to-face interviews, Phone calls, Zalo, Google Forms | Limited availability, changing requirements, resistance to adopting digital systems, limited pilot participation. |
+| **Tenants** | Secondary End Users | Evaluate usability, test payment workflow, submit maintenance requests, provide feedback on transparency and user experience. | Not accountable for delivery | Limited — receives only the parts of the prototype relevant to the tenant-facing app | **Low–Medium** — feedback can adjust tenant-facing UX details, but does not drive core project scope | Mobile application, Zalo, Google Forms | Limited engagement during testing, incomplete feedback, inconsistent system usage. |
+| **Cloud Service Provider** | Technology Provider | Provides cloud hosting, databases, application deployment services. | Accountable only for the availability/SLA of the infrastructure it provides, not for project delivery | No access to project artifacts; interaction limited to service dashboards/support | **Low** — an outage or quota limit can constrain the team's options, but the provider does not influence project decisions | Cloud management portals, documentation, support tickets | Service outages, quota limitations, student credit expiration, infrastructure downtime. |
+| **GitHub** | Development Platform | Source code repository, version control, collaboration, issue tracking, continuous integration. | Accountable only for platform availability, not project outcomes | No access to project decision-making | **Low** — service-level constraint only | GitHub platform | Repository access issues, merge conflicts, accidental code deletion, service interruption. |
+| **Banking System (VietQR Standard)** | External Integration | Generates standardized QR codes for bank transfers between tenants and landlords. | Accountable only for the correctness of the standard it publishes, not for RosiHome's implementation | No access to project artifacts | **Medium** — RosiHome's payment workflow must conform to VietQR's format, so changes to the standard can force a design change, even though the bank has no direct involvement in the project | Banking applications, VietQR standard documentation | QR generation format changes, incorrect bank information entered by landlords, manual payment verification required. |
+| **University** | Academic Stakeholder | Provides project environment, computing resources, academic supervision, and evaluation. | **Accountable** for setting and enforcing the academic requirements the project must satisfy | Access limited to official reporting/evaluation channels | **High** — sets the non-negotiable constraints (deadlines, assessment criteria) the whole project must operate within | Official university communication channels, meetings | Changes to assessment requirements or project deadlines may affect planning. |
+
 
 # 6. Project Facilities and Resources
 
@@ -167,16 +168,3 @@ The project aims to:
 | Manual payment verification | Clearly define landlord verification responsibility |
 | Cloud service interruption  | Use reliable providers and maintain backups         |
 | Team member availability    | Regular progress monitoring and workload balancing  |
-
----
-
-# 11. Project Authorization (Signatures)
-
-| Role                         | Name               | Signature  | Date       |
-| ---------------------------- | ------------------ | ---------- | ---------- |
-| Project Sponsor / Supervisor | __________________ | __________ | __________ |
-| Project Manager              | __________________ | __________ | __________ |
-| Team Member                  | __________________ | __________ | __________ |
-| Team Member                  | __________________ | __________ | __________ |
-| Team Member                  | __________________ | __________ | __________ |
-| Team Member                  | __________________ | __________ | __________ |

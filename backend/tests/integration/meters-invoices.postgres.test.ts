@@ -222,6 +222,7 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(response.body.error.code).toBe("CONFLICT");
   });
 
+<<<<<<< HEAD
   it("US-METER-01: commits only one of two concurrent duplicate baselines", async () => {
     const body = {
       utilityType: "Electricity",
@@ -249,6 +250,8 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(rows.rows).toHaveLength(1);
   });
 
+=======
+>>>>>>> origin/main
   it("US-METER-01: a landlord cannot record a reading for a room they don't own", async () => {
     const response = await recordReading(otherLandlordToken, ROOM_ID, {
       utilityType: "Electricity",
@@ -304,6 +307,7 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(response.body.error.code).toBe("UNPROCESSABLE");
   });
 
+<<<<<<< HEAD
   it("US-METER-02: atomically records electricity and metered water with one reproducible response", async () => {
     await recordReading(landlordToken, ROOM_ID, {
       utilityType: "Electricity",
@@ -390,6 +394,8 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(rows.rows).toEqual([]);
   });
 
+=======
+>>>>>>> origin/main
   it("US-INVOICE-01 end-to-end: generates a Draft invoice with itemized rent + electricity + water", async () => {
     await recordReading(landlordToken, ROOM_ID, {
       utilityType: "Electricity",
@@ -565,6 +571,7 @@ describe("Meters + Invoices PostgreSQL integration", () => {
 
     // Correct the electricity reading from 150 -> 160 (consumption 50 -> 60).
     const correction = await request(app)
+<<<<<<< HEAD
       .patch(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
       .set(auth(landlordToken))
       .send({ correctedValue: 160 });
@@ -592,6 +599,13 @@ describe("Meters + Invoices PostgreSQL integration", () => {
     expect(correctionRows.rows[1]!.correction_of).toBe(
       julyElectricity.body.data.id,
     );
+=======
+      .post(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
+      .set(auth(landlordToken))
+      .send({ value: 160 });
+    expect(correction.status).toBe(200);
+    expect(correction.body.data).toMatchObject({ consumption: 60 });
+>>>>>>> origin/main
 
     const recalculated = await dbPool.query<{ total_amount: number }>(
         "SELECT total_amount FROM invoices WHERE id = $1",
@@ -607,11 +621,18 @@ describe("Meters + Invoices PostgreSQL integration", () => {
       .expect(200);
 
     const blockedCorrection = await request(app)
+<<<<<<< HEAD
       .patch(`/api/v1/meter-readings/${correction.body.data.id}/correct`)
       .set(auth(landlordToken))
       .send({ correctedValue: 170 });
     expect(blockedCorrection.status).toBe(422);
     expect(blockedCorrection.body.error.code).toBe("INVOICE_NOT_DRAFT");
+=======
+      .post(`/api/v1/meter-readings/${julyElectricity.body.data.id}/correct`)
+      .set(auth(landlordToken))
+      .send({ value: 170 });
+    expect(blockedCorrection.status).toBe(422);
+>>>>>>> origin/main
   });
 
   it("US-INVOICE-01/US-METER-01: flat-per-tenant water billing does not require a water meter reading", async () => {

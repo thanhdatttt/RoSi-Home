@@ -1,20 +1,29 @@
 import { ConflictError, NotFoundError, UnprocessableError } from "../../lib/errors.js";
 import { writeAudit } from "../../db/audit.js";
+<<<<<<< HEAD
 import { db, type Db } from "../../db/index.js";
+=======
+import { db } from "../../db/index.js";
+>>>>>>> origin/main
 import { roundVnd } from "../../lib/money.js";
 import { periodBounds } from "../../lib/billingPeriod.js";
 import {
   resolveElectricityRate,
   resolveWaterRate,
+<<<<<<< HEAD
   type ResolvedRate,
 } from "../utilities/rateResolver.js";
 import { countActiveLeasesForRoomPeriod } from "../leases/repository.js";
+=======
+} from "../utilities/rateResolver.js";
+>>>>>>> origin/main
 import {
   assertRoomOwned,
   createMeterReading,
   findActiveReading,
   findPreviousReading,
   findMeterReadingById,
+<<<<<<< HEAD
   listActiveReadings,
   supersedeReading,
   type MeterReadingRow,
@@ -23,6 +32,12 @@ import type {
   CalculateMeterReadingsInput,
   MeterReadingInput,
 } from "./schema.js";
+=======
+  supersedeReading,
+  type MeterReadingRow,
+} from "./repository.js";
+import type { MeterReadingInput } from "./schema.js";
+>>>>>>> origin/main
 import {
   findActiveInvoiceForRoomPeriod,
   type InvoiceRow,
@@ -46,7 +61,10 @@ export type MeterReadingView = {
   rateEffectiveFrom: string | null;
   locality: string | null;
   tenantCount: number | null;
+<<<<<<< HEAD
   correctionOf: string | null;
+=======
+>>>>>>> origin/main
   recordedBy: string;
   createdAt: string;
 };
@@ -70,12 +88,16 @@ function serialize(row: MeterReadingRow): MeterReadingView {
       row.rateEffectiveFrom === null ? null : String(row.rateEffectiveFrom),
     locality: row.locality,
     tenantCount: row.tenantCount,
+<<<<<<< HEAD
     correctionOf: row.correctionOf,
+=======
+>>>>>>> origin/main
     recordedBy: row.recordedBy,
     createdAt: row.createdAt.toISOString(),
   };
 }
 
+<<<<<<< HEAD
 export type MonthlyMeterCalculationView = {
   electricity: MeterReadingView;
   water:
@@ -98,10 +120,13 @@ export type MonthlyMeterCalculationView = {
   };
 };
 
+=======
+>>>>>>> origin/main
 function toScale4(n: number): string {
   return n.toFixed(4);
 }
 
+<<<<<<< HEAD
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const candidate = error as {
@@ -216,6 +241,8 @@ async function createCalculatedReading(
   return row;
 }
 
+=======
+>>>>>>> origin/main
 // US-METER-01 / US-METER-02 — record an initial baseline or a monthly reading
 // and persist the reproducible calculation result.
 export async function recordMeterReadingService(
@@ -309,6 +336,7 @@ export async function recordMeterReadingService(
     amount = roundVnd(cons * unitRate);
   }
 
+<<<<<<< HEAD
   let row: MeterReadingRow;
   try {
     row = await createMeterReading({
@@ -334,6 +362,26 @@ export async function recordMeterReadingService(
     if (isUniqueViolation(error)) throw duplicateReadingConflict();
     throw error;
   }
+=======
+  const row = await createMeterReading({
+    roomId,
+    utilityType: input.utilityType,
+    billingPeriod: input.billingPeriod,
+    value: toScale4(input.value),
+    isInitial: input.isInitial,
+    previousValue,
+    consumption,
+    unitRate,
+    amount,
+    rateSource,
+    rateSourceId: rateSource === null ? null : rateSourceId ?? null,
+    rateSourceReference,
+    rateEffectiveFrom,
+    locality,
+    tenantCount: null,
+    recordedBy: landlordId,
+  });
+>>>>>>> origin/main
 
   await writeAudit({
     actorUserId: landlordId,
@@ -354,6 +402,7 @@ export async function recordMeterReadingService(
   return serialize(row);
 }
 
+<<<<<<< HEAD
 export async function listMeterReadingsService(
   landlordId: string,
   roomId: string,
@@ -465,6 +514,8 @@ export async function calculateMeterReadingsService(
   }
 }
 
+=======
+>>>>>>> origin/main
 // US-METER-03 — correct an erroneous monthly reading before its draft invoice
 // is sent. Supersedes the old reading, preserves the original value, and
 // recalculates the linked draft invoice.
@@ -475,11 +526,14 @@ export async function correctMeterReadingService(
 ): Promise<MeterReadingView> {
   const original = await findMeterReadingById(readingId);
   if (!original) throw new NotFoundError("Meter reading not found.");
+<<<<<<< HEAD
   if (original.supersededAt !== null) {
     throw new UnprocessableError(
       "This meter reading has already been superseded by a correction.",
     );
   }
+=======
+>>>>>>> origin/main
   if (original.isInitial) {
     throw new UnprocessableError(
       "Initial baseline readings cannot be corrected; record a monthly reading instead.",
@@ -492,11 +546,17 @@ export async function correctMeterReadingService(
     original.roomId,
     original.billingPeriod,
   );
+<<<<<<< HEAD
   if (!linked || linked.status !== "Draft") {
     throw new UnprocessableError(
       "This reading can only be corrected while its related invoice is still a draft.",
       undefined,
       "INVOICE_NOT_DRAFT",
+=======
+  if (linked && linked.status !== "Draft") {
+    throw new UnprocessableError(
+      "This reading cannot be corrected because its invoice has already been sent or paid.",
+>>>>>>> origin/main
     );
   }
 
@@ -506,7 +566,11 @@ export async function correctMeterReadingService(
       "Corrected reading cannot be lower than the previous reading.",
       [
         {
+<<<<<<< HEAD
           field: "correctedValue",
+=======
+          field: "value",
+>>>>>>> origin/main
           message: "Must be greater than or equal to the previous reading.",
         },
       ],
@@ -518,6 +582,7 @@ export async function correctMeterReadingService(
   const amount = roundVnd(cons * unitRate);
   const supersededAt = new Date();
 
+<<<<<<< HEAD
   let newRow: MeterReadingRow;
   try {
     newRow = await db.transaction(async (rawTrx) => {
@@ -573,6 +638,54 @@ export async function correctMeterReadingService(
     if (isUniqueViolation(error)) throw duplicateReadingConflict();
     throw error;
   }
+=======
+  const newRow = await db.transaction(async (rawTrx) => {
+    const trx = rawTrx as unknown as typeof db;
+    const created = await createMeterReading(
+      {
+        roomId: original.roomId,
+        utilityType: original.utilityType,
+        billingPeriod: original.billingPeriod,
+        value: toScale4(newValue),
+        isInitial: false,
+        previousValue: original.previousValue,
+        consumption: toScale4(cons),
+        unitRate: original.unitRate,
+        amount,
+        rateSource: original.rateSource,
+        rateSourceId: original.rateSourceId,
+        rateSourceReference: original.rateSourceReference,
+        rateEffectiveFrom:
+          original.rateEffectiveFrom === null
+            ? null
+            : String(original.rateEffectiveFrom),
+        locality: original.locality,
+        tenantCount: original.tenantCount,
+        recordedBy: landlordId,
+      },
+      trx,
+    );
+    await supersedeReading(original.id, supersededAt, trx);
+    return created;
+  });
+
+  await writeAudit({
+    actorUserId: landlordId,
+    action: "meter_reading.corrected",
+    entityType: "meter_readings",
+    entityId: newRow.id,
+    beforeValue: {
+      value: Number(original.value),
+      amount: original.amount,
+      correctionOf: null,
+    },
+    afterValue: {
+      value: newValue,
+      amount,
+      correctionOf: original.id,
+    },
+  });
+>>>>>>> origin/main
 
   await recalculateDraftInvoice(
     original.roomId,

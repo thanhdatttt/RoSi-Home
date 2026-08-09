@@ -6,7 +6,7 @@ describe("utilityRateSchema", () => {
     const result = utilityRateSchema.safeParse({
       electricityRatePerKwh: 3500,
       waterBillingMethod: "Metered",
-      effectiveFrom: "2026-07-01",
+      effectiveFrom: "2099-07-01",
     });
 
     expect(result.success).toBe(true);
@@ -17,7 +17,7 @@ describe("utilityRateSchema", () => {
       electricityRatePerKwh: -1,
       waterBillingMethod: "Flat",
       waterFlatAmountPerTenant: 50000,
-      effectiveFrom: "2026-07-01",
+      effectiveFrom: "2099-07-01",
     });
 
     expect(result.success).toBe(false);
