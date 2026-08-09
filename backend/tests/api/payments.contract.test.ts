@@ -58,11 +58,11 @@ describe("Payments & Invoices HTTP contract", () => {
       const response = await request(app)
         .put("/api/v1/payment-config")
         .set("Authorization", `Bearer ${landlordToken}`)
-        .send({ bankCode: "VCB", accountNumber: "123", accountHolderName: "A" })
+        .send({ bankCode: "VCB", accountNumber: "12345", accountHolderName: "AN" })
         .expect(200);
 
       expect(response.body.data).toEqual({ bankCode: "VCB" });
-      expect(paymentsMocks.upsertPaymentConfig).toHaveBeenCalledWith(LANDLORD_ID, { bankCode: "VCB", accountNumber: "123", accountHolderName: "A" });
+      expect(paymentsMocks.upsertPaymentConfig).toHaveBeenCalledWith(LANDLORD_ID, { bankCode: "VCB", accountNumber: "12345", accountHolderName: "AN" });
     });
   });
 
@@ -92,7 +92,11 @@ describe("Payments & Invoices HTTP contract", () => {
       const response = await request(app)
         .post(`/api/v1/invoices/${INVOICE_ID}/payment-proofs`)
         .set("Authorization", `Bearer ${tenantToken}`)
-        .attach("proof", Buffer.from("fake-image"), "test.png")
+        .attach(
+          "proof",
+          Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]),
+          "test.png",
+        )
         .expect(201);
 
       expect(response.body.data.status).toBe("Pending");

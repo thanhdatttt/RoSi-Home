@@ -29,6 +29,7 @@ export type InvoiceDetail = InvoiceRow & {
   locality: string | null;
   propertyName: string;
   propertyAddress: string;
+  roomName: string;
   tenantUserId: string | null;
   tenantFullName: string;
   tenantEmail: string;
@@ -96,6 +97,7 @@ export async function getInvoiceDetail(
       locality: properties.locality,
       propertyName: properties.name,
       propertyAddress: properties.address,
+      roomName: rooms.name,
       tenantUserId: tenantInfo.userId,
       tenantFullName: tenantInfo.fullName,
       tenantEmail: tenantInfo.email,

@@ -8,6 +8,7 @@ vi.mock("../../../src/db/index.js", () => ({
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         innerJoin: vi.fn().mockReturnThis(),
+        leftJoin: vi.fn().mockReturnThis(),
         where: vi.fn().mockResolvedValue([
           {
             id: "inv-1",
@@ -15,7 +16,8 @@ vi.mock("../../../src/db/index.js", () => ({
             billingPeriod: "2025-01",
             dueDate: "2025-01-05",
             tenantUserId: "tenant-1",
-            propertyName: "House 1"
+            propertyName: "House 1",
+            reminderEveryDays: 1,
           }
         ])
       }))

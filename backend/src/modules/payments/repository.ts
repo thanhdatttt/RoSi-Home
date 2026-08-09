@@ -11,8 +11,10 @@ import {
 } from "../../db/schema.js";
 import { NotFoundError, UnprocessableError, ForbiddenError } from "../../lib/errors.js";
 
+type PaymentConfigRow = typeof landlordPaymentConfigs.$inferSelect;
+
 export const PaymentRepository = {
-  async getPaymentConfig(landlordId: string) {
+  async getPaymentConfig(landlordId: string): Promise<PaymentConfigRow | null> {
     const config = await db
       .select()
       .from(landlordPaymentConfigs)
@@ -96,7 +98,20 @@ export const PaymentRepository = {
           verifiedBy,
           proofId,
         })
+        .onConflictDoNothing({ target: payments.invoiceId })
         .returning();
+
+      if (!payment) {
+        const [existing] = await tx
+          .select()
+          .from(payments)
+          .where(eq(payments.invoiceId, invoiceId))
+          .limit(1);
+        if (!existing) {
+          throw new UnprocessableError("Payment confirmation could not be completed");
+        }
+        return { payment: existing, created: false as const };
+      }
 
       // Update invoice status
       await tx
@@ -118,7 +133,7 @@ export const PaymentRepository = {
           .where(and(eq(paymentProofs.invoiceId, invoiceId), eq(paymentProofs.status, "Pending")));
       }
 
-      return payment;
+      return { payment, created: true as const };
     });
   },
 

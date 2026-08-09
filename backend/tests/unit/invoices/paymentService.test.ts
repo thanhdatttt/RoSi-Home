@@ -73,7 +73,11 @@ describe("paymentService unit tests", () => {
         accountNumber: "123",
         accountHolderName: "A",
       } as any);
-      vi.mocked(generateVietQR).mockResolvedValue({ payload: "payload1", imageUrl: "img1" });
+      vi.mocked(generateVietQR).mockResolvedValue({
+        payload: "payload1",
+        imageUrl: "img1",
+        description: "RH P1",
+      });
 
       const res = await getVietqrService("tenant-1", "Tenant", "inv-1");
       expect(res.payload).toBe("payload1");
@@ -101,7 +105,10 @@ describe("paymentService unit tests", () => {
   describe("confirmPaymentService", () => {
     it("creates payment and writes audit", async () => {
       vi.mocked(getInvoiceDetail).mockResolvedValue(invoiceMock as any);
-      vi.mocked(PaymentRepository.createPayment).mockResolvedValue({ id: "pay-1" } as any);
+      vi.mocked(PaymentRepository.createPayment).mockResolvedValue({
+        payment: { id: "pay-1" },
+        created: true,
+      } as any);
 
       const res = await confirmPaymentService("landlord-1", "inv-1");
       expect(res.id).toBe("pay-1");
