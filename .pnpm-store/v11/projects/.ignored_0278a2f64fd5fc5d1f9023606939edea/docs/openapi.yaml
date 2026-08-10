@@ -1,0 +1,1486 @@
+openapi: 3.0.3
+info:
+  title: RosiHome API
+  version: 0.1.0
+  description: >
+    RosiHome property management system — REST API backend (Node.js/Express + TypeScript + Drizzle + Supabase Postgres).
+    This document serves as the source of truth for the Frontend.
+servers:
+  - url: /api/v1
+    description: Current API version (v1)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Forbidden
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not Found
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Validation failed
+              details:
+                type: array
+                items:
+                  type: object
+
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      tags:
+        - System
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, email, password, passwordConfirmation]
+              properties:
+                fullName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                passwordConfirmation:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: OK
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /auth/login:
+    post:
+      summary: Login
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  description: Email or username
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/refresh:
+    post:
+      summary: Refresh Access Token
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+  /auth/logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: Successfully logged out
+  /auth/change-password:
+    post:
+      summary: Change password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword, newPasswordConfirmation]
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+                newPasswordConfirmation:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Password changed successfully
+  /auth/forgot-password:
+    post:
+      summary: Forgot password
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Reset link sent
+  /profile:
+    get:
+      summary: Get current user profile
+      tags: [Profile]
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  fullName:
+                    type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+                  role:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      summary: Update user profile
+      tags: [Profile]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                phone:
+                  type: string
+      responses:
+        "200":
+          description: Profile updated
+  /properties:
+    get:
+      summary: List all properties
+      tags: [Properties]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: A list of properties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create a property
+      tags: [Properties]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, address, utilityRates]
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                locality:
+                  type: string
+                utilityRates:
+                  type: object
+                  required: [electricityRatePerKwh, waterBillingMethod]
+                  properties:
+                    electricityRatePerKwh:
+                      type: integer
+                    waterBillingMethod:
+                      type: string
+                      enum: [Metered, Flat]
+                    waterRatePerM3:
+                      type: integer
+                    waterFlatAmountPerTenant:
+                      type: integer
+                surcharges:
+                  type: array
+                  description: Optional initial surcharges for this property. These will be effective from the current date.
+                  items:
+                    type: object
+                    required: [name, monthlyAmount]
+                    properties:
+                      name:
+                        type: string
+                      monthlyAmount:
+                        type: integer
+      responses:
+        "201":
+          description: Property created
+  /properties/{id}:
+    get:
+      summary: Get property details
+      tags: [Properties]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Property details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update property
+      tags: [Properties]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                locality:
+                  type: string
+      responses:
+        "200":
+          description: Property updated
+  /properties/{propertyId}/lease-reminder-config:
+    get:
+      summary: Get lease reminder config for a property
+      tags: [Properties]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reminder config
+    patch:
+      summary: Update lease reminder config
+      tags: [Properties]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [daysBefore]
+              properties:
+                daysBefore:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Config updated
+  /rooms/properties/{propertyId}:
+    post:
+      summary: Create a room in a property
+      tags: [Rooms]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, baseRent]
+              properties:
+                name:
+                  type: string
+                baseRent:
+                  type: integer
+      responses:
+        "201":
+          description: Room created
+    get:
+      summary: List rooms in a property
+      tags: [Rooms]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: A list of rooms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+  /rooms/properties/{propertyId}/bulk:
+    post:
+      summary: Bulk create rooms
+      tags: [Rooms]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rooms]
+              properties:
+                rooms:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, baseRent]
+                    properties:
+                      name:
+                        type: string
+                      baseRent:
+                        type: integer
+      responses:
+        "201":
+          description: Rooms created
+  /rooms/{id}:
+    get:
+      summary: Get room details
+      tags: [Rooms]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Room details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update room
+      tags: [Rooms]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                baseRent:
+                  type: integer
+      responses:
+        "200":
+          description: Room updated
+  /tenants:
+    get:
+      summary: List all tenants
+      tags: [Tenants]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: A list of tenants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+  /tenants/{id}:
+    get:
+      summary: Get tenant details
+      tags: [Tenants]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Tenant details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update tenant
+      tags: [Tenants]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                idNumber:
+                  type: string
+      responses:
+        "200":
+          description: Tenant updated
+    delete:
+      summary: Archive tenant
+      tags: [Tenants]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Tenant archived
+  /utilities/properties/{propertyId}/utility-rates:
+    get:
+      summary: Get utility rates for a property
+      tags: [Utilities]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Utility rates containing both current and upcoming rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      current:
+                        type: object
+                      upcoming:
+                        type: object
+    post:
+      summary: Set or update upcoming utility rates
+      tags: [Utilities]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [electricityRatePerKwh, waterBillingMethod, effectiveFrom]
+              properties:
+                electricityRatePerKwh:
+                  type: integer
+                waterBillingMethod:
+                  type: string
+                  enum: [Metered, Flat]
+                waterRatePerM3:
+                  type: integer
+                waterFlatAmountPerTenant:
+                  type: integer
+                effectiveFrom:
+                  type: string
+                  format: date
+      responses:
+        "201":
+          description: Created
+  /charges/properties/{propertyId}/surcharges:
+    get:
+      summary: List surcharges
+      tags: [Charges]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: A list of surcharges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        current:
+                          type: object
+                          nullable: true
+                        upcoming:
+                          type: object
+                          nullable: true
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+    post:
+      summary: Create surcharge
+      tags: [Charges]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, monthlyAmount, effectiveFrom]
+              properties:
+                name:
+                  type: string
+                monthlyAmount:
+                  type: integer
+                effectiveFrom:
+                  type: string
+                  format: date
+                effectiveTo:
+                  type: string
+                  format: date
+                  nullable: true
+      responses:
+        "201":
+          description: Surcharge created
+  /charges/{id}:
+    patch:
+      summary: Update surcharge
+      tags: [Charges]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                monthlyAmount:
+                  type: integer
+                effectiveFrom:
+                  type: string
+                  format: date
+                effectiveTo:
+                  type: string
+                  format: date
+                  nullable: true
+      responses:
+        "200":
+          description: Surcharge updated
+    delete:
+      summary: Delete surcharge
+      tags: [Charges]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Surcharge deleted
+  /leases:
+    post:
+      summary: Create a new lease
+      tags: [Leases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roomId, tenant, startDate, endDate, agreedRent, deposit]
+              properties:
+                roomId:
+                  type: string
+                  format: uuid
+                tenant:
+                  type: object
+                  required: [fullName, phone, idNumber, email]
+                  properties:
+                    fullName:
+                      type: string
+                    phone:
+                      type: string
+                    idNumber:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                agreedRent:
+                  type: integer
+                deposit:
+                  type: integer
+      responses:
+        "201":
+          description: Lease created
+    get:
+      summary: List all leases
+      tags: [Leases]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: propertyId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A list of leases
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+  /leases/upcoming-expirations:
+    get:
+      summary: Get leases expiring soon
+      tags: [Leases]
+      responses:
+        "200":
+          description: A list of expiring leases
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+  /leases/{id}:
+    get:
+      summary: Get lease details
+      tags: [Leases]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Lease details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update or renew lease
+      tags: [Leases]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                endDate:
+                  type: string
+                  format: date
+                agreedRent:
+                  type: integer
+                deposit:
+                  type: integer
+                renewalStartDate:
+                  type: string
+                  format: date
+                renewalEndDate:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Lease updated
+  /leases/{id}/end:
+    post:
+      summary: End a lease
+      tags: [Leases]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actualEndDate]
+              properties:
+                actualEndDate:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Lease ended
+  /rooms/{roomId}/meter-readings:
+    post:
+      summary: Record a meter reading
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [utilityType, billingPeriod, value]
+              properties:
+                utilityType:
+                  type: string
+                  enum: [Electricity, Water]
+                billingPeriod:
+                  type: string
+                  example: "2024-05"
+                value:
+                  type: number
+                isInitial:
+                  type: boolean
+                  default: false
+      responses:
+        "201":
+          description: Reading recorded
+  /meter-readings/{id}/correct:
+    post:
+      summary: Correct a meter reading
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: number
+      responses:
+        "200":
+          description: Reading corrected
+  /invoices/{id}:
+    get:
+      summary: Get invoice details
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invoice details
+  /invoices/{id}/pdf:
+    get:
+      summary: Download invoice PDF
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: PDF file stream
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /invoices/{id}/send:
+    post:
+      summary: Send invoice to tenant
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Invoice sent
+  /properties/{propertyId}/invoices/generate:
+    post:
+      summary: Generate invoices for a property
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: period
+          schema:
+            type: string
+            example: "2024-05"
+      responses:
+        "200":
+          description: Invoices generated
+  /invoices/{id}/vietqr:
+    get:
+      summary: Get VietQR code for invoice
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: VietQR details
+  /invoices/{id}/payment-proofs:
+    post:
+      summary: Upload payment proof
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                proof:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Payment proof uploaded
+  /invoices/{id}/confirm-payment:
+    post:
+      summary: Confirm payment
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Payment confirmed
+  /invoices/{id}/remind:
+    post:
+      summary: Send payment reminder
+      tags: [Invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reminder sent
+  /notifications/device-tokens:
+    post:
+      summary: Register device token
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pushToken, platform]
+              properties:
+                pushToken:
+                  type: string
+                platform:
+                  type: string
+                  enum: [ios, android]
+      responses:
+        "200":
+          description: Token registered
+    delete:
+      summary: Unregister device token
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pushToken]
+              properties:
+                pushToken:
+                  type: string
+      responses:
+        "200":
+          description: Token unregistered
+  /notifications/test:
+    post:
+      summary: Test push notification
+      tags: [Notifications]
+      responses:
+        "200":
+          description: Test notification sent
+  /maintenance-requests:
+    get:
+      summary: List maintenance requests
+      tags: [Maintenance]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: propertyId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Pending, InProgress, Completed]
+      responses:
+        "200":
+          description: A list of requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+    post:
+      summary: Submit maintenance request
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [roomId, title, description]
+              properties:
+                roomId:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                description:
+                  type: string
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Request submitted
+  /maintenance-requests/{id}:
+    get:
+      summary: Get maintenance request
+      tags: [Maintenance]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request details
+  /maintenance-requests/{id}/status:
+    patch:
+      summary: Update maintenance status
+      tags: [Maintenance]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [Pending, InProgress, Completed]
+      responses:
+        "200":
+          description: Status updated
+  /rooms/{roomId}/maintenance-requests:
+    get:
+      summary: Get maintenance history for a room
+      tags: [Rooms, Maintenance]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: History list
+  /dashboard/occupancy:
+    get:
+      summary: Get occupancy metrics
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Occupancy data
+  /dashboard/revenue:
+    get:
+      summary: Get revenue metrics
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Revenue data
+  /dashboard/outstanding:
+    get:
+      summary: Get outstanding payments
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Outstanding data
+  /dashboard/upcoming-expirations:
+    get:
+      summary: Get upcoming lease expirations
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Expirations data
+  /reports/generate:
+    post:
+      summary: Generate a report
+      tags: [Reports]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [periodType]
+              properties:
+                periodType:
+                  type: string
+                  enum: [month, custom]
+                month:
+                  type: string
+                  example: "2024-05"
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Report generated
+  /reports/{id}/pdf:
+    get:
+      summary: Download report PDF
+      tags: [Reports]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: PDF stream
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /payment-config:
+    get:
+      summary: Get payment config (VietQR)
+      tags: [Payments]
+      responses:
+        "200":
+          description: Config details
+    put:
+      summary: Update payment config
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bankCode, accountNumber, accountHolderName]
+              properties:
+                bankCode:
+                  type: string
+                accountNumber:
+                  type: string
+                accountHolderName:
+                  type: string
+      responses:
+        "200":
+          description: Config updated
+  /payment-proofs:
+    get:
+      summary: List pending payment proofs
+      tags: [Payments]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Pending, Verified]
+      responses:
+        "200":
+          description: List of proofs
+  /payments/history:
+    get:
+      summary: Get payment history
+      tags: [Payments]
+      responses:
+        "200":
+          description: Payment history
