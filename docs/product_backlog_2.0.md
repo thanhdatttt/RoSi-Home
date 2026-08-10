@@ -99,14 +99,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Defines the three-layer monolithic client-server design, REST boundaries, React/React Native clients, Node.js/Express API, PostgreSQL/Drizzle, Supabase storage, JWT, VietQR, CI/CD, and hosting.
   - [ ] Diagrams and choices agree with the MVP scope and are understandable by the project team.
 
-### TASK-DOC-02 — Review the Technical Architecture document
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and topic required by TASK-DOC-01 is present.
-  - [ ] Verifies technology choices, diagrams, data flow, payment boundary, and terminology against the backlog and repository.
-  - [ ] Resolves contradictions.
-
 ### TASK-DOC-03 — Write Product Backlog Version 1
 
 - **Output:** `docs/product_backlog.md`
@@ -117,15 +109,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Defines the hierarchy, status, priority, Definition of Done, audit/deletion rules, dependencies, 15 features, and all 51 user stories with testable acceptance criteria.
   - [ ] Story IDs, scope, workflow mapping, decisions, feature totals, and regulatory references are internally consistent.
 
-### TASK-DOC-04 — Review Product Backlog Version 1
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-03 is present.
-  - [ ] Checks story IDs, hierarchy, roles, priorities, decisions, dependencies, acceptance criteria, feature totals, and regulatory notes for clarity and consistency.
-  - [ ] Confirms every story is independently testable and no unresolved decision is silently left inside a Ready story.
-  - [ ] Resolves contradictions.
-
 ### TASK-DOC-05 — Write Product Backlog 2.0
 
 - **Output:** `docs/product_backlog_2.0.md`
@@ -134,18 +117,9 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Title: **Product Backlog 2.0 — RosiHome**.
   - [ ] Includes **Backlog Conventions, Workflow Reference, Technical and Project Tasks, Documentation Tasks, Product User Stories, Suggested Delivery Order, Backlog Summary,** and **Regulatory Pricing Notes**.
   - [ ] Contains all 51 Version 1 user stories under the same 15 features and five epics.
-  - [ ] Contains technical, Trello-management, document-writing, and document-review tasks without counting them as user stories or features.
+  - [ ] Contains technical, Trello-management, and document-writing tasks without counting them as user stories or features.
   - [ ] Has no separate product-decision record; approved outcomes appear in related story acceptance criteria.
   - [ ] Keeps `docs/product_backlog.md` unchanged.
-
-### TASK-DOC-06 — Review Product Backlog 2.0
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-05 is present.
-  - [ ] Compares Version 2 with Version 1 to verify all story IDs, roles, outcomes, priorities, and important acceptance rules remain covered.
-  - [ ] Checks that task counts and story/feature totals reconcile and that wording is compact and testable.
-  - [ ] Resolves contradictions.
 
 ### TASK-DOC-07 — Write the Project Charter
 
@@ -156,14 +130,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Includes **Project Background, Context, and Overview; Project Objectives; Project Scope; Project Management and Governance; Stakeholder Analysis; Project Facilities and Resources; Major Milestones; Impact Analysis; Assumptions;** and **Project Risks (Summary)**.
   - [ ] States measurable objectives, in/out scope, ownership, resources, milestones, assumptions, and key risks consistently with the proposal and backlog.
 
-### TASK-DOC-08 — Review the Project Charter
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-07 is present.
-  - [ ] Checks scope, objectives, stakeholders, governance, resources, milestones, assumptions, and risks against the other approved documents.
-  - [ ] Resolves contradictions.
-
 ### TASK-DOC-09 — Write the Software Project Estimation document
 
 - **Output:** `docs/project_estimation.md`
@@ -172,14 +138,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Title: **Software Project Estimation Document**.
   - [ ] Includes **Introduction, 2 Estimation Methodologies, Estimated time/effort/tokens for both methodolgies, Final Estimation Summary,** and **Appendix**.
   - [ ] Shows assumptions, metrics, calculations, source data, feature/story mapping, units, and a reconciled final estimate.
-
-### TASK-DOC-10 — Review the Software Project Estimation document
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-09 is present.
-  - [ ] Recalculates samples and totals, checks units and formulas, and verifies mappings against the backlog and estimation source data.
-  - [ ] Resolves contradictions.
 
 ### TASK-DOC-11 — Write the Project Proposal
 
@@ -190,14 +148,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Includes **Pain Points & Problem Statement, Business Case, Stakeholders, Competitor Analysis, Feasibility Study, Project Timeline & Schedule, Cost & Budget Plan, Risk Assessment,** and **Elevator Pitch**.
   - [ ] Supports claims with appropriate evidence, clearly explains RosiHome's value, and keeps scope, schedule, costs, and risks internally consistent.
 
-### TASK-DOC-12 — Review the Project Proposal
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-11 is present.
-  - [ ] Checks evidence quality, competitor comparison, feasibility, timeline, budget arithmetic, risks, and alignment with project scope.
-  - [ ] Resolves contradictions.
-
 ### TASK-DOC-13 — Write the Statement of Work
 
 - **Output:** `docs/statement_of_work.md`
@@ -206,14 +156,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Title: **RosiHome Statement of Work**.
   - [ ] Includes **Document Information, Purpose and Agreement, Project Background and Objectives, Scope of Work, Deliverables and Acceptance, Schedule and Milestones, Roles and Responsibilities, Resource and Budget Baseline, Assumptions/Dependencies/Constraints,** and **Change Control**.
   - [ ] Defines verifiable deliverables, acceptance ownership, schedule, responsibilities, constraints, and a practical change process consistent with the charter and backlog.
-
-### TASK-DOC-14 — Review the Statement of Work
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-13 is present.
-  - [ ] Checks that scope, deliverables, acceptance, schedule, roles, budget, constraints, and change control are unambiguous and mutually consistent.
-  - [ ] Resolves contradictions.
 
 ### TASK-DOC-15 — Write the Vision and Scope document
 
@@ -224,14 +166,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Includes **Background, Context, and Overview; Current Business Use Cases; Current Domain Model; Current Users' Problems and Objectives; Components and Features to be Developed; Components and Features Excluded; Future Business Use Cases; Business Process Comparison; Future Domain Model; Assumptions; Risks;** and **Conclusion**.
   - [ ] Current/future workflows and domain models are distinguishable, actors and pain points are traceable to features, and exclusions match the MVP backlog.
 
-### TASK-DOC-16 — Review the Vision and Scope document
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-15 is present.
-  - [ ] Checks workflow logic, domain relationships, user objectives, feature coverage, exclusions, assumptions, risks, and consistency with the proposal and backlog.
-  - [ ] Resolves contradictions.
-
 ### TASK-DOC-17 — Write the Risk Management Plan
 
 - **Output:** `docs/risk_management_plan.md`
@@ -241,15 +175,6 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
   - [ ] Includes **Purpose and Scope, Risk Management Approach, Roles and Responsibilities, Risk Identification, Risk Analysis and Prioritization, Risk Register, Risk Response Planning, Risk Monitoring and Reporting, Escalation,** and **Review Schedule**.
   - [ ] Defines simple likelihood and impact scales, risk score/priority rules, owners, response strategies, triggers, contingency actions, status, and review frequency.
   - [ ] Covers project, schedule, scope, technical, security/privacy, third-party service, budget, quality, and user-adoption risks consistently with the charter, proposal, SOW, and backlog.
-
-### TASK-DOC-18 — Review the Risk Management Plan
-
-- **Priority:** Must
-- **Acceptance criteria:**
-  - [ ] Confirms every heading and requirement in TASK-DOC-17 is present.
-  - [ ] Checks that each risk has a clear cause, event, impact, score, owner, response, trigger/contingency where needed, status, and next review date.
-  - [ ] Verifies scoring is consistent, high-priority risks are actionable, and related risks agree with the charter, proposal, SOW, and backlog.
-  - [ ] Resolves contradictions.
 
 ## 5. Product User Stories
 
@@ -428,8 +353,8 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | Features | 15 |
 | User stories | 51 |
 | Technical/project tasks | 4 |
-| Documentation tasks | 18 |
-| **Total implementable/trackable items** | **73** |
+| Documentation tasks | 9 |
+| **Total implementable/trackable items** | **64** |
 
 User stories count toward product-story throughput. Technical, management, and documentation tasks are tracked separately.
 
