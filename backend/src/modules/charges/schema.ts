@@ -15,7 +15,11 @@ const dateStr = z
     { message: "Date must be a valid calendar date." },
   );
 
-const futureDateStr = dateStr.refine((value) => value > businessDate(), {
+const monthOnlyStr = dateStr.refine((val) => val.endsWith("-01"), {
+  message: "Date must be the 1st of the month (YYYY-MM-01).",
+});
+
+const futureDateStr = monthOnlyStr.refine((value) => value > businessDate(), {
   message: "effectiveFrom must be strictly in the future (greater than today).",
 });
 
@@ -27,7 +31,7 @@ export const createSurchargeSchema = z
       .int("Amount must be a whole-number VND amount.")
       .min(0, "Amount cannot be negative."),
     effectiveFrom: futureDateStr,
-    effectiveTo: dateStr.nullable().optional(),
+    effectiveTo: monthOnlyStr.nullable().optional(),
   })
   .strict();
 
@@ -39,8 +43,8 @@ export const updateSurchargeSchema = z
       .int("Amount must be a whole-number VND amount.")
       .min(0, "Amount cannot be negative.")
       .optional(),
-    effectiveFrom: futureDateStr.optional(),
-    effectiveTo: dateStr.nullable().optional(),
+    effectiveFrom: monthOnlyStr.optional(),
+    effectiveTo: monthOnlyStr.nullable().optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {

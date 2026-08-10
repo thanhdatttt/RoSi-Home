@@ -131,3 +131,17 @@ export async function getUpcomingRate(
     .limit(1);
   return row ?? null;
 }
+
+export async function deleteUpcomingRate(
+  id: string,
+  today: string,
+): Promise<void> {
+  await db
+    .delete(utilityRateHistory)
+    .where(
+      and(
+        eq(utilityRateHistory.id, id),
+        sql`${utilityRateHistory.effectiveFrom} > ${today}`
+      )
+    );
+}

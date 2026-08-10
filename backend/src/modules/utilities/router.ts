@@ -3,7 +3,7 @@ import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import { utilityRateSchema } from "./schema.js";
-import { create, get } from "./controller.js";
+import { create, get, remove } from "./controller.js";
 
 export const utilitiesRouter = Router();
 
@@ -22,4 +22,9 @@ utilitiesRouter.get(
   "/properties/:propertyId/utility-rates",
   requireRole("Landlord"),
   asyncHandler(get),
+);
+utilitiesRouter.delete(
+  "/properties/:propertyId/utility-rates/:id",
+  requireRole("Landlord"),
+  asyncHandler(remove),
 );

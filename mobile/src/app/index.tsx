@@ -2,20 +2,16 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../components/MobileFrame";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { Home, KeyRound } from "lucide-react-native";
 
 export default function Welcome() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <MobileFrame>
-      {/* 
-        Note: We use expo-linear-gradient for the background gradient.
-        You may need to run `npx expo install expo-linear-gradient`.
-        React Native doesn't natively support CSS blur for background orbs like 'blur-3xl'.
-        Usually, this is achieved by using a PNG with a blur or react-native-svg with a radial gradient.
-        We've left the blobs as colored views, but they won't be blurred. 
-      */}
       <LinearGradient
         colors={['#0c1a3a', '#0a1228', '#060d1e']}
         start={{ x: 0, y: 0 }}
@@ -40,7 +36,7 @@ export default function Welcome() {
           elevation: 0,
         }} />
 
-        <View className="flex-1 flex-col px-7 pt-16">
+        <View className="flex-1 flex-col px-7" style={{ paddingTop: Math.max(insets.top + 24, 64) }}>
           <View className="flex-row items-center gap-2">
             <View className="h-9 w-9 rounded-xl bg-[#2563eb] items-center justify-center">
               <Home size={20} color="#ffffff" />
@@ -65,7 +61,7 @@ export default function Welcome() {
           borderTopRightRadius: 32,
           paddingHorizontal: 28,
           paddingTop: 28,
-          paddingBottom: 32,
+          paddingBottom: Math.max(insets.bottom + 16, 32),
           gap: 12,
         }}>
           <Link href="/register" asChild>

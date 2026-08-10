@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
@@ -10,6 +11,7 @@ import { ApiRequestError } from "../../lib/api";
 
 export default function ChangePassword() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { changePassword, loading } = useAuth();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -61,23 +63,24 @@ export default function ChangePassword() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background pb-8">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href="/profile" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Security</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Change password</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Security</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Change password</Text>
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 pb-6">
+        {/* Form */}
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 24) }}>
           <Field 
             label="Current password" 
-             
             secureTextEntry 
             placeholder="Enter current password" 
             icon={<Lock size={16} color="gray" />} 
@@ -85,44 +88,47 @@ export default function ChangePassword() {
             onChangeText={setCurrent} 
             error={errors.current} 
           />
-          <Field 
-            label="New password" 
-             
-            secureTextEntry 
-            placeholder="Choose a new password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={next} 
-            onChangeText={setNext} 
-            error={errors.next} 
-          />
-          <Field 
-            label="Confirm new password" 
-             
-            secureTextEntry 
-            placeholder="Re-enter new password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={confirm} 
-            onChangeText={setConfirm} 
-            error={errors.confirm} 
-          />
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="New password" 
+              secureTextEntry 
+              placeholder="Choose a new password" 
+              icon={<Lock size={16} color="gray" />} 
+              value={next} 
+              onChangeText={setNext} 
+              error={errors.next} 
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="Confirm new password" 
+              secureTextEntry 
+              placeholder="Re-enter new password" 
+              icon={<Lock size={16} color="gray" />} 
+              value={confirm} 
+              onChangeText={setConfirm} 
+              error={errors.confirm} 
+            />
+          </View>
 
-          <View className="rounded-xl border border-border bg-surface p-3.5 mb-4">
-            <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Password policy</Text>
-            <View className="gap-1.5">
+          {/* Policy checklist */}
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 14, marginTop: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 8 }}>Password policy</Text>
+            <View style={{ gap: 6 }}>
               {rules.map((r) => (
-                <View key={r.label} className="flex-row items-center gap-2">
-                  <View className={`h-4 w-4 rounded-full items-center justify-center ${r.ok ? "bg-[#2563eb]" : "bg-secondary"}`}>
+                <View key={r.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ height: 16, width: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: r.ok ? '#2563eb' : '#f1f5f9' }}>
                     <Check size={10} color={r.ok ? "#ffffff" : "gray"} />
                   </View>
-                  <Text className={r.ok ? "text-foreground text-xs" : "text-muted-foreground text-xs"}>{r.label}</Text>
+                  <Text style={{ fontSize: 12, color: r.ok ? '#0f172a' : '#94a3b8' }}>{r.label}</Text>
                 </View>
               ))}
             </View>
           </View>
 
           {apiError && (
-            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
-              <Text className="text-xs text-destructive">{apiError}</Text>
+            <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
           )}
 

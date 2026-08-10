@@ -3,13 +3,15 @@ import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import { registerDeviceTokenSchema, unregisterDeviceTokenSchema } from "./schema.js";
-import { registerDeviceToken, sendTest, unregisterDeviceToken } from "./controller.js";
+import { registerDeviceToken, sendTest, unregisterDeviceToken, listNotifications } from "./controller.js";
 
 export const notificationsRouter = Router();
 
 // Both Landlord and Tenant accounts register their own device — no role
 // restriction here, only ownership (req.user!.id) inside the service layer.
 notificationsRouter.use(requireAuth);
+
+notificationsRouter.get("/", asyncHandler(listNotifications));
 
 notificationsRouter.post(
   "/device-tokens",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "@/components/MobileFrame";
 import { Field } from "@/components/ui/Field";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -11,6 +12,7 @@ import { apiRequest } from "@/lib/api";
 export default function Profile() {
   const { user, token, logout, refreshProfile } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   
   const [name, setName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -52,90 +54,96 @@ export default function Profile() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background pb-8">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href={user?.role === 'Tenant' ? "/tenant" : "/landlord"} asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Account</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Your profile</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Account</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Your profile</Text>
           </View>
         </View>
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="px-6 flex-col items-center pt-2 pb-6">
-            <View className="h-20 w-20 rounded-full bg-[#2563eb] items-center justify-center shadow-sm">
-              <Text className="text-white text-2xl font-extrabold">
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+          {/* Avatar */}
+          <View style={{ paddingHorizontal: 24, alignItems: 'center', paddingTop: 8, paddingBottom: 24 }}>
+            <View style={{ height: 80, width: 80, borderRadius: 40, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
+              <Text style={{ color: '#ffffff', fontSize: 24, fontWeight: '800' }}>
                 {name ? name.substring(0, 2).toUpperCase() : "US"}
               </Text>
             </View>
-            <View className="mt-3 flex-row items-center gap-1.5 bg-[#2563eb]/15 px-2.5 py-1 rounded-full">
+            <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(37,99,235,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
               <ShieldCheck size={12} color="#2563eb" />
-              <Text className="text-[11px] font-semibold text-[#2563eb]">{user?.role || "Landlord"}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#2563eb' }}>{user?.role || "Landlord"}</Text>
             </View>
           </View>
 
-          <View className="px-6 space-y-4">
+          {/* Form */}
+          <View style={{ paddingHorizontal: 24 }}>
             <Field 
               label="Full name" 
               value={name} 
               onChangeText={setName} 
               icon={<User size={16} color="gray" />} 
             />
-            <Field 
-              label="Email (login identifier)" 
-              value={email} 
-              readOnly 
-              icon={<Mail size={16} color="gray" />} 
-              hint="Contact support to change your login email." 
-            />
-            <View>
-              <Text className="text-xs font-medium text-foreground mb-1.5 ml-1">Role</Text>
-              <View className="flex-row items-center gap-2 bg-secondary/50 border border-border px-4 h-12 rounded-2xl">
+            <View style={{ marginTop: 16 }}>
+              <Field 
+                label="Email (login identifier)" 
+                value={email} 
+                readOnly 
+                icon={<Mail size={16} color="gray" />} 
+                hint="Contact support to change your login email." 
+              />
+            </View>
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#0f172a', marginBottom: 6, marginLeft: 4 }}>Role</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(241,245,249,0.5)', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 16, height: 48, borderRadius: 16 }}>
                 <ShieldCheck size={16} color="#64748b" />
-                <Text className="text-sm font-medium text-foreground">{user?.role || "Landlord"}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: '#0f172a' }}>{user?.role || "Landlord"}</Text>
               </View>
             </View>
 
             {saved && (
-              <View className="rounded-lg bg-[#2563eb]/15 border border-[#2563eb]/30 px-3 py-2 mt-2">
-                <Text className="text-xs text-[#2563eb]">Profile updated.</Text>
+              <View style={{ borderRadius: 8, backgroundColor: 'rgba(37,99,235,0.15)', borderWidth: 1, borderColor: 'rgba(37,99,235,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginTop: 16 }}>
+                <Text style={{ fontSize: 12, color: '#2563eb' }}>Profile updated.</Text>
               </View>
             )}
 
-            <View className="pt-2">
+            <View style={{ marginTop: 16 }}>
               <PrimaryButton variant="primary" onPress={handleSave} disabled={saving}>
                 {saving ? "Saving..." : "Save changes"}
               </PrimaryButton>
             </View>
           </View>
 
-          <View className="px-6 mt-8 space-y-2.5 pb-8">
+          {/* Actions */}
+          <View style={{ paddingHorizontal: 24, marginTop: 32, paddingBottom: 32 }}>
             <Link href="/change-password" asChild>
-              <TouchableOpacity className="rounded-2xl border border-border bg-surface p-4 flex-row items-center gap-3">
-                <View className="h-10 w-10 rounded-xl bg-[#2563eb]/15 items-center justify-center">
+              <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center' }}>
                   <KeyRound size={16} color="#2563eb" />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-sm font-semibold">Change password</Text>
-                  <Text className="text-xs text-muted-foreground">Replace a temporary or old password.</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600' }}>Change password</Text>
+                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>Replace a temporary or old password.</Text>
                 </View>
               </TouchableOpacity>
             </Link>
             
             <TouchableOpacity 
               onPress={handleLogout}
-              className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex-row items-center gap-3 mt-3"
+              style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.05)', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}
             >
-              <View className="h-10 w-10 rounded-xl bg-destructive/10 items-center justify-center">
+              <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center' }}>
                 <LogOut size={16} color="#ef4444" />
               </View>
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-destructive">Log out</Text>
-                <Text className="text-xs text-muted-foreground">Ends your session on this device.</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#ef4444' }}>Log out</Text>
+                <Text style={{ fontSize: 12, color: '#94a3b8' }}>Ends your session on this device.</Text>
               </View>
             </TouchableOpacity>
           </View>

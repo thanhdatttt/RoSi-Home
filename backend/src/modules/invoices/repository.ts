@@ -33,6 +33,7 @@ export type InvoiceDetail = InvoiceRow & {
   tenantFullName: string;
   tenantEmail: string;
   tenantPhone: string;
+  roomName: string;
 };
 
 export async function assertPropertyOwned(
@@ -100,6 +101,7 @@ export async function getInvoiceDetail(
       tenantFullName: tenantInfo.fullName,
       tenantEmail: tenantInfo.email,
       tenantPhone: tenantInfo.phone,
+      roomName: rooms.name,
     })
     .from(invoices)
     .innerJoin(leases, eq(invoices.leaseId, leases.id))
@@ -170,6 +172,72 @@ export async function deleteInvoiceLineItems(
   await executor
     .delete(invoiceLineItems)
     .where(eq(invoiceLineItems.invoiceId, invoiceId));
+}
+
+export async function listInvoicesForLandlord(
+  landlordId: string,
+  executor: typeof db = db,
+): Promise<InvoiceDetail[]> {
+  const rows = await executor
+    .select({
+      ...getTableColumns(invoices),
+      tenantInfoId: leases.tenantInfoId,
+      agreedRent: leases.agreedRent,
+      propertyId: properties.id,
+      landlordId: properties.landlordId,
+      locality: properties.locality,
+      propertyName: properties.name,
+      propertyAddress: properties.address,
+      tenantUserId: tenantInfo.userId,
+      tenantFullName: tenantInfo.fullName,
+      tenantEmail: tenantInfo.email,
+      tenantPhone: tenantInfo.phone,
+      roomName: rooms.name,
+    })
+    .from(invoices)
+    .innerJoin(leases, eq(invoices.leaseId, leases.id))
+    .innerJoin(rooms, eq(leases.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .innerJoin(tenantInfo, eq(leases.tenantInfoId, tenantInfo.id))
+    .where(and(eq(properties.landlordId, landlordId), isNull(invoices.deletedAt)))
+    .orderBy(sql`${invoices.dueDate} DESC`);
+  return rows as InvoiceDetail[];
+}
+
+export async function listInvoicesForTenant(
+  tenantUserId: string,
+  executor: typeof db = db,
+): Promise<InvoiceDetail[]> {
+  const rows = await executor
+    .select({
+      ...getTableColumns(invoices),
+      tenantInfoId: leases.tenantInfoId,
+      agreedRent: leases.agreedRent,
+      propertyId: properties.id,
+      landlordId: properties.landlordId,
+      locality: properties.locality,
+      propertyName: properties.name,
+      propertyAddress: properties.address,
+      tenantUserId: tenantInfo.userId,
+      tenantFullName: tenantInfo.fullName,
+      tenantEmail: tenantInfo.email,
+      tenantPhone: tenantInfo.phone,
+      roomName: rooms.name,
+    })
+    .from(invoices)
+    .innerJoin(leases, eq(invoices.leaseId, leases.id))
+    .innerJoin(rooms, eq(leases.roomId, rooms.id))
+    .innerJoin(properties, eq(rooms.propertyId, properties.id))
+    .innerJoin(tenantInfo, eq(leases.tenantInfoId, tenantInfo.id))
+    .where(
+      and(
+        isNull(invoices.deletedAt),
+        eq(tenantInfo.userId, tenantUserId),
+        sql`${invoices.status} != 'Draft'`,
+      ),
+    )
+    .orderBy(sql`${invoices.createdAt} DESC`);
+  return rows as InvoiceDetail[];
 }
 
 export async function insertInvoiceLineItems(

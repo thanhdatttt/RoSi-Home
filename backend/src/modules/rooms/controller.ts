@@ -3,6 +3,7 @@ import { type Pagination } from "../../lib/pagination.js";
 import {
   bulkCreateRoomsService,
   createRoomService,
+  deleteRoomService,
   getRoomService,
   listRoomsService,
   updateRoomService,
@@ -37,4 +38,9 @@ async function update(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: view });
 }
 
-export { create, bulk, list, get, update };
+async function remove(req: Request, res: Response): Promise<void> {
+  await deleteRoomService(req.user!.id, req.params.id);
+  res.status(200).json({ data: { success: true } });
+}
+
+export { create, bulk, list, get, update, remove };
