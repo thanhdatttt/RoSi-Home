@@ -1,31 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-
-const isWeb = Platform.OS === 'web';
-
-const Storage = {
-  getItemAsync: async (key: string) => {
-    if (isWeb) return localStorage.getItem(key);
-    return SecureStore.getItemAsync(key);
-  },
-  setItemAsync: async (key: string, value: string) => {
-    if (isWeb) {
-      localStorage.setItem(key, value);
-      return;
-    }
-    return SecureStore.setItemAsync(key, value);
-  },
-  deleteItemAsync: async (key: string) => {
-    if (isWeb) {
-      localStorage.removeItem(key);
-      return;
-    }
-    return SecureStore.deleteItemAsync(key);
-  },
-};
-
-import { apiRequest } from '@/lib/api';
+import { apiRequest, onApiError, setOnTokenRefreshed, Storage, TOKEN_KEY, REFRESH_KEY } from '@/lib/api';
 
 export type AuthUser = {
   id: string;
@@ -49,9 +23,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-const TOKEN_KEY = 'rosihome.accessToken';
-const REFRESH_KEY = 'rosihome.refreshToken';
 
 type LoginResponse = {
   accessToken: string;
@@ -94,6 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Globally intercept 401 Unauthorized errors to automatically log the user out
+  useEffect(() => {
+    setOnTokenRefreshed((newToken) => {
+      setToken(newToken);
+    });
+    
+    return onApiError((error) => {
+      if (error.status === 401) {
+        logout();
+      }
+    });
   }, []);
 
   async function login(username: string, password: string, rememberMe: boolean = false) {

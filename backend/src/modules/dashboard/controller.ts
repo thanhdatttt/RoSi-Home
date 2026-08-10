@@ -4,6 +4,7 @@ import {
   getOutstandingSummaryService,
   getRevenueService,
   getUpcomingExpirationsService,
+  getTenantDashboardSummaryService,
 } from "./service.js";
 import { ValidationError } from "../../lib/errors.js";
 
@@ -35,4 +36,10 @@ async function revenue(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data });
 }
 
-export { outstanding, upcomingExpirations, occupancy, revenue };
+// TENANT DASHBOARD
+async function tenantDashboard(req: Request, res: Response): Promise<void> {
+  const data = await getTenantDashboardSummaryService(req.user!.id);
+  res.status(200).json({ data });
+}
+
+export { outstanding, upcomingExpirations, occupancy, revenue, tenantDashboard };

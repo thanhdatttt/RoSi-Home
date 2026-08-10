@@ -39,7 +39,7 @@ export async function generateInvoicePdf(view: InvoiceView): Promise<Uint8Array>
   y -= 8;
   line("Line Items", 14, true, 22);
 
-  for (const item of view.lineItems) {
+  for (const item of view.lineItems || []) {
     const label = truncate(`${item.description}`, 52);
     const amount = `${(item.amount ?? 0).toLocaleString("en-US")} VND`;
     line(`${label.padEnd(54)}${amount}`, 11);

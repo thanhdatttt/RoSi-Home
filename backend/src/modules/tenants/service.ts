@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
-import { tenantInfo, users } from "../../db/schema.js";
+import { tenantInfo, users, leases } from "../../db/schema.js";
 import { hashPassword } from "../../lib/auth.js";
 import { sendEmail } from "../../lib/email.js";
 import { ConflictError, NotFoundError } from "../../lib/errors.js";
@@ -146,6 +146,15 @@ export async function archiveTenantService(
   const tenant = await getTenantScoped(landlordId, id);
   if (!tenant) throw new NotFoundError("Tenant not found.");
 
+  const [activeLease] = await db
+    .select({ id: leases.id })
+    .from(leases)
+    .where(and(eq(leases.tenantInfoId, id), eq(leases.status, "Active")));
+
+  if (activeLease) {
+    throw new ConflictError("Cannot archive a tenant with an active lease. Please end the lease first.");
+  }
+
   const archived = await softDeleteTenant(id, landlordId);
   if (!archived) throw new NotFoundError("Tenant not found.");
 
@@ -163,7 +172,7 @@ export async function archiveTenantService(
 export async function provisionTenantAccount(
   tenant: { id: string; fullName: string; phone: string; email: string },
   tx: Db = db,
-): Promise<{ userId: string; provisioned: boolean }> {
+): Promise<{ userId: string; provisioned: boolean; tempPassword?: string }> {
   // Idempotency guard: a returning tenant already has an account; do not re-provision.
   const info = await findTenantById(tenant.id, tx);
   if (!info) throw new NotFoundError("Tenant not found.");
@@ -208,5 +217,5 @@ export async function provisionTenantAccount(
     `Welcome to RosiHome.\nUsername (phone): ${tenant.phone}\nTemporary password: ${tempPassword}\nPlease sign in and change your password.`,
   ).catch(() => undefined);
 
-  return { userId: user.id, provisioned: true };
+  return { userId: user.id, provisioned: true, tempPassword };
 }

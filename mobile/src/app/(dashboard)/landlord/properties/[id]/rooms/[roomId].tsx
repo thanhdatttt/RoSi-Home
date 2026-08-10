@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from "react-native";
 import { Link, useRouter, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../../components/MobileFrame";
 import { Field } from "../../../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../../../components/ui/PrimaryButton";
@@ -12,6 +13,7 @@ export default function EditRoom() {
   const { id, roomId } = useLocalSearchParams<{ id: string; roomId: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const insets = useSafeAreaInsets();
   
   const [name, setName] = useState("");
   const [rent, setRent] = useState("");
@@ -66,7 +68,7 @@ export default function EditRoom() {
   if (loading) {
     return (
       <MobileFrame>
-        <View className="flex-1 items-center justify-center bg-background">
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f8ff' }}>
           <ActivityIndicator size="large" color="#2563eb" />
         </View>
       </MobileFrame>
@@ -77,29 +79,31 @@ export default function EditRoom() {
     <MobileFrame>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"} 
-        className="flex-1 bg-background"
+        style={{ flex: 1, backgroundColor: '#f5f8ff' }}
       >
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
-          <View className="flex-1">
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Room Configuration</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Details</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Room Configuration</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Details</Text>
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 mt-4" showsVerticalScrollIndicator={false}>
-          <View className="space-y-4">
-            <Field 
-              label="Room / Unit name" 
-              placeholder="e.g. Unit #1, Room 104" 
-              icon={<DoorOpen size={16} color="gray" />} 
-              value={name}
-              onChangeText={setName}
-            />
+        {/* Form */}
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 16 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+          <Field 
+            label="Room / Unit name" 
+            placeholder="e.g. Unit #1, Room 104" 
+            icon={<DoorOpen size={16} color="gray" />} 
+            value={name}
+            onChangeText={setName}
+          />
+          <View style={{ marginTop: 16 }}>
             <Field 
               label="Monthly base rent (VNĐ)" 
               placeholder="e.g. 3800000" 
@@ -108,15 +112,15 @@ export default function EditRoom() {
               value={rent}
               onChangeText={setRent}
             />
-            
-            {error && (
-              <View className="bg-destructive/10 p-3 rounded-xl mt-2">
-                <Text className="text-destructive text-xs">{error}</Text>
-              </View>
-            )}
           </View>
+          
+          {error && (
+            <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', padding: 12, borderRadius: 12, marginTop: 16 }}>
+              <Text style={{ color: '#ef4444', fontSize: 12 }}>{error}</Text>
+            </View>
+          )}
 
-          <View className="mt-8 mb-8">
+          <View style={{ marginTop: 32, marginBottom: 32 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
               {saving ? "Saving..." : "Save changes"}
             </PrimaryButton>

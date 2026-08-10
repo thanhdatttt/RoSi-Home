@@ -3,6 +3,8 @@ import {
   getInvoiceService,
   sendInvoiceService,
   generateInvoicesForProperty,
+  listInvoicesService,
+  listInvoicesForTenantService,
 } from "./service.js";
 import { generateInvoicePdf } from "../../lib/invoicePdf.js";
 import { previousMonthPeriod } from "../../lib/billingPeriod.js";
@@ -22,6 +24,16 @@ async function get(req: Request, res: Response): Promise<void> {
     req.params.id,
   );
   res.status(200).json({ data: view });
+}
+
+async function list(req: Request, res: Response): Promise<void> {
+  const items = await listInvoicesService(req.user!.id);
+  res.status(200).json({ data: items });
+}
+
+async function listForTenant(req: Request, res: Response): Promise<void> {
+  const items = await listInvoicesForTenantService(req.user!.id);
+  res.status(200).json({ data: items });
 }
 
 async function download(req: Request, res: Response): Promise<void> {
@@ -97,4 +109,10 @@ async function remind(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: result });
 }
 
-export { get, download, send, generate, getVietqr, uploadProof, confirmPayment, remind };
+export { get, download, send, generate,  getVietqr,
+  uploadProof,
+  confirmPayment,
+  remind,
+  list,
+  listForTenant,
+};

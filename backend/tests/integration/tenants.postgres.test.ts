@@ -134,6 +134,12 @@ describe("Tenants (US-TENANT-01/02)", () => {
   });
 
   it("archives a tenant (soft delete) and then 404s on lookup", async () => {
+    // End the lease first to avoid 409 Conflict
+    await dbPool.query(
+      "UPDATE leases SET status = 'Ended' WHERE tenant_info_id = $1",
+      [TENANT_INFO_ID]
+    );
+
     await request(app)
       .delete(`/api/v1/tenants/${TENANT_INFO_ID}`)
       .set(auth(landlordToken))
