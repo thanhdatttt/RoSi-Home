@@ -4,38 +4,38 @@
 
 ### 1.1 Purpose
 
-This document provides the estimation for the RosiHome Property Management System project, including story points for all user stories in the Product Backlog. The estimation results are used for planning, progress tracking, and resource management throughout the MVP development lifecycle.
+This document estimates the RosiHome Property Management System using two complementary methods:
+
+1. Expert Judgment and Planning Poker, with Story Points converted to part-time person-days.
+2. Regression based on comparable completed projects and the current backlog-item count.
+
+The estimation baseline is aligned with `docs/product_backlog_2.0.md`.
+
 ### 1.2 Project Overview
 
-- **Project:** RosiHome – Property Management Platform for Self-Managing Landlords.
-- **Technology stack:** React Native (mobile), Node.js/Express (backend), PostgreSQL (database), Drizzle ORM, JWT authentication, VietQR payment, GitHub Actions CI/CD.
-- **Project scale:** MVP consisting of 5 Epics, 15 Features, 51 User Stories.
-- **Team size:** 5 developers (full-stack, part-time).
-- **Agile process:** Kanban with dependency-based delivery batches.
+- **Project:** RosiHome — Property Management Platform for Self-Managing Landlords.
+- **Technology stack:** React Native/Expo, Node.js/Express, PostgreSQL, Drizzle ORM, JWT, Supabase Storage, VietQR, and GitHub Actions.
+- **Product scope:** 5 Epics, 15 Features, and 51 User Stories.
+- **Supporting scope:** 4 technical/project tasks and 9 documentation tasks.
+- **Total trackable backlog:** 64 items.
+- **Team size:** 5 part-time members, approximately 3–4 hours per person per working day.
+- **AI support:** All team members use modern coding agents; these agents are materially stronger than the chat-only AI used in most historical projects.
 
 ### 1.3 Scope
 
 #### 1.3.1 In Scope
 
-The estimated Epic/Module scope covers the entire Product Backlog:
-
-- **EPIC 1:** Infrastructure and User Management (F-01)
-- **EPIC 2:** Portfolio and Property Setup (F-02, F-03, F-04)
-- **EPIC 3:** Automated Monthly Billing and Payment (F-05, F-06, F-07, F-08, F-09)
-- **EPIC 4:** Lease Management and Maintenance Tracking (F-10, F-11, F-12, F-13)
-- **EPIC 5:** Portfolio Performance Monitoring (F-14, F-15)
+- All 51 product User Stories in Product Backlog 2.0.
+- All 4 technical/project tasks.
+- All 9 documentation tasks.
+- Backend, mobile frontend, testing, integration, project management, and required course documentation.
 
 #### 1.3.2 Out of Scope
 
-Items not included in this estimation:
-
-- Technical tasks and infrastructure setup (not counted as user-story throughput)
-- AI-powered analytics and features beyond MVP scope
-- Payment gateway integration
-- Electronic signatures
-- IoT smart-meter integration
-- Multi-landlord collaboration
-- Advanced accounting and tax reporting
+- AI-powered product analytics beyond the MVP.
+- Payment-gateway integration and automatic bank reconciliation.
+- Electronic signatures and IoT smart-meter integration.
+- Multi-landlord collaboration and advanced accounting/tax reporting.
 
 ---
 
@@ -43,48 +43,67 @@ Items not included in this estimation:
 
 ### 2.1 Overall Estimation Process
 
+```text
+Product Backlog 2.0 (64 items)
+        ├── Expert Judgment + Planning Poker
+        │       └── Base effort from calibrated hours/SP
+        │
+Historical completed projects
+        └── Context normalization + regression
+                └── Base regression effort
+
+Compare both base results
+        └── Select the final baseline
+                └── Apply one risk factor
 ```
-Product Backlog
-        ↓
-Expert Judgment
-        ↓
-Story Points (User Story)
-        ↓
-Velocity (50% MVP)
-        ↓
-Most Likely (Feature)
-        ↓
-PERT
-        ↓
-Final Estimation
-```
+
+Story Points and regression are not interchangeable. Story Points represent the relative size of the current backlog, while regression uses the count-based unit available in the historical dataset: trackable backlog items.
 
 ### 2.2 Assumptions
 
-- Requirements remain stable throughout MVP development.
-- Approximately 50% of MVP scope is already completed; the remainder is estimated in this document.
-- Story Points use the Fibonacci sequence (1, 2, 3, 5, 8, 13).
-- Team consists of 5 part-time developers (~3-4 hours/person/day).
-- AI assists development and testing (Claude Code, ChatGPT, Gemini, ...).
-- External services (email, push notification, file storage, PDF generation) have established baselines or development adapters.
+- Product Backlog 2.0 is the current scope baseline: 51 User Stories plus 13 supporting tasks, or 64 items in total.
+- Story Points use Fibonacci values: 1, 2, 3, 5, 8, and 13.
+- The project is treated as 0% complete; no completed-work data is used.
+- One person-day in this document means one member working one part-time day of approximately 3.5 hours.
+- The SP-to-time conversion is calibrated from the team's known setup and authentication effort rather than assigned directly.
+- Calendar working days are calculated by dividing total person-days by five team members.
+- The regression estimate assumes normal work without sustained overtime.
+- Historical task granularity is sufficiently comparable after qualitative productivity normalization.
+- Modern coding agents reduce repetitive implementation effort but do not eliminate review, integration, testing, documentation, and coordination work.
+- No risk factor is applied before the two base estimates are compared.
+- The selected baseline uses a 2.0 final risk factor after the two methods are compared.
 
 ### 2.3 Estimation Metrics
 
 #### 2.3.1 Story Point
 
-Story Point is a relative unit of effort measurement reflecting the complexity, workload, and technical risk of each user story. The Fibonacci sequence is used to reflect increasing uncertainty as stories grow larger.
+A Story Point is a relative measure of complexity, workload, technical risk, dependencies, and uncertainty. The same scale is also applied to supporting tasks so the complete 64-item backlog has one consistent relative-size baseline.
 
-#### 2.3.2 Velocity
+#### 2.3.2 Part-Time Person-Day Effort
 
-Velocity is the number of story points the team can complete within a given time period (per day or per batch). Velocity is determined based on MVP performance data after actual development data becomes available.
+One person-day equals one 3.5-hour working day by one member. It is already a part-time unit, so it is not converted through an 8-hour workday.
 
-#### 2.3.3 Effort
+```text
+Team calendar working days = total person-days ÷ 5 members
+```
 
-Effort is calculated based on velocity and total remaining story points. Formula: Effort (days) = Total SP / Velocity (SP/day).
+#### 2.3.3 Risk Factor
 
-#### 2.3.4 AI Token Consumption
+The risk factor is applied once, only after both methods are compared and one base estimate is selected. The final factor is 2.0, covering the uncertainty from unfamiliar documentation work, VietQR and integration behavior, and the limited historical regression sample despite the team's capable AI agents and familiarity with most CRUD flows.
 
-AI Token Consumption estimates the number of tokens required for AI-assisted development, based on the total story points and average token consumption per story point.
+#### 2.3.4 Regression
+
+Regression estimates total effort from historical project size using the simple linear-regression form presented in the course material:
+
+```text
+ŷ = a + bx
+
+where:
+x = number of backlog items/tasks
+ŷ = predicted adjusted effort in person-days
+a = intercept
+b = slope in person-days per additional backlog item
+```
 
 ---
 
@@ -92,315 +111,456 @@ AI Token Consumption estimates the number of tokens required for AI-assisted dev
 
 ### 3.1 Expert Judgment
 
-Expert Judgment is the initial estimation technique where the team lead, with AI assistance, assigns story points to each user story based on:
-- **Complexity of business logic**: Number of acceptance criteria, validation rules, and edge cases
-- **Technical risk**: Integration with external services, security-sensitive operations, data consistency requirements
-- **Dependencies**: Number of prerequisite stories and cross-module coupling
-- **Implementation effort**: Estimated lines of code, API endpoints, UI screens, and test coverage needed
-- **Team familiarity**: How well the team knows the domain and technology for this story
+Initial SP is assigned from the Product Backlog 2.0 acceptance criteria using the existing rules:
 
-The expert judgment provides the "Initial SP" as a starting point for team discussion during Planning Poker.
+- business-logic and validation complexity;
+- technical and security risk;
+- dependencies and cross-module coupling;
+- implementation, testing, review, and documentation workload;
+- team familiarity and uncertainty.
+
+Supporting tasks receive Initial SP through Expert Judgment. User Stories discussed in Planning Poker use the recorded consensus as Final SP; all other items retain the Expert Judgment value.
 
 ### 3.2 Planning Poker
 
-Planning Poker is a consensus-based estimation technique where the entire team participates to refine the Initial SP into Final SP. The process:
+Planning Poker refines selected product User Stories. Supporting technical, project-management, and documentation tasks are not included in this historical Planning Poker round.
 
-1. **Preparation**: The Team Lead presents a user story with its acceptance criteria, dependencies, and the Initial SP from Expert Judgment.
-2. **Discussion**: Team members ask clarifying questions about scope, technical approach, risks, and acceptance criteria.
-3. **Voting**: Each developer independently selects a Fibonacci card (1, 2, 3, 5, 8, 13, 21) representing their estimate.
-4. **Reveal**: All votes are revealed simultaneously. If consensus is reached (all votes match or within one Fibonacci step), that value becomes the Final SP.
-5. **Discussion on outliers**: If estimates diverge significantly, the highest and lowest estimators explain their reasoning. The team discusses hidden complexity, unknowns, or different interpretations.
-6. **Re-vote**: After discussion, the team votes again. Usually 2-3 rounds achieve consensus.
-7. **Record**: The agreed Final SP is recorded in the story point table (Section 3.3).
+| User Story | Chí | Minh | Đạt | Hưng | Quân | Consensus Final SP | Notes |
+|---|---:|---:|---:|---:|---:|---:|---|
+| US-AUTH-03 | 5 | 5 | 3 | 2 | 3 | 3 | Revoke refresh and access sessions safely. |
+| US-ROOM-03 | 5 | 3 | 5 | 5 | 3 | 5 | Bulk creation requires duplicate detection and transaction rules. |
+| US-TENANT-01 | 3 | 2 | 3 | 5 | 3 | 3 | Read/update flow with moderate validation and ownership checks. |
+| US-TENANT-02 | 13 | 13 | 8 | 8 | 13 | 13 | Lease, tenant profile, account provisioning, locking, and email. |
+| US-UTILITY-01 | 2 | 2 | 3 | 3 | 2 | 2 | Configuration creation with limited validation. |
+| US-UTILITY-02 | 3 | 3 | 3 | 3 | 3 | 3 | Includes audit and effective-date history. |
+| US-CHARGE-01 | 3 | 3 | 5 | 3 | 5 | 3 | CRUD plus validation and billing applicability. |
+| US-METER-01 | 1 | 1 | 2 | 1 | 2 | 1 | Baseline creation with limited validation. |
+| US-METER-02 | 13 | 8 | 13 | 13 | 8 | 13 | Complex regulated-rate and consumption logic. |
+| US-METER-03 | 3 | 3 | 3 | 3 | 5 | 3 | Update, audit, and draft-invoice recalculation. |
+| US-REMINDER-01 | 8 | 8 | 8 | 5 | 8 | 8 | Scheduled job and external push-notification dependency. |
+| US-REMINDER-02 | 5 | 5 | 3 | 8 | 5 | 5 | Manual reminder with notification and duplicate control. |
+| US-LEASE-03 | 5 | 3 | 5 | 3 | 5 | 5 | Update and renewal with historical traceability. |
+| US-LEASE-05 | 5 | 5 | 5 | 5 | 5 | 5 | Scheduled multi-window push notifications. |
+| US-MAINT-03 | 2 | 2 | 2 | 2 | 3 | 2 | Similar to viewing submitted maintenance requests. |
+| US-MAINT-04 | 1 | 2 | 3 | 2 | 3 | 2 | Status transition, audit, and notification. |
+| US-REPORT-01 | 13 | 8 | 8 | 13 | 13 | 13 | Period handling and broad aggregation requirements. |
+| US-REPORT-02 | 13 | 13 | 13 | 8 | 13 | 13 | Complex financial analysis and reconciliation. |
+| US-REPORT-04 | 5 | 5 | 8 | 5 | 8 | 5 | Moderate calculations for maintenance metrics. |
 
-**Planning Poker Record** :
+### 3.3 Backlog Item Story Point Result
 
-| User Story     | Chí | Minh | Đạt | Hưng | Quân | Consensus Final SP | Notes                                                                                                  |
-| -------------- | --- | ---- | --- | ---- | ---- | ------------------ | ------------------------------------------------------------------------------------------------------ |
-| US-AUTH-03     | 2   | 5    | 3   | 2    | 3    | 3                  | Involve revoking refresh token and access token                                                        |
-| US-ROOM-03     | 5   | 3    | 5   | 5    | 3    | 5                  | Harder than create 1 room because have to check for existing room name duplicate when generating rooms |
-| US-TENANT-01   | 3   | 2    | 3   | 5    | 3    | 3                  | read and update with little validation                                                                 |
-| US-TENANT-02   | 13  | 13   | 8   | 8    | 13   | 13                 | Require lease + tenant profile + tenant account creation, validation, locking, email service.          |
-| US-UTILITY-01  | 2   | 2    | 3   | 3    | 2    | 2                  | Only create object, very little validation needed                                                      |
-| US-UTILITY-02  | 3   | 3    | 3   | 3    | 3    | 3                  | Have audit and history management                                                                      |
-| US-CHARGE-01   | 3   | 3    | 5   | 3    | 5    | 3                  | Only CRUD, little validation                                                                           |
-| US-METER-01    | 1   | 1    | 2   | 1    | 2    | 1                  | Only create, little validation                                                                         |
-| US-METER-02    | 13  | 8    | 13  | 13   | 8    | 13                 | Require complex logic to match Viet Nam law's for default calculation                                  |
-| US-METER-03    | 3   | 3    | 3   | 3    | 5    | 3                  | Only update, but still need medium validation and recalculate invoice                                  |
-| US-REMINDER-01 | 8   | 8    | 8   | 5    | 8    | 8                  | Depend on many external service (email, push notification), require cron job                           |
-| US-REMINDER-02 | 5   | 5    | 3   | 8    | 5    | 5                  | Depend on email and push notification                                                                  |
-| US-LEASE-03    | 5   | 3    | 5   | 3    | 5    | 5                  | Not only update but also renew lease                                                                   |
-| US-LEASE-05    | 5   | 5    | 5   | 5    | 5    | 5                  | Depend on push notification                                                                            |
-| US-MAINT-03    | 2   | 2    | 2   | 2    | 3    | 2                  | Similar to view submitted maintenance request                                                          |
-| US-MAINT-04    | 1   | 2    | 3   | 2    | 3    | 2                  | Only update 1 field of object                                                                          |
-| US-REPORT-01   | 13  | 8    | 8   | 13   | 13   | 13                 | Report require lots of calculation and need to decide what to calculate to be useful                   |
-| US-REPORT-02   | 13  | 13   | 13  | 8    | 13   | 13                 | Complex analysis needed                                                                                |
-| US-REPORT-04   | 5   | 5    | 8   | 5    | 8    | 5                  | Not complex calculation but still require some calculation                                             |
+The table now covers every implementable or trackable item in Product Backlog 2.0. Final SP for Planning Poker items matches the consensus in Section 3.2. Excluding Chí, the total absolute differences from Final SP across the 19 Planning Poker stories are Hưng 22 SP, Đạt 20 SP, Minh 17 SP, and Quân 17 SP. Therefore, Hưng and Đạt are selected for the two additional Initial SP columns. Their Planning Poker vote is used when a story appears in Section 3.2; otherwise, their value equals Final SP.
 
-### 3.3 Story Point Result
-
-The expert judgment story points below represent the team lead's initial assessment with AI assistance. These serve as the baseline for velocity-based forecasting. Final SP column is populated after Planning Poker consensus.
-
-| User Story     | Description                                           | Initial SP | Final SP |
-| -------------- | ----------------------------------------------------- | ---------- | -------- |
-|                | **EPIC 1: Infrastructure and User Management**        |            |          |
-| US-AUTH-01     | Register a landlord account                           | 3          | 3        |
-| US-AUTH-02     | Log in                                                | 5          | 5        |
-| US-AUTH-03     | Log out                                               | 1          | 3        |
-| US-AUTH-04     | Enforce role and data ownership                       | 5          | 5        |
-| US-AUTH-05     | Change password                                       | 3          | 3        |
-| US-PROFILE-01  | View and update a user profile                        | 2          | 2        |
-| US-AUTH-06     | Recover a forgotten password                          | 5          | 5        |
-|                | **EPIC 2: Portfolio and Property Setup**              |            |          |
-| US-PROPERTY-01 | Create a property                                     | 3          | 3        |
-| US-PROPERTY-02 | View and update owned properties                      | 2          | 2        |
-| US-ROOM-01     | Add a room to a property                              | 3          | 3        |
-| US-ROOM-02     | View and update room information                      | 2          | 2        |
-| US-ROOM-03     | Add multiple rooms to a property                      | 5          | 5        |
-| US-TENANT-01   | View and update tenant information                    | 3          | 3        |
-| US-TENANT-02   | Provision a tenant account from a lease               | 8          | 13       |
-| US-UTILITY-01  | Configure utility rates                               | 5          | 3        |
-| US-UTILITY-02  | View and update utility rates                         | 3          | 3        |
-| US-CHARGE-01   | Configure recurring property surcharges               | 5          | 3        |
-|                | **EPIC 3: Automated Monthly Billing and Payment**     |            |          |
-| US-METER-01    | Record an initial meter reading                       | 3          | 1        |
-| US-METER-02    | Record monthly readings and calculate consumption     | 13         | 13       |
-| US-METER-03    | Correct a reading used for billing                    | 5          | 3        |
-| US-INVOICE-01  | Generate a monthly invoice                            | 13         | 13       |
-| US-INVOICE-02  | View an invoice                                       | 3          | 3        |
-| US-INVOICE-03  | Download an invoice document                          | 5          | 5        |
-| US-INVOICE-04  | Review and send a draft invoice                       | 5          | 5        |
-| US-VIETQR-01   | Configure landlord payment details                    | 3          | 3        |
-| US-VIETQR-02   | Generate and display an invoice VietQR code           | 13         | 13       |
-| US-PAYMENT-01  | Upload payment proof                                  | 5          | 5        |
-| US-PAYMENT-02  | Verify payment manually                               | 3          | 3        |
-| US-PAYMENT-03  | View payment history and outstanding balances         | 5          | 5        |
-| US-REMINDER-01 | Receive an automatic overdue-payment reminder         | 5          | 8        |
-| US-REMINDER-02 | Send a manual payment reminder                        | 3          | 5        |
-|                | **EPIC 4: Lease Management and Maintenance Tracking** |            |          |
-| US-LEASE-01    | Create a digital lease                                | 5          | 5        |
-| US-LEASE-02    | View lease information                                | 2          | 2        |
-| US-LEASE-03    | Update or renew a lease                               | 5          | 5        |
-| US-LEASE-04    | End a lease and release a room                        | 3          | 3        |
-| US-LEASE-05    | Receive a lease-expiration reminder                   | 8          | 5        |
-| US-LEASE-06    | View upcoming lease expirations                       | 3          | 3        |
-| US-MAINT-01    | Submit a maintenance request                          | 5          | 5        |
-| US-MAINT-02    | View submitted maintenance requests                   | 2          | 2        |
-| US-MAINT-03    | Review maintenance requests                           | 3          | 2        |
-| US-MAINT-04    | Update maintenance status                             | 3          | 2        |
-| US-MAINT-05    | View maintenance history by room                      | 3          | 3        |
-|                | **EPIC 5: Portfolio Performance Monitoring**          |            |          |
-| US-DASH-01     | View occupied room count                              | 3          | 3        |
-| US-DASH-02     | View monthly revenue summary                          | 5          | 5        |
-| US-DASH-03     | View outstanding and overdue invoices                 | 5          | 5        |
-| US-DASH-04     | View upcoming lease expirations on the dashboard      | 3          | 3        |
-| US-REPORT-01   | Select a reporting period and generate a report       | 5          | 13       |
-| US-REPORT-02   | Analyze financial performance and debt                | 8          | 13       |
-| US-REPORT-03   | Analyze occupancy, churn, and lease expirations       | 8          | 8        |
-| US-REPORT-04   | Analyze maintenance efficiency                        | 5          | 5        |
-| US-REPORT-05   | Export a business report as PDF                       | 5          | 5        |
-|                | **Total**                                             | **236**    | **248**  |
-
----
-
-## 4. Velocity-Based Estimation
-
-*This section will be populated after Planning Poker consensus (Section 3.3 Final SP column) is completed. Velocity calculation requires Final Story Points per user story to determine remaining SP and forecast completion time.*
-
-### 4.1 MVP Performance Data
-
-| Metric                  | Value |
-| ----------------------- | ----- |
-| Completed Story Points  |       |
-| Completed User Stories  |       |
-| Actual Development Time |       |
-| AI Tokens Used          |       |
-
-
-### 4.2 Velocity Calculation
-
-| Stream          | Time/Story | Tokens/Story |
-| --------------- | ---------- | ------------ |
-| BE1 blended     |            |              |
-| BE2 combined    |            |              |
-| BE3 Billing     |            |              |
-| BE3 Maintenance |            |              |
-| BE3 combined    |            |              |
-| FE1 Batch 1     |            |              |
-| FE2 Batch 1     |            |              |
-
-**Overall backend velocity:**
-**Overall backend token rate:**
-
-### 4.3 Remaining Work Estimation
-
-**Remaining backend scope:** (to be determined after Final SP)
-
-| Scenario | Remaining Backend Time | Remaining Backend Tokens | Factor |
-|---|---|---|---|
-| Optimistic | | | 1.0× |
-| Expected | | | 1.5× |
-| Conservative | | | 2.0× |
-
-**Remaining frontend scope:** (to be determined after Final SP)
-
-| Scenario | FE1 Remaining | FE2 Remaining | Combined Remaining |
-|---|---|---|---|
-| Lean | | | |
-| Expected | | | |
-| Conservative | | | |
+| Backlog Item | Description | Initial SP | Initial SP (Hưng) | Initial SP (Đạt) | Final SP |
+|---|---|---:|---:|---:|---:|
+| | **Technical and Project Tasks** | | | | |
+| TASK-TECH-01 | Set up backend infrastructure | 5 | 5 | 5 | 5 |
+| TASK-TECH-02 | Set up frontend/mobile infrastructure | 5 | 5 | 5 | 5 |
+| TASK-TECH-03 | Set up quality tooling | 8 | 8 | 8 | 8 |
+| TASK-PM-01 | Manage the team's Trello board | 5 | 5 | 5 | 5 |
+| | **Technical/Project Task Subtotal (4 items)** | **23** | **23** | **23** | **23** |
+| | **Documentation Tasks** | | | | |
+| TASK-DOC-01 | Write the Technical Architecture document | 8 | 8 | 8 | 8 |
+| TASK-DOC-03 | Write Product Backlog Version 1 | 13 | 13 | 13 | 13 |
+| TASK-DOC-05 | Write Product Backlog 2.0 | 13 | 13 | 13 | 13 |
+| TASK-DOC-07 | Write the Project Charter | 8 | 8 | 8 | 8 |
+| TASK-DOC-09 | Write the Software Project Estimation document | 8 | 8 | 8 | 8 |
+| TASK-DOC-11 | Write the Project Proposal | 8 | 8 | 8 | 8 |
+| TASK-DOC-13 | Write the Statement of Work | 8 | 8 | 8 | 8 |
+| TASK-DOC-15 | Write the Vision and Scope document | 8 | 8 | 8 | 8 |
+| TASK-DOC-17 | Write the Risk Management Plan | 8 | 8 | 8 | 8 |
+| | **Documentation Task Subtotal (9 items)** | **82** | **82** | **82** | **82** |
+| | **EPIC 1: Infrastructure and User Management** | | | | |
+| US-AUTH-01 | Register a landlord account | 3 | 3 | 3 | 3 |
+| US-AUTH-02 | Log in | 5 | 5 | 5 | 5 |
+| US-AUTH-03 | Log out | 1 | 2 | 3 | 3 |
+| US-AUTH-04 | Enforce role and data ownership | 5 | 5 | 5 | 5 |
+| US-AUTH-05 | Change password | 3 | 3 | 3 | 3 |
+| US-PROFILE-01 | View and update a user profile | 2 | 2 | 2 | 2 |
+| US-AUTH-06 | Recover a forgotten password | 5 | 5 | 5 | 5 |
+| | **EPIC 2: Portfolio and Property Setup** | | | | |
+| US-PROPERTY-01 | Create a property | 3 | 3 | 3 | 3 |
+| US-PROPERTY-02 | View and update owned properties | 2 | 2 | 2 | 2 |
+| US-ROOM-01 | Add a room to a property | 3 | 3 | 3 | 3 |
+| US-ROOM-02 | View and update room information | 2 | 2 | 2 | 2 |
+| US-ROOM-03 | Add multiple rooms to a property | 5 | 5 | 5 | 5 |
+| US-TENANT-01 | View and update tenant information | 3 | 5 | 3 | 3 |
+| US-TENANT-02 | Provision a tenant account from a lease | 8 | 8 | 8 | 13 |
+| US-UTILITY-01 | Configure utility rates | 5 | 3 | 3 | 2 |
+| US-UTILITY-02 | View and update utility rates | 3 | 3 | 3 | 3 |
+| US-CHARGE-01 | Configure recurring property surcharges | 5 | 3 | 5 | 3 |
+| | **EPIC 3: Automated Monthly Billing and Payment** | | | | |
+| US-METER-01 | Record an initial meter reading | 3 | 1 | 2 | 1 |
+| US-METER-02 | Record monthly readings and calculate consumption | 13 | 13 | 13 | 13 |
+| US-METER-03 | Correct a reading used for billing | 5 | 3 | 3 | 3 |
+| US-INVOICE-01 | Generate a monthly invoice | 13 | 13 | 13 | 13 |
+| US-INVOICE-02 | View an invoice | 3 | 3 | 3 | 3 |
+| US-INVOICE-03 | Download an invoice document | 5 | 5 | 5 | 5 |
+| US-INVOICE-04 | Review and send a draft invoice | 5 | 5 | 5 | 5 |
+| US-VIETQR-01 | Configure landlord payment details | 3 | 3 | 3 | 3 |
+| US-VIETQR-02 | Generate and display an invoice VietQR code | 13 | 13 | 13 | 13 |
+| US-PAYMENT-01 | Upload payment proof | 5 | 5 | 5 | 5 |
+| US-PAYMENT-02 | Verify payment manually | 3 | 3 | 3 | 3 |
+| US-PAYMENT-03 | View payment history and outstanding balances | 5 | 5 | 5 | 5 |
+| US-REMINDER-01 | Receive an automatic overdue-payment reminder | 5 | 5 | 8 | 8 |
+| US-REMINDER-02 | Send a manual payment reminder | 3 | 8 | 3 | 5 |
+| | **EPIC 4: Lease Management and Maintenance Tracking** | | | | |
+| US-LEASE-01 | Create a digital lease | 5 | 5 | 5 | 5 |
+| US-LEASE-02 | View lease information | 2 | 2 | 2 | 2 |
+| US-LEASE-03 | Update or renew a lease | 5 | 3 | 5 | 5 |
+| US-LEASE-04 | End a lease and release a room | 3 | 3 | 3 | 3 |
+| US-LEASE-05 | Receive a lease-expiration reminder | 8 | 5 | 5 | 5 |
+| US-LEASE-06 | View upcoming lease expirations | 3 | 3 | 3 | 3 |
+| US-MAINT-01 | Submit a maintenance request | 5 | 5 | 5 | 5 |
+| US-MAINT-02 | View submitted maintenance requests | 2 | 2 | 2 | 2 |
+| US-MAINT-03 | Review maintenance requests | 3 | 2 | 2 | 2 |
+| US-MAINT-04 | Update maintenance status | 3 | 2 | 3 | 2 |
+| US-MAINT-05 | View maintenance history by room | 3 | 3 | 3 | 3 |
+| | **EPIC 5: Portfolio Performance Monitoring** | | | | |
+| US-DASH-01 | View occupied room count | 3 | 3 | 3 | 3 |
+| US-DASH-02 | View monthly revenue summary | 5 | 5 | 5 | 5 |
+| US-DASH-03 | View outstanding and overdue invoices | 5 | 5 | 5 | 5 |
+| US-DASH-04 | View upcoming lease expirations on the dashboard | 3 | 3 | 3 | 3 |
+| US-REPORT-01 | Select a reporting period and generate a report | 5 | 13 | 8 | 13 |
+| US-REPORT-02 | Analyze financial performance and debt | 8 | 8 | 13 | 13 |
+| US-REPORT-03 | Analyze occupancy, churn, and lease expirations | 8 | 8 | 8 | 8 |
+| US-REPORT-04 | Analyze maintenance efficiency | 5 | 5 | 8 | 5 |
+| US-REPORT-05 | Export a business report as PDF | 5 | 5 | 5 | 5 |
+| | **Product User Story Subtotal (51 items)** | **236** | **237** | **243** | **247** |
+| | **Grand Total (64 items)** | **341** | **342** | **348** | **352** |
 
 ---
 
-## 5. Three-Point Estimation (PERT)
+## 4. Story-Point-Based Effort Estimation
 
-### 5.1 Estimation Factors
+### 4.1 Base Effort
 
-Effort Complexity Factors used to evaluate each Feature:
+Because the project is treated as not started, the SP-to-time conversion is inferred from work the team already understands well. Each time range is represented by its midpoint:
 
-| Factor | Description |
-|---|---|
-| Complex business logic | Multi-step calculations, state machines, validation rules, edge cases |
-| Third-party API integration | External payment (VietQR), email/push providers, file storage, PDF services |
-| Security-sensitive functionality | Authentication, authorization, payment data, personal data, encryption |
-| AI-generated unfamiliar code | New patterns, libraries, or domains where AI assistance is less reliable |
-| Performance optimization | Large dataset aggregation, report generation, query optimization, caching |
-| Requirement ambiguity | Unclear acceptance criteria, pending stakeholder decisions, evolving scope |
+| Calibration Item | Final SP | Known Time | Midpoint | Hours/SP |
+|---|---:|---:|---:|---:|
+| TASK-TECH-01 — Backend setup | 5 | 2–3 hours | 2.5 hours | 0.50 |
+| TASK-TECH-02 — Frontend setup | 5 | 2–3 hours | 2.5 hours | 0.50 |
+| US-AUTH-01 — Registration | 3 | 1–2 hours | 1.5 hours | 0.50 |
+| US-AUTH-02 — Login with JWT, access token, and refresh token | 5 | 4–5 hours | 4.5 hours | 0.90 |
 
-Complexity Score = count of factors present per feature (0–6).
+A through-origin fit is used so that zero SP corresponds to zero implementation time:
 
-Conversion rules (applied to Most Likely M):
-| Complexity Score | O | P |
-|---|---|---|
-| 0–2 | 0.90M | 1.20M |
-| 3–5 | 0.85M | 1.40M |
-| 6–8 | 0.80M | 1.70M |
-| >8 | 0.70M | 2.00M |
+```text
+Hours per SP = Σ(SP × midpoint hours) ÷ Σ(SP²)
+             = 52 ÷ 84
+             = 0.619 ≈ 0.62 hour/SP
 
-> **Most Likely (M)** derived from MVP velocity (1.9 SP/hour from 37 stories / 115 SP in 60.4h); only **O** and **P** adjusted by Complexity Score.
+Therefore:
+1 SP ≈ 0.62 hour
+3 SP ≈ 1.86 hours
+5 SP ≈ 3.10 hours
 
-#### Feature Complexity Scoring
+Complete backlog Final SP = 352 SP
+Base effort hours = 352 × 0.619 = 217.9 hours
+Base effort = 217.9 ÷ 3.5 = 62.3 person-days
+```
 
-| Feature | Factors Present | Complexity Score |
-|---|---|---|
-| F-01: Auth & Profile | Security-sensitive, Complex business logic, Requirement ambiguity (roles) | 3 |
-| F-02: Property | — | 0 |
-| F-03: Room | Complex business logic (multi-room) | 1 |
-| F-04: Tenant & Utility | Complex business logic (provisioning, rates, surcharges), Requirement ambiguity | 2 |
-| F-05: Meter | Complex business logic (consumption calc, corrections) | 1 |
-| F-06: Invoice | Complex business logic (generation, state machine), AI-generated unfamiliar code (PDF), Performance optimization | 3 |
-| F-07: VietQR | Third-party API integration, Security-sensitive, Complex business logic (QR payload) | 3 |
-| F-08: Payment | Security-sensitive, Complex business logic (verification, history), Requirement ambiguity | 3 |
-| F-09: Reminder | Complex business logic (scheduling), AI-generated unfamiliar code (cron/jobs) | 2 |
-| F-10: Lease | Complex business logic (lifecycle, renewals), Requirement ambiguity | 2 |
-| F-11: Maintenance | Complex business logic (workflow, status transitions) | 1 |
-| F-12: Dashboard | Performance optimization (aggregations), Complex business logic | 2 |
-| F-13: Report | Complex business logic (multi-analysis), Performance optimization, AI-generated unfamiliar code (PDF export), Requirement ambiguity | 4 |
+### 4.2 Base Method Result
 
-### 5.2 PERT Estimation Result
+| Result | Value |
+|---|---:|
+| Calibrated rate | 0.619 hour/SP |
+| **Base effort for comparison** | **62.3 person-days** |
 
-Most Likely (M) = Feature SP ÷ 1.9 SP/hour (empirical velocity from MVP)
+No risk factor is applied in this section. The 62.3-person-day result is carried unchanged into the method comparison in Section 6.
 
-| Feature | SP | M (hours) | Complexity Score | O (hours) | P (hours) | Expected = (O+4M+P)/6 (hours) |
+---
+
+## 5. Regression-Based Total Effort Estimation
+
+### 5.1 Historical Dataset and Context Normalization
+
+The supplied historical effort is measured in person-days. Each value is multiplied by a comparability factor to express the corresponding effort under RosiHome's stronger experience and Agent-assisted workflow.
+
+| Project | Tasks | Members | Raw Effort (person-days) | RosiHome Comparability Factor | Adjusted Effort (person-days) |
+|---|---:|---:|---:|---:|---:|
+| FilmForum | 24 | 5 | 77 | 0.55 | 42.35 |
+| Auctiz | 27 | 5 | 69 | 0.70 | 48.30 |
+| BidWise | 29 | 4 | 68 | 0.70 | 47.60 |
+| Domini Shop | 33 | 5 | 50 | 0.90 | 45.00 |
+| Java Chatbox | 54 | 2 | 70 | 0.75 | 52.50 |
+
+Factor rationale:
+
+- **FilmForum — 0.55:** the team had almost no software-development experience, had never built a web/app system, and used a much weaker chat-only AI approximately 1.5 years earlier.
+- **Auctiz and BidWise — 0.70:** the team knew only basic backend, frontend, database, and security concepts and still used chat-only AI approximately one year earlier.
+- **Domini Shop — 0.90:** this is the closest reference because the team used coding agents and did not rely on overtime; only a modest reduction is applied because RosiHome's agents are stronger.
+- **Java Chatbox — 0.75:** Java increased implementation complexity and the project used chat-only AI. Its two-member team also relied on substantial overtime, which can compress elapsed duration and partially hide sustainable effort; therefore, its factor is not reduced as aggressively as FilmForum's.
+
+These factors are judgment-based calibration coefficients. They make the historical projects more comparable, but they are not measured causal productivity ratios.
+
+### 5.2 Linear Regression Model
+
+The course model `ŷ = a + bx` is used, with one independent variable:
+
+- `xᵢ`: number of tasks in historical project `i`;
+- `yᵢ`: adjusted effort of historical project `i`;
+- `ŷ`: effort predicted by the fitted regression line.
+
+Members is not included as a second independent variable because the dataset has only five observations and member count is confounded with technology, experience, overtime, and AI capability. Members is used only after estimation to convert total person-days into team working days.
+
+#### Step 1 — Calculate adjusted effort for every historical project
+
+For project `i`:
+
+```text
+yᵢ = Eᵢ × kᵢ
+
+where:
+Eᵢ = raw historical effort in person-days
+kᵢ = RosiHome comparability factor from Section 5.1
+yᵢ = adjusted effort used as the regression dependent variable
+```
+
+Substituting each project's values:
+
+```text
+FilmForum:    y₁ = 77 × 0.55 = 42.35 person-days
+Auctiz:       y₂ = 69 × 0.70 = 48.30 person-days
+BidWise:      y₃ = 68 × 0.70 = 47.60 person-days
+Domini Shop:  y₄ = 50 × 0.90 = 45.00 person-days
+Java Chatbox: y₅ = 70 × 0.75 = 52.50 person-days
+```
+
+#### Step 2 — Calculate the sample means
+
+```text
+n = 5
+
+Σxᵢ = 24 + 27 + 29 + 33 + 54 = 167
+x̄ = Σxᵢ ÷ n = 167 ÷ 5 = 33.4 tasks
+
+Σyᵢ = 42.35 + 48.30 + 47.60 + 45.00 + 52.50 = 235.75
+ȳ = Σyᵢ ÷ n = 235.75 ÷ 5 = 47.15 person-days
+```
+
+#### Step 3 — Calculate the slope `b`
+
+The simple linear-regression slope is:
+
+```text
+b = Σ[(xᵢ − x̄)(yᵢ − ȳ)] ÷ Σ[(xᵢ − x̄)²]
+```
+
+Every component is calculated below:
+
+| Project | xᵢ | yᵢ | xᵢ − x̄ | yᵢ − ȳ | (xᵢ − x̄)(yᵢ − ȳ) | (xᵢ − x̄)² |
 |---|---:|---:|---:|---:|---:|---:|
-| F-01: Auth & Profile | 24 | 12.6 | 3 | 10.7 | 17.7 | **13.1** |
-| F-02: Property | 5 | 2.6 | 0 | 2.4 | 3.2 | **2.7** |
-| F-03: Room | 10 | 5.3 | 1 | 4.7 | 6.3 | **5.3** |
-| F-04: Tenant & Utility | 24 | 12.6 | 2 | 11.4 | 15.2 | **12.8** |
-| F-05: Meter | 21 | 11.1 | 1 | 9.9 | 13.3 | **11.1** |
-| F-06: Invoice | 26 | 13.7 | 3 | 11.6 | 19.2 | **14.2** |
-| F-07: VietQR | 16 | 8.4 | 3 | 7.2 | 11.8 | **8.8** |
-| F-08: Payment | 13 | 6.8 | 3 | 5.8 | 9.6 | **7.1** |
-| F-09: Reminder | 8 | 4.2 | 2 | 3.8 | 5.1 | **4.3** |
-| F-10: Lease | 26 | 13.7 | 2 | 12.3 | 16.4 | **13.8** |
-| F-11: Maintenance | 16 | 8.4 | 1 | 7.6 | 10.1 | **8.5** |
-| F-12: Dashboard | 16 | 8.4 | 2 | 7.6 | 10.1 | **8.5** |
-| F-13: Report | 31 | 16.3 | 4 | 13.9 | 22.8 | **16.8** |
-| **Total** | **236** | **124.1** | — | **108.8** | **160.6** | **127.0** |
+| FilmForum | 24 | 42.35 | -9.4 | -4.80 | 45.12 | 88.36 |
+| Auctiz | 27 | 48.30 | -6.4 | 1.15 | -7.36 | 40.96 |
+| BidWise | 29 | 47.60 | -4.4 | 0.45 | -1.98 | 19.36 |
+| Domini Shop | 33 | 45.00 | -0.4 | -2.15 | 0.86 | 0.16 |
+| Java Chatbox | 54 | 52.50 | 20.6 | 5.35 | 110.21 | 424.36 |
+| **Total** | | | **0** | **0** | **146.85** | **573.20** |
 
-### 5.3 Estimation Validation
+Substitute the two totals:
 
-| Method | Estimated Time (hours) | Estimated Token (M) |
-|---|---:|---:|
-| Velocity (Expected) | TBD (after Final SP) | TBD |
-| PERT (Expected) | 127.0 | ~860M (extrapolated) |
+```text
+b = 146.85 ÷ 573.20
+  = 0.256193...
+  ≈ 0.2562 person-day per additional task
+```
 
-- Compare results between two methods.
-- Analyze if significant variance exists.
-- PERT total (127h) aligns with velocity-based backend (60h done + ~15h remaining = 75h) + frontend (~75h) ≈ 150h when including integration, testing, deployment overhead.
+#### Step 4 — Calculate the intercept `a`
+
+```text
+a = ȳ − bx̄
+  = 47.15 − (0.256193 × 33.4)
+  = 47.15 − 8.556856
+  = 38.593144
+  ≈ 38.593 person-days
+```
+
+#### Step 5 — Write the fitted regression line
+
+```text
+ŷ = a + bx
+ŷ = 38.593 + 0.2562x
+```
+
+The intercept represents the fitted baseline project effort, while the slope adds approximately 0.2562 person-day for each additional backlog item within the model.
+
+#### Step 6 — Substitute the RosiHome backlog size
+
+RosiHome contains 64 trackable items:
+
+```text
+ŷ_RosiHome = 38.593 + (0.2562 × 64)
+           = 38.593 + 16.3968
+           = 54.9898
+           ≈ 55.0 person-days
+```
+
+The regression base result carried into Section 6 is therefore **55.0 person-days**, before any risk factor.
+
+#### Model fit
+
+The coefficient of determination is included as a descriptive check:
+
+```text
+SSE = 20.188
+SST = 57.810
+R² = 1 − (SSE ÷ SST)
+   = 1 − (20.188 ÷ 57.810)
+   = 0.651
+```
+
+With only five historical observations, this fit is useful for estimation and visualization but remains too limited for a high-confidence prediction.
+### 5.3 RosiHome Regression Result
+
+```text
+RosiHome backlog size = 64 items
+Fitted line: ŷ = 38.593 + 0.2562x
+
+Regression point estimate = 38.593 + (0.2562 × 64)
+                          = 54.9898
+                          ≈ 55.0 person-days
+```
+
+| Result | Value |
+|---|---:|
+| **Base effort for comparison** | **55.0 person-days** |
+
+No risk factor is applied in this section. The 55.0-person-day result is carried unchanged into the method comparison in Section 6.
+
+#### Scatter Plot and Fitted-Line Data
+
+The following values can be copied directly into a spreadsheet or charting tool:
+
+| Project | x: Tasks | Actual y: Adjusted Effort | Fitted ŷ = 38.593 + 0.2562x |
+|---|---:|---:|---:|
+| FilmForum | 24 | 42.35 | 44.74 |
+| Auctiz | 27 | 48.30 | 45.51 |
+| BidWise | 29 | 47.60 | 46.02 |
+| Domini Shop | 33 | 45.00 | 47.05 |
+| Java Chatbox | 54 | 52.50 | 52.43 |
+| **RosiHome prediction** | **64** | — | **54.99** |
+
+For the chart:
+
+- use **Tasks** as the horizontal axis;
+- use **Adjusted Effort (person-days)** as the vertical axis;
+- plot the five historical `Actual y` values as the scatter series;
+- plot the `Fitted ŷ` values as a straight-line series;
+- show `(64, 54.99)` as the RosiHome prediction point.
+
+### 5.4 Interpretation and Recalibration
+
+- The regression estimates the complete 64-item backlog from historical project counts.
+- The 55.0-person-day result represents normalized historical productivity before any risk factor.
+- The five historical observations are insufficient for a stable prediction and differ in technology, experience, AI support, team size, and overtime behavior.
+- The model does not assume overtime. Overtime may shorten calendar duration temporarily but does not remove total work and can increase rework risk.
 
 ---
 
 ## 6. Final Estimation Summary
 
-### 6.1 Overall Estimation
+### 6.1 Base Method Comparison
 
-| Item | Expected Value | Range |
-|---|---|---|
-| Total Story Points (backend) | 236 | - |
-| Completed Story Points (backend) | TBD (after Final SP) | - |
-| Remaining Story Points (backend) | TBD (after Final SP) | - |
-| Backend Velocity | ~0.61 stories/hour | - |
-| Backend Token Rate | ~6.75M tokens/story | - |
-| **PERT Total Expected Time** | **127.0 hours** | 108.8–160.6 hours |
-| PERT Backend Expected Time | ~75 hours | 65–95 hours |
-| PERT Frontend Expected Time | ~52 hours | 44–62 hours |
-| Full Implementation AI Usage EAC | ~860M tokens | 770–960M tokens |
-| Complete MVP Duration | 9 weeks | 8–10 weeks |
-| Gross Team Capacity | 787.5 hours | 600–1,000 hours |
-| Development Cash Budget | VND 3,277,500 | VND 950,000–4,062,500 |
-| Economic Labor | 787.5h × shadow rate | 600–1,000h × shadow rate |
+No risk factor is included in this comparison.
 
-*Velocity-based remaining work estimates (Section 4) to be populated after Planning Poker Final SP.*
+| Method | Base Effort | Evidence |
+|---|---:|---|
+| Story Points + Expert Judgment | **62.3 person-days** | Current 64-item backlog and time-calibrated SP |
+| Linear regression | **55.0 person-days** | Fitted line from five normalized historical projects |
+| Difference | **7.3 person-days** | The SP result is 13.3% higher than regression |
 
-### 6.2 Conclusion
+### 6.2 Final Baseline Selection
 
-The **PERT three-point estimation** (Section 5) provides the primary risk-adjusted forecast: **127 hours expected** (109–161 hour range) for full MVP implementation across all 13 features. This translates to **~9 weeks** with 5 part-time developers at 3–4 hours/day.
+The **62.3-person-day Story Point result** is selected as the final base estimate because:
 
-The PERT estimate integrates:
-- **Feature-level complexity scoring** across 6 risk factors (business logic, third-party APIs, security, AI unfamiliarity, performance, ambiguity)
-- **Empirical velocity baseline** (1.9 SP/hour from 37 deployed backend stories)
-- **Asymmetric uncertainty** via Optimistic/Pessimistic bounds per complexity tier
-- **Cross-method validation**: PERT total (127h) aligns with velocity-based EAC (75h backend + 75h frontend ≈ 150h with integration/testing overhead)
+- it is derived from the current RosiHome backlog rather than only task counts;
+- the SP-to-time rate is calibrated from backend setup, frontend setup, registration, and token-based login work familiar to the team;
+- the regression sample contains only five heterogeneous projects and is retained as an independent reasonableness check;
+- the selected SP result is also the higher of the two unadjusted estimates.
 
-The velocity-based estimation (Section 4) will be finalized after Planning Poker consensus populates Final SP. Both methods will be reconciled before baseline approval per the Cost–Time–Resources Estimation Methodology.
+No factor has been applied to either method before this selection.
+
+### 6.3 Final Risk Adjustment
+
+After selecting 62.3 person-days, one 2.0 risk factor is applied.
+
+Factors that limit risk:
+
+- all members use capable AI coding agents;
+- most RosiHome functions are CRUD flows or familiar authentication, billing, and reporting patterns.
+
+Risks covered by the factor:
+
+- implementation and project documentation must be produced in parallel;
+- the team is less familiar with formal software-project documentation;
+- VietQR and some notification/integration behavior are less familiar than ordinary CRUD work.
+
+```text
+Selected base effort = 62.3 person-days
+Final risk factor = 2.0
+Final project effort = 62.3 × 2.0 = 124.6 person-days
+Team calendar duration = 124.6 ÷ 5 = 24.9 ≈ 25 working days
+```
+
+| Item | Final Value |
+|---|---:|
+| Total backlog items | 64 |
+| Complete backlog Final SP | 352 SP |
+| Selected base effort | 62.3 person-days |
+| Final risk factor | 2.0 |
+| **Final project effort** | **124.6 person-days** |
+| **Planned team duration** | **25 working days** |
+
+### 6.4 Conclusion
+
+The methods are compared before risk adjustment: Story Points estimate 62.3 person-days and linear regression estimates 55.0 person-days. The project-specific and higher Story Point result is selected, then multiplied once by 2.0. The final RosiHome estimate is therefore **124.6 part-time person-days**, equivalent to approximately **25 working days** for five members.
 
 ---
 
 ## Appendix
 
-### A. Velocity Calculation Details
-
-| Stream | Completed Stories | Real-Time Hours | Tokens | Hours/Story | Tokens/Story |
-|---|---|---|---|---|---|
-| BE1 (Batch 1+2) | 15 | 35 | 135.0M | 2.33 | 9.00M |
-| BE2 (Batch 1) | 5 | 7 | 6.3M | 1.40 | 1.26M |
-| BE2 (Batch 2+3) | 7 | 13 | 13.0M | 1.86 | 1.86M |
-| BE2 (Batch 4) | 2 | 2 | 2.5M | 1.00 | 1.25M |
-| BE3 (Billing Foundation) | 3 | 1.01 | 36.5M | 0.34 | 12.17M |
-| BE3 (MAINT-01→05) | 5 | 2.38 | 56.56M | 0.48 | 11.31M |
-| **Backend Total** | **37** | **60.39** | **249.86M** | **1.63** | **6.75M** |
-| FE1 (Batch 1) | 4 pkg | 13–15 | 10.5M | 3.25–3.75 | 2.625M |
-| FE2 (Batch 1) | 4 pkg | 13–14 | 118.0M | 3.25–3.50 | 29.50M |
-
-### B. Feature Mapping
+### A. Feature Mapping
 
 | Epic | Feature | User Stories |
 |---|---|---|
-| EPIC 1 | F-01: Auth & Profile | US-AUTH-01→06, US-PROFILE-01 (7) |
-| EPIC 2 | F-02: Property | US-PROPERTY-01→02 (2) |
-| EPIC 2 | F-03: Room | US-ROOM-01→03 (3) |
-| EPIC 2 | F-04: Tenant & Utility | US-TENANT-01→02, US-UTILITY-01→02, US-CHARGE-01 (5) |
-| EPIC 3 | F-05: Meter | US-METER-01→03 (3) |
-| EPIC 3 | F-06: Invoice | US-INVOICE-01→04 (4) |
-| EPIC 3 | F-07: VietQR | US-VIETQR-01→02 (2) |
-| EPIC 3 | F-08: Payment | US-PAYMENT-01→03 (3) |
-| EPIC 3 | F-09: Reminder | US-REMINDER-01→02 (2) |
-| EPIC 4 | F-10: Lease | US-LEASE-01→06 (6) |
-| EPIC 4 | F-11: Maintenance | US-MAINT-01→05 (5) |
-| EPIC 5 | F-12: Dashboard | US-DASH-01→04 (4) |
-| EPIC 5 | F-13: Report | US-REPORT-01→05 (5) |
+| EPIC 1 | F-01: User Registration, Authentication, and Profile | US-AUTH-01→06, US-PROFILE-01 (7) |
+| EPIC 2 | F-02: Property and Room Management | US-PROPERTY-01→02, US-ROOM-01→03 (5) |
+| EPIC 2 | F-03: Tenant Information and Account Management | US-TENANT-01→02 (2) |
+| EPIC 2 | F-04: Utility Pricing and Property Surcharges | US-UTILITY-01→02, US-CHARGE-01 (3) |
+| EPIC 3 | F-05: Utility Meter Reading and Calculation | US-METER-01→03 (3) |
+| EPIC 3 | F-06: Billing and Invoice Generation | US-INVOICE-01→04 (4) |
+| EPIC 3 | F-07: VietQR Payment Integration | US-VIETQR-01→02 (2) |
+| EPIC 3 | F-08: Payment Verification and Tracking | US-PAYMENT-01→03 (3) |
+| EPIC 3 | F-09: Rent Payment Reminders | US-REMINDER-01→02 (2) |
+| EPIC 4 | F-10: Digital Lease Tracking | US-LEASE-01→04 (4) |
+| EPIC 4 | F-11: Automated Lease Renewal Reminders | US-LEASE-05→06 (2) |
+| EPIC 4 | F-12: Maintenance Request Submission | US-MAINT-01→02 (2) |
+| EPIC 4 | F-13: Maintenance Status Tracking | US-MAINT-03→05 (3) |
+| EPIC 5 | F-14: Centralized Business Dashboard | US-DASH-01→04 (4) |
+| EPIC 5 | F-15: Monthly Business Report and Analytics | US-REPORT-01→05 (5) |
 
-### C. PERT Calculation Details
+### B. Linear Regression Calculation Details
 
-*To be populated after feature-level complexity scoring is completed by the team.*
+| Project | xᵢ | yᵢ | xᵢ − x̄ | yᵢ − ȳ | Product | Squared x deviation | Fitted ŷ |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| FilmForum | 24 | 42.35 | -9.4 | -4.80 | 45.12 | 88.36 | 44.74 |
+| Auctiz | 27 | 48.30 | -6.4 | 1.15 | -7.36 | 40.96 | 45.51 |
+| BidWise | 29 | 47.60 | -4.4 | 0.45 | -1.98 | 19.36 | 46.02 |
+| Domini Shop | 33 | 45.00 | -0.4 | -2.15 | 0.86 | 0.16 | 47.05 |
+| Java Chatbox | 54 | 52.50 | 20.6 | 5.35 | 110.21 | 424.36 | 52.43 |
+| **Total / Mean** | **x̄ = 33.4** | **ȳ = 47.15** | **0** | **0** | **146.85** | **573.20** | |
+
+```text
+b = 146.85 ÷ 573.20 = 0.256193
+a = 47.15 − (0.256193 × 33.4) = 38.593144
+
+Fitted line:
+ŷ = 38.593 + 0.2562x
+
+RosiHome:
+ŷ = 38.593 + (0.2562 × 64)
+  = 54.9898
+  ≈ 55.0 person-days
+```

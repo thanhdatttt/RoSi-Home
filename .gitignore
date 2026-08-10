@@ -22,6 +22,8 @@ ios/
 android/
 web-build/
 
+.pnpm-store/
+
 .opencode/
 
 # Codex telemetry setup — kept out of git entirely (per project requirement).
