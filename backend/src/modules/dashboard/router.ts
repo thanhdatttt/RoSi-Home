@@ -1,21 +1,29 @@
 import { Router } from "express";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
-import { occupancy, outstanding, revenue, upcomingExpirations } from "./controller.js";
+import { occupancy, outstanding, revenue, upcomingExpirations, tenantDashboard } from "./controller.js";
 
 export const dashboardRouter = Router();
 
 dashboardRouter.use(requireAuth);
-dashboardRouter.use(requireRole("Landlord"));
+
+// TENANT DASHBOARD
+dashboardRouter.get("/tenant", requireRole("Tenant"), asyncHandler(tenantDashboard));
+
+// LANDLORD DASHBOARD
+const landlordDashboardRouter = Router();
+landlordDashboardRouter.use(requireRole("Landlord"));
 
 // US-DASH-01
-dashboardRouter.get("/occupancy", asyncHandler(occupancy));
+landlordDashboardRouter.get("/occupancy", asyncHandler(occupancy));
 
 // US-DASH-02
-dashboardRouter.get("/revenue", asyncHandler(revenue));
+landlordDashboardRouter.get("/revenue", asyncHandler(revenue));
 
 // US-DASH-03
-dashboardRouter.get("/outstanding", asyncHandler(outstanding));
+landlordDashboardRouter.get("/outstanding", asyncHandler(outstanding));
 
 // US-DASH-04
-dashboardRouter.get("/upcoming-expirations", asyncHandler(upcomingExpirations));
+landlordDashboardRouter.get("/upcoming-expirations", asyncHandler(upcomingExpirations));
+
+dashboardRouter.use(landlordDashboardRouter);

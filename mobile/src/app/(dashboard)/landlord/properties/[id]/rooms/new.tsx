@@ -1,100 +1,281 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, TextInput } from "react-native";
 import { Link, useRouter, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../../components/MobileFrame";
-import { Field } from "../../../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../../../components/ui/PrimaryButton";
-import { ArrowLeft, DoorOpen, Banknote } from "lucide-react-native";
+import { ArrowLeft, Check } from "lucide-react-native";
 import { useAuth } from "../../../../../../contexts/auth-context";
 import { apiRequest } from "../../../../../../lib/api";
 
-export default function NewRoom() {
+const MAX_ROOMS = 50;
+
+export default function NewRooms() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const insets = useSafeAreaInsets();
   
-  const [name, setName] = useState("");
-  const [rent, setRent] = useState("");
+  const [prefix, setPrefix] = useState("P");
+  const [start, setStart] = useState("101");
+  const [count, setCount] = useState("6");
+  const [rent, setRent] = useState("1200000");
+  const [existingRooms, setExistingRooms] = useState<{ prefix: string; num: number }[]>([]);
+  
+  const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Auto-detect prefix and next start number from existing rooms
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const data = await apiRequest<any>(`/rooms/properties/${id}`, { token });
+        const rooms: any[] = data.data || data;
+        if (!rooms.length) return;
+
+        // Extract prefix + number from room names (e.g. "P101" → prefix "P", number 101)
+        const parsed = rooms
+          .map((r: any) => {
+            const match = (r.name || "").match(/^([A-Za-z]*)(\d+)$/);
+            if (!match) return null;
+            return { prefix: match[1], num: parseInt(match[2], 10) };
+          })
+          .filter(Boolean) as { prefix: string; num: number }[];
+
+        if (!parsed.length) return;
+        setExistingRooms(parsed);
+
+        // Use the most common prefix
+        const prefixCounts: Record<string, number> = {};
+        parsed.forEach(p => { prefixCounts[p.prefix] = (prefixCounts[p.prefix] || 0) + 1; });
+        const mostCommonPrefix = Object.entries(prefixCounts).sort((a, b) => b[1] - a[1])[0][0];
+
+        // Find the lowest available missing number
+        const prefixNums = parsed.filter(p => p.prefix === mostCommonPrefix).map(p => p.num).sort((a, b) => a - b);
+        let firstMissing = prefixNums.length > 0 ? prefixNums[0] : 101;
+        while (prefixNums.includes(firstMissing)) {
+          firstMissing++;
+        }
+
+        setPrefix(mostCommonPrefix || "P");
+        setStart(String(firstMissing));
+      } catch {
+        // If fetching fails, keep defaults
+      }
+    })();
+  }, [id, token]);
+
+  const startNum = Number(start);
+  const countNum = Number(count);
+  const rentRaw = rent.replace(/,/g, "");
+  const rentNum = Number(rentRaw);
+
+  const errors = {
+    prefix: !prefix.trim() ? "Prefix is required." : "",
+    start: !start || Number.isNaN(startNum) || startNum < 0 ? "Enter a valid start number." : "",
+    count:
+      !count || Number.isNaN(countNum) || countNum < 1
+        ? "Add at least 1 room."
+        : countNum > MAX_ROOMS
+          ? `Maximum ${MAX_ROOMS} rooms at once.`
+          : "",
+    rent: rentRaw === "" || Number.isNaN(rentNum) || rentNum < 0 ? "Rent must be zero or more." : "",
+  };
+  const valid = !Object.values(errors).some(Boolean);
+
+  const names = useMemo(() => {
+    if (Number.isNaN(startNum) || Number.isNaN(countNum)) return [];
+    const n = Math.min(Math.max(countNum || 0, 0), MAX_ROOMS);
+    
+    const taken = new Set(
+      existingRooms
+        .filter(r => r.prefix === prefix.trim())
+        .map(r => r.num)
+    );
+
+    const generated: string[] = [];
+    let currentNum = startNum;
+
+    while (generated.length < n) {
+      if (!taken.has(currentNum)) {
+        generated.push(`${prefix.trim()}${currentNum}`);
+      }
+      currentNum++;
+    }
+
+    return generated;
+  }, [prefix, startNum, countNum, existingRooms]);
+
+  const formatMoney = (val: string) => {
+    if (!val) return "";
+    const numeric = val.replace(/\D/g, "");
+    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      setError("Room name is required.");
-      return;
-    }
-    const rentAmount = parseInt(rent, 10);
-    if (isNaN(rentAmount) || rentAmount < 0) {
-      setError("Rent must be a valid positive number.");
-      return;
-    }
-    setError(null);
+    setTouched(true);
+    if (!valid) return;
+    
+    setSubmitError(null);
     setSaving(true);
+    
     try {
-      await apiRequest<{ id: string }>(`/rooms/properties/${id}`, {
+      // Use the actual backend bulk endpoint for atomic batch creation
+      await apiRequest<any>(`/rooms/properties/${id}/bulk`, {
         method: 'POST',
         token,
-        body: { name, baseRent: rentAmount },
+        body: {
+          rooms: names.map(name => ({
+            name,
+            baseRent: rentNum,
+          }))
+        },
       });
-      // Go back to property details after creating the room
-      router.back();
+      setDone(true);
     } catch (err: any) {
-      setError(err.message || "Failed to create room");
+      setSubmitError(err.message || "Failed to create rooms");
     } finally {
       setSaving(false);
     }
   };
 
+  if (done) {
+    return (
+      <MobileFrame>
+        <View style={{ flex: 1, backgroundColor: '#f5f8ff', paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+          <View style={{ height: 56, width: 56, borderRadius: 16, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
+            <Check size={24} color="white" />
+          </View>
+          <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 16 }}>
+            {names.length} room{names.length > 1 ? "s" : ""} created
+          </Text>
+          <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 8, lineHeight: 20 }}>
+            Every new room starts as <Text style={{ fontWeight: '700', color: '#0f172a' }}>Vacant</Text> at {rentNum.toLocaleString()} VNĐ / month. You can still edit each room individually.
+          </Text>
+          <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
+            <Text style={{ fontSize: 14, lineHeight: 20 }}>{names.join(" · ")}</Text>
+          </View>
+          <View style={{ marginTop: 'auto', paddingTop: 24 }}>
+            <PrimaryButton onPress={() => router.back()}>Back to property</PrimaryButton>
+          </View>
+        </View>
+      </MobileFrame>
+    );
+  }
+
   return (
     <MobileFrame>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"} 
-        className="flex-1 bg-background"
+        style={{ flex: 1, backgroundColor: '#f5f8ff' }}
       >
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
-          <View className="flex-1">
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">New Room</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Details</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Rooms</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Create many rooms</Text>
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 mt-4" showsVerticalScrollIndicator={false}>
-          <View className="space-y-4">
-            <Field 
-              label="Room / Unit name" 
-              placeholder="e.g. Unit #1, Room 104" 
-              icon={<DoorOpen size={16} color="gray" />} 
-              value={name}
-              onChangeText={setName}
-            />
-            <Field 
-              label="Monthly base rent (VNĐ)" 
-              placeholder="e.g. 3800000" 
-              keyboardType="number-pad"
-              icon={<Banknote size={16} color="gray" />} 
-              value={rent}
-              onChangeText={setRent}
-            />
-            
-            {error && (
-              <View className="bg-destructive/10 p-3 rounded-xl mt-2">
-                <Text className="text-destructive text-xs">{error}</Text>
-              </View>
-            )}
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+          {/* Info banner */}
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, marginBottom: 20 }}>
+            <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18 }}>
+              Quickly create rooms from one template. You can still edit each room afterwards. Either all rooms save, or none do.
+            </Text>
           </View>
 
-          <View className="mt-8 mb-8">
+          {/* Form fields */}
+          <TplField
+            label="Prefix"
+            value={prefix}
+            onChangeText={setPrefix}
+            hint="e.g. P101, P102"
+            error={touched ? errors.prefix : ""}
+          />
+          <View style={{ marginTop: 16 }}>
+            <TplField
+              label="Start number"
+              keyboardType="number-pad"
+              value={start}
+              onChangeText={setStart}
+              error={touched ? errors.start : ""}
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
+            <TplField
+              label="Number of rooms"
+              keyboardType="number-pad"
+              value={count}
+              onChangeText={setCount}
+              hint={`Up to ${MAX_ROOMS} rooms`}
+              error={touched ? errors.count : ""}
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
+            <TplField
+              label="Shared base rent (VNĐ)"
+              keyboardType="decimal-pad"
+              value={formatMoney(rent)}
+              onChangeText={setRent}
+              error={touched ? errors.rent : ""}
+            />
+          </View>
+
+          {/* Preview */}
+          <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: '700' }}>Preview</Text>
+            <Text style={{ marginTop: 8, fontSize: 14, color: '#94a3b8', lineHeight: 20 }}>
+              {names.length ? names.join(" · ") : "—"}
+            </Text>
+          </View>
+          
+          {submitError && (
+            <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{submitError}</Text>
+          )}
+
+          <View style={{ marginTop: 24 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Create room"}
+              {saving ? "Creating..." : `Create ${names.length || 0} room${names.length === 1 ? "" : "s"}`}
             </PrimaryButton>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </MobileFrame>
+  );
+}
+
+function TplField({
+  label, value, onChangeText, hint, error, keyboardType = "default",
+}: {
+  label: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  hint?: string;
+  error?: string;
+  keyboardType?: any;
+}) {
+  return (
+    <View>
+      <Text style={{ fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 6 }}>
+        {label}
+      </Text>
+      <TextInput
+        keyboardType={keyboardType}
+        value={value}
+        onChangeText={onChangeText}
+        style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: error ? '#ef4444' : '#e2e8f0', paddingHorizontal: 12, fontSize: 14, fontWeight: '500' }}
+      />
+      {hint && !error && <Text style={{ marginTop: 4, fontSize: 11, color: '#94a3b8' }}>{hint}</Text>}
+      {error ? <Text style={{ marginTop: 4, fontSize: 11, color: '#ef4444' }}>{error}</Text> : null}
+    </View>
   );
 }

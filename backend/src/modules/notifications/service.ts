@@ -7,6 +7,7 @@ import {
   findNotificationByDedupeKey,
   listDeviceTokensForUser,
   upsertDeviceToken,
+  listNotificationsForUser,
   type DeviceTokenRow,
 } from "./repository.js";
 
@@ -117,4 +118,8 @@ export async function sendTestNotificationService(
     body: "If you can see this, Expo push is wired up correctly.",
     linkRef: "test:ping",
   });
+}
+
+export async function listNotificationsService(userId: string) {
+  return await listNotificationsForUser(userId);
 }

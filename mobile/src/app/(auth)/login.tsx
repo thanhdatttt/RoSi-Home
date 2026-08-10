@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Switch } from "react-native";
 import { Link, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
@@ -11,6 +12,8 @@ import { ApiRequestError } from "../../lib/api";
 export default function Login() {
   const router = useRouter();
   const { login, loading } = useAuth();
+  const insets = useSafeAreaInsets();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -42,20 +45,22 @@ export default function Login() {
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href="/" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
           <View>
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Welcome back</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Sign in to RosiHome</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Welcome back</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Sign in to RosiHome</Text>
           </View>
         </View>
 
-        <View className="flex-1 px-6 pb-6">
+        {/* Form */}
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom + 16, 24) }}>
           <Field 
             label="Email address" 
             keyboardType="email-address"
@@ -65,52 +70,52 @@ export default function Login() {
             value={email} 
             onChangeText={setEmail} 
           />
-          <Field 
-            label="Password" 
-            secureTextEntry 
-            placeholder="Your password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={password} 
-            onChangeText={setPassword} 
-          />
+          <View style={{ marginTop: 16 }}>
+            <Field 
+              label="Password" 
+              secureTextEntry 
+              placeholder="Your password" 
+              icon={<Lock size={16} color="gray" />} 
+              value={password} 
+              onChangeText={setPassword} 
+            />
+          </View>
 
-          <View className="flex-row items-center justify-between text-xs mb-4">
-            <View className="flex-row items-center gap-2">
-              <Switch 
-                value={rememberMe} 
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Switch
+                value={rememberMe}
                 onValueChange={setRememberMe}
-                trackColor={{ true: "#2563eb", false: "#ccc" }}
+                trackColor={{ false: '#e2e8f0', true: '#2563eb' }}
+                thumbColor="#ffffff"
               />
-              <Text className="text-muted-foreground text-xs">Remember me</Text>
+              <Text style={{ fontSize: 12, color: '#64748b' }}>Remember me</Text>
             </View>
             <Link href="/forgot-password" asChild>
               <TouchableOpacity>
-                <Text className="text-primary font-semibold text-xs">Forgot password?</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>Forgot password?</Text>
               </TouchableOpacity>
             </Link>
           </View>
 
           {err && (
-            <View className="rounded-lg bg-destructive/10 px-3 py-2 mb-4">
-              <Text className="text-xs text-destructive">{err}</Text>
+            <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#ef4444' }}>{err}</Text>
             </View>
           )}
 
-          <PrimaryButton variant="primary" onPress={submit}>
+          <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
           </PrimaryButton>
 
-          <View className="pt-4 flex-row justify-center items-center gap-1">
-            <Text className="text-xs text-muted-foreground">Landlord?</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>No account yet?</Text>
             <Link href="/register" asChild>
               <TouchableOpacity>
-                <Text className="text-primary font-semibold text-xs underline">Create account</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Register as landlord</Text>
               </TouchableOpacity>
             </Link>
           </View>
-          <Text className="text-center text-[11px] text-muted-foreground mt-2">
-            Tenants: your landlord sets up your account and sends a temporary password.
-          </Text>
         </View>
       </View>
     </MobileFrame>

@@ -14,8 +14,11 @@ import {
   findSurchargeScoped,
   listActiveSurcharges,
   lockSurchargeName,
+  renameSurchargeGroup,
   softDeleteSurcharge,
   updateSurcharge,
+  findOverlappingSurcharges,
+  getUpcomingSurchargeId,
   type SurchargeRow,
 } from "./repository.js";
 import type { CreateSurchargeInput, UpdateSurchargeInput } from "./schema.js";
@@ -56,6 +59,22 @@ export async function createSurchargeService(
   input: CreateSurchargeInput,
 ): Promise<SurchargeView> {
   await assertPropertyOwned(propertyId, landlordId);
+  assertSurchargePeriod(input.effectiveFrom, input.effectiveTo ?? null);
+
+  const today = businessDate();
+  const excludeId = await getUpcomingSurchargeId(propertyId, input.name, today);
+
+  const overlaps = await findOverlappingSurcharges(
+    propertyId,
+    input.name,
+    input.effectiveFrom,
+    input.effectiveTo ?? null,
+    excludeId
+  );
+
+  if (overlaps.length > 0) {
+    throw new ConflictError(`This conflicts with an existing rate for '${input.name}'. Please end the active rate before scheduling a new one for this period.`);
+  }
 
   return db.transaction(async (rawTrx) => {
     const trx = rawTrx as unknown as typeof db;
@@ -127,8 +146,34 @@ export async function updateSurchargeService(
     if (!existing) throw new NotFoundError("Surcharge not found.");
 
     const today = businessDate();
-    if (toDateStr(existing.effectiveFrom)! <= today) {
-      throw new ConflictError("Cannot update a surcharge that is already in effect. Create a new upcoming surcharge instead.");
+    if (existing.effectiveFrom <= today) {
+      throw new ConflictError("Cannot update a surcharge that is already in effect. Please schedule a new rate instead.");
+    }
+
+    const finalName = input.name ?? existing.name;
+    const finalFrom = input.effectiveFrom ?? existing.effectiveFrom;
+    
+    // Check if effectiveTo is provided in the input, even if it is null
+    const finalTo = input.effectiveTo !== undefined ? input.effectiveTo : existing.effectiveTo;
+
+    assertSurchargePeriod(finalFrom, finalTo);
+
+    const overlaps = await findOverlappingSurcharges(
+      existing.propertyId,
+      finalName,
+      finalFrom,
+      finalTo,
+      id,
+      trx
+    );
+
+    if (overlaps.length > 0) {
+      throw new ConflictError(`This conflicts with another rate for '${finalName}'. Please adjust the dates so they do not overlap.`);
+    }
+
+    if (input.name && input.name !== existing.name) {
+      // User is renaming the surcharge. Update ALL records with the old name for this property to keep them grouped together.
+      await renameSurchargeGroup(existing.propertyId, existing.name, input.name, trx);
     }
 
     const row = await updateSurcharge(

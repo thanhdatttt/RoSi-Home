@@ -7,11 +7,18 @@ import { UnauthenticatedError, ForbiddenError } from "../lib/errors.js";
 const CHANGE_PASSWORD_PATH = "/change-password";
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+  let token: string | undefined;
+  
   const header = req.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) {
+  if (header && header.startsWith("Bearer ")) {
+    token = header.slice("Bearer ".length).trim();
+  } else if (req.query.token && typeof req.query.token === "string") {
+    token = req.query.token;
+  }
+
+  if (!token) {
     return next(new UnauthenticatedError());
   }
-  const token = header.slice("Bearer ".length).trim();
   let claims: JwtClaims;
   try {
     claims = jwt.verify(token, config.jwtSecret) as JwtClaims;
