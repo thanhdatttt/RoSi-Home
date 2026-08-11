@@ -164,12 +164,12 @@ The table now covers every implementable or trackable item in Product Backlog 2.
 | TASK-DOC-03 | Write Product Backlog Version 1 | 13 | 13 | 13 | 13 |
 | TASK-DOC-05 | Write Product Backlog 2.0 | 13 | 13 | 13 | 13 |
 | TASK-DOC-07 | Write the Project Charter | 8 | 8 | 8 | 8 |
-| TASK-DOC-09 | Write the Software Project Estimation document | 8 | 8 | 8 | 8 |
+| TASK-DOC-09 | Write the Software Project Estimation document | 13 | 13 | 13 | 13 |
 | TASK-DOC-11 | Write the Project Proposal | 8 | 8 | 8 | 8 |
 | TASK-DOC-13 | Write the Statement of Work | 8 | 8 | 8 | 8 |
 | TASK-DOC-15 | Write the Vision and Scope document | 8 | 8 | 8 | 8 |
 | TASK-DOC-17 | Write the Risk Management Plan | 8 | 8 | 8 | 8 |
-| | **Documentation Task Subtotal (9 items)** | **82** | **82** | **82** | **82** |
+| | **Documentation Task Subtotal (9 items)** | **87** | **87** | **87** | **87** |
 | | **EPIC 1: Infrastructure and User Management** | | | | |
 | US-AUTH-01 | Register a landlord account | 3 | 3 | 3 | 3 |
 | US-AUTH-02 | Log in | 5 | 5 | 5 | 5 |
@@ -227,7 +227,7 @@ The table now covers every implementable or trackable item in Product Backlog 2.
 | US-REPORT-04 | Analyze maintenance efficiency | 5 | 5 | 8 | 5 |
 | US-REPORT-05 | Export a business report as PDF | 5 | 5 | 5 | 5 |
 | | **Product User Story Subtotal (51 items)** | **236** | **237** | **243** | **247** |
-| | **Grand Total (64 items)** | **341** | **342** | **348** | **352** |
+| | **Grand Total (64 items)** | **346** | **347** | **353** | **357** |
 
 ---
 
@@ -256,9 +256,9 @@ Therefore:
 3 SP ≈ 1.86 hours
 5 SP ≈ 3.10 hours
 
-Complete backlog Final SP = 352 SP
-Base effort hours = 352 × 0.619 = 217.9 hours
-Base effort = 217.9 ÷ 3.5 = 62.3 person-days
+Complete backlog Final SP = 357 SP
+Base effort hours = 357 × (52 ÷ 84) = 221.0 hours
+Base effort = 221.0 ÷ 3.5 = 63.14 ≈ 63.1 person-days
 ```
 
 ### 4.2 Base Method Result
@@ -266,9 +266,9 @@ Base effort = 217.9 ÷ 3.5 = 62.3 person-days
 | Result | Value |
 |---|---:|
 | Calibrated rate | 0.619 hour/SP |
-| **Base effort for comparison** | **62.3 person-days** |
+| **Base effort for comparison** | **63.1 person-days** |
 
-No risk factor is applied in this section. The 62.3-person-day result is carried unchanged into the method comparison in Section 6.
+No risk factor is applied in this section. The 63.1-person-day result is carried unchanged into the method comparison in Section 6.
 
 ---
 
@@ -442,13 +442,7 @@ The following values can be copied directly into a spreadsheet or charting tool:
 | Java Chatbox | 54 | 52.50 | 52.43 |
 | **RosiHome prediction** | **64** | — | **54.99** |
 
-For the chart:
-
-- use **Tasks** as the horizontal axis;
-- use **Adjusted Effort (person-days)** as the vertical axis;
-- plot the five historical `Actual y` values as the scatter series;
-- plot the `Fitted ŷ` values as a straight-line series;
-- show `(64, 54.99)` as the RosiHome prediction point.
+![[chart.png]]
 
 ### 5.4 Interpretation and Recalibration
 
@@ -467,13 +461,13 @@ No risk factor is included in this comparison.
 
 | Method | Base Effort | Evidence |
 |---|---:|---|
-| Story Points + Expert Judgment | **62.3 person-days** | Current 64-item backlog and time-calibrated SP |
+| Story Points + Expert Judgment | **63.1 person-days** | Current 64-item backlog and time-calibrated SP |
 | Linear regression | **55.0 person-days** | Fitted line from five normalized historical projects |
-| Difference | **7.3 person-days** | The SP result is 13.3% higher than regression |
+| Difference | **8.1 person-days** | The SP result is 14.7% higher than regression |
 
 ### 6.2 Final Baseline Selection
 
-The **62.3-person-day Story Point result** is selected as the final base estimate because:
+The **63.1-person-day Story Point result** is selected as the final base estimate because:
 
 - it is derived from the current RosiHome backlog rather than only task counts;
 - the SP-to-time rate is calibrated from backend setup, frontend setup, registration, and token-based login work familiar to the team;
@@ -484,7 +478,7 @@ No factor has been applied to either method before this selection.
 
 ### 6.3 Final Risk Adjustment
 
-After selecting 62.3 person-days, one 2.0 risk factor is applied.
+After selecting 63.1 person-days, one 2.0 risk factor is applied.
 
 Factors that limit risk:
 
@@ -498,24 +492,24 @@ Risks covered by the factor:
 - VietQR and some notification/integration behavior are less familiar than ordinary CRUD work.
 
 ```text
-Selected base effort = 62.3 person-days
+Selected base effort = 63.14 person-days
 Final risk factor = 2.0
-Final project effort = 62.3 × 2.0 = 124.6 person-days
-Team calendar duration = 124.6 ÷ 5 = 24.9 ≈ 25 working days
+Final project effort = 63.14 × 2.0 = 126.28 ≈ 126.3 person-days
+Team calendar duration = 126.28 ÷ 5 = 25.26 ≈ 25 working days
 ```
 
 | Item | Final Value |
 |---|---:|
 | Total backlog items | 64 |
-| Complete backlog Final SP | 352 SP |
-| Selected base effort | 62.3 person-days |
+| Complete backlog Final SP | 357 SP |
+| Selected base effort | 63.1 person-days |
 | Final risk factor | 2.0 |
-| **Final project effort** | **124.6 person-days** |
+| **Final project effort** | **126.3 person-days** |
 | **Planned team duration** | **25 working days** |
 
 ### 6.4 Conclusion
 
-The methods are compared before risk adjustment: Story Points estimate 62.3 person-days and linear regression estimates 55.0 person-days. The project-specific and higher Story Point result is selected, then multiplied once by 2.0. The final RosiHome estimate is therefore **124.6 part-time person-days**, equivalent to approximately **25 working days** for five members.
+The methods are compared before risk adjustment: Story Points estimate 63.1 person-days and linear regression estimates 55.0 person-days. The project-specific and higher Story Point result is selected, then multiplied once by 2.0. The final RosiHome estimate is therefore **126.3 part-time person-days**, equivalent to approximately **25 working days** for five members.
 
 ---
 
