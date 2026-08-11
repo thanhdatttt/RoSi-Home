@@ -78,7 +78,7 @@ The team consists of **five part-time student developers**. One of the five, **C
 
 ### 5.1 Purpose
 
-A Responsibility Assignment Matrix (RACI) maps every deliverable to the people involved in it, using four designations: **R**esponsible (does the work), **A**ccountable (owns the outcome and signs off — exactly one per row), **C**onsulted (gives input before the work is done), and **I**nformed (told after the work is done). Establishing the RACI as part of the Project Charter, rather than leaving it implicit, is standard PMI practice and is the main gap this rewrite closes: the previous charter described roles in prose but never assigned individual project tasks to individual members. The matrix below is organized at **feature level** rather than at individual user-story level, so it stays readable as a charter-level reference; each row is traceable to the team's own delivery plan and can be expanded back to its underlying user stories in the backlog if finer-grained tracking is needed during a sprint.
+A Responsibility Assignment Matrix (RACI) maps every deliverable to the people involved in it, using four designations: **R**esponsible (does the work), **A**ccountable (owns the outcome and signs off — exactly one per row), **C**onsulted (gives input before the work is done), and **I**nformed (told after the work is done). The delivery matrix covers product features and the technical, management, and documentation tasks defined in Product Backlog 2.0.
 
 ### 5.2 Legend
 
@@ -108,23 +108,36 @@ A Responsibility Assignment Matrix (RACI) maps every deliverable to the people i
 
 ### 5.4 Delivery-Level RACI
 
-| Feature | Responsible | Accountable | Consulted | Informed |
+| Delivery Item | Responsible | Accountable | Consulted | Informed |
 |---|---|---|---|---|
-| F-01 User Registration, Authentication, and Profile Management (AUTH-01→06, PROFILE-01) | Chí, MXH | Chí | LR (role/ownership rules only) | SPN |
-| F-02 Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Đạt, MXH | Đạt | LR | SPN |
-| F-03 Tenant Information and Account Management (TENANT-01→02) | Chí, MXH | Chí | LR, TN | SPN |
-| F-04 Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Minh, Quân | Minh | LR | SPN |
-| F-05 Utility Meter Reading and Calculation (METER-01→03) | Đạt, Quân | Đạt | LR | SPN |
-| F-06 Billing and Invoice Generation (INVOICE-01→04) | Đạt, MXH | Đạt | LR | TN, SPN |
-| F-07 VietQR Payment Integration (VIETQR-01→02) | Minh, Quân | Minh | LR | TN, SPN |
-| F-08 Payment Verification and Tracking (PAYMENT-01→03) | Minh, Quân | Minh | LR, TN | SPN |
-| F-09 Rent Payment Reminders (REMINDER-01→02) | Minh, Quân | Minh | LR | TN, SPN |
-| F-10 Digital Lease Tracking (LEASE-01→04) | Chí, MXH | Chí | LR | TN, SPN |
-| F-11 Automated Lease Renewal Reminders (LEASE-05→06) | Chí, MXH | Chí | LR | TN, SPN |
-| F-12 Maintenance Request Submission (MAINT-01→02) | Minh, Quân | Minh | TN, LR | SPN |
-| F-13 Maintenance Status Tracking (MAINT-03→05) | Minh, Quân | Minh | LR | TN, SPN |
-| F-14 Centralized Business Dashboard (DASH-01→04) | Chí, Đạt, MXH | Chí (DASH-01→02) / Đạt (DASH-03→04) — see note | LR | SPN |
-| F-15 Monthly Business Report and Analytics (REPORT-01→05) | Minh, Quân | Minh | LR | SPN |
+| F-01 User Registration, Authentication, and Profile Management (AUTH-01→06, PROFILE-01) | Chí | Chí | LR (role/ownership rules only) | SPN |
+| F-02 Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Đạt | Đạt | LR | SPN |
+| F-03 Tenant Information and Account Management (TENANT-01→02) | MXH | MXH | LR, TN | SPN |
+| F-04 Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Minh | Minh | LR | SPN |
+| F-05 Utility Meter Reading and Calculation (METER-01→03) | Đạt | Đạt | LR | SPN |
+| F-06 Billing and Invoice Generation (INVOICE-01→04) | Minh | Minh | LR | TN, SPN |
+| F-07 VietQR Payment Integration (VIETQR-01→02) | Minh | Minh | LR | TN, SPN |
+| F-08 Payment Verification and Tracking (PAYMENT-01→03) | Quân | Quân | LR, TN | SPN |
+| F-09 Rent Payment Reminders (REMINDER-01→02) | Minh | Minh | LR | TN, SPN |
+| F-10 Digital Lease Tracking (LEASE-01→04) | MXH | MXH | LR | TN, SPN |
+| F-11 Automated Lease Renewal Reminders (LEASE-05→06) | Chí | Chí | LR | TN, SPN |
+| F-12 Maintenance Request Submission (MAINT-01→02) | MXH | MXH | TN, LR | SPN |
+| F-13 Maintenance Status Tracking (MAINT-03→05) | MXH | MXH | LR | TN, SPN |
+| F-14 Centralized Business Dashboard (DASH-01→04) | Đạt | Đạt | LR | SPN |
+| F-15 Monthly Business Report and Analytics (REPORT-01→05) | Quân | Quân | LR | SPN |
+| TASK-TECH-01 Set up backend infrastructure | Chí | Chí | Đạt, Minh | SPN |
+| TASK-TECH-02 Set up frontend infrastructure | MXH | MXH | Quân | SPN |
+| TASK-TECH-03 Set up quality tooling | Đạt | Đạt | Chí, Minh, MXH, Quân | SPN |
+| TASK-PM-01 Manage the team's Trello board | Chí | Chí | Dev Team | SPN |
+| TASK-DOC-01 Write the Technical Architecture document | Đạt | Chí | SPN | |
+| TASK-DOC-03 Write Product Backlog Version 1 | Minh | Chí | SPN | |
+| TASK-DOC-05 Write Product Backlog 2.0 | Chí | Chí | SPN | |
+| TASK-DOC-07 Write the Project Charter | Đạt | Chí | SPN | |
+| TASK-DOC-09 Write the Software Project Estimation document | Chí | Chí | SPN | |
+| TASK-DOC-11 Write the Project Proposal | Chí | Chí | SPN | |
+| TASK-DOC-13 Write the Statement of Work | MXH | Chí | SPN | |
+| TASK-DOC-15 Write the Vision and Scope document | Chí | Chí | SPN | |
+| TASK-DOC-17 Write the Risk Management Plan | MXH | Chí | SPN | |
 
 ### 5.5 Cross-Cutting and Shared Activities RACI
 
