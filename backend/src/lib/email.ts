@@ -1,30 +1,9 @@
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
 import { db } from "../db/index.js";
 import { emailSendQueue } from "../db/schema.js";
 import { config } from "./config.js";
 
-// Transactional email (architecture §1.1): any SMTP-compatible provider sits
-// behind this interface. The active implementation uses Gmail SMTP via nodemailer
-// (configured through EMAIL_HOST/EMAIL_PORT/EMAIL_USER/EMAIL_PASSWORD/EMAIL_FROM).
-
-let transporter: Transporter | null = null;
-
-function getTransporter(): Transporter {
-  if (!transporter) {
-    const smtp = config.emailSmtp;
-    transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth: {
-        user: smtp.user,
-        pass: smtp.password,
-      },
-    });
-  }
-  return transporter;
-}
+// Transactional email (architecture §1.1): The active implementation uses 
+// EmailJS REST API to bypass SMTP restrictions on serverless platforms.
 
 export interface EmailProvider {
   send(to: string, subject: string, body: string): Promise<{ ok: boolean; error?: string }>;
@@ -33,15 +12,36 @@ export interface EmailProvider {
 export const emailProvider: EmailProvider = {
   async send(to, subject, body) {
     try {
-      await getTransporter().sendMail({
-        from: config.emailSmtp.from,
-        to,
-        subject,
-        text: body,
+      const { serviceId, templateId, publicKey, privateKey } = config.emailJS;
+
+      const payload = {
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        accessToken: privateKey,
+        template_params: {
+          to,
+          subject,
+          body,
+        },
+      };
+
+      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`EmailJS API Error: ${response.status} ${errorText}`);
+      }
+
       return { ok: true };
     } catch (err) {
-      console.error("SMTP ERROR:", err);
+      console.error("EMAILJS ERROR:", err);
 
       return {
         ok: false,
