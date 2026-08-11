@@ -55,14 +55,12 @@ export const config = {
   get emailProviderApiKey() {
     return getEnv("EMAIL_PROVIDER_API_KEY", "");
   },
-  get emailSmtp() {
+  get emailJS() {
     return {
-      host: getEnv("EMAIL_HOST", "smtp.gmail.com"),
-      port: Number(getEnv("EMAIL_PORT", "465")),
-      secure: getEnv("EMAIL_SECURE", "true") === "true",
-      user: getEnv("EMAIL_USER", ""),
-      password: getEnv("EMAIL_PASSWORD", ""),
-      from: getEnv("EMAIL_FROM", "RosiHome <noreply@rosihome.app>"),
+      serviceId: getEnv("EMAILJS_SERVICE_ID", ""),
+      templateId: getEnv("EMAILJS_TEMPLATE_ID", ""),
+      publicKey: getEnv("EMAILJS_PUBLIC_KEY", ""),
+      privateKey: getEnv("EMAILJS_PRIVATE_KEY", ""),
     };
   },
   get appPublicUrl() {

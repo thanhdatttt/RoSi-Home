@@ -22,10 +22,6 @@ const mocks = vi.hoisted(() => {
     supersedeReading: vi.fn(),
     resolveElectricityRate: vi.fn(),
     resolveWaterRate: vi.fn(),
-<<<<<<< HEAD
-    countActiveLeasesForRoomPeriod: vi.fn(),
-=======
->>>>>>> origin/main
     findActiveInvoiceForRoomPeriod: vi.fn(),
     recalculateDraftInvoice: vi.fn(),
   };
@@ -44,13 +40,6 @@ vi.mock("../../../src/modules/utilities/rateResolver.js", () => ({
   resolveWaterRate: mocks.resolveWaterRate,
 }));
 
-<<<<<<< HEAD
-vi.mock("../../../src/modules/leases/repository.js", () => ({
-  countActiveLeasesForRoomPeriod: mocks.countActiveLeasesForRoomPeriod,
-}));
-
-=======
->>>>>>> origin/main
 vi.mock("../../../src/modules/meters/repository.js", () => ({
   assertRoomOwned: mocks.assertRoomOwned,
   createMeterReading: mocks.createMeterReading,
@@ -69,14 +58,8 @@ vi.mock("../../../src/modules/invoices/service.js", () => ({
 }));
 
 import {
-<<<<<<< HEAD
-  calculateMeterReadingsService,
-  correctMeterReadingService,
-  recordMeterReadingService,
-=======
   recordMeterReadingService,
   correctMeterReadingService,
->>>>>>> origin/main
 } from "../../../src/modules/meters/service.js";
 
 function baseRow(overrides: Record<string, unknown> = {}) {
@@ -97,10 +80,6 @@ function baseRow(overrides: Record<string, unknown> = {}) {
     rateEffectiveFrom: "2026-07-01",
     locality: "Ho Chi Minh City",
     tenantCount: null,
-<<<<<<< HEAD
-    correctionOf: null,
-=======
->>>>>>> origin/main
     recordedBy: LANDLORD_ID,
     createdAt: new Date("2026-07-05T00:00:00.000Z"),
     supersededAt: null,
@@ -319,151 +298,6 @@ describe("recordMeterReadingService", () => {
   });
 });
 
-<<<<<<< HEAD
-describe("calculateMeterReadingsService", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    mocks.transaction.mockImplementation(
-      async (callback: (executor: unknown) => unknown) => callback(mocks.trx),
-    );
-    mocks.assertRoomOwned.mockResolvedValue({
-      propertyId: PROPERTY_ID,
-      locality: "Ho Chi Minh City",
-    });
-    mocks.findActiveReading.mockResolvedValue(null);
-    mocks.findPreviousReading.mockImplementation(
-      async (_roomId: string, utilityType: "Electricity" | "Water") =>
-        baseRow({
-          id:
-            utilityType === "Electricity"
-              ? "11111111-1111-4111-8111-111111111111"
-              : "22222222-2222-4222-8222-222222222222",
-          utilityType,
-          billingPeriod: "2026-06",
-          value: utilityType === "Electricity" ? "100.0000" : "10.0000",
-          isInitial: true,
-          previousValue: null,
-          consumption: null,
-          unitRate: null,
-          amount: 0,
-        }),
-    );
-    mocks.resolveElectricityRate.mockResolvedValue({
-      utilityType: "Electricity",
-      source: "landlord",
-      sourceId: "66666666-6666-4666-8666-666666666666",
-      sourceReference: null,
-      effectiveFrom: "2026-07-01",
-      ratePerKwh: 3500,
-    });
-    mocks.resolveWaterRate.mockResolvedValue({
-      utilityType: "Water",
-      source: "landlord",
-      sourceId: "77777777-7777-4777-8777-777777777777",
-      sourceReference: null,
-      effectiveFrom: "2026-07-01",
-      method: "Metered",
-      ratePerM3: 15000,
-      flatAmountPerTenant: null,
-    });
-    mocks.createMeterReading.mockImplementation(
-      async (values: Record<string, unknown>) =>
-        baseRow({
-          ...values,
-          id:
-            values.utilityType === "Electricity"
-              ? "88888888-8888-4888-8888-888888888888"
-              : "99999999-9999-4999-8999-999999999999",
-        }),
-    );
-    mocks.writeAudit.mockResolvedValue(undefined);
-    mocks.countActiveLeasesForRoomPeriod.mockResolvedValue(1);
-  });
-
-  it("US-METER-02: persists electricity and metered water in one transaction", async () => {
-    const result = await calculateMeterReadingsService(LANDLORD_ID, ROOM_ID, {
-      billingPeriod: "2026-07",
-      electricityReading: 150,
-      waterReading: 15,
-    });
-
-    expect(mocks.transaction).toHaveBeenCalledOnce();
-    expect(mocks.createMeterReading).toHaveBeenCalledTimes(2);
-    expect(mocks.createMeterReading).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        utilityType: "Electricity",
-        previousValue: "100.0000",
-        consumption: "50.0000",
-        amount: 175000,
-      }),
-      mocks.trx,
-    );
-    expect(mocks.createMeterReading).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        utilityType: "Water",
-        previousValue: "10.0000",
-        consumption: "5.0000",
-        amount: 75000,
-      }),
-      mocks.trx,
-    );
-    expect(result.previousReadings).toEqual({
-      electricity: 100,
-      water: 10,
-    });
-    expect(result.water).toMatchObject({ method: "Metered", amount: 75000 });
-  });
-
-  it("US-METER-02: calculates flat water without storing an invented water reading", async () => {
-    mocks.resolveWaterRate.mockResolvedValue({
-      utilityType: "Water",
-      source: "landlord",
-      sourceId: "77777777-7777-4777-8777-777777777777",
-      sourceReference: null,
-      effectiveFrom: "2026-07-01",
-      method: "Flat",
-      ratePerM3: null,
-      flatAmountPerTenant: 100000,
-    });
-    mocks.countActiveLeasesForRoomPeriod.mockResolvedValue(2);
-
-    const result = await calculateMeterReadingsService(LANDLORD_ID, ROOM_ID, {
-      billingPeriod: "2026-07",
-      electricityReading: 150,
-    });
-
-    expect(mocks.createMeterReading).toHaveBeenCalledOnce();
-    expect(result.water).toEqual(
-      expect.objectContaining({
-        method: "Flat",
-        reading: null,
-        flatAmountPerTenant: 100000,
-        tenantCount: 2,
-        amount: 200000,
-      }),
-    );
-  });
-
-  it("US-METER-02: requires water only for metered properties", async () => {
-    await expect(
-      calculateMeterReadingsService(LANDLORD_ID, ROOM_ID, {
-        billingPeriod: "2026-07",
-        electricityReading: 150,
-      }),
-    ).rejects.toMatchObject({
-      status: 422,
-      fields: [{ field: "waterReading" }],
-    });
-
-    expect(mocks.transaction).not.toHaveBeenCalled();
-    expect(mocks.createMeterReading).not.toHaveBeenCalled();
-  });
-});
-
-=======
->>>>>>> origin/main
 describe("correctMeterReadingService", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -501,10 +335,6 @@ describe("correctMeterReadingService", () => {
         previousValue: "100.0000",
         consumption: "60.0000",
         amount: 210000,
-<<<<<<< HEAD
-        correctionOf: READING_ID,
-=======
->>>>>>> origin/main
       }),
       mocks.trx,
     );
@@ -517,10 +347,6 @@ describe("correctMeterReadingService", () => {
           value: 160,
         }),
       }),
-<<<<<<< HEAD
-      mocks.trx,
-=======
->>>>>>> origin/main
     );
   });
 
@@ -542,11 +368,7 @@ describe("correctMeterReadingService", () => {
 
     await expect(
       correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
-<<<<<<< HEAD
-    ).rejects.toMatchObject({ status: 422, code: "INVOICE_NOT_DRAFT" });
-=======
     ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
->>>>>>> origin/main
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
     expect(mocks.recalculateDraftInvoice).not.toHaveBeenCalled();
@@ -560,11 +382,7 @@ describe("correctMeterReadingService", () => {
 
     await expect(
       correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
-<<<<<<< HEAD
-    ).rejects.toMatchObject({ status: 422, code: "INVOICE_NOT_DRAFT" });
-=======
     ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
->>>>>>> origin/main
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
   });
@@ -575,11 +393,7 @@ describe("correctMeterReadingService", () => {
     ).rejects.toMatchObject({
       status: 422,
       code: "UNPROCESSABLE",
-<<<<<<< HEAD
-      fields: [{ field: "correctedValue" }],
-=======
       fields: [{ field: "value" }],
->>>>>>> origin/main
     });
 
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
@@ -597,32 +411,6 @@ describe("correctMeterReadingService", () => {
     expect(mocks.createMeterReading).not.toHaveBeenCalled();
   });
 
-<<<<<<< HEAD
-  it("US-METER-03: requires an existing draft invoice", async () => {
-    mocks.findActiveInvoiceForRoomPeriod.mockResolvedValue(null);
-
-    await expect(
-      correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
-    ).rejects.toMatchObject({ status: 422, code: "INVOICE_NOT_DRAFT" });
-
-    expect(mocks.createMeterReading).not.toHaveBeenCalled();
-  });
-
-  it("US-METER-03: refuses to correct a superseded reading again", async () => {
-    mocks.findMeterReadingById.mockResolvedValue(
-      baseRow({ supersededAt: new Date("2026-07-06T00:00:00.000Z") }),
-    );
-
-    await expect(
-      correctMeterReadingService(LANDLORD_ID, READING_ID, 160),
-    ).rejects.toMatchObject({ status: 422, code: "UNPROCESSABLE" });
-
-    expect(mocks.assertRoomOwned).not.toHaveBeenCalled();
-    expect(mocks.createMeterReading).not.toHaveBeenCalled();
-  });
-
-=======
->>>>>>> origin/main
   it("returns 404 for a reading that does not exist", async () => {
     mocks.findMeterReadingById.mockResolvedValue(null);
 

@@ -6,6 +6,7 @@ import {
   upsertUpcomingRate,
   getCurrentRate,
   getUpcomingRate,
+  deleteUpcomingRate,
   type UtilityRateRow,
 } from "./repository.js";
 import type { UtilityRateInput } from "./schema.js";
@@ -77,4 +78,26 @@ export async function getRatesService(
     current: currentRow ? serialize(currentRow) : null,
     upcoming: upcomingRow ? serialize(upcomingRow) : null,
   };
+}
+
+export async function deleteUtilityRateService(
+  landlordId: string,
+  propertyId: string,
+  id: string,
+): Promise<{ success: true }> {
+  await assertPropertyOwned(propertyId, landlordId);
+  return db.transaction(async (rawTrx) => {
+    const trx = rawTrx as unknown as typeof db;
+    await deleteUpcomingRate(id, businessDate());
+    await writeAudit(
+      {
+        actorUserId: landlordId,
+        action: "utility_rate.deleted",
+        entityType: "utility_rate_history",
+        entityId: id,
+      },
+      trx,
+    );
+    return { success: true };
+  });
 }

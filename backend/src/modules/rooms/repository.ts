@@ -13,7 +13,7 @@ export const roomStatusExpr = sql`
   CASE
     WHEN EXISTS (
       SELECT 1 FROM ${leases} l
-      WHERE l.room_id = ${rooms.id}
+      WHERE l.room_id = "rooms"."id"
         AND l.status = 'Active'
         AND l.deleted_at IS NULL
     ) THEN 'Occupied'::text
@@ -78,6 +78,21 @@ export async function updateRoom(
   const [row] = await db
     .update(rooms)
     .set(input)
+    .where(and(eq(rooms.id, id), isNull(rooms.deletedAt)))
+    .returning();
+  return row ?? null;
+}
+
+export async function softDeleteRoom(
+  id: string,
+  deletedBy: string,
+): Promise<RoomRow | null> {
+  const [row] = await db
+    .update(rooms)
+    .set({
+      deletedAt: new Date(),
+      deletedBy,
+    })
     .where(and(eq(rooms.id, id), isNull(rooms.deletedAt)))
     .returning();
   return row ?? null;

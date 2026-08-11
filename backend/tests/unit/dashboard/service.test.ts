@@ -61,14 +61,15 @@ describe("Dashboard Service Unit Tests", () => {
       const result = await getRevenueService(landlordId, "2026-07");
       
       expect(result).toEqual({ 
-        expectedRevenue: { rent: 5000000 }, 
-        collectedRevenue: { rent: 2000000 }, 
+        expectedRevenue: 5000000, 
+        collectedRevenue: 2000000,
+        growthPercentage: 0,
         month: "2026-07" 
       });
       
       // 2026-07-01 00:00:00 to 2026-07-31 23:59:59
       const calls = mocks.getRevenueSummary.mock.calls;
-      expect(calls.length).toBe(1);
+      expect(calls.length).toBe(2);
       expect(calls[0][0]).toBe(landlordId);
       expect(calls[0][1]).toBe("month");
       expect(calls[0][2]).toBeInstanceOf(Date);

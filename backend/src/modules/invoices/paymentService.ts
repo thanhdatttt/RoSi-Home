@@ -29,11 +29,7 @@ export async function getVietqrService(actorId: string, role: "Landlord" | "Tena
     throw new UnprocessableError("Landlord payment configuration is missing.");
   }
 
-<<<<<<< HEAD
-  const description = `RH ${detail.id.slice(0, 6)} ${detail.billingPeriod} ${detail.roomName}`;
-=======
   const description = `Rent ${detail.propertyName} Room ${detail.roomId.substring(0, 4)} ${detail.billingPeriod}`;
->>>>>>> origin/main
 
   const qr = await generateVietQR(
     config.bankCode,
@@ -47,11 +43,7 @@ export async function getVietqrService(actorId: string, role: "Landlord" | "Tena
     payload: qr.payload,
     imageUrl: qr.imageUrl,
     amount: detail.totalAmount,
-<<<<<<< HEAD
-    description: qr.description,
-=======
     description,
->>>>>>> origin/main
   };
 }
 
@@ -116,20 +108,6 @@ export async function confirmPaymentService(landlordId: string, invoiceId: strin
     throw new UnprocessableError("Invoice cannot be paid.");
   }
 
-<<<<<<< HEAD
-  const result = await PaymentRepository.createPayment(invoiceId, detail.totalAmount, landlordId);
-  const payment = result.payment;
-
-  if (result.created) {
-    await writeAudit({
-      actorUserId: landlordId,
-      action: "payment.confirmed",
-      entityType: "payments",
-      entityId: payment.id,
-      afterValue: { invoiceId, amount: detail.totalAmount },
-    });
-  }
-=======
   const payment = await PaymentRepository.createPayment(invoiceId, detail.totalAmount, landlordId);
 
   await writeAudit({
@@ -139,7 +117,6 @@ export async function confirmPaymentService(landlordId: string, invoiceId: strin
     entityId: payment.id,
     afterValue: { invoiceId, amount: detail.totalAmount },
   });
->>>>>>> origin/main
 
   return payment;
 }
@@ -157,11 +134,7 @@ export async function sendManualReminderService(landlordId: string, invoiceId: s
     userId: detail.tenantUserId,
     type: "payment.overdue",
     title: "Payment Reminder",
-<<<<<<< HEAD
-    body: `Invoice ${detail.id.slice(0, 8)} for ${detail.billingPeriod} is due ${detail.dueDate}. Outstanding: ${detail.totalAmount.toLocaleString("en-US")} VND.`,
-=======
     body: `Please remember to pay your invoice for ${detail.billingPeriod} at ${detail.propertyName} (${detail.totalAmount.toLocaleString("en-US")} VND).`,
->>>>>>> origin/main
     linkRef: `invoices/${invoiceId}`,
     dedupeKey,
   });

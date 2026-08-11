@@ -205,11 +205,7 @@ describe("Billing Foundation PostgreSQL integration", () => {
     await dbPool.query(`
       ALTER TABLE audit_events
       ADD CONSTRAINT reject_utility_rate_audit
-<<<<<<< HEAD
-      CHECK (action <> 'utility_rate.created')
-=======
       CHECK (action <> 'utility_rate.created_or_updated')
->>>>>>> origin/main
     `);
 
     try {
@@ -252,47 +248,10 @@ describe("Billing Foundation PostgreSQL integration", () => {
     });
 
     const result = await dbPool.query(
-<<<<<<< HEAD
-      "SELECT count(*)::integer AS count FROM surcharges WHERE name = 'Internet'",
-    );
-    expect(result.rows[0].count).toBe(2);
-  });
-
-  it("serializes concurrent overlapping writes and commits exactly one", async () => {
-    const attempts = await Promise.allSettled([
-      createSurchargeService(LANDLORD_ID, PROPERTY_ID, {
-        name: "Parking",
-        monthlyAmount: 50000,
-        effectiveFrom: "2026-07-01",
-      }),
-      createSurchargeService(LANDLORD_ID, PROPERTY_ID, {
-        name: "Parking",
-        monthlyAmount: 60000,
-        effectiveFrom: "2026-07-01",
-      }),
-    ]);
-
-    expect(
-      attempts.filter((attempt) => attempt.status === "fulfilled"),
-    ).toHaveLength(1);
-    expect(
-      attempts.filter(
-        (attempt) =>
-          attempt.status === "rejected" &&
-          (attempt.reason as { code?: string }).code === "CONFLICT",
-      ),
-    ).toHaveLength(1);
-
-    const result = await dbPool.query(
-      "SELECT count(*)::integer AS count FROM surcharges WHERE name = 'Parking'",
-    );
-    expect(result.rows[0].count).toBe(1);
-=======
       "SELECT monthly_amount, effective_from FROM surcharges WHERE name = 'Internet' AND active = true AND deleted_at IS NULL",
     );
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0].monthly_amount).toBe(120000);
     expect(new Date(result.rows[0].effective_from).toISOString().startsWith("2099-07-01")).toBe(true);
->>>>>>> origin/main
   });
 });

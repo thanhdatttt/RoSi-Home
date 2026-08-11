@@ -3,6 +3,8 @@ import {
   getInvoiceService,
   sendInvoiceService,
   generateInvoicesForProperty,
+  listInvoicesService,
+  listInvoicesForTenantService,
 } from "./service.js";
 import { generateInvoicePdf } from "../../lib/invoicePdf.js";
 import { previousMonthPeriod } from "../../lib/billingPeriod.js";
@@ -22,6 +24,16 @@ async function get(req: Request, res: Response): Promise<void> {
     req.params.id,
   );
   res.status(200).json({ data: view });
+}
+
+async function list(req: Request, res: Response): Promise<void> {
+  const items = await listInvoicesService(req.user!.id);
+  res.status(200).json({ data: items });
+}
+
+async function listForTenant(req: Request, res: Response): Promise<void> {
+  const items = await listInvoicesForTenantService(req.user!.id);
+  res.status(200).json({ data: items });
 }
 
 async function download(req: Request, res: Response): Promise<void> {
@@ -67,35 +79,10 @@ async function uploadProof(req: Request, res: Response): Promise<void> {
   if (!req.file) {
     throw new UnprocessableError("Payment proof file is required");
   }
-<<<<<<< HEAD
-  if (req.file.buffer.length === 0) {
-    throw new UnprocessableError("Payment proof file cannot be empty");
-  }
-=======
->>>>>>> origin/main
   const contentType = req.file.mimetype as "image/png" | "image/jpeg";
   if (contentType !== "image/png" && contentType !== "image/jpeg") {
     throw new UnprocessableError("Unsupported file type");
   }
-<<<<<<< HEAD
-  const isPng =
-    req.file.buffer.length >= 8 &&
-    req.file.buffer.subarray(0, 8).equals(
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    );
-  const isJpeg =
-    req.file.buffer.length >= 3 &&
-    req.file.buffer[0] === 0xff &&
-    req.file.buffer[1] === 0xd8 &&
-    req.file.buffer[2] === 0xff;
-  if (
-    (contentType === "image/png" && !isPng) ||
-    (contentType === "image/jpeg" && !isJpeg)
-  ) {
-    throw new UnprocessableError("File content does not match its image type");
-  }
-=======
->>>>>>> origin/main
   
   const result = await uploadPaymentProofService(
     req.user!.id,
@@ -122,4 +109,10 @@ async function remind(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: result });
 }
 
-export { get, download, send, generate, getVietqr, uploadProof, confirmPayment, remind };
+export { get, download, send, generate,  getVietqr,
+  uploadProof,
+  confirmPayment,
+  remind,
+  list,
+  listForTenant,
+};

@@ -73,15 +73,7 @@ describe("paymentService unit tests", () => {
         accountNumber: "123",
         accountHolderName: "A",
       } as any);
-<<<<<<< HEAD
-      vi.mocked(generateVietQR).mockResolvedValue({
-        payload: "payload1",
-        imageUrl: "img1",
-        description: "RH P1",
-      });
-=======
       vi.mocked(generateVietQR).mockResolvedValue({ payload: "payload1", imageUrl: "img1" });
->>>>>>> origin/main
 
       const res = await getVietqrService("tenant-1", "Tenant", "inv-1");
       expect(res.payload).toBe("payload1");
@@ -89,11 +81,7 @@ describe("paymentService unit tests", () => {
 
     it("throws UnprocessableError if config missing", async () => {
       vi.mocked(getInvoiceDetail).mockResolvedValue(invoiceMock as any);
-<<<<<<< HEAD
-      vi.mocked(PaymentRepository.getPaymentConfig).mockResolvedValue(null);
-=======
       vi.mocked(PaymentRepository.getPaymentConfig).mockResolvedValue(null as any);
->>>>>>> origin/main
 
       await expect(getVietqrService("tenant-1", "Tenant", "inv-1")).rejects.toThrow(UnprocessableError);
     });
@@ -113,14 +101,7 @@ describe("paymentService unit tests", () => {
   describe("confirmPaymentService", () => {
     it("creates payment and writes audit", async () => {
       vi.mocked(getInvoiceDetail).mockResolvedValue(invoiceMock as any);
-<<<<<<< HEAD
-      vi.mocked(PaymentRepository.createPayment).mockResolvedValue({
-        payment: { id: "pay-1" },
-        created: true,
-      } as any);
-=======
       vi.mocked(PaymentRepository.createPayment).mockResolvedValue({ id: "pay-1" } as any);
->>>>>>> origin/main
 
       const res = await confirmPaymentService("landlord-1", "inv-1");
       expect(res.id).toBe("pay-1");

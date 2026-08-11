@@ -1,10 +1,13 @@
-import { and, count, eq, isNull, asc } from "drizzle-orm";
+import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { properties } from "../../db/schema.js";
+import { properties, rooms, leases } from "../../db/schema.js";
 import type { Pagination } from "../../lib/pagination.js";
 import type { CreatePropertyInput, UpdatePropertyInput } from "./schema.js";
 
-export type PropertyRow = typeof properties.$inferSelect;
+export type PropertyRow = typeof properties.$inferSelect & {
+  units?: number;
+  occupied?: number;
+};
 
 export async function createProperty(
   landlordId: string,
@@ -36,9 +39,24 @@ export async function listPropertiesByLandlord(
   p: Pagination,
 ): Promise<PropertyRow[]> {
   return db
-    .select()
+    .select({
+      id: properties.id,
+      landlordId: properties.landlordId,
+      name: properties.name,
+      address: properties.address,
+      locality: properties.locality,
+      createdAt: properties.createdAt,
+      updatedAt: properties.updatedAt,
+      deletedAt: properties.deletedAt,
+      deletedBy: properties.deletedBy,
+      units: sql<number>`count(distinct ${rooms.id})`.mapWith(Number),
+      occupied: sql<number>`count(distinct case when ${leases.status} = 'Active' then ${rooms.id} else null end)`.mapWith(Number),
+    })
     .from(properties)
+    .leftJoin(rooms, and(eq(properties.id, rooms.propertyId), isNull(rooms.deletedAt)))
+    .leftJoin(leases, and(eq(rooms.id, leases.roomId), isNull(leases.deletedAt)))
     .where(and(eq(properties.landlordId, landlordId), isNull(properties.deletedAt)))
+    .groupBy(properties.id)
     .orderBy(asc(properties.name))
     .limit(p.pageSize)
     .offset((p.page - 1) * p.pageSize);
@@ -65,6 +83,24 @@ export async function updateProperty(
   const [row] = await db
     .update(properties)
     .set(input)
+    .where(
+      and(eq(properties.id, id), eq(properties.landlordId, landlordId), isNull(properties.deletedAt)),
+    )
+    .returning();
+  return row ?? null;
+}
+
+export async function softDeleteProperty(
+  landlordId: string,
+  id: string,
+  deletedBy: string,
+): Promise<PropertyRow | null> {
+  const [row] = await db
+    .update(properties)
+    .set({
+      deletedAt: new Date(),
+      deletedBy,
+    })
     .where(
       and(eq(properties.id, id), eq(properties.landlordId, landlordId), isNull(properties.deletedAt)),
     )

@@ -1,2 +1,0 @@
-DROP INDEX IF EXISTS "meter_readings_unique";--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "meter_readings_unique" ON "meter_readings" USING btree ("room_id","utility_type","billing_period") WHERE "meter_readings"."superseded_at" IS NULL;

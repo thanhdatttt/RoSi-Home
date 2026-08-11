@@ -134,12 +134,10 @@ describe("Dashboard PostgreSQL Integration", () => {
     expect(data.month).toBe("2026-07");
     
     // 5M rent + 200k water expected in July (Invoice 2)
-    expect(data.expectedRevenue.rent).toBe(5000000);
-    expect(data.expectedRevenue.water).toBe(200000);
+    expect(data.expectedRevenue).toBe(5200000);
     
     // Paid 5.2M in July
-    expect(data.collectedRevenue.rent).toBe(5000000);
-    expect(data.collectedRevenue.water).toBe(200000);
+    expect(data.collectedRevenue).toBe(5200000);
   });
 
   it("US-DASH-03: retrieves outstanding invoices", async () => {

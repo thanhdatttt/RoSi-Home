@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { db, type Db } from "../../db/index.js";
 import { deviceTokens, notifications } from "../../db/schema.js";
 
@@ -61,4 +61,16 @@ export async function findNotificationByDedupeKey(
     .from(notifications)
     .where(eq(notifications.dedupeKey, dedupeKey));
   return row ?? null;
+}
+
+export async function listNotificationsForUser(
+  userId: string,
+  executor: Db = db,
+): Promise<NotificationRow[]> {
+  return executor
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(50);
 }

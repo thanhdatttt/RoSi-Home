@@ -27,10 +27,6 @@ vi.mock("../../src/lib/storage.js", async (importOriginal) => {
       objectPath: input.objectPath,
       fileUrl: `payment-proofs/${input.objectPath}`,
     })),
-<<<<<<< HEAD
-    createSignedPaymentProofUrl: vi.fn(async (fileUrl: string) => `https://storage.test/${fileUrl}`),
-=======
->>>>>>> origin/main
   };
 });
 
@@ -113,11 +109,7 @@ describe("Payments & VietQR (US-VIETQR, US-PAYMENT)", () => {
     // Need config first
     await dbPool.query(
       `INSERT INTO landlord_payment_configs (landlord_id, bank_code, account_number, account_holder_name)
-<<<<<<< HEAD
-       VALUES ($1, 'VCB', '12345', 'AN')`,
-=======
        VALUES ($1, 'VCB', '123', 'A')`,
->>>>>>> origin/main
       [LANDLORD_ID]
     );
 
@@ -135,15 +127,7 @@ describe("Payments & VietQR (US-VIETQR, US-PAYMENT)", () => {
     const res = await request(app)
       .post(`/api/v1/invoices/${INVOICE_ID}/payment-proofs`)
       .set(auth(sign("Tenant", TENANT_USER_ID)))
-<<<<<<< HEAD
-      .attach(
-        "proof",
-        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]),
-        "test.png",
-      )
-=======
       .attach("proof", Buffer.from("fake-image"), "test.png")
->>>>>>> origin/main
       .expect(201);
 
     expect(res.body.data.status).toBe("Pending");

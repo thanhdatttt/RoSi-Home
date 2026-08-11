@@ -7,11 +7,8 @@ export const createPropertySchema = z
     name: z.string().min(1, "Name is required."),
     address: z.string().min(1, "Address is required."),
     locality: z.string().trim().min(1).optional(),
-<<<<<<< HEAD
-=======
     utilityRates: utilityRateSchema.omit({ effectiveFrom: true }),
     surcharges: z.array(createSurchargeSchema.omit({ effectiveFrom: true, effectiveTo: true })).optional(),
->>>>>>> origin/main
   })
   .strict();
 

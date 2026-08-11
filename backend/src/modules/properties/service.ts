@@ -12,6 +12,7 @@ import {
   findProperty,
   listPropertiesByLandlord,
   updateProperty,
+  softDeleteProperty,
   type PropertyRow,
 } from "./repository.js";
 
@@ -21,6 +22,8 @@ export type PropertyView = {
   address: string;
   createdAt: string;
   updatedAt: string;
+  units: number;
+  occupied: number;
 };
 
 function serialize(row: PropertyRow): PropertyView {
@@ -30,11 +33,14 @@ function serialize(row: PropertyRow): PropertyView {
     address: row.address,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    units: row.units ?? 0,
+    occupied: row.occupied ?? 0,
   };
 }
 
 import { insertInitialUtilityRate } from "../utilities/repository.js";
 import { insertInitialSurcharge } from "../charges/repository.js";
+import { upsertLeaseReminderConfig } from "../leases/repository.js";
 import { businessDate } from "../../lib/businessDate.js";
 import { db } from "../../db/index.js";
 
@@ -64,6 +70,11 @@ export async function createPropertyService(
           );
         }
       }
+      await upsertLeaseReminderConfig(
+        prop.id,
+        { remindAt30Days: true },
+        tx
+      );
       return prop;
     });
     
@@ -128,4 +139,22 @@ export async function updatePropertyService(
     }
     throw err;
   }
+}
+
+export async function deletePropertyService(
+  landlordId: string,
+  id: string,
+): Promise<void> {
+  const existing = await findProperty(landlordId, id);
+  if (!existing) throw new NotFoundError("Property not found.");
+
+  const deleted = await softDeleteProperty(landlordId, id, landlordId);
+  if (!deleted) throw new NotFoundError("Property not found.");
+
+  await writeAudit({
+    actorUserId: landlordId,
+    action: "property.deleted",
+    entityType: "properties",
+    entityId: id,
+  });
 }

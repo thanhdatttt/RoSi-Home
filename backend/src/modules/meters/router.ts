@@ -2,19 +2,8 @@ import { Router } from "express";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
-<<<<<<< HEAD
-import {
-  calculateMeterReadingsSchema,
-  correctMeterReadingContractSchema,
-  correctMeterReadingSchema,
-  meterReadingListQuerySchema,
-  meterReadingSchema,
-} from "./schema.js";
-import { calculate, correct, list, record } from "./controller.js";
-=======
 import { meterReadingSchema, correctMeterReadingSchema } from "./schema.js";
 import { record, correct } from "./controller.js";
->>>>>>> origin/main
 
 export const metersRouter = Router();
 
@@ -27,16 +16,6 @@ export const metersRouter = Router();
 // ever be dispatched there.
 metersRouter.use(requireAuth);
 
-<<<<<<< HEAD
-metersRouter.get(
-  "/rooms/:roomId/meter-readings",
-  requireRole("Landlord"),
-  validate(meterReadingListQuerySchema, "query"),
-  asyncHandler(list),
-);
-
-=======
->>>>>>> origin/main
 // US-METER-01 / US-METER-02
 metersRouter.post(
   "/rooms/:roomId/meter-readings",
@@ -45,28 +24,7 @@ metersRouter.post(
   asyncHandler(record),
 );
 
-<<<<<<< HEAD
-// US-METER-02 — record all required monthly readings and calculate the
-// reproducible electricity/water breakdown in one transaction.
-metersRouter.post(
-  "/rooms/:roomId/meter-readings/calculate",
-  requireRole("Landlord"),
-  validate(calculateMeterReadingsSchema),
-  asyncHandler(calculate),
-);
-
 // US-METER-03
-metersRouter.patch(
-  "/meter-readings/:id/correct",
-  requireRole("Landlord"),
-  validate(correctMeterReadingContractSchema),
-  asyncHandler(correct),
-);
-
-// Backward-compatible alias retained for existing clients.
-=======
-// US-METER-03
->>>>>>> origin/main
 metersRouter.post(
   "/meter-readings/:id/correct",
   requireRole("Landlord"),

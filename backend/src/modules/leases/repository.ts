@@ -330,7 +330,7 @@ export async function findUpcomingExpirationsForLandlord(
 
 export async function findLeaseReminderConfig(
   propertyId: string,
-  executor: Db = db,
+  executor: any = db,
 ): Promise<LeaseReminderConfigRow | null> {
   const [row] = await executor
     .select()
@@ -341,17 +341,8 @@ export async function findLeaseReminderConfig(
 
 export async function upsertLeaseReminderConfig(
   propertyId: string,
-<<<<<<< HEAD
-  fields: Partial<
-    Pick<
-      LeaseReminderConfigRow,
-      "remindAt30Days" | "remindAt15Days" | "remindAt7Days" | "overdueReminderEveryDays"
-    >
-  >,
-=======
   fields: Partial<Pick<LeaseReminderConfigRow, "remindAt30Days" | "remindAt15Days" | "remindAt7Days">>,
->>>>>>> origin/main
-  executor: Db = db,
+  executor: any = db,
 ): Promise<LeaseReminderConfigRow> {
   const existing = await findLeaseReminderConfig(propertyId, executor);
   if (existing) {

@@ -299,15 +299,7 @@ export async function saveReport(
   return row.id;
 }
 
-<<<<<<< HEAD
-export async function getReportById(
-  reportId: string,
-  landlordId: string,
-  executor: Db = db,
-): Promise<(typeof reports.$inferSelect) | undefined> {
-=======
 export async function getReportById(reportId: string, landlordId: string, executor: Db = db) {
->>>>>>> origin/main
   const [row] = await executor.select()
     .from(reports)
     .where(and(eq(reports.id, reportId), eq(reports.landlordId, landlordId)));

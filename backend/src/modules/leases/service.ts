@@ -79,10 +79,6 @@ export type LeaseReminderConfigView = {
   remindAt30Days: boolean;
   remindAt15Days: boolean;
   remindAt7Days: boolean;
-<<<<<<< HEAD
-  overdueReminderEveryDays: number;
-=======
->>>>>>> origin/main
 };
 
 function serialize(row: LeaseDetailRow): LeaseView {
@@ -115,13 +111,9 @@ function serializeReminderConfig(
 ): LeaseReminderConfigView {
   return {
     propertyId,
-    remindAt30Days: row?.remindAt30Days ?? false,
+    remindAt30Days: row?.remindAt30Days ?? true,
     remindAt15Days: row?.remindAt15Days ?? false,
     remindAt7Days: row?.remindAt7Days ?? false,
-<<<<<<< HEAD
-    overdueReminderEveryDays: row?.overdueReminderEveryDays ?? 1,
-=======
->>>>>>> origin/main
   };
 }
 
@@ -148,7 +140,7 @@ async function assertNoOverlap(
 export async function createLeaseService(
   landlordId: string,
   input: CreateLeaseInput,
-): Promise<{ lease: LeaseView; tenantAccountProvisioned: boolean }> {
+): Promise<{ lease: LeaseView; tenantAccountProvisioned: boolean; tempPassword?: string }> {
   await assertRoomOwnedByLandlord(input.roomId, landlordId);
   assertLeasePeriod(input.startDate, input.endDate);
 
@@ -194,7 +186,7 @@ export async function createLeaseService(
         trx,
       );
 
-      const { provisioned } = await provisionTenantAccount(
+      const { provisioned, tempPassword } = await provisionTenantAccount(
         {
           id: tenantRow.id,
           fullName: tenantRow.fullName,
@@ -221,7 +213,7 @@ export async function createLeaseService(
       );
 
       const detail = await findLeaseForLandlord(landlordId, lease.id, trx);
-      return { lease: serialize(detail!), tenantAccountProvisioned: provisioned };
+      return { lease: serialize(detail!), tenantAccountProvisioned: provisioned, tempPassword };
     });
   } catch (err) {
     // Second line of defense: leases_tenant_active (one Active lease per
