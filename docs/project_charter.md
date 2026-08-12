@@ -64,8 +64,8 @@ The team consists of **five part-time full-stack student developers**. Work is a
 |---|---|---|
 | Project Sponsor | University Supervisor / Lecturer | Approves the project, provides academic guidance, reviews progress, approves final deliverables. |
 | Project Manager / Team Leader | **Chí** | Plans and monitors the project, maintains Trello and the delivery baseline, coordinates dependencies and communication, manages risks and changes, and reports progress to the Sponsor. |
-| Full-stack Developer / Story Owner | **Chí** | Owns end-to-end Auth/Profile (`US-AUTH-01→06`, `US-PROFILE-01`) and Lease Expiry (`US-LEASE-05→06`); sets up backend infrastructure; writes Product Backlog 2.0, Project Estimation, Project Proposal, and Vision and Scope. |
-| Full-stack Developer / Story Owner | **Đạt** | Owns end-to-end Property/Room (`US-PROPERTY-01→02`, `US-ROOM-01→03`), Meter (`US-METER-01→03`), and Dashboard (`US-DASH-01→04`); sets up quality tooling; writes the Technical Architecture and Project Charter. |
+| Full-stack Developer / Story Owner | **Chí** | Owns end-to-end Auth/Profile (`US-AUTH-01→06`, `US-PROFILE-01`) and Lease Expiry (`US-LEASE-05→06`); sets up backend infrastructure and continuous deployment to Render; writes Product Backlog 2.0, Project Estimation, Project Proposal, and Vision and Scope. |
+| Full-stack Developer / Story Owner | **Đạt** | Owns end-to-end Property/Room (`US-PROPERTY-01→02`, `US-ROOM-01→03`), Meter (`US-METER-01→03`), and Dashboard (`US-DASH-01→04`); sets up quality tooling and continuous integration; writes the Technical Architecture and Project Charter. |
 | Full-stack Developer / Story Owner | **Minh** | Owns end-to-end Utility/Charge (`US-UTILITY-01→02`, `US-CHARGE-01`), Invoice (`US-INVOICE-01→04`), VietQR (`US-VIETQR-01→02`), and Payment Reminder (`US-REMINDER-01→02`); writes Product Backlog Version 1. |
 | Full-stack Developer / Story Owner | **Hưng (MXH)** | Owns end-to-end Tenant (`US-TENANT-01→02`), Lease (`US-LEASE-01→04`), and Maintenance (`US-MAINT-01→05`); sets up frontend infrastructure; writes the Statement of Work and Risk Management Plan. |
 | Full-stack Developer / Story Owner | **Quân** | Owns end-to-end Payment (`US-PAYMENT-01→03`) and Business Report (`US-REPORT-01→05`). |
@@ -85,11 +85,11 @@ A Responsibility Assignment Matrix (RACI) maps every deliverable to the people i
 | Abbreviation | Full Name | Role |
 |---|---|---|
 | **PM** | Trần Khôn Chí | Project Manager / Team Leader (coordination-level involvement only) |
-| **Chí** | Trần Khôn Chí| Backend Developer 1 (BE1) |
-| **Đạt** | Phạm Thành Đạt | Backend Developer 2 (BE2) |
-| **Minh** | Nguyễn Văn Minh | Backend Developer 3 (BE3) |
-| **MXH** | Mai Xuân Hưng | Frontend Developer 1 (FE1) |
-| **Quân** | Nguyễn Huy Quân | Frontend Developer 2 (FE2) |
+| **Chí** | Trần Khôn Chí | Full-stack Developer / Story Owner |
+| **Đạt** | Phạm Thành Đạt | Full-stack Developer / Story Owner |
+| **Minh** | Nguyễn Văn Minh | Full-stack Developer / Story Owner |
+| **MXH** | Mai Xuân Hưng | Full-stack Developer / Story Owner |
+| **Quân** | Nguyễn Huy Quân | Full-stack Developer / Story Owner |
 | **SPN** | — | Project Sponsor / Lecturer |
 | **LR** | — | Landlord Representatives (Product Owner group) |
 | **TN** | — | Tenants (secondary end users, consulted during pilot) |
@@ -128,6 +128,8 @@ A Responsibility Assignment Matrix (RACI) maps every deliverable to the people i
 | TASK-TECH-01 Set up backend infrastructure | Chí | Chí | Đạt, Minh | SPN |
 | TASK-TECH-02 Set up frontend infrastructure | MXH | MXH | Quân | SPN |
 | TASK-TECH-03 Set up quality tooling | Đạt | Đạt | Chí, Minh, MXH, Quân | SPN |
+| TASK-TECH-04 Set up continuous integration | Đạt | Đạt | Chí, Minh, MXH, Quân | SPN |
+| TASK-TECH-05 Set up continuous deployment to Render | Chí | Chí | Đạt | SPN |
 | TASK-PM-01 Manage the team's Trello board | Chí | Chí | Dev Team | SPN |
 | TASK-DOC-01 Write the Technical Architecture document | Đạt | Chí | SPN | |
 | TASK-DOC-03 Write Product Backlog Version 1 | Minh | Chí | SPN | |
@@ -146,9 +148,9 @@ These activities recur across every batch and are not tied to a single user stor
 | Activity | Responsible | Accountable | Consulted | Informed |
 |---|---|---|---|---|
 | Pull-request review | all members |  all members | Author | PM |
-| Shared API/schema decision | Minh, Chí, Đạt | Integration owner appointed for the batch | PM | Dev Team |
-| Backend CI maintenance | Minh, Chí, Đạt | Chí (BE1, infrastructure owner) | — | PM |
-| Mobile validation | MXH, Quân | MXH, Quân | — | PM |
+| Shared API/schema decision | Affected story owners | Integration owner appointed for the batch | PM | Dev Team |
+| CI workflow maintenance | Đạt | Đạt | Dev Team | PM |
+| CD workflow and Render deployment maintenance | Chí | Chí | Đạt | PM |
 | Documentation authoring and updates | All members, for their own or affected work | all members | — | PM |
 | Documentation review and approval | All members | All members  | — | PM |
 
@@ -159,7 +161,7 @@ These activities recur across every batch and are not tied to a single user stor
 | Stakeholder | Role in Project | Responsibilities | Accountability (answerable for the outcome) | Access to Project Information/Decisions | Level of Influence | Communication Method | Risks Associated |
 |---|---|---|---|---|---|---|---|
 | **Project Supervisor / Lecturer** | Project Sponsor | Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met. | **Accountable** for certifying the project meets academic requirements and for the final grade decision | Full — receives all deliverables, attends milestone reviews | **High** — can require rework, reject milestones, or fail the deliverable | Weekly meetings, Email | Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions. |
-| **Project Manager (Chí, Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, oversees project delivery — alongside his own BE1 delivery workstream. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. Dual PM/BE1 role creates a single point of overload risk. |
+| **Project Manager (Chí, Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, and oversees project delivery alongside his assigned full-stack stories and supporting tasks. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. Chí's combined PM, story-owner, infrastructure, deployment, and documentation workload creates an overload risk. |
 | **Development Team (Đạt, Minh, MXH, Quân)** | System Development | Design architecture, develop features, perform testing, fix defects, maintain documentation, per the named workstreams in Section 4 and the RACI in Section 5. | Each member is **accountable** for their assigned user stories/modules (see Section 5.4); collectively accountable to the PM for sprint commitments | Full internal access (codebase, backlog, CI); no direct access to Supervisor grading decisions | **High** — can influence technical approach, estimates, and project scope | GitHub, Discord, Daily stand-up meetings | Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework. |
 | **Self-Managing Landlords** | Primary Client / Product Owner | Provide business requirements, validate business processes, evaluate prototypes, participate in user acceptance testing. | **Not accountable** for project outcomes (they are consulted, not responsible for delivery), but their acceptance is the qualitative measure of product-market fit | Limited — receives summarized findings, prototypes, and surveys; no access to internal project management artifacts | **High for product decisions** — negative feedback on core workflows (e.g., billing, payment) can force a scope or design change; **no influence** over academic schedule or grading | Face-to-face interviews, Phone calls, Zalo, Google Forms | Limited availability, changing requirements, resistance to adopting digital systems, limited pilot participation. |
 | **Tenants** | Secondary End Users | Evaluate usability, test payment workflow, submit maintenance requests, provide feedback on transparency and user experience. | Not accountable for delivery | Limited — receives only the parts of the prototype relevant to the tenant-facing app | **Low–Medium** — feedback can adjust tenant-facing UX details, but does not drive core project scope | Mobile application, Zalo, Google Forms | Limited engagement during testing, incomplete feedback, inconsistent system usage. |
@@ -186,7 +188,7 @@ These activities recur across every batch and are not tied to a single user stor
 - GitHub
 - React / React Native
 - PostgreSQL
-- Azure or AWS Cloud
+- Render and Supabase
 - Figma
 - Postman
 - Claude Code
