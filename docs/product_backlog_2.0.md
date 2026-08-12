@@ -84,6 +84,22 @@ For all product stories:
   - [ ] Backend testing instructions and an OpenAPI specification are stored in the repository.
   - [ ] Development interfaces or adapters exist for email, Expo push notifications, Supabase Storage, VietQR, and invoice/report PDF generation.
 
+### TASK-TECH-04 — Set up continuous integration
+
+- **Priority:** Must
+- **Work estimation:** ~1.9 hours | tokens not separately recorded
+- **Acceptance criteria:**
+  - [ ] A GitHub Actions CI workflow runs the complete backend test suite for every pull request targeting `main`.
+  - [ ] The workflow uses the backend project's actual working directory and dependency/test commands, and fails when any backend test fails.
+
+### TASK-TECH-05 — Set up continuous deployment to Render
+
+- **Priority:** Must
+- **Work estimation:** ~1.9 hours | tokens not separately recorded
+- **Acceptance criteria:**
+  - [ ] After an approved pull request is merged into `main`, the CD workflow triggers a Render deployment.
+  - [ ] The merged revision is deployed successfully to the configured Render service.
+
 ### TASK-PM-01 — Manage the team's Trello board
 
 - **Priority:** Must
@@ -140,7 +156,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 - **Work estimation:** ~6 hours | ~100,000 tokens
 - **Acceptance criteria:**
   - [ ] Title: **Project Charter — RosiHome**.
-  - [ ] Includes **Project Background, Context, and Overview; Project Objectives; Project Scope; Project Management and Governance; Stakeholder Analysis; Project Facilities and Resources; Major Milestones; Impact Analysis; Assumptions;** and **Project Risks (Summary)**.
+  - [ ] Includes **Project Background, Context, and Overview; Project Objectives; Project Scope; Project Management and Governance; Stakeholder Analysis; Project Facilities and Resources; Major Milestones; Impact Analysis;** and **Assumptions**.
   - [ ] States measurable objectives, in/out scope, ownership, resources, milestones, assumptions, and key risks consistently with the proposal and backlog.
 
 ### TASK-DOC-09 — Write the Software Project Estimation document
@@ -1074,9 +1090,9 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | Epics | 5 |
 | Features | 15 |
 | User stories | 51 |
-| Technical/project tasks | 4 |
+| Technical/project tasks | 6 |
 | Documentation tasks | 9 |
-| **Total implementable/trackable items** | **64** |
+| **Total implementable/trackable items** | **66** |
 
 User stories count toward product-story throughput. Technical, management, and documentation tasks are tracked separately.
 
