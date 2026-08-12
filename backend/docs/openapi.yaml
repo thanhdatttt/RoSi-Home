@@ -1060,6 +1060,20 @@ paths:
       responses:
         "200":
           description: Reading corrected
+  /invoices:
+    get:
+      summary: List invoices for the authenticated landlord
+      tags: [Invoices]
+      responses:
+        "200":
+          description: Invoice list
+  /tenant-invoices:
+    get:
+      summary: List invoices for the authenticated tenant
+      tags: [Invoices]
+      responses:
+        "200":
+          description: Invoice list
   /invoices/{id}:
     get:
       summary: Get invoice details
@@ -1157,12 +1171,13 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required: [proof]
               properties:
                 proof:
                   type: string
                   format: binary
       responses:
-        "200":
+        "201":
           description: Payment proof uploaded
   /invoices/{id}/confirm-payment:
     post:
@@ -1192,6 +1207,13 @@ paths:
       responses:
         "200":
           description: Reminder sent
+  /notifications:
+    get:
+      summary: List notifications for the authenticated user
+      tags: [Notifications]
+      responses:
+        "200":
+          description: Notification list
   /notifications/device-tokens:
     post:
       summary: Register device token

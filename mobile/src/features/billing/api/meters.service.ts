@@ -103,9 +103,9 @@ export async function correctMeterReading(
   correctedValue: number,
 ) {
   const response = await client.request<ApiEnvelope<MeterReadingView>>({
-    method: 'PATCH',
+    method: 'POST',
     path: `/api/v1/meter-readings/${readingId}/correct`,
-    body: { correctedValue },
+    body: { value: correctedValue },
   });
   return response.data;
 }
