@@ -1,7 +1,5 @@
 # Product Backlog 2.0 — RosiHome
 
-> Course-project backlog for the RosiHome mobile MVP. It contains all 51 user stories from Version 1 plus the technical, management, and documentation tasks needed to deliver the project. Product decisions are included directly in the relevant acceptance criteria; there is no separate decision section.
-
 ## 1. Backlog Conventions
 
 ### Work item types
@@ -58,6 +56,7 @@ For all product stories:
 ### TASK-TECH-02 — Set up frontend infrastructure
 
 - **Priority:** Must
+- **Work estimation:** ~3 hours | ~20,000 tokens
 - **Acceptance criteria:**
   - [ ] The mobile project uses Expo SDK 57, React 19, and React Native 0.86, with Android/iOS development and optional Web commands configured.
   - [ ] Expo Router provides typed auth and role-based dashboard routes, including guards for signed-out users, landlord/tenant separation, and forced temporary-password change.
@@ -93,6 +92,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Output:** `docs/architecture.md`
 - **Priority:** Must
+- **Work estimation:** ~7 hours | ~120,000 tokens
 - **Acceptance criteria:**
   - [ ] Title: **Technical Architecture — RosiHome**.
   - [ ] Includes **Architecture Style, Tech Stack, How It Fits Together, Core Data (Simple Version),** and **Why This Stack Works**.
@@ -125,6 +125,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Output:** `docs/project_charter.md`
 - **Priority:** Must
+- **Work estimation:** ~6 hours | ~100,000 tokens
 - **Acceptance criteria:**
   - [ ] Title: **Project Charter — RosiHome**.
   - [ ] Includes **Project Background, Context, and Overview; Project Objectives; Project Scope; Project Management and Governance; Stakeholder Analysis; Project Facilities and Resources; Major Milestones; Impact Analysis; Assumptions;** and **Project Risks (Summary)**.
@@ -143,6 +144,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Output:** `docs/proposal.md`
 - **Priority:** Must
+- **Work estimation:** ~7 hours | ~135,000 tokens
 - **Acceptance criteria:**
   - [ ] Title: **Project Proposal — RosiHome**.
   - [ ] Includes **Pain Points & Problem Statement, Business Case, Stakeholders, Competitor Analysis, Feasibility Study, Project Timeline & Schedule, Cost & Budget Plan, Risk Assessment,** and **Elevator Pitch**.
@@ -209,6 +211,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | **US-ROOM-02** | As a landlord, I want to view and update room details and availability so that I can manage my rental units accurately. | Owned rooms show number/name, rent and lease-derived occupancy; valid details can be updated; occupancy cannot be manually overridden; other landlords' rooms are inaccessible. |
 | **US-ROOM-03** | As a landlord, I want to add multiple rooms in one operation so that I can set up a property without repeating the same form for every room. | Landlord submits multiple valid rooms for one owned property; duplicate/invalid rows are identified before save; operation follows the approved all-or-nothing rule; created rooms are `Vacant` and totals are reported. |
 
+- **Work estimation:** ~10 hours | ~12,000,000 tokens
 #### F-03 — Tenant Information and Account Management
 
 - **Priority:** Must
@@ -240,6 +243,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | **US-METER-02** | As a landlord, I want to enter current monthly readings and see calculated utility charges so that I can prepare an accurate invoice. | Current metered readings cannot be below previous readings; consumption is difference × effective rate; flat water is monthly rate × lease tenant count and needs no water reading; calculation shows inputs and rounding; owned rooms only. |
 | **US-METER-03** | As a landlord, I want to correct an erroneous reading before sending its draft invoice so that the tenant receives an accurate bill without losing accountability. | Only owning landlord can correct a reading while its invoice is `Draft`; draft recalculates deterministically; before/after values, actor, time and reason are audited; sent/paid invoice cannot be silently changed. |
 
+- **Work estimation:** ~8 hours | ~15,000,000 tokens
 #### F-06 — Billing and Invoice Generation
 
 - **Priority:** Must
@@ -251,6 +255,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | **US-INVOICE-03** | As a landlord or assigned tenant, I want to download an invoice document so that I can retain or share a billing record outside RosiHome. | Authorized user downloads a readable PDF containing invoice identity, parties, itemization, total, due date, status and VietQR when applicable; document matches stored invoice and contains no unrelated data. |
 | **US-INVOICE-04** | As a landlord, I want to review and explicitly send a generated draft invoice so that the tenant receives only a bill I have confirmed. | Owning landlord reviews a complete draft, corrects readings if needed, then explicitly sends it; status changes from `Draft` to sent/issued; assigned tenant gains access and receives mobile push once; sent/paid data is immutable except through an audited correction process. |
 
+- **Work estimation:** ~12 hours | ~20,000,000 tokens
 #### F-07 — VietQR Payment Integration
 
 - **Priority:** Must
@@ -333,6 +338,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 | **US-DASH-03** | As a landlord, I want to see outstanding amounts and overdue invoices so that I know which payments require follow-up. | Shows reconciled outstanding total and overdue list with tenant/room, due date, amount and authorized link; overdue means unpaid after due date; paid/foreign invoices excluded. |
 | **US-DASH-04** | As a landlord, I want upcoming lease expirations on the dashboard so that I can initiate renewal or move-out discussions. | Uses the same window/rules as US-LEASE-06; shows property/room, tenant, date and authorized link; ended/foreign leases excluded. |
 
+- **Work estimation:** ~9 hours | ~10,000,000 tokens
 #### F-15 — Monthly Business Report and Analytics
 
 - **Priority:** Should
