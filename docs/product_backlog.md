@@ -32,15 +32,15 @@
 - **Must Have:** Required for the product's core workflows in the current development scope.
 - **Should Have:** Valuable product behavior that may be scheduled after the core dependency path.
 
-### 1.4 Global Definition of Done
+### 1.4 Universal Definition of Done
 
-Unless a story explicitly states otherwise, it is `Done` only when:
+Every `User Story` must satisfy all items below before its status moves to `Done`. Items are grouped by delivery phase so they map onto the workflow in project plan.
 
-- All acceptance criteria pass in the RosiHome mobile application. The current product scope does not require a Web delivery surface.
+- All acceptance criteria pass. Edge cases implied by the AC (empty states, invalid input, missing dependencies) are handled, not just the happy path.
 - Authorization and ownership rules are enforced by the backend, not only hidden in the user interface.
 - Relevant automated tests pass, including at least the main success path and critical validation/authorization paths.
 - No unresolved severity-critical or severity-high defect remains within the story scope.
-- Code has been reviewed and merged according to the team's Git workflow.
+- Code must pass CI checks before merge. PR has been reviewed and merged according to the team's Git workflow.
 - Database migrations and configuration changes required by the story are reproducible.
 - The completed behavior has been deployed to and verified in the agreed development/integration environment.
 - User-facing and API errors do not expose passwords, tokens, private files, or another landlord's or tenant's data.
