@@ -58,17 +58,17 @@ The project aims to:
 
 # 4. Project Management and Governance
 
-The team consists of **five part-time student developers**. One of the five, **Chí**, holds the dual role of **Project Manager / Team Leader** in addition to his individual delivery workstream (**BE1**). This dual assignment is reflected explicitly throughout the RACI matrix in Section 5, since "Project Manager" is a role Chí carries alongside — not instead of — his own delivery responsibilities.
+The team consists of **five part-time full-stack student developers**. Work is assigned by user story and related feature group rather than by separate frontend and backend roles. Each story owner is responsible end-to-end for the required API, mobile UI, tests, integration, and defect fixes. One member, **Chí**, also serves as **Project Manager / Team Leader** while retaining his assigned product, infrastructure, management, and documentation work.
 
 | Role | Name | Responsibilities |
 |---|---|---|
 | Project Sponsor | University Supervisor / Lecturer | Approves the project, provides academic guidance, reviews progress, approves final deliverables. |
-| Project Manager / Team Leader | **Chí** (also BE1) | Plans the project, maintains the schedule and baseline, coordinates communication, assigns/records integration ownership, manages risks and changes, reports project progress to the Sponsor. |
-| Backend Developer 1 (BE1) | **Chí** | Owns Auth, Profile, Tenant, Lease, Dashboard 01–02, and backend stabilization. |
-| Backend Developer 2 (BE2) | **Đạt** | Owns Property, Room, Meter, Invoice, Dashboard 03–04. |
-| Backend Developer 3 (BE3) | **Minh** | Owns Utility, Charge, Maintenance, Payment, Reminder, Report. |
-| Frontend Developer 1 (FE1) | **Hung** | Owns Auth/Profile/Property/Room UI, Tenant/Lease UI, Invoice/Payment UI, Dashboard UI. |
-| Frontend Developer 2 (FE2) | **Quân** | Owns the Design System, Utility UI, Meter/Maintenance UI, VietQR/Notification UI, Report UI. |
+| Project Manager / Team Leader | **Chí** | Plans and monitors the project, maintains Trello and the delivery baseline, coordinates dependencies and communication, manages risks and changes, and reports progress to the Sponsor. |
+| Full-stack Developer / Story Owner | **Chí** | Owns end-to-end Auth/Profile (`US-AUTH-01→06`, `US-PROFILE-01`) and Lease Expiry (`US-LEASE-05→06`); sets up backend infrastructure; writes Product Backlog 2.0, Project Estimation, Project Proposal, and Vision and Scope. |
+| Full-stack Developer / Story Owner | **Đạt** | Owns end-to-end Property/Room (`US-PROPERTY-01→02`, `US-ROOM-01→03`), Meter (`US-METER-01→03`), and Dashboard (`US-DASH-01→04`); sets up quality tooling; writes the Technical Architecture and Project Charter. |
+| Full-stack Developer / Story Owner | **Minh** | Owns end-to-end Utility/Charge (`US-UTILITY-01→02`, `US-CHARGE-01`), Invoice (`US-INVOICE-01→04`), VietQR (`US-VIETQR-01→02`), and Payment Reminder (`US-REMINDER-01→02`); writes Product Backlog Version 1. |
+| Full-stack Developer / Story Owner | **Hưng (MXH)** | Owns end-to-end Tenant (`US-TENANT-01→02`), Lease (`US-LEASE-01→04`), and Maintenance (`US-MAINT-01→05`); sets up frontend infrastructure; writes the Statement of Work and Risk Management Plan. |
+| Full-stack Developer / Story Owner | **Quân** | Owns end-to-end Payment (`US-PAYMENT-01→03`) and Business Report (`US-REPORT-01→05`). |
 | Product Owner | Self-Managing Landlords (Representative Users) | Provide business requirements, validate workflows, participate in user acceptance testing, provide feedback. |
 | End Users | Landlords and Tenants | Use the system during pilot testing and evaluate usability and functionality. |
 
@@ -237,17 +237,3 @@ These activities recur across every batch and are not tied to a single user stor
 - Cloud services remain available throughout the project.
 - Pilot users are available to provide feedback during testing.
 - Development will be completed within the academic project timeline.
-
----
-
-# 11. Project Risks (Summary)
-
-| Risk                        | Mitigation                                          |
-| --------------------------- | ----------------------------------------------------- |
-| Schedule delays             | Agile sprint planning and scope prioritization      |
-| Scope creep                 | Freeze MVP requirements after approval              |
-| Low user participation      | Recruit pilot users early                           |
-| Manual payment verification | Clearly define landlord verification responsibility |
-| Cloud service interruption  | Use reliable providers and maintain backups          |
-| Team member availability    | Regular progress monitoring and workload balancing   |
-| PM/BE1 dual-role overload   | PM tracks own capacity explicitly; escalate to Sponsor if coordination load displaces BE1 delivery |
