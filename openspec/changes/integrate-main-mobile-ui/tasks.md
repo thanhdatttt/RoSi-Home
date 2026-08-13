@@ -49,7 +49,7 @@
 ## 7. Cleanup and acceptance
 
 - [ ] 7.1 Remove only legacy modules classified `Replaced` or `Remove` after their target slice is accepted.
-- [ ] 7.2 Run pnpm typecheck, Expo Doctor/export, backend checks, OpenAPI validation, and applicable integration checks.
+- [x] 7.2 Run pnpm typecheck, Expo Doctor/export, backend checks, OpenAPI validation, and applicable integration checks.
 - [ ] 7.3 Complete real-device UAT evidence for both roles and external boundaries.
 - [ ] 7.4 Reconcile Product Backlog status using the universal Definition of Done.
 - [ ] 7.5 Drop the checkpoint stash only after the migrated capabilities are accepted and recoverability is no longer required.
