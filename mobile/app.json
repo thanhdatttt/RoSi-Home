@@ -33,11 +33,28 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RoSi Home to attach maintenance photos.",
+          "cameraPermission": "Allow RoSi Home to take maintenance photos.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
     ],
+    "extra": {
+      "eas": {
+        "projectId": "2bd46abb-07f1-49ad-9b4f-d2e51bb2d48d"
+      }
+    },
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }
