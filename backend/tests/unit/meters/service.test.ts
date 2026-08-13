@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => {
     resolveWaterRate: vi.fn(),
     findActiveInvoiceForRoomPeriod: vi.fn(),
     recalculateDraftInvoice: vi.fn(),
+    listActiveMeterReadings: vi.fn(),
+    countActiveMeterReadings: vi.fn(),
   };
 });
 
@@ -47,6 +49,8 @@ vi.mock("../../../src/modules/meters/repository.js", () => ({
   findPreviousReading: mocks.findPreviousReading,
   findMeterReadingById: mocks.findMeterReadingById,
   supersedeReading: mocks.supersedeReading,
+  listActiveMeterReadings: mocks.listActiveMeterReadings,
+  countActiveMeterReadings: mocks.countActiveMeterReadings,
 }));
 
 vi.mock("../../../src/modules/invoices/repository.js", () => ({
@@ -60,6 +64,7 @@ vi.mock("../../../src/modules/invoices/service.js", () => ({
 import {
   recordMeterReadingService,
   correctMeterReadingService,
+  listMeterReadingsService,
 } from "../../../src/modules/meters/service.js";
 
 function baseRow(overrides: Record<string, unknown> = {}) {
@@ -83,9 +88,27 @@ function baseRow(overrides: Record<string, unknown> = {}) {
     recordedBy: LANDLORD_ID,
     createdAt: new Date("2026-07-05T00:00:00.000Z"),
     supersededAt: null,
+    correctionOf: null,
     ...overrides,
   };
 }
+
+describe("listMeterReadingsService", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.assertRoomOwned.mockResolvedValue({ propertyId: PROPERTY_ID, locality: null });
+    mocks.listActiveMeterReadings.mockResolvedValue([baseRow()]);
+    mocks.countActiveMeterReadings.mockResolvedValue(1);
+  });
+
+  it("returns only the owned room's active, paginated readings", async () => {
+    const result = await listMeterReadingsService(LANDLORD_ID, ROOM_ID, { page: 1, pageSize: 20, billingPeriod: "2026-07" });
+    expect(mocks.assertRoomOwned).toHaveBeenCalledWith(ROOM_ID, LANDLORD_ID);
+    expect(mocks.listActiveMeterReadings).toHaveBeenCalledWith(ROOM_ID, expect.objectContaining({ page: 1, pageSize: 20 }), "2026-07");
+    expect(result.meta).toEqual({ page: 1, pageSize: 20, total: 1 });
+    expect(result.data[0]).toMatchObject({ id: READING_ID, value: 150 });
+  });
+});
 
 describe("recordMeterReadingService", () => {
   beforeEach(() => {

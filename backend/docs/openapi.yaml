@@ -65,15 +65,148 @@ components:
   schemas:
     PaginationMeta:
       type: object
+      required: [page, pageSize, total]
       properties:
         total:
           type: integer
         page:
           type: integer
-        limit:
+        pageSize:
           type: integer
-        totalPages:
+    PropertyView:
+      type: object
+      required: [id, name, address, locality, createdAt, updatedAt, units, occupied]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+        locality:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        units:
           type: integer
+        occupied:
+          type: integer
+    RoomView:
+      type: object
+      required: [id, propertyId, name, baseRent, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        baseRent:
+          type: integer
+        status:
+          type: string
+          enum: [Vacant, Occupied]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UtilityRateView:
+      type: object
+      required: [id, propertyId, electricityRatePerKwh, waterBillingMethod, waterRatePerM3, waterFlatAmountPerTenant, effectiveFrom, createdBy, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        propertyId: { type: string, format: uuid }
+        electricityRatePerKwh: { type: integer, minimum: 0 }
+        waterBillingMethod: { type: string, enum: [Metered, Flat] }
+        waterRatePerM3: { type: integer, minimum: 0, nullable: true }
+        waterFlatAmountPerTenant: { type: integer, minimum: 0, nullable: true }
+        effectiveFrom: { type: string, format: date }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    SurchargeView:
+      type: object
+      required: [id, propertyId, name, monthlyAmount, effectiveFrom, effectiveTo, active, createdBy, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        propertyId: { type: string, format: uuid }
+        name: { type: string }
+        monthlyAmount: { type: integer, minimum: 0 }
+        effectiveFrom: { type: string, format: date }
+        effectiveTo: { type: string, format: date, nullable: true }
+        active: { type: boolean }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    TenantView:
+      type: object
+      required: [id, fullName, phone, email, idNumber, createdByLandlordId, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        idNumber: { type: string }
+        createdByLandlordId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    LeaseView:
+      type: object
+      required: [id, roomId, roomName, propertyId, propertyName, tenantInfoId, tenantId, tenant, startDate, endDate, actualEndDate, agreedRent, deposit, status, createdBy, endedBy, endedAt, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        roomId: { type: string, format: uuid }
+        roomName: { type: string }
+        propertyId: { type: string, format: uuid }
+        propertyName: { type: string }
+        tenantInfoId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid, nullable: true }
+        tenant:
+          type: object
+          required: [fullName, phone, email]
+          properties:
+            fullName: { type: string }
+            phone: { type: string }
+            email: { type: string, format: email }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        actualEndDate: { type: string, format: date, nullable: true }
+        agreedRent: { type: integer, minimum: 0 }
+        deposit: { type: integer, minimum: 0 }
+        status: { type: string, enum: [Active, Ended, Expired] }
+        createdBy: { type: string, format: uuid }
+        endedBy: { type: string, format: uuid, nullable: true }
+        endedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    UpcomingExpirationView:
+      type: object
+      required: [leaseId, propertyId, propertyName, roomId, roomName, tenantFullName, endDate]
+      properties:
+        leaseId: { type: string, format: uuid }
+        propertyId: { type: string, format: uuid }
+        propertyName: { type: string }
+        roomId: { type: string, format: uuid }
+        roomName: { type: string }
+        tenantFullName: { type: string }
+        endDate: { type: string, format: date }
+    LeaseReminderConfigView:
+      type: object
+      required: [propertyId, remindAt30Days, remindAt15Days, remindAt7Days]
+      properties:
+        propertyId: { type: string, format: uuid }
+        remindAt30Days: { type: boolean }
+        remindAt15Days: { type: boolean }
+        remindAt7Days: { type: boolean }
 
 security:
   - bearerAuth: []
@@ -297,7 +430,7 @@ paths:
             type: integer
             default: 1
         - in: query
-          name: limit
+          name: pageSize
           schema:
             type: integer
             default: 20
@@ -312,7 +445,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/PropertyView"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
     post:
@@ -359,6 +492,13 @@ paths:
       responses:
         "201":
           description: Property created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PropertyView"
   /properties/{id}:
     get:
       summary: Get property details
@@ -373,6 +513,13 @@ paths:
       responses:
         "200":
           description: Property details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PropertyView"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -401,6 +548,13 @@ paths:
       responses:
         "200":
           description: Property updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PropertyView"
   /properties/{propertyId}/lease-reminder-config:
     get:
       summary: Get lease reminder config for a property
@@ -415,6 +569,13 @@ paths:
       responses:
         "200":
           description: Reminder config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseReminderConfigView"
     patch:
       summary: Update lease reminder config
       tags: [Properties]
@@ -431,15 +592,22 @@ paths:
           application/json:
             schema:
               type: object
-              required: [daysBefore]
+              minProperties: 1
+              additionalProperties: false
               properties:
-                daysBefore:
-                  type: array
-                  items:
-                    type: integer
+                remindAt30Days: { type: boolean }
+                remindAt15Days: { type: boolean }
+                remindAt7Days: { type: boolean }
       responses:
         "200":
           description: Config updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseReminderConfigView"
   /rooms/properties/{propertyId}:
     post:
       summary: Create a room in a property
@@ -466,6 +634,13 @@ paths:
       responses:
         "201":
           description: Room created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/RoomView"
     get:
       summary: List rooms in a property
       tags: [Rooms]
@@ -482,7 +657,7 @@ paths:
             type: integer
             default: 1
         - in: query
-          name: limit
+          name: pageSize
           schema:
             type: integer
             default: 20
@@ -497,7 +672,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/RoomView"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
   /rooms/properties/{propertyId}/bulk:
@@ -532,6 +707,18 @@ paths:
       responses:
         "201":
           description: Rooms created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      created:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/RoomView"
   /rooms/{id}:
     get:
       summary: Get room details
@@ -546,6 +733,13 @@ paths:
       responses:
         "200":
           description: Room details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/RoomView"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -572,6 +766,13 @@ paths:
       responses:
         "200":
           description: Room updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/RoomView"
   /tenants:
     get:
       summary: List all tenants
@@ -583,7 +784,7 @@ paths:
             type: integer
             default: 1
         - in: query
-          name: limit
+          name: pageSize
           schema:
             type: integer
             default: 20
@@ -598,7 +799,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/TenantView"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
   /tenants/{id}:
@@ -615,6 +816,13 @@ paths:
       responses:
         "200":
           description: Tenant details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantView"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -646,6 +854,13 @@ paths:
       responses:
         "200":
           description: Tenant updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantView"
     delete:
       summary: Archive tenant
       tags: [Tenants]
@@ -682,9 +897,13 @@ paths:
                     type: object
                     properties:
                       current:
-                        type: object
+                        allOf:
+                          - $ref: "#/components/schemas/UtilityRateView"
+                        nullable: true
                       upcoming:
-                        type: object
+                        allOf:
+                          - $ref: "#/components/schemas/UtilityRateView"
+                        nullable: true
     post:
       summary: Set or update upcoming utility rates
       tags: [Utilities]
@@ -718,6 +937,29 @@ paths:
       responses:
         "201":
           description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UtilityRateView"
+  /utilities/properties/{propertyId}/utility-rates/{id}:
+    delete:
+      summary: Cancel an upcoming utility rate
+      tags: [Utilities]
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Upcoming utility rate cancelled
   /charges/properties/{propertyId}/surcharges:
     get:
       summary: List surcharges
@@ -735,7 +977,7 @@ paths:
             type: integer
             default: 1
         - in: query
-          name: limit
+          name: pageSize
           schema:
             type: integer
             default: 20
@@ -755,10 +997,12 @@ paths:
                         name:
                           type: string
                         current:
-                          type: object
+                          allOf:
+                            - $ref: "#/components/schemas/SurchargeView"
                           nullable: true
                         upcoming:
-                          type: object
+                          allOf:
+                            - $ref: "#/components/schemas/SurchargeView"
                           nullable: true
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
@@ -794,6 +1038,13 @@ paths:
       responses:
         "201":
           description: Surcharge created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SurchargeView"
   /charges/{id}:
     patch:
       summary: Update surcharge
@@ -826,6 +1077,13 @@ paths:
       responses:
         "200":
           description: Surcharge updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SurchargeView"
     delete:
       summary: Delete surcharge
       tags: [Charges]
@@ -880,6 +1138,19 @@ paths:
       responses:
         "201":
           description: Lease created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseView"
+                  meta:
+                    type: object
+                    required: [tenantAccountProvisioned]
+                    properties:
+                      tenantAccountProvisioned: { type: boolean }
+                      tempPassword: { type: string }
     get:
       summary: List all leases
       tags: [Leases]
@@ -910,7 +1181,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/LeaseView"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
   /leases/upcoming-expirations:
@@ -928,7 +1199,7 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/UpcomingExpirationView"
   /leases/{id}:
     get:
       summary: Get lease details
@@ -943,6 +1214,13 @@ paths:
       responses:
         "200":
           description: Lease details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseView"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -978,6 +1256,13 @@ paths:
       responses:
         "200":
           description: Lease updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseView"
   /leases/{id}/end:
     post:
       summary: End a lease
@@ -1003,7 +1288,45 @@ paths:
       responses:
         "200":
           description: Lease ended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LeaseView"
   /rooms/{roomId}/meter-readings:
+    get:
+      summary: List active meter readings for an owned room
+      tags: [Meters]
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: billingPeriod
+          schema:
+            type: string
+            pattern: '^\\d{4}-(0[1-9]|1[0-2])$'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Active meter readings, optionally filtered by billing period
     post:
       summary: Record a meter reading
       tags: [Meters]
@@ -1385,6 +1708,32 @@ paths:
       responses:
         "200":
           description: History list
+  /dashboard/tenant:
+    get:
+      summary: Get the authenticated tenant's active-lease dashboard
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Tenant dashboard, or null when there is no active lease
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    nullable: true
+                    type: object
+                    properties:
+                      leaseId: { type: string, format: uuid }
+                      propertyName: { type: string }
+                      roomId: { type: string, format: uuid }
+                      roomName: { type: string }
+                      startDate: { type: string, format: date }
+                      endDate: { type: string, format: date }
+                      agreedRent: { type: integer }
+                      deposit: { type: integer }
+                      status: { type: string }
   /dashboard/occupancy:
     get:
       summary: Get occupancy metrics

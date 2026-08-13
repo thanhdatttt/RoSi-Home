@@ -15,8 +15,11 @@ import {
   findMeterReadingById,
   supersedeReading,
   type MeterReadingRow,
+  listActiveMeterReadings,
+  countActiveMeterReadings,
 } from "./repository.js";
-import type { MeterReadingInput } from "./schema.js";
+import type { MeterReadingInput, MeterReadingListQuery } from "./schema.js";
+import { paginate, type Paginated } from "../../lib/pagination.js";
 import {
   findActiveInvoiceForRoomPeriod,
   type InvoiceRow,
@@ -42,6 +45,7 @@ export type MeterReadingView = {
   tenantCount: number | null;
   recordedBy: string;
   createdAt: string;
+  correctionOf: string | null;
 };
 
 function serialize(row: MeterReadingRow): MeterReadingView {
@@ -65,11 +69,25 @@ function serialize(row: MeterReadingRow): MeterReadingView {
     tenantCount: row.tenantCount,
     recordedBy: row.recordedBy,
     createdAt: row.createdAt.toISOString(),
+    correctionOf: row.correctionOf,
   };
 }
 
 function toScale4(n: number): string {
   return n.toFixed(4);
+}
+
+export async function listMeterReadingsService(
+  landlordId: string,
+  roomId: string,
+  query: MeterReadingListQuery,
+): Promise<Paginated<MeterReadingView>> {
+  await assertRoomOwned(roomId, landlordId);
+  const [rows, total] = await Promise.all([
+    listActiveMeterReadings(roomId, query, query.billingPeriod),
+    countActiveMeterReadings(roomId, query.billingPeriod),
+  ]);
+  return paginate(rows.map(serialize), total, query);
 }
 
 // US-METER-01 / US-METER-02 — record an initial baseline or a monthly reading
@@ -182,6 +200,7 @@ export async function recordMeterReadingService(
     locality,
     tenantCount: null,
     recordedBy: landlordId,
+    correctionOf: null,
   });
 
   await writeAudit({
@@ -272,6 +291,7 @@ export async function correctMeterReadingService(
         locality: original.locality,
         tenantCount: original.tenantCount,
         recordedBy: landlordId,
+        correctionOf: original.id,
       },
       trx,
     );

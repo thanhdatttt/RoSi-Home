@@ -13,6 +13,7 @@ const READING_ID = "66666666-6666-4666-8666-666666666666";
 const INVOICE_ID = "77777777-7777-4777-8777-777777777777";
 
 const mocks = vi.hoisted(() => ({
+  listMeterReadingsService: vi.fn(),
   recordMeterReadingService: vi.fn(),
   correctMeterReadingService: vi.fn(),
   getInvoiceService: vi.fn(),
@@ -22,6 +23,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../src/modules/meters/service.js", () => ({
+  listMeterReadingsService: mocks.listMeterReadingsService,
   recordMeterReadingService: mocks.recordMeterReadingService,
   correctMeterReadingService: mocks.correctMeterReadingService,
 }));
@@ -61,6 +63,7 @@ const meterReadingView = {
   tenantCount: null,
   recordedBy: LANDLORD_ID,
   createdAt: "2026-07-05T00:00:00.000Z",
+  correctionOf: null,
 };
 
 const invoiceView = {
@@ -95,6 +98,7 @@ describe("Meters + Invoices HTTP contract", () => {
   });
 
   beforeEach(() => {
+    mocks.listMeterReadingsService.mockResolvedValue({ data: [meterReadingView], meta: { page: 1, pageSize: 20, total: 1 } });
     mocks.recordMeterReadingService.mockResolvedValue(meterReadingView);
     mocks.correctMeterReadingService.mockResolvedValue({
       ...meterReadingView,
@@ -113,6 +117,20 @@ describe("Meters + Invoices HTTP contract", () => {
   });
 
   // --- Meters -------------------------------------------------------------
+
+  it("US-METER-01/02/03: lists active room readings with period context", async () => {
+    const response = await request(app)
+      .get(`/api/v1/rooms/${ROOM_ID}/meter-readings?billingPeriod=2026-07`)
+      .set("Authorization", `Bearer ${landlordToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual({ data: [meterReadingView], meta: { page: 1, pageSize: 20, total: 1 } });
+    expect(mocks.listMeterReadingsService).toHaveBeenCalledWith(
+      LANDLORD_ID,
+      ROOM_ID,
+      { page: 1, pageSize: 20, billingPeriod: "2026-07" },
+    );
+  });
 
   it("US-METER-01/02: rejects an unauthenticated meter-reading request", async () => {
     const response = await request(app)

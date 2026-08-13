@@ -24,6 +24,7 @@ export type OverdueInvoiceView = {
 export type TenantDashboardSummary = {
   leaseId: string;
   propertyName: string;
+  roomId: string;
   roomName: string;
   startDate: string;
   endDate: string;
@@ -62,6 +63,7 @@ export async function getTenantDashboardSummaryService(
   return {
     leaseId: activeLease.leaseId,
     propertyName: activeLease.propertyName,
+    roomId: activeLease.roomId,
     roomName: activeLease.roomName,
     startDate: String(activeLease.startDate),
     endDate: String(activeLease.endDate),
