@@ -1,226 +1,373 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Platform } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert } from "react-native";
 import { Link, useLocalSearchParams } from "expo-router";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
+import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
-import { ArrowLeft, Receipt, Plus, Trash2, Power } from "lucide-react-native";
+import { ArrowLeft, Receipt, Plus, Trash2, Edit2, CalendarClock, CheckCircle2 } from "lucide-react-native";
+import {
+  createPropertySurcharge,
+  deletePropertySurcharge,
+  listPropertySurcharges,
+  updatePropertySurcharge,
+  type SurchargeView,
+} from "../../../../../features/portfolio/api";
+import { useAuth } from "../../../../../contexts/auth-context";
 
-type Surcharge = { id: number; name: string; amount: number; start: string; end?: string; active: boolean };
+const toLocalISOString = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
-const INITIAL: Surcharge[] = [
-  { id: 1, name: "Internet", amount: 500000, start: "2025-01-01", active: true },
-  { id: 2, name: "Security", amount: 200000, start: "2025-01-01", active: true },
-  { id: 3, name: "Cleaning (Q1)", amount: 150000, start: "2025-01-01", end: "2025-03-31", active: false },
-];
+const fmtMoney = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+const parseDate = (s: string): Date => {
+  const [y, m, d] = s.split('-');
+  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+};
+
+const fmtDate = (s: string) => {
+  const d = parseDate(s);
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
 
 export default function SurchargesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
+  const { token } = useAuth();
 
-  const [list, setList] = useState<Surcharge[]>(INITIAL);
-  const [adding, setAdding] = useState(false);
+  const [groups, setGroups] = useState<Awaited<ReturnType<typeof listPropertySurcharges>>['data']>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [formMode, setFormMode] = useState<"hidden" | "add" | "edit">("hidden");
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", start: new Date(), end: new Date() });
   const [useEnd, setUseEnd] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const fetchSurcharges = useCallback(async () => {
+    try {
+      if (!token) return;
+      const res = await listPropertySurcharges(token, id);
+      setGroups(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, token]);
 
-  function toggle(sid: number) {
-    setList((l) => l.map((s) => (s.id === sid ? { ...s, active: !s.active } : s)));
-  }
-
-  function remove(sid: number) {
-    setList((l) => l.filter((s) => s.id !== sid));
-  }
+  useEffect(() => {
+    fetchSurcharges();
+  }, [fetchSurcharges]);
 
   const formatMoney = (val: string) => {
     if (!val) return "";
     const numeric = val.replace(/\D/g, "");
     return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
-
   const getRawNumber = (val: string) => val.replace(/,/g, "");
 
-  function add() {
-    if (!form.name.trim()) return setErr("Name is required.");
-    const rawAmt = getRawNumber(form.amount);
-    if (rawAmt === "" || Number(rawAmt) < 0) return setErr("Amount must be non-negative.");
-    if (list.some((s) => s.active && s.name.toLowerCase() === form.name.trim().toLowerCase())) {
-      return setErr("An active surcharge with this name already exists.");
+  function openAdd(prefill?: { name: string; amount: string }) {
+    if (formMode === "add" && !prefill) {
+      setFormMode("hidden");
+      return;
     }
+    setFormMode("add");
+    setEditingId(null);
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(1);
 
-    setList((l) => [
-      ...l,
-      { 
-        id: Date.now(), 
-        name: form.name.trim(), 
-        amount: Number(rawAmt), 
-        start: form.start.toISOString().slice(0, 10), 
-        end: useEnd ? form.end.toISOString().slice(0, 10) : undefined, 
-        active: true 
-      },
-    ]);
-    
-    setForm({ name: "", amount: "", start: new Date(), end: new Date() });
+    setForm({ name: prefill?.name || "", amount: prefill?.amount || "", start: nextMonth, end: nextMonth });
     setUseEnd(false);
     setErr(null);
-    setAdding(false);
   }
 
-  const onChangeStart = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowStartPicker(Platform.OS === 'ios');
-    if (selectedDate) setForm({ ...form, start: selectedDate });
-  };
-  
-  const onChangeEnd = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowEndPicker(Platform.OS === 'ios');
-    if (selectedDate) setForm({ ...form, end: selectedDate });
-  };
+  function openEditUpcoming(s: SurchargeView) {
+    setFormMode("edit");
+    setEditingId(s.id);
+    setForm({
+      name: s.name,
+      amount: s.monthlyAmount.toString(),
+      start: parseDate(s.effectiveFrom),
+      end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date(),
+    });
+    setUseEnd(!!s.effectiveTo);
+    setErr(null);
+  }
+
+  async function handleDelete(surchargeId: string, name: string) {
+    Alert.alert(
+      "Delete Surcharge",
+      `Are you sure you want to delete "${name}"? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePropertySurcharge(token, surchargeId);
+              fetchSurcharges();
+            } catch (e: any) {
+              Alert.alert("Error", e.message || "Failed to delete surcharge.");
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  async function submit() {
+    if (!form.name.trim()) return setErr("Name is required.");
+    const rawAmt = getRawNumber(form.amount);
+
+    setSubmitting(true);
+    setErr(null);
+    try {
+      const startStr = toLocalISOString(form.start);
+      const endStr = useEnd ? toLocalISOString(form.end) : null;
+
+      if (useEnd && startStr > endStr!) {
+        setSubmitting(false);
+        return setErr("End date cannot be before start date.");
+      }
+      if (rawAmt === "" || Number(rawAmt) < 0) {
+        setSubmitting(false);
+        return setErr("Amount must be non-negative.");
+      }
+
+      if (formMode === "edit" && editingId) {
+        const payload = {
+          name: form.name,
+          monthlyAmount: Number(rawAmt),
+          effectiveFrom: startStr,
+          effectiveTo: endStr,
+        };
+        await updatePropertySurcharge(token, editingId, payload);
+      } else {
+        const body = {
+          name: form.name.trim(),
+          monthlyAmount: Number(rawAmt),
+          effectiveFrom: startStr,
+          effectiveTo: endStr,
+        };
+        await createPropertySurcharge(token, id, body);
+      }
+
+      setFormMode("hidden");
+      setEditingId(null);
+      fetchSurcharges();
+    } catch (e: any) {
+      setErr(e.message || "Failed to save surcharge.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
-          <View className="flex-1">
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Property</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Surcharges</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Property</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Surcharges</Text>
           </View>
-          <TouchableOpacity 
-            onPress={() => setAdding(!adding)}
-            className="h-10 w-10 rounded-full bg-[#2563eb] items-center justify-center"
+          <TouchableOpacity
+            onPress={() => openAdd()}
+            style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}
           >
-            <Plus size={16} color="white" style={{ transform: [{ rotate: adding ? '45deg' : '0deg' }] }} />
+            <Plus size={16} color="white" style={{ transform: [{ rotate: formMode === 'add' ? '45deg' : '0deg' }] }} />
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 px-6 mt-2 pb-8" showsVerticalScrollIndicator={false}>
-          
-          <View className="rounded-xl border border-[#2563eb]/40 bg-[#2563eb]/10 p-3.5 flex-row gap-2 mb-4">
-            <Text className="text-xs text-foreground/80 leading-relaxed pr-4">
-              Active surcharges appear as separate line items on every invoice. Deactivation only affects future invoices.
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+
+          <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+            <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
+              Surcharges take effect on the 1st of each month. Changes to an active surcharge are scheduled for a future month; only upcoming schedules can be edited.
             </Text>
           </View>
 
-          {adding && (
-            <View className="rounded-2xl border border-border bg-surface p-4 space-y-3 mb-4">
-              <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">New surcharge</Text>
-              
+          {formMode !== "hidden" && (
+            <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>
+                {formMode === "edit" ? "Edit surcharge" : "New surcharge"}
+              </Text>
+
               <TextInput
                 value={form.name}
                 onChangeText={(text) => setForm({ ...form, name: text })}
                 placeholder="e.g. Internet"
-                className="w-full h-11 rounded-lg bg-background border border-border px-3 text-sm font-medium"
+                style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14, fontWeight: '500', marginTop: 12, color: '#0f172a' }}
               />
-              
-              <View className="relative justify-center">
-                <View className="absolute left-3 z-10">
-                  <Text className="text-xs font-bold text-muted-foreground">Amt</Text>
+
+              <View style={{ position: 'relative', justifyContent: 'center', marginTop: 12 }}>
+                <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>Amt</Text>
                 </View>
                 <TextInput
                   keyboardType="decimal-pad"
                   value={formatMoney(form.amount)}
                   onChangeText={(text) => setForm({ ...form, amount: text })}
                   placeholder="500,000"
-                  className="w-full h-11 rounded-lg bg-background border border-border pl-12 pr-3 text-sm font-medium"
+                  style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 48, paddingRight: 12, fontSize: 14, fontWeight: '500' }}
                 />
               </View>
 
-              <View className="flex-row gap-2">
-                <View className="flex-1 space-y-1">
-                  <Text className="text-[11px] text-muted-foreground">Start</Text>
-                  {Platform.OS === 'web' ? (
-                    React.createElement('input', {
-                      type: 'date',
-                      value: form.start.toISOString().slice(0, 10),
-                      onChange: (e: any) => setForm({ ...form, start: new Date(e.target.value) }),
-                      style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: 'var(--background)', borderWidth: 1, borderColor: 'var(--border)', paddingHorizontal: 8, fontSize: 14, outline: 'none', color: 'var(--foreground)' }
-                    })
-                  ) : (
-                    <>
-                      <TouchableOpacity onPress={() => setShowStartPicker(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center">
-                        <Text className="text-sm">{form.start.toISOString().slice(0, 10)}</Text>
-                      </TouchableOpacity>
-                      {showStartPicker && <DateTimePicker value={form.start} mode="date" display="default" onChange={onChangeStart} />}
-                    </>
-                  )}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <DatePicker
+                    label="Applies from"
+                    value={form.start}
+                    onChange={(d) => setForm({ ...form, start: d })}
+                    compact
+                    monthOnly
+                  />
                 </View>
-                <View className="flex-1 space-y-1">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-[11px] text-muted-foreground">End (optional)</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#94a3b8' }}>End (optional)</Text>
                   </View>
                   {!useEnd ? (
-                    <TouchableOpacity onPress={() => setUseEnd(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center items-center">
-                      <Text className="text-xs text-muted-foreground font-medium">+ Add End Date</Text>
+                    <TouchableOpacity onPress={() => setUseEnd(true)} style={{ width: '100%', height: 40, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 8, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '500' }}>+ Add End Date</Text>
                     </TouchableOpacity>
                   ) : (
-                    Platform.OS === 'web' ? (
-                      React.createElement('input', {
-                        type: 'date',
-                        value: form.end.toISOString().slice(0, 10),
-                        onChange: (e: any) => setForm({ ...form, end: new Date(e.target.value) }),
-                        style: { width: '100%', height: 40, borderRadius: 8, backgroundColor: 'var(--background)', borderWidth: 1, borderColor: 'var(--border)', paddingHorizontal: 8, fontSize: 14, outline: 'none', color: 'var(--foreground)' }
-                      })
-                    ) : (
-                      <>
-                        <TouchableOpacity onPress={() => setShowEndPicker(true)} className="w-full h-10 rounded-lg bg-background border border-border px-2 justify-center">
-                          <Text className="text-sm">{form.end.toISOString().slice(0, 10)}</Text>
-                        </TouchableOpacity>
-                        {showEndPicker && <DateTimePicker value={form.end} mode="date" display="default" onChange={onChangeEnd} />}
-                      </>
-                    )
+                    <DatePicker
+                      value={form.end}
+                      onChange={(d) => setForm({ ...form, end: d })}
+                      compact
+                      monthOnly
+                    />
                   )}
                 </View>
               </View>
 
-              {err && <Text className="text-xs text-destructive mt-1">{err}</Text>}
-              
-              <View className="mt-2">
-                <PrimaryButton onPress={add}>Add surcharge</PrimaryButton>
+              <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+                Rate changes strictly take effect on the 1st of the selected month.
+              </Text>
+
+              {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}
+
+              <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  onPress={() => { setFormMode("hidden"); setEditingId(null); }}
+                  style={{ flex: 1, height: 48, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569' }}>Cancel</Text>
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <PrimaryButton onPress={submit} disabled={submitting}>
+                    {submitting ? "Saving..." : (formMode === "edit" ? "Save changes" : "Add surcharge")}
+                  </PrimaryButton>
+                </View>
               </View>
             </View>
           )}
 
-          <View className="space-y-2 mb-8">
-            {list.map((s) => (
-              <View 
-                key={s.id} 
-                className={`rounded-2xl border border-border bg-surface p-4 flex-row items-center gap-3 ${s.active ? "" : "opacity-60"}`}
-              >
-                <View className="h-10 w-10 rounded-xl bg-primary/15 items-center justify-center shrink-0">
-                  <Receipt size={20} color="#2563eb" />
+          {/* Surcharge list */}
+          {loading ? (
+            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+              <ActivityIndicator color="#2563eb" />
+            </View>
+          ) : groups.length === 0 ? (
+            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+              <Text style={{ color: '#94a3b8', fontSize: 14 }}>No surcharges configured.</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 12, marginBottom: 32 }}>
+              {groups.map((g) => (
+                <View key={g.name} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                  {/* Current (active) rate */}
+                  {g.current && (
+                    <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Receipt size={20} color="#2563eb" />
+                      </View>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{g.name}</Text>
+                          <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                            <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#059669' }}>Active</Text>
+                          </View>
+                        </View>
+                        <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
+                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : "ongoing"}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.current.monthlyAmount)} VNĐ</Text>
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                          <TouchableOpacity
+                            onPress={() => openAdd({ name: g.current!.name, amount: g.current!.monthlyAmount.toString() })}
+                            style={{ height: 28, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '600', color: '#475569' }}>Schedule change</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleDelete(g.current!.id, g.name)}
+                            style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Trash2 size={12} color="#ef4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Upcoming (scheduled) rate */}
+                  {g.upcoming && (
+                    <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderTopWidth: g.current ? 1 : 0, borderTopColor: '#f1f5f9' }}>
+                      <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(59,130,246,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <CalendarClock size={20} color="#3b82f6" />
+                      </View>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{g.current ? "Scheduled" : g.name}</Text>
+                          <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, backgroundColor: '#f1f5f9' }}>
+                            <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#64748b' }}>Pending</Text>
+                          </View>
+                        </View>
+                        <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
+                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : " - ongoing"}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.upcoming.monthlyAmount)} VNĐ</Text>
+                        <View style={{ flexDirection: 'row', gap: 4 }}>
+                          <TouchableOpacity
+                            onPress={() => openEditUpcoming(g.upcoming!)}
+                            style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Edit2 size={12} color="#475569" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleDelete(g.upcoming!.id, g.name)}
+                            style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Trash2 size={12} color="#ef4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  )}
                 </View>
-                <View className="flex-1 pr-2">
-                  <Text className="text-sm font-semibold truncate" numberOfLines={1}>{s.name}</Text>
-                  <Text className="text-[11px] text-muted-foreground truncate" numberOfLines={1}>
-                    {s.start}{s.end ? ` → ${s.end}` : " · ongoing"}
-                  </Text>
-                </View>
-                <View className="items-end gap-2 shrink-0">
-                  <Text className="text-sm font-bold">{s.amount.toLocaleString()} VNĐ</Text>
-                  <View className="flex-row gap-1">
-                    <TouchableOpacity 
-                      onPress={() => toggle(s.id)} 
-                      className="h-8 w-8 rounded-lg bg-secondary items-center justify-center"
-                    >
-                      <Power size={14} color={s.active ? "#2563eb" : "gray"} />
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => remove(s.id)} 
-                      className="h-8 w-8 rounded-lg bg-secondary items-center justify-center"
-                    >
-                      <Trash2 size={14} color="gray" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </View>
     </MobileFrame>

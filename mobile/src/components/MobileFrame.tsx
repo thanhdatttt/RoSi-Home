@@ -1,5 +1,6 @@
 import React, { type ReactNode } from "react";
-import { SafeAreaView, View, Platform, ViewStyle } from "react-native";
+import { View, Platform, ViewStyle } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { twMerge } from "tailwind-merge";
 
 /**
@@ -7,9 +8,9 @@ import { twMerge } from "tailwind-merge";
  */
 export function MobileFrame({ children }: { children: ReactNode }) {
   // Enforce rigid styles on web to simulate a mobile screen
-  const webStyle = Platform.OS === 'web' ? { 
-    maxWidth: 440, 
-    width: '100%', 
+  const webStyle = Platform.OS === 'web' ? {
+    maxWidth: 440,
+    width: '100%',
     marginHorizontal: 'auto',
     borderLeftWidth: 1,
     borderRightWidth: 1,
@@ -18,13 +19,8 @@ export function MobileFrame({ children }: { children: ReactNode }) {
   } as any : {};
 
   return (
-    <SafeAreaView 
-      className="flex-1 bg-background"
-      style={webStyle}
-    >
-      <View className="flex-1">
-        {children}
-      </View>
-    </SafeAreaView>
+    <View style={[{ flex: 1, backgroundColor: '#f5f8ff' }, webStyle]}>
+      {children}
+    </View>
   );
 }

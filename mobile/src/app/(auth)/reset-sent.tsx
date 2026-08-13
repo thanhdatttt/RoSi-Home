@@ -14,15 +14,15 @@ export default function ResetSent() {
         </View>
         <Text className="text-2xl font-extrabold mt-6 text-center">Check your inbox</Text>
         <Text className="text-sm text-muted-foreground mt-3 leading-relaxed text-center">
-          We've sent a password reset link to your email. It'll expire in 30 minutes.
+          If the address matches an account, we've sent a new temporary password. Use it to sign in, then change it from your profile.
         </Text>
-        
+
         <View className="mt-8 w-full gap-2">
           <Link href="/login" asChild>
             <PrimaryButton variant="primary">Back to sign in</PrimaryButton>
           </Link>
           <Link href="/forgot-password" asChild>
-            <PrimaryButton variant="ghost">Resend link</PrimaryButton>
+            <PrimaryButton variant="ghost">Send again</PrimaryButton>
           </Link>
         </View>
       </View>

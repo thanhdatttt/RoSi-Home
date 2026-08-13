@@ -1,110 +1,197 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from "react-native";
-import { Link, useRouter } from "expo-router";
+import React, { useState, useCallback, useRef } from "react";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert } from "react-native";
+import { Link, useRouter, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
-import { ArrowLeft, Plus, Building2, MapPin, Search } from "lucide-react-native";
+import { ArrowLeft, Plus, Building2, MapPin, Search, Trash2 } from "lucide-react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../../../contexts/auth-context";
-import { apiRequest } from "../../../../lib/api";
+import {
+  deleteProperty,
+  listProperties,
+  type PropertyView,
+} from "../../../../features/portfolio/api";
+
+const PAGE_SIZE = 5;
 
 export default function PropertiesList() {
   const router = useRouter();
   const { token } = useAuth();
+  const insets = useSafeAreaInsets();
   const [q, setQ] = useState("");
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState<PropertyView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    async function fetchProperties() {
-      if (!token) return;
-      try {
-        const data = await apiRequest<any[]>('/properties', { token });
-        setProperties(data);
-      } catch (err) {
-        console.error("Failed to load properties", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchPropertiesInitial = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const result = await listProperties(token, 1, PAGE_SIZE);
+      setProperties(result.data);
+      setPage(1);
+      setHasMore(result.meta.total > result.meta.page * result.meta.pageSize);
+    } catch (err) {
+      console.error("Failed to load properties", err);
+    } finally {
+      setLoading(false);
     }
-    fetchProperties();
   }, [token]);
 
-  const items = properties.filter((p) => 
-    p.name.toLowerCase().includes(q.toLowerCase()) || 
+  useFocusEffect(
+    useCallback(() => {
+      fetchPropertiesInitial();
+    }, [fetchPropertiesInitial])
+  );
+
+  const loadMore = async () => {
+    if (!token || !hasMore || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const result = await listProperties(token, nextPage, PAGE_SIZE);
+      setProperties(prev => {
+        // Filter out duplicates just in case
+        const existingIds = new Set(prev.map(p => p.id));
+        const newItems = result.data.filter(d => !existingIds.has(d.id));
+        return [...prev, ...newItems];
+      });
+      setPage(nextPage);
+      setHasMore(result.meta.total > result.meta.page * result.meta.pageSize);
+    } catch (err) {
+      console.error("Failed to load more properties", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const confirmDelete = (property: PropertyView) => {
+    Alert.alert(
+      "Delete Property",
+      `Are you sure you want to delete "${property.name}"? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteProperty(token, property.id);
+              fetchPropertiesInitial();
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Failed to delete property");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const items = properties.filter((p) =>
+    p.name.toLowerCase().includes(q.toLowerCase()) ||
     p.address.toLowerCase().includes(q.toLowerCase())
   );
 
   return (
     <MobileFrame>
-      <View className="flex-1 flex-col bg-background pb-8">
-        <View className="px-6 pt-14 pb-4 flex-row items-center gap-3">
+      <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           <Link href="/landlord" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-secondary items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
           </Link>
-          <View className="flex-1 pr-2">
-            <Text className="text-[11px] uppercase tracking-widest text-[#2563eb] font-semibold">Portfolio</Text>
-            <Text className="text-2xl font-extrabold leading-tight">Properties</Text>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Portfolio</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>Properties</Text>
           </View>
           <Link href="/landlord/properties/new" asChild>
-            <TouchableOpacity className="h-10 w-10 rounded-full bg-[#2563eb] items-center justify-center">
+            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
               <Plus size={16} color="white" />
             </TouchableOpacity>
           </Link>
         </View>
 
-        <View className="px-6">
-          <View className="relative justify-center">
-            <View className="absolute left-3.5 z-10">
+        {/* Search */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View style={{ position: 'relative', justifyContent: 'center' }}>
+            <View style={{ position: 'absolute', left: 14, zIndex: 10 }}>
               <Search size={16} color="gray" />
             </View>
             <TextInput
               value={q}
               onChangeText={setQ}
               placeholder="Search by name or address"
-              className="w-full h-11 rounded-xl bg-surface border border-border pl-10 pr-4 text-sm"
               placeholderTextColor="gray"
+              style={{ width: '100%', height: 44, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 40, paddingRight: 16, fontSize: 14 }}
             />
           </View>
         </View>
 
-        <ScrollView className="flex-1 mt-4 px-6" showsVerticalScrollIndicator={false}>
-          <View className="space-y-3">
-            {loading ? (
-              <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
-            ) : items.length === 0 ? (
-              <View className="rounded-2xl border border-dashed border-border p-8 items-center justify-center">
-                <Text className="text-sm text-muted-foreground text-center">
-                  {q ? `No properties match "${q}".` : "You haven't added any properties yet."}
-                </Text>
-              </View>
-            ) : (
-              items.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/landlord/properties/${p.id}`}
-                  asChild
-                >
-                  <TouchableOpacity className="rounded-2xl border border-border bg-surface p-4 flex-row items-center gap-3">
-                    <View className="h-12 w-12 rounded-xl bg-primary/10 items-center justify-center shrink-0">
+        {/* List */}
+        <ScrollView style={{ flex: 1, marginTop: 16, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32), gap: 12 }}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
+          ) : items.length === 0 ? (
+            <View style={{ borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e2e8f0', padding: 32, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center' }}>
+                {q ? `No properties match "${q}".` : "You haven't added any properties yet."}
+              </Text>
+            </View>
+          ) : (
+            items.map((p) => (
+              <Swipeable
+                key={p.id}
+                containerStyle={{ overflow: 'visible' }}
+                renderRightActions={() => (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#ef4444',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: 80,
+                      borderRadius: 16,
+                      marginLeft: 12,
+                    }}
+                    onPress={() => confirmDelete(p)}
+                  >
+                    <Trash2 size={24} color="white" />
+                  </TouchableOpacity>
+                )}
+              >
+                <Link href={`/landlord/properties/${p.id}`} asChild>
+                  <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ height: 48, width: 48, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Building2 size={20} color="#2563eb" />
                     </View>
-                    <View className="flex-1 pr-2">
-                      <Text className="font-semibold text-sm" numberOfLines={1}>{p.name}</Text>
-                      <View className="flex-row items-center gap-1 mt-0.5">
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{p.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <MapPin size={12} color="gray" />
-                        <Text className="text-xs text-muted-foreground" numberOfLines={1}>{p.address}</Text>
+                        <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>{p.address}</Text>
                       </View>
                     </View>
-                    <View className="items-end shrink-0">
-                      <Text className="text-sm font-bold">0/0</Text>
-                      <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">occupied</Text>
+                    <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700' }}>{p.occupied || 0}/{p.units || 0}</Text>
+                      <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>occupied</Text>
                     </View>
                   </TouchableOpacity>
                 </Link>
-              ))
-            )}
-          </View>
+              </Swipeable>
+            ))
+          )}
+          {!loading && hasMore && items.length > 0 && (
+            <TouchableOpacity
+              onPress={loadMore}
+              disabled={loadingMore}
+              style={{ paddingVertical: 12, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+            >
+              {loadingMore ? <ActivityIndicator size="small" color="#2563eb" /> : <Text style={{ color: '#2563eb', fontWeight: '600', fontSize: 14 }}>Load More</Text>}
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </View>
     </MobileFrame>

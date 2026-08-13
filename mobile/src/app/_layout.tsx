@@ -1,65 +1,102 @@
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import '../global.css';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { useColorScheme } from 'react-native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useEffect } from 'react';
+import * as Notifications from 'expo-notifications';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { ApiSessionProvider, useApiSession } from '@/core/api';
-import { AppDataProvider } from '@/core/data';
-import { colors } from '@/ui';
+export { ErrorBoundary } from 'expo-router';
 
-function AppNavigator() {
-  const { authenticated, user } = useApiSession();
-  const passwordChangeRequired = user?.mustChangePassword === true;
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { openNotificationLink } from '@/features/notifications/routing';
 
-  return (
-    <>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.surface },
-          headerTintColor: colors.text,
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: colors.background },
-          headerBackTitle: 'Quay lại',
-        }}
-      >
-        <Stack.Protected guard={!authenticated || passwordChangeRequired}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={authenticated && !passwordChangeRequired}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="property-form" options={{ title: 'Bất động sản' }} />
-          <Stack.Screen name="property-detail" options={{ headerShown: false }} />
-          <Stack.Screen name="rooms" options={{ title: 'Danh sách phòng' }} />
-          <Stack.Screen name="room-form" options={{ title: 'Phòng' }} />
-          <Stack.Screen name="bulk-rooms" options={{ title: 'Tạo nhiều phòng' }} />
-          <Stack.Screen name="utility-rates" options={{ title: 'Điện nước' }} />
-          <Stack.Screen name="surcharges" options={{ title: 'Phụ phí' }} />
-          <Stack.Screen name="surcharge-form" options={{ title: 'Phụ phí' }} />
-          <Stack.Screen name="change-password" options={{ title: 'Đổi mật khẩu' }} />
-          <Stack.Screen name="dashboard" options={{ title: 'Dashboard' }} />
-          <Stack.Screen name="room-detail" options={{ title: 'Chi tiết phòng' }} />
-          <Stack.Screen name="meter-reading" options={{ title: 'Chỉ số điện nước' }} />
-          <Stack.Screen name="invoice-preview" options={{ title: 'Hóa đơn dự kiến' }} />
-          <Stack.Screen name="invoices" options={{ title: 'Hóa đơn' }} />
-          <Stack.Screen name="invoice-detail" options={{ title: 'Chi tiết hóa đơn' }} />
-          <Stack.Screen name="vietqr" options={{ title: 'VietQR' }} />
-          <Stack.Screen name="leases" options={{ title: 'Hợp đồng' }} />
-          <Stack.Screen name="lease-form" options={{ title: 'Tạo hợp đồng' }} />
-          <Stack.Screen name="lease-detail" options={{ title: 'Chi tiết hợp đồng' }} />
-          <Stack.Screen name="maintenance" options={{ title: 'Bảo trì' }} />
-          <Stack.Screen name="maintenance-detail" options={{ title: 'Chi tiết bảo trì' }} />
-        </Stack.Protected>
-      </Stack>
-    </>
-  );
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    const openResponse = (response: Notifications.NotificationResponse | null) => {
+      const linkRef = response?.notification.request.content.data?.linkRef;
+      if (typeof linkRef === 'string') openNotificationLink(router, user, linkRef);
+    };
+    const subscription = Notifications.addNotificationResponseReceivedListener(openResponse);
+    void Notifications.getLastNotificationResponseAsync().then(openResponse);
+    return () => subscription.remove();
+  }, [router, user]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const currentSegments = segments as string[];
+    const currentPath = currentSegments[currentSegments.length - 1];
+    const isIndex = currentSegments.length === 0 || currentSegments[0] === 'index';
+    const allowedUnauthPaths = ['login', 'register', 'forgot-password', 'reset-sent'];
+
+    const isAllowedUnauth = isIndex || (currentPath && allowedUnauthPaths.includes(currentPath));
+
+    if (!user && !isAllowedUnauth) {
+      router.replace('/login');
+    } else if (user) {
+      const isAuthScreen = isIndex || (currentPath && allowedUnauthPaths.includes(currentPath));
+
+      // If user MUST change password, strictly restrict them to the force-change-password screen
+      if (user.mustChangePassword && currentPath !== 'force-change-password') {
+        router.replace('/force-change-password');
+        return;
+      }
+
+      if (isAuthScreen) {
+        // Redirect authenticated users away from login/register screens
+        if (user.mustChangePassword) {
+          router.replace('/force-change-password');
+        } else if (user.role === 'Tenant') {
+          router.replace('/tenant');
+        } else {
+          router.replace('/landlord');
+        }
+      } else if (!user.mustChangePassword) {
+        // Strictly prevent cross-role access to dashboards
+        const isTenantArea = currentSegments.includes('tenant');
+        const isLandlordArea = currentSegments.includes('landlord');
+        if (user.role === 'Landlord' && isTenantArea) {
+          router.replace('/landlord');
+        } else if (user.role === 'Tenant' && isLandlordArea) {
+          router.replace('/tenant');
+        }
+      }
+    }
+  }, [user, loading, segments, router]);
+
+  return <>{children}</>;
 }
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
   return (
-    <ApiSessionProvider>
-      <AppDataProvider>
-        <AppNavigator />
-      </AppDataProvider>
-    </ApiSessionProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AuthProvider>
+          <AuthGuard>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(dashboard)" />
+            </Stack>
+          </AuthGuard>
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

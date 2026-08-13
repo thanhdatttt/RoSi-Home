@@ -38,7 +38,7 @@ export default function ForceChangePassword() {
         newPassword: next,
         newPasswordConfirmation: confirm,
       });
-      router.push("/tenant");
+      router.replace("/login");
     } catch (e: any) {
       if (e instanceof ApiRequestError) {
         if (e.fields) {
@@ -73,35 +73,35 @@ export default function ForceChangePassword() {
         </View>
 
         <ScrollView className="flex-1 px-6 pb-6">
-          <Field 
-            label="Temporary password" 
-             
-            secureTextEntry 
-            placeholder="Enter temporary password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={current} 
-            onChangeText={setCurrent} 
-            error={errors.current} 
+          <Field
+            label="Temporary password"
+
+            secureTextEntry
+            placeholder="Enter temporary password"
+            icon={<Lock size={16} color="gray" />}
+            value={current}
+            onChangeText={setCurrent}
+            error={errors.current}
           />
-          <Field 
-            label="New password" 
-             
-            secureTextEntry 
-            placeholder="Choose a new password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={next} 
-            onChangeText={setNext} 
-            error={errors.next} 
+          <Field
+            label="New password"
+
+            secureTextEntry
+            placeholder="Choose a new password"
+            icon={<Lock size={16} color="gray" />}
+            value={next}
+            onChangeText={setNext}
+            error={errors.next}
           />
-          <Field 
-            label="Confirm new password" 
-             
-            secureTextEntry 
-            placeholder="Re-enter new password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={confirm} 
-            onChangeText={setConfirm} 
-            error={errors.confirm} 
+          <Field
+            label="Confirm new password"
+
+            secureTextEntry
+            placeholder="Re-enter new password"
+            icon={<Lock size={16} color="gray" />}
+            value={confirm}
+            onChangeText={setConfirm}
+            error={errors.confirm}
           />
 
           <View className="rounded-xl border border-border bg-surface p-3.5 mb-4 mt-2">
