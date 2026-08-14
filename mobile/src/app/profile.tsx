@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "@/components/MobileFrame";
 import { Field } from "@/components/ui/Field";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { ArrowLeft, Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
+import { Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
 import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/api";
 
@@ -56,12 +56,7 @@ export default function Profile() {
     <MobileFrame>
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href={user?.role === 'Tenant' ? "/tenant" : "/landlord"} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, paddingTop: Math.max(insets.top + 16, 56) }}>
           <View>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Account</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>Your profile</Text>

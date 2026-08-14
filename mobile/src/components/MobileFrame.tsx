@@ -1,12 +1,16 @@
 import React, { type ReactNode } from "react";
-import { View, Platform, ViewStyle } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { twMerge } from "tailwind-merge";
+import { View, Platform } from "react-native";
+import { usePathname } from "expo-router";
+import { useAuth } from "@/contexts/auth-context";
+import { RoleBottomNav } from "@/components/RoleBottomNav";
 
 /**
  * MobileFrame acts as a SafeArea container for React Native.
  */
 export function MobileFrame({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const { user } = useAuth();
+
   // Enforce rigid styles on web to simulate a mobile screen
   const webStyle = Platform.OS === 'web' ? {
     maxWidth: 440,
@@ -21,6 +25,7 @@ export function MobileFrame({ children }: { children: ReactNode }) {
   return (
     <View style={[{ flex: 1, backgroundColor: '#f5f8ff' }, webStyle]}>
       {children}
+      <RoleBottomNav pathname={pathname} role={user?.role} />
     </View>
   );
 }
