@@ -235,7 +235,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~300,000 tokens | 1.5 Lovable credits
 - **User story:** As a new landlord, I want to register a Landlord account so that I can manage my rental portfolio in RosiHome.
 - **Dependencies:** None.
 
@@ -252,7 +252,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~1.5 hours | ~250,000 tokens | 1.5 Lovable credits
 - **User story:** As a registered user, I want to log in with valid credentials so that I can access my authorized RosiHome functions.
 - **Dependencies:** US-AUTH-01.
 
@@ -267,7 +267,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~0.5 hours | ~100,000 tokens | 0.1 Lovable credits
 - **User story:** As an authenticated user, I want to log out so that another person using the device cannot continue my session.
 - **Dependencies:** US-AUTH-02.
 
@@ -281,7 +281,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~350,000 tokens | 0.0 Lovable credits
 - **User story:** As a RosiHome user, I want access limited to my role and related rental data so that private information is protected.
 - **Dependencies:** US-AUTH-02 and the relevant domain relationship (property ownership, tenant account link, or active lease).
 
@@ -297,7 +297,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~350,000 tokens | 1.5 Lovable credits
 - **User story:** As an authenticated user, I want to change my password so that I can replace a temporary or compromised credential.
 - **Dependencies:** US-AUTH-02.
 
@@ -314,7 +314,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~350,000 tokens | 2.0 Lovable credits
 - **User story:** As an authenticated user, I want to view and update my basic profile so that my contact information remains current.
 - **Dependencies:** US-AUTH-02.
 
@@ -330,7 +330,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 - **Status:** Refined
 - **Priority:** Should Have
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~1.5 hours | ~250,000 tokens | 1.5 Lovable credits
 - **User story:** As a registered user who forgot my password, I want to receive a new password by email so that I can regain access immediately.
 - **Dependencies:** US-AUTH-01 and an approved transactional-email provider.
 
@@ -439,7 +439,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.5 hours | ~400,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord, I want to view and update tenant information captured during lease creation so that the rental contact record remains current.
 - **Dependencies:** US-LEASE-01.
 
@@ -456,7 +456,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~350,000 tokens | 2.0 Lovable credits
 - **User story:** As a landlord, I want the system to provision a tenant account when I create the tenant's lease so that the tenant can access RosiHome without self-registering.
 - **Dependencies:** US-LEASE-01 and an approved transactional-email provider.
 
@@ -596,7 +596,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~5.0 hours | ~900,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord, I want the system to generate a scheduled draft invoice from rent and new utility readings so that I can review a complete monthly bill before sending it.
 - **Dependencies:** US-LEASE-01, US-METER-02, US-UTILITY-01, US-CHARGE-01 when recurring surcharges apply, and a scheduled-job baseline.
 
@@ -617,7 +617,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~4.0 hours | ~700,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord or assigned tenant, I want to view an itemized invoice so that I understand the amount charged.
 - **Dependencies:** US-INVOICE-01 and US-AUTH-04.
 
@@ -633,7 +633,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 - **Status:** Refined
 - **Priority:** Must Have
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~4.0 hours | ~800,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord or assigned tenant, I want to download an invoice document so that I can retain or share a billing record outside RosiHome.
 - **Dependencies:** US-INVOICE-02 and PDF-generation baseline.
 
@@ -648,7 +648,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~300,000 tokens | 2.0 Lovable credits
 - **User story:** As a landlord, I want to review and explicitly send a generated draft invoice so that the tenant receives only a bill I have confirmed.
 - **Dependencies:** US-INVOICE-01 and US-METER-03 when a correction is required.
 
@@ -799,7 +799,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~6.0 hours | ~1,200,000 tokens | 3.0 Lovable credits
 - **User story:** As a landlord, I want to enter tenant information while creating a room lease so that the rental relationship is recorded and the tenant account can be provisioned without a separate profile-creation step.
 - **Dependencies:** US-ROOM-01 and an approved transactional-email provider for subsequent account provisioning.
 
@@ -819,7 +819,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~300,000 tokens | 2.0 Lovable credits
 - **User story:** As a landlord or assigned tenant, I want to view lease information so that I can refer to the agreed rental period and terms.
 - **Dependencies:** US-LEASE-01 and US-TENANT-02 for tenant access.
 
@@ -834,7 +834,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~350,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord, I want to update or renew a lease record so that agreed changes and a continued tenancy are reflected in RosiHome.
 - **Dependencies:** US-LEASE-01.
 
@@ -850,7 +850,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~4.0 hours | ~800,000 tokens | 1.0 Lovable credits
 - **User story:** As a landlord, I want to end a lease when a tenant moves out so that the room becomes available for a future tenant.
 - **Dependencies:** US-LEASE-01.
 
@@ -871,7 +871,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~3.0 hours | ~500,000 tokens | 1.0 Lovable credits
 - **User story:** As a landlord or tenant, I want advance notice of a lease expiration so that renewal or move-out can be planned.
 - **Dependencies:** US-LEASE-01 and a mobile push-notification service.
 
@@ -890,7 +890,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~400,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord, I want to view leases approaching expiration so that I can follow up with the correct tenants.
 - **Dependencies:** US-LEASE-01.
 
@@ -1001,7 +1001,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~4.0 hours | ~700,000 tokens | 2.5 Lovable credits
 - **User story:** As a landlord, I want to see the number of occupied rooms compared with my total rooms so that I can understand current capacity at a glance.
 - **Dependencies:** US-ROOM-02 and US-LEASE-04.
 
@@ -1017,7 +1017,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE1):** ~2.3 hours | ~9,000,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.0 hours | ~300,000 tokens | 1.0 Lovable credits
 - **User story:** As a landlord, I want to compare expected and collected monthly revenue so that I can understand current rental income.
 - **Dependencies:** US-INVOICE-01 and US-PAYMENT-02.
 
@@ -1033,7 +1033,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.0 hour | ~1,250,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~2.5 hours | ~400,000 tokens | 1.5 Lovable credits
 - **User story:** As a landlord, I want to see outstanding amounts and overdue invoices so that I know which payments require follow-up.
 - **Dependencies:** US-PAYMENT-03.
 
@@ -1049,7 +1049,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.0 hour | ~1,250,000 tokens
-- **FE estimation (FE1):** ~2.0 hours | ~1,500,000 tokens
+- **FE estimation (FE1):** ~3.0 hours | ~450,000 tokens | 0.0 Lovable credits
 - **User story:** As a landlord, I want upcoming lease expirations on the dashboard so that I can initiate renewal or move-out discussions.
 - **Dependencies:** US-LEASE-06.
 
