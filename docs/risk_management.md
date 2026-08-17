@@ -23,11 +23,6 @@
 > 
 > **Risk Level:** 1–3 Tolerable · 4–5 Moderate · 6–11 Substantial · 12–20 Critical
 
-**Methodology: Inherent vs. Residual Risk**
-This document tracks risk using the Risk Reduction Leverage model:
-- **Risk Exposure Before ($RE_{before}$):** The inherent risk score *before* any mitigations are applied.
-- **Risk Exposure After ($RE_{after}$):** The residual risk score *after* our defined solutions are implemented.
-
 ---
 
 ## 2. Risk Items
@@ -37,500 +32,360 @@ This document tracks risk using the Risk Reduction Leverage model:
 ### RP-01 — Academic Workload Reduces Availability
 
 **Description**
-Team members are full-time students with overlapping exam schedules, coursework deadlines, and personal obligations. Any peak academic period can simultaneously reduce availability, causing sprint velocity to drop.
+The team consists of full-time students. When midterms or final projects hit, everyone will be busy at the same time, meaning we will write less code and fall behind schedule.
 
 **Mitigation & Contingency**
-- **Mitigation:** Maintain an 8–10 week schedule baseline with Week 10 explicitly treated as a contingency buffer. Run a weekly meeting to surface availability changes and rebalance assignments immediately.
-- **Contingency:** If the buffer is exhausted, immediately drop one "nice-to-have" feature (e.g., advanced reporting) from the MVP scope to ensure core milestones are hit.
+- **Mitigation:** We planned an 8–10 week schedule but intentionally left Week 10 empty as a buffer. We also hold weekly meetings to check everyone's availability and shift tasks if someone is slammed with exams.
+- **Contingency:** If we burn through the buffer and are still behind, the team will have to work overtime and put in extra hours on the weekends. If that's not enough, we will cut a "nice-to-have" feature (like advanced reporting) to make sure the core app is finished.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without a buffer or rebalancing, an academic crunch causes major milestone delays.
+**Risk Exposure**
+Without a buffer or extra hours, an academic crunch will severely delay the project.
 - **Max Slip:** ~30–50% schedule slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 4 × 3 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-With a buffer, the delay is contained, though weekly meetings mean rebalancing may be slightly delayed.
-- **Max Slip:** ~10–25% schedule slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 3 × 2 = 6 — Substantial**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
 ### RP-02 — React Native Mobile Overrun
 
 **Description**
-The frontend team is new to React Native and Expo. Unfamiliar tooling can cause unexpected build failures and long debugging cycles that delay the mobile milestones.
+The frontend developers (2 people) are learning React Native and Expo for the first time. Fighting with unknown tools usually causes weird build errors that take days to fix.
 
 **Mitigation & Contingency**
-- **Mitigation:** Build a thin end-to-end vertical slice in the first FE sprint to surface Expo/RN surprises. Use AI tooling to scaffold boilerplate screens from the agreed shared design system.
-- **Contingency:** If Expo proves too technically blocking by Week 4, pivot the frontend to a standard mobile-responsive web app (PWA) to ensure demo readiness.
+- **Mitigation:** We will build a very thin, end-to-end "vertical slice" in the very first sprint just to see if Expo throws any surprises. We will also use AI tools to quickly generate the boring UI layouts so we can focus on the hard logic.
+- **Contingency:** If Expo is still causing massive blocking issues by Week 4, we will abandon the mobile app and just build a mobile-friendly web app (PWA) so we actually have something to show on demo day.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without early prototyping, technical blockers arrive late.
+**Risk Exposure**
+If we don't test the tools early, we might get stuck with unfixable bugs right before the deadline.
 - **Max Slip:** ~30–40% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 3 × 3 = 9 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Vertical slice ensures blockers are caught early.
-- **Max Slip:** ~15–25% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### RP-03 — Frontend Critical-Path Bottleneck
+### RP-03 — Frontend Waiting on Backend
 
 **Description**
-The sequential BE-first → FE-second model means frontend work cannot start until backend contracts are stable, risking a massive backlog at the end.
+Because the frontend needs the backend APIs to work, the 2 frontend developers might be stuck waiting around with nothing to do if the 3 backend developers fall behind.
 
 **Mitigation & Contingency**
-- **Mitigation:** Build shared UI components and navigation during BE Batch 1 (FE pre-work). Define API contracts before BE implementation begins so FE uses mocks.
-- **Contingency:** Descope secondary frontend screens (e.g., complex tenant profiles) to ensure the core payment and leasing flows are perfectly polished.
+- **Mitigation:** The frontend team will build shared UI components (buttons, nav bars) while waiting. The backend team will also agree on what the API responses will look like early on, so the frontend can use "fake" mock data to keep working.
+- **Contingency:** If the backend is severely delayed, we will completely drop secondary screens (like detailed tenant profiles) and only focus on making sure the rent payment flow works perfectly.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without mock contracts, FE is completely blocked until BE is 100% finished.
+**Risk Exposure**
+If frontend is completely blocked, all their work gets crammed into the final two weeks.
 - **Max Slip:** ~35–50% schedule slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 4 × 3 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Mock contracts and batching smooth out the pipeline.
-- **Max Slip:** ~15–20% schedule slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 3 × 2 = 6 — Substantial**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### RP-04 — Cross-Module API/Schema Conflict
+### RP-04 — Database Schema Conflicts
 
 **Description**
-Three independent backend engineers share the same PostgreSQL schema. Conflicting foreign keys or undocumented API changes cause merge conflicts.
+We have 3 backend engineers all touching the same PostgreSQL database. If two people change the way tables link together without telling each other, the code will break when we try to merge it.
 
 **Mitigation & Contingency**
-- **Mitigation:** Conduct pre-batch contract meetings to align on shared-table changes. Enforce mandatory PR approval from every affected module owner for schema changes.
-- **Contingency:** Immediately revert the conflicting PR and schedule an emergency sync call to manually resolve the schema mapping.
+- **Mitigation:** Before writing code, the backend team will agree on exactly what database tables will change. Every pull request that changes the database must be reviewed by the other backend devs before it can be merged.
+- **Contingency:** If a bad database change gets merged and breaks things, we will immediately revert the code, jump on a meeting call, and fix the tables together.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without contract meetings, schema conflicts require significant module rework.
-- **Max Slip:** ~30–40% budget/rework slip
+**Risk Exposure**
+Messing up the database structure requires throwing away and rewriting a lot of code.
+- **Max Slip:** ~30–40% rework slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 3 × 3 = 9 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Required reviews catch conflicts before merge.
-- **Max Slip:** ~10–15% budget/rework slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### RP-05 — Over-Reliance on AI-Generated Code
+### RP-05 — Over-Reliance on AI Code
 
 **Description**
-All five developers use AI tools heavily. AI can confidently produce plausible-but-incorrect authorization logic that passes superficial review.
+Everyone on the team uses AI tools (like Copilot or ChatGPT). AI can confidently write code that looks correct but actually has huge security flaws, especially around who is allowed to see what data.
 
 **Mitigation & Contingency**
-- **Mitigation:** Every PR must include an author comment explaining the logic, and a non-author reviewer approval. Automated tests must cover at least one authorization boundary per story.
-- **Contingency:** Revert the defective commit and assign a human pair-programming session to manually rewrite the critical logic.
+- **Mitigation:** You can't just copy-paste AI code and merge it. Developers must cross-check the AI's functionality against the acceptance criteria in the product backlog. We also require manual testing, automated tests, and GitHub is configured to require at least one contributor approval before a branch can be merged.
+- **Contingency:** If bad AI code manages to bypass the GitHub Actions and manual reviews to reach the main branch, we will immediately fix the logic in the very next commit.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without mandatory review and tests, severe bugs ship to production requiring architecture rework.
-- **Max Slip:** ~35–50% budget/rework slip
+**Risk Exposure**
+Trusting AI blindly can lead to massive security bugs that ruin the whole app architecture.
+- **Max Slip:** ~35–50% rework slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 4 × 3 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Testing and code review catch hallucinated logic early.
-- **Max Slip:** ~10–20% budget/rework slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 3 × 2 = 6 — Substantial**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### RP-06 — Cron/Email/Push/PDF Infra Unavailable
+### RP-06 — Third-Party Services Fail or Block Us
 
 **Description**
-Batch 3 and 4 depend on external services (SMTP, Expo push, Render cron, PDF gen). If these aren't ready, stories cannot reach Done.
+Later in the project, we need external tools for emails, push notifications, and generating PDFs. If we can't figure out how to set them up, we can't finish those features.
 
 **Mitigation & Contingency**
-- **Mitigation:** Implement development adapters (stubs) so stories can be coded without live services. Validate real provider integration before Batch 3 acceptance.
-- **Contingency:** Hardcode mock responses for Demo Day (e.g., simulating a successful email send in the UI) if the third-party provider is completely offline.
+- **Mitigation:** We will build the code using "fake" stubs first (so the app acts like it sent an email, even if it didn't) to keep development moving. We will test the real external services early to make sure they actually work.
+- **Contingency:** If a service like the email provider is completely broken on Demo Day, we will just use our fake stubs so the app still looks like it's working during the presentation.
 
-**Risk Exposure Before ($RE_{before}$)**
-Waiting for live services blocks local development and delays integration.
+**Risk Exposure**
+Getting stuck trying to configure a broken email server wastes days of coding time.
 - **Max Slip:** ~30–45% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 3 × 3 = 9 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Stubs unblock local development entirely.
-- **Max Slip:** ~15–25% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### RP-07 — Unclear or Shifting Requirements
+### RP-07 — Landlords Change Their Minds
 
 **Description**
-Landlord requirements shift mid-project due to late feedback, forcing rework on already-merged code.
+When we show the app to landlords, they might suddenly ask for things to work differently, forcing us to throw away code we already wrote.
 
 **Mitigation & Contingency**
-- **Mitigation:** Conduct a pre-batch readiness review to resolve all "Needs Clarification" items before coding. A formal change request is required for post-sign-off scope.
-- **Contingency:** Push the new mandatory requirements to a "Version 2.0" backlog to protect the current sprint, unless the change is trivial.
+- **Mitigation:** Before we start coding a new feature, the team will make sure we fully understand what the landlord actually needs.
+- **Contingency:** If a landlord demands a big change after we've already built it, the Project Manager will politely say no and promise to put it in "Version 2.0," protecting our current deadline.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without sign-offs, constant rework destroys the schedule.
+**Risk Exposure**
+Constantly rewriting code to chase changing opinions will destroy our schedule.
 - **Max Slip:** ~30–45% schedule slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 4 × 3 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Readiness reviews bound the uncertainty per batch.
-- **Max Slip:** ~15–20% schedule slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 3 × 2 = 6 — Substantial**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
 ### RP-08 — Scope Creep
 
 **Description**
-As the app becomes functional, stakeholders are tempted to add features outside the frozen MVP backlog.
+As the app starts to look good, people will get excited and want to add fun new features that aren't in the original plan.
 
 **Mitigation & Contingency**
-- **Mitigation:** Maintain a strict scope freeze from Day 1. Any feature idea not in the approved backlog goes to a "later" list. The PM enforces the process at every weekly meeting.
-- **Contingency:** If a new feature is absolutely demanded, formally swap it out by removing an existing planned feature of equal size from the backlog.
+- **Mitigation:** We are freezing the scope on Day 1. Any cool new idea goes straight onto a "do it later" list. The PM's job is to enforce this rule strictly every week.
+- **Contingency:** If a new feature is absolutely necessary, we will try to swap it by dropping an old feature. If no old features can be dropped because they are all critical, the team must authorize emergency overtime.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without a freeze, scope expands infinitely and demo day is missed entirely.
+**Risk Exposure**
+If we keep adding features, the app will never be finished in time for the deadline.
 - **Max Slip:** > 60% schedule slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Catastrophic (4)**
-- **$RE_{before}$ Score: 4 × 4 = 16 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Even with a freeze, partial creep (e.g., expanding a feature's scope under the guise of a "bug fix") is still likely without strict enforcement.
-- **Max Slip:** ~30–50% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Severe (3)**
-- **$RE_{after}$ Score: 2 × 3 = 6 — Substantial**
+- **Risk Score: 4 × 4 = 16 — Critical**
 
 ---
 
-### RP-09 — Batch Owner Unavailability (Knowledge Silo)
+### RP-09 — Knowledge Silos
 
 **Description**
-Each backend domain is owned by one engineer. If they become unavailable, the domain batch stalls.
+With 3 backend developers, it's easy for one person to become the only one who understands a specific part of the code. If they get sick or drop out, no one else knows how to finish their work.
 
 **Mitigation & Contingency**
-- **Mitigation:** Enforce atomic commits and mandatory cross-domain PR review. Assign backup owners and require clear documentation before the batch starts.
-- **Contingency:** The backup owner immediately takes over the domain, and the batch's scope is reduced by 20% to account for their ramp-up time.
+- **Mitigation:** We require cross-reviewing code, but our primary defense is using AI codebase-scanning tools (like Cursor or Claude) to quickly read and explain any unfamiliar code written by someone else, making knowledge transfer almost instant.
+- **Contingency:** If a developer vanishes, another backend dev will take over their tasks immediately, using AI to quickly summarize their recent commits and get up to speed in hours instead of days.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without cross-training, one illness stalls the entire batch entirely.
+**Risk Exposure**
+Losing the only person who knows how the payment code works will bring the project to a halt.
 - **Max Slip:** ~30–40% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 3 × 3 = 9 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Backup owners can seamlessly pick up the work.
-- **Max Slip:** ~10–20% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### RP-10 — AI Token Quota Exhausted
+### RP-10 — AI Token Limits Exhausted
 
 **Description**
-Unexpected AI usage spikes exhaust monthly quotas, forcing developers to work without AI assistance.
+If the team uses AI heavily for coding, they might hit their monthly message limits on tools like Claude or ChatGPT, suddenly slowing down their coding speed.
 
 **Mitigation & Contingency**
-- **Mitigation:** Monitor usage weekly. Use lower-cost models (Flash/Haiku) for routine work.
-- **Contingency:** Use the contingency fund to buy a temporary pro tier, or switch developers to the free tiers of alternative tools (Claude/Gemini).
+- **Mitigation:** Developers should pace their usage and use lighter AI models for simple questions to save their limits for the hard stuff.
+- **Contingency:** If a developer runs out of premium AI access, they must switch to free tiers (like Gemini or the free ChatGPT) and just deal with the slower workflow.
 
-**Risk Exposure Before ($RE_{before}$)**
-Running out of quota cuts coding velocity in half mid-batch.
+**Risk Exposure**
+Suddenly losing AI assistance mid-sprint cuts coding speed in half.
 - **Max Slip:** ~15–25% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Moderate (2)**
-- **$RE_{before}$ Score: 3 × 2 = 6 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Tiered models and tracking make exhaustion unlikely.
-- **Max Slip:** ~10–20% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### RP-11 — Insufficient Pilot Landlords for UAT
+### RP-11 — No One Wants to Test the App
 
 **Description**
-If outreach is delayed, the team reaches UAT with no participants, undermining demo credibility and project validity.
+If we wait until the app is perfectly finished to find landlords to test it, we might end up with zero testers, proving that no one actually wants the product.
 
 **Mitigation & Contingency**
-- **Mitigation:** Begin multi-channel outreach in Week 1. Track recruitment explicitly as a milestone.
-- **Contingency:** Recruit friends or family members to act as proxy landlords for a simulated UAT session to gather baseline usability data.
+- **Mitigation:** We will start messaging landlords on Zalo and Facebook groups in Week 1, long before the app is done, to get a waiting list of people ready to test it.
+- **Contingency:** If we can't find real landlords, we will ask friends or family members to pretend to be landlords so we can at least get some basic usability testing done for the demo.
 
-**Risk Exposure Before ($RE_{before}$)**
-Waiting until the app is done to find users usually yields 0 users, invalidating the project.
-- **Max Slip:** > 60% schedule/budget slip (MVP Failure)
+**Risk Exposure**
+Building an app that nobody uses is a complete failure of the MVP.
+- **Max Slip:** > 60% schedule/budget slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Catastrophic (4)**
-- **$RE_{before}$ Score: 3 × 4 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Early outreach secures the needed 3 pilots in time.
-- **Max Slip:** ~30–45% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Severe (3)**
-- **$RE_{after}$ Score: 2 × 3 = 6 — Substantial**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
 ### RP-12 — VietQR Format Incorrect
 
 **Description**
-Implementation deviates from the VietQR spec, causing payment QR codes to fail in banking apps.
+If we don't strictly follow the official NAPAS rules for generating VietQR codes, the QR codes won't scan properly in the tenant's banking apps.
 
 **Mitigation & Contingency**
-- **Mitigation:** Implement strictly against the NAPAS spec. Test generated codes with major banking apps before marking the story Done.
-- **Contingency:** Instruct tenants to manually copy-paste the landlord's account number (provided in the UI as a plaintext backup) if the QR fails.
+- **Mitigation:** Read the official documentation carefully. Developers must physically scan the generated QR codes with their own banking apps to prove they work before finishing the task.
+- **Contingency:** If the QR code generation is broken, the app will just display the landlord's bank account number in plain text so the tenant can copy and paste it manually.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without strict testing, formatting edge cases easily break the QR.
+**Risk Exposure**
+Edge cases in banking formats easily break the QR codes if we don't test them.
 - **Max Slip:** ~10–25% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Moderate (2)**
-- **$RE_{before}$ Score: 3 × 2 = 6 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Banking app tests catch bugs before release.
-- **Max Slip:** ~10–15% schedule slip
-- Probability: **15% (Very Low, 1)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 1 × 2 = 2 — Tolerable**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### RP-13 — Report and Dashboard Performance
+### RP-13 — Dashboard Loads Too Slowly
 
 **Description**
-Without proper indexing, queries degrade even at pilot scale, producing a poor UX during demo.
+Even though the frontend dashboard is smart and only shows a few items at a time (like the top 3 buildings with a "see all" pagination button), the backend API can still be extremely slow if the database doesn't have proper indexes.
 
 **Mitigation & Contingency**
-- **Mitigation:** Apply indexed foreign keys from the start. Add pagination and date filters to all reports.
-- **Contingency:** Hardcode a default date filter to limit reports to the last 30 days, forcing smaller data sets during the demo.
+- **Mitigation:** The backend team will use proper database indexes on foreign keys from the start and avoid "N+1 query" mistakes, ensuring the API can fetch those top items instantly without scanning the whole database.
+- **Contingency:** If the database queries are still lagging during the demo, we will hardcode the API to return dummy data for the dashboard charts so the presentation stays fast.
 
-**Risk Exposure Before ($RE_{before}$)**
-N+1 queries reliably crash the dashboard with a few months of data.
+**Risk Exposure**
+Bad database queries can easily crash the app or cause 10-second loading screens.
 - **Max Slip:** ~30–40% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 3 × 3 = 9 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Pagination ensures load times remain fast.
-- **Max Slip:** ~10–15% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### RP-14 — CI/CD or Deployment Failure
+### RP-14 — Deployment Failure on Demo Day
 
 **Description**
-A broken CI pipeline or failed Render deployment leaves the team without a validated baseline for demo day.
+If our cloud server on Render crashes, or we break the app right before the presentation, we won't have anything to show the teachers.
 
 **Mitigation & Contingency**
-- **Mitigation:** Pipeline must be green before PR approval. Maintain a fully configured local development environment.
-- **Contingency:** Present the demo using a developer's local `localhost` environment (via Ngrok) if cloud production is offline.
+- **Mitigation:** Developers must make sure the app actually runs properly on their own laptops before merging code. We won't merge any risky new code right before Demo Day.
+- **Contingency:** If the cloud server is completely dead during the presentation, we will run the app locally on a developer's laptop to show it to the audience.
 
-**Risk Exposure Before ($RE_{before}$)**
-A cloud failure on demo day destroys the final presentation.
+**Risk Exposure**
+A server crash during the final presentation ruins the entire project grade.
 - **Max Slip:** > 60% schedule slip (Demo Fails)
 - Probability: **55% (Likely, 3)**
 - Impact: **Catastrophic (4)**
-- **$RE_{before}$ Score: 3 × 4 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Local fallback environment ensures the demo succeeds regardless of cloud status.
-- **Max Slip:** ~30–50% schedule slip (Fallback overhead)
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Severe (3)**
-- **$RE_{after}$ Score: 2 × 3 = 6 — Substantial**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
-### RP-15 — Supabase Free-Tier Quota Reached
+### RP-15 — Supabase Free-Tier Runs Out
 
 **Description**
-Maintenance/payment image uploads exhaust the 1 GB free tier file storage (or the 500 MB database size limit), causing upload or insert failures.
+Because tenants upload photos of utility meters and payment receipts, we might use up our 1 GB of free file storage on Supabase very quickly.
 
 **Mitigation & Contingency**
-- **Mitigation:** Compress images client-side before upload to drastically reduce payload size.
-- **Contingency:** Immediately execute the pre-budgeted $25/month (~650,000 VND) upgrade to the Pro tier to unblock uploads instantly.
+- **Mitigation:** We will write code to compress the images on the user's phone before uploading them, which keeps the file sizes extremely small.
+- **Contingency:** If we still hit the limit, we will use the 650,000 VND we budgeted for the pilot to upgrade Supabase to the $25/month Pro tier.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without compression, raw camera photos hit the quota in days.
+**Risk Exposure**
+Uncompressed phone photos will eat through 1 GB of storage in a matter of days.
 - **Max Slip:** ~10–25% schedule slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Moderate (2)**
-- **$RE_{before}$ Score: 4 × 2 = 8 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Compression drastically reduces bandwidth, and a paid upgrade path is ready.
-- **Max Slip:** < 5% schedule slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Minor (1)**
-- **$RE_{after}$ Score: 3 × 1 = 3 — Tolerable**
+- **Risk Score: 4 × 2 = 8 — Substantial**
 
 ---
 
-### RP-16 — Tenant Misses Auto-Generated Login
+### RP-16 — Tenants Don't Get Their Passwords
 
 **Description**
-Tenant accounts are auto-created when a landlord creates a lease, sending a temporary password via email. If the email goes to spam, or the tenant struggles with the mandatory "change password" step, they cannot log in.
+When a landlord adds a tenant, the app automatically emails the tenant a temporary password. If that email gets flagged as spam, the tenant might not see it and will assume they are locked out of the app.
 
 **Mitigation & Contingency**
-- **Mitigation:** Authenticate the email domain (SPF/DKIM) to prevent spam. Add a "Resend Login Email" button to the landlord dashboard.
-- **Contingency:** Allow the landlord to view the temporary password in their dashboard so they can manually text it to the tenant via Zalo/SMS.
+- **Mitigation:** We will configure the email server properly (SPF/DKIM) to avoid spam filters. We will also add a "Resend Email" button and a prompt reminding the landlord to tell the tenant to check their spam folder.
+- **Contingency:** If the email is completely lost, we will show the temporary password directly on the landlord's screen so they can just copy it and text it to the tenant via Zalo.
 
-**Risk Exposure Before ($RE_{before}$)**
-If emails are blocked, tenants cannot access the app.
+**Risk Exposure**
+If tenants can't find their passwords, landlords have to spend time playing tech support.
 - **Max Slip:** ~10–25% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Moderate (2)**
-- **$RE_{before}$ Score: 3 × 2 = 6 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Direct landlord-to-tenant messaging bypasses the email infrastructure entirely.
-- **Max Slip:** < 10% schedule slip
-- Probability: **15% (Very Low, 1)**
-- Impact: **Minor (1)**
-- **$RE_{after}$ Score: 1 × 1 = 1 — Tolerable**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### RP-17 — Fake Payment Screenshot
+### RP-17 — Tenants Upload Fake Payment Proofs
 
 **Description**
-Tenants upload fake payment proofs. Without automated bank integration, landlords over-trust the system.
+Because the app doesn't connect directly to the bank, a tenant could upload a fake screenshot saying they paid. If the landlord trusts the app blindly, they might get scammed.
 
 **Mitigation & Contingency**
-- **Mitigation:** Add a prominent UI disclaimer: "Please verify this payment in your own banking app."
-- **Contingency:** If a landlord is tricked, log an incident and add a "Report Fraud" button to permanently block the offending tenant account.
+- **Mitigation:** We will put a very clear warning message in the app: "Always check your actual bank app to confirm you received the money before approving this."
+- **Contingency:** If a landlord gets tricked by a fake screenshot, we will manually ban the tenant's account from the system.
 
-**Risk Exposure Before ($RE_{before}$)**
-Without a disclaimer, landlords falsely assume the system verifies the money, causing severe trust issues.
+**Risk Exposure**
+If landlords assume the app verifies the money automatically, it will destroy their trust in the product.
 - **Max Slip:** ~30–50% budget/trust slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 4 × 3 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-The disclaimer correctly sets expectations.
-- **Max Slip:** < 10% budget slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Minor (1)**
-- **$RE_{after}$ Score: 3 × 1 = 3 — Tolerable**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### RP-18 — Data Privacy or Security Violation
+### RP-18 — Private Data Got Leaked
 
 **Description**
-Tenant PII (ID, phone) or financial data is exposed due to an authorization bug or misconfiguration.
+We are storing people's phone numbers, IDs, and financial records. If we make a mistake with our security rules, someone could steal this data.
 
 **Mitigation & Contingency**
-- **Mitigation:** Enforce HTTPS and JWT checks per DoD. Security-sensitive stories require non-author review and synthetic test data.
-- **Contingency:** Immediately take the database offline. Notify affected pilot users and academic supervisors within 24 hours, and patch the vulnerability before restarting.
+- **Mitigation:** All data must be sent over HTTPS. We will strictly review any code that handles user permissions, and use fake data during testing so we don't accidentally leak real information.
+- **Contingency:** If we realize data is exposed, we will immediately shut down the database, tell our pilot users and teachers what happened, and fix the bug before turning it back on.
 
-**Risk Exposure Before ($RE_{before}$)**
-A leaked database or API instantly shuts down the pilot.
+**Risk Exposure**
+Leaking personal data will instantly kill the pilot program and the project.
 - **Max Slip:** > 60% schedule slip
 - Probability: **55% (Likely, 3)**
 - Impact: **Catastrophic (4)**
-- **$RE_{before}$ Score: 3 × 4 = 12 — Critical**
-
-**Risk Exposure After ($RE_{after}$)**
-Strict tests keep data isolated, but any minor breach still halts the project temporarily.
-- **Max Slip:** ~40–60% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Severe (3)**
-- **$RE_{after}$ Score: 2 × 3 = 6 — Substantial**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
-### RP-19 — No Post-Project Owner
+### RP-19 — Who Pays for the Server Later?
 
 **Description**
-After demo day, cloud resources accrue cost with no assigned payer.
+After we get our grade, the servers will keep running and charging money. If we don't decide who is paying for it, it will drain someone's personal bank account.
 
 **Mitigation & Contingency**
-- **Mitigation:** Explicitly decide on a clean archive vs. a funded maintainer by Week 9.
-- **Contingency:** If undecided, automatically export database backups and terminate all cloud resources on Demo Day + 7 to prevent unexpected billing.
+- **Mitigation:** By Week 9, the team needs to formally decide if we are shutting the app down completely, or if someone wants to take it over and pay for it.
+- **Contingency:** If no one wants it, we will export all the data and permanently delete the cloud servers one week after the final presentation.
 
-**Risk Exposure Before ($RE_{before}$)**
-Orphaned servers drain the creator's credit card.
+**Risk Exposure**
+Forgotten servers are a classic way for students to lose money unnecessarily.
 - **Max Slip:** < 10% budget slip
 - Probability: **75% (Very Likely, 4)**
 - Impact: **Minor (1)**
-- **$RE_{before}$ Score: 4 × 1 = 4 — Moderate**
-
-**Risk Exposure After ($RE_{after}$)**
-The decision gracefully shuts down or funds the infrastructure.
-- **Max Slip:** < 5% budget slip
-- Probability: **55% (Likely, 3)**
-- Impact: **Minor (1)**
-- **$RE_{after}$ Score: 3 × 1 = 3 — Tolerable**
+- **Risk Score: 4 × 1 = 4 — Moderate**
 
 ---
 
-### RP-20 — Competitor Releases Similar Free App
+### RP-20 — Someone Else Builds It First
 
 **Description**
-A competitor releases a similar free app before demo day, affecting pilot adoption.
+Another company could release a free property management app in Vietnam right before we do, making our landlords lose interest in our student project.
 
 **Mitigation & Contingency**
-- **Mitigation:** Validate target user needs closely and prioritize differentiating features like VietQR.
-- **Contingency:** Pivot the pilot pitch to emphasize the "local student-built, perfectly tailored" aspect to retain the few committed pilot landlords.
+- **Mitigation:** We will make sure our app has specific features that Vietnamese landlords love (like VietQR integration) to make it better than generic competitors.
+- **Contingency:** If a competitor launches, we will change our pitch. We'll tell the landlords, "Ours is built locally by students just for you, and we will customize it to fit your exact needs."
 
-**Risk Exposure Before ($RE_{before}$)**
-Competitors steal pilot users if there's no unique value proposition.
+**Risk Exposure**
+A big competitor could steal all our pilot users, leaving us with nothing to present.
 - **Max Slip:** ~30–40% schedule slip
 - Probability: **35% (Unlikely, 2)**
 - Impact: **Severe (3)**
-- **$RE_{before}$ Score: 2 × 3 = 6 — Substantial**
-
-**Risk Exposure After ($RE_{after}$)**
-Differentiation retains users.
-- **Max Slip:** ~10–20% schedule slip
-- Probability: **35% (Unlikely, 2)**
-- Impact: **Moderate (2)**
-- **$RE_{after}$ Score: 2 × 2 = 4 — Moderate**
+- **Risk Score: 2 × 3 = 6 — Substantial**
 
 ---
 
@@ -538,75 +393,75 @@ Differentiation retains users.
 
 ### 3.1 Risk Register
 
-| ID | Risk Title | $RE_{before}$ Score | $RE_{before}$ Level | $RE_{after}$ Score | $RE_{after}$ Level |
-|---|---|---|---|---|---|
-| RP-01 | Academic Workload Reduces Availability | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-02 | React Native Mobile Overrun | 9 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-03 | Frontend Critical-Path Bottleneck | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-04 | Cross-Module API/Schema Conflict | 9 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-05 | Over-Reliance on AI-Generated Code | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-06 | Cron/Email/Push/PDF Infra Unavailable | 9 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-07 | Unclear or Shifting Requirements | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-08 | Scope Creep | 16 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-09 | Batch Owner Unavailability | 9 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-10 | AI Token Quota Exhausted | 6 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-11 | Insufficient Pilot Landlords for UAT | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-12 | VietQR Format Incorrect or Changed | 6 | 🟠 Substantial | 2 | 🟢 Tolerable |
-| RP-13 | Report and Dashboard Performance | 9 | 🟠 Substantial | 4 | 🟡 Moderate |
-| RP-14 | CI/CD or Deployment Failure | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-15 | Supabase Free-Tier Quota Reached | 8 | 🟠 Substantial | 3 | 🟢 Tolerable |
-| RP-16 | Tenant Misses Auto-Generated Login | 6 | 🟠 Substantial | 1 | 🟢 Tolerable |
-| RP-17 | Fake Payment Screenshot | 12 | 🔴 Critical | 3 | 🟢 Tolerable |
-| RP-18 | Data Privacy or Security Violation | 12 | 🔴 Critical | 6 | 🟠 Substantial |
-| RP-19 | No Post-Project Owner | 4 | 🟡 Moderate | 3 | 🟢 Tolerable |
-| RP-20 | Competitor Releases Similar Free App | 6 | 🟠 Substantial | 4 | 🟡 Moderate |
+| ID | Risk Title | Risk Score | Risk Level |
+|---|---|---|---|
+| RP-01 | Academic Workload Reduces Availability | 12 | 🔴 Critical |
+| RP-02 | React Native Mobile Overrun | 9 | 🟠 Substantial |
+| RP-03 | Frontend Waiting on Backend | 12 | 🔴 Critical |
+| RP-04 | Database Schema Conflicts | 9 | 🟠 Substantial |
+| RP-05 | Over-Reliance on AI Code | 12 | 🔴 Critical |
+| RP-06 | Third-Party Services Fail or Block Us | 9 | 🟠 Substantial |
+| RP-07 | Landlords Change Their Minds | 12 | 🔴 Critical |
+| RP-08 | Scope Creep | 16 | 🔴 Critical |
+| RP-09 | Knowledge Silos | 9 | 🟠 Substantial |
+| RP-10 | AI Token Limits Exhausted | 6 | 🟠 Substantial |
+| RP-11 | No One Wants to Test the App | 12 | 🔴 Critical |
+| RP-12 | VietQR Format Incorrect | 6 | 🟠 Substantial |
+| RP-13 | Dashboard Loads Too Slowly | 9 | 🟠 Substantial |
+| RP-14 | Deployment Failure on Demo Day | 12 | 🔴 Critical |
+| RP-15 | Supabase Free-Tier Runs Out | 8 | 🟠 Substantial |
+| RP-16 | Tenants Don't Get Their Passwords | 6 | 🟠 Substantial |
+| RP-17 | Tenants Upload Fake Payment Proofs | 12 | 🔴 Critical |
+| RP-18 | Private Data Got Leaked | 12 | 🔴 Critical |
+| RP-19 | Who Pays for the Server Later? | 4 | 🟡 Moderate |
+| RP-20 | Someone Else Builds It First | 6 | 🟠 Substantial |
 
 ---
 
-### 3.2 Inherent Risk vs. Residual Risk Level Summary
+### 3.2 Risk Level Summary
 
-| Level | Inherent ($RE_{before}$) Count | Residual ($RE_{after}$) Count |
-|---|---|---|
-| 🔴 Critical (12–20) | 9 | 0 |
-| 🟠 Substantial (6–11) | 10 | 8 |
-| 🟡 Moderate (4–5) | 1 | 7 |
-| 🟢 Tolerable (1–3) | 0 | 5 |
+| Level | Count |
+|---|---|
+| 🔴 Critical (12–20) | 9 |
+| 🟠 Substantial (6–11) | 10 |
+| 🟡 Moderate (4–5) | 1 |
+| 🟢 Tolerable (1–3) | 0 |
 
 ---
 
-### 3.3 Priority Rankings (Ranked by $RE_{before}$ Score)
+### 3.3 Priority Rankings
 
-| Rank | ID | Risk Title | $RE_{before}$ | $RE_{after}$ | Risk Reduction |
-|---|---|---|---|---|---|
-| 1 | RP-08 | Scope Creep | 16 | 6 | -10 |
-| 2 | RP-01 | Academic Workload Reduces Availability | 12 | 6 | -6 |
-| 3 | RP-03 | Frontend Critical-Path Bottleneck | 12 | 6 | -6 |
-| 4 | RP-05 | Over-Reliance on AI-Generated Code | 12 | 6 | -6 |
-| 5 | RP-07 | Unclear or Shifting Requirements | 12 | 6 | -6 |
-| 6 | RP-11 | Insufficient Pilot Landlords for UAT | 12 | 6 | -6 |
-| 7 | RP-14 | CI/CD or Deployment Failure | 12 | 6 | -6 |
-| 8 | RP-18 | Data Privacy or Security Violation | 12 | 6 | -6 |
-| 9 | RP-17 | Fake Payment Screenshot | 12 | 3 | -9 |
-| 10 | RP-02 | React Native Mobile Overrun | 9 | 4 | -5 |
-| 11 | RP-04 | Cross-Module API/Schema Conflict | 9 | 4 | -5 |
-| 12 | RP-06 | Cron/Email/Push/PDF Infra Unavailable | 9 | 4 | -5 |
-| 13 | RP-09 | Batch Owner Unavailability | 9 | 4 | -5 |
-| 14 | RP-13 | Report and Dashboard Performance | 9 | 4 | -5 |
-| 15 | RP-15 | Supabase Free-Tier Quota Reached | 8 | 3 | -5 |
-| 16 | RP-16 | Tenant Misses Auto-Generated Login | 6 | 1 | -5 |
-| 17 | RP-10 | AI Token Quota Exhausted | 6 | 4 | -2 |
-| 18 | RP-20 | Competitor Releases Similar Free App | 6 | 4 | -2 |
-| 19 | RP-12 | VietQR Format Incorrect or Changed | 6 | 2 | -4 |
-| 20 | RP-19 | No Post-Project Owner | 4 | 3 | -1 |
+| Rank | ID | Risk Title | Risk Score |
+|---|---|---|---|
+| 1 | RP-08 | Scope Creep | 16 |
+| 2 | RP-01 | Academic Workload Reduces Availability | 12 |
+| 3 | RP-03 | Frontend Waiting on Backend | 12 |
+| 4 | RP-05 | Over-Reliance on AI Code | 12 |
+| 5 | RP-07 | Landlords Change Their Minds | 12 |
+| 6 | RP-11 | No One Wants to Test the App | 12 |
+| 7 | RP-14 | Deployment Failure on Demo Day | 12 |
+| 8 | RP-17 | Tenants Upload Fake Payment Proofs | 12 |
+| 9 | RP-18 | We Leak Private Data | 12 |
+| 10 | RP-02 | React Native Mobile Overrun | 9 |
+| 11 | RP-04 | Database Schema Conflicts | 9 |
+| 12 | RP-06 | Third-Party Services Fail or Block Us | 9 |
+| 13 | RP-09 | Knowledge Silos | 9 |
+| 14 | RP-13 | Dashboard Loads Too Slowly | 9 |
+| 15 | RP-15 | Supabase Free-Tier Runs Out | 8 |
+| 16 | RP-10 | AI Token Limits Exhausted | 6 |
+| 17 | RP-12 | VietQR Format Incorrect | 6 |
+| 18 | RP-16 | Tenants Don't Get Their Passwords | 6 |
+| 19 | RP-20 | Someone Else Builds It First | 6 |
+| 20 | RP-19 | Who Pays for the Server Later? | 4 |
 
 ---
 
 ### 3.4 Top Watch Items
 
-The following risks have the highest **Inherent Risk** and demand immediate action/enforcement from Day 1 to ensure their mitigations work:
+The following risks have the highest **Risk Score** and demand immediate action/enforcement from Day 1:
 
 1. **RP-08 (Scope Creep)** — Without a hard freeze, failure is nearly certain.
-2. **RP-18 (Data Privacy)** — CI authorization tests and HTTPS must be enforced to prevent catastrophic leak.
-3. **RP-14 (CI/CD Failure)** — Pipeline must be green and rollback tested to prevent Demo Day failure.
-4. **RP-11 (UAT Recruitment)** — Landlord outreach must start in Week 1 to prevent empty MVP.
+2. **RP-18 (Data Privacy)** — Security rules and HTTPS must be enforced to prevent a catastrophic leak.
+3. **RP-14 (Deployment Failure)** — The app must run locally first to prevent Demo Day failure.
+4. **RP-11 (UAT Recruitment)** — Landlord outreach must start in Week 1 to prevent an empty MVP.
 5. **RP-05 (AI Over-reliance)** — Non-author review must be strictly enforced to prevent severe bugs.
