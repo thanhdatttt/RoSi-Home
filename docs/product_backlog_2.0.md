@@ -38,7 +38,7 @@ Every `Items` must satisfy all items below before its status moves to `Done`. It
 - Each task has one **Work estimation** line; each User Story has separate **BE estimation** and **FE estimation** lines.
 - Story estimates use the assigned BE/FE workstreams and their calibrated time/token rates from `docs/estimate/Observed Delivery Inputs.md`.
 - BE1 uses 2.3 hours/9.0M tokens per story as a workstream average; Lease and Dashboard work keeps the same group totals but distributes them by Final SP and acceptance-criteria complexity.
-- FE1 uses 2.0 hours/1.5M tokens per story and FE2 uses 1.7 hours/14.75M tokens per story, extrapolated from their observed Batch 1 delivery.
+- FE1 uses 2.0 hours/1.5M tokens per story. FE2 uses the quota-planning allocation below rather than a flat per-story token rate.
 - Task time uses an existing task estimate when available; otherwise it uses the approved `52 hours / 84 SP` calibration from `project_estimation.md`.
 - `tokens not separately recorded` means the task was included in blended activity or no task-level token measurement exists; no token amount is invented.
 - `session-history estimate` is an approximate planning value inferred from the document's size, calculation work, and repeated drafting/revision prompts; it is not measured token telemetry.
@@ -354,7 +354,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.4 hours | ~1,260,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.8 hours | ~8,000,000 tokens
 - **User story:** As a landlord, I want to create a rental property so that I can manage its rooms in RosiHome.
 - **Dependencies:** US-AUTH-04.
 
@@ -370,7 +370,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.4 hours | ~1,260,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.9 hours | ~8,500,000 tokens
 - **User story:** As a landlord, I want to view and update my property details so that the portfolio record stays accurate.
 - **Dependencies:** US-PROPERTY-01.
 
@@ -386,7 +386,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.4 hours | ~1,260,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.6 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to add a room to one of my properties so that it can be used in leasing and billing workflows.
 - **Dependencies:** US-PROPERTY-01.
 
@@ -402,7 +402,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.4 hours | ~1,260,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.6 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to view and update room details and availability so that I can manage my rental units accurately.
 - **Dependencies:** US-ROOM-01.
 
@@ -418,7 +418,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.4 hours | ~1,260,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.0 hours | ~8,500,000 tokens
 - **User story:** As a landlord, I want to add multiple rooms in one operation so that I can set up a property without repeating the same form for every room.
 - **Dependencies:** US-PROPERTY-01.
 
@@ -479,7 +479,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~750,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.0 hours | ~8,500,000 tokens
 - **User story:** As a landlord, I want to configure electricity and water rates so that monthly utility charges use my actual pricing rules.
 - **Dependencies:** US-PROPERTY-01.
 
@@ -499,7 +499,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~700,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.6 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to view and update utility rates so that future calculations reflect current pricing.
 - **Dependencies:** US-UTILITY-01.
 
@@ -514,7 +514,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.0 hours | ~500,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.4 hours | ~6,500,000 tokens
 - **User story:** As a landlord, I want to configure recurring property-wide surcharges so that shared services such as internet appear consistently on tenant invoices.
 - **Dependencies:** US-PROPERTY-01.
 
@@ -538,7 +538,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.5 hours | ~7,000,000 tokens
 - **User story:** As a landlord, I want to record the first meter reading for a room so that future monthly consumption has a valid baseline.
 - **Dependencies:** US-ROOM-01.
 
@@ -554,7 +554,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.1 hours | ~9,000,000 tokens
 - **User story:** As a landlord, I want to enter current monthly readings and see calculated utility charges so that I can prepare an accurate invoice.
 - **Dependencies:** US-METER-01 and US-UTILITY-01.
 
@@ -575,7 +575,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE2):** ~1.9 hours | ~1,857,143 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.4 hours | ~10,000,000 tokens
 - **User story:** As a landlord, I want to correct an erroneous reading before sending its draft invoice so that the tenant receives an accurate bill without losing accountability.
 - **Dependencies:** US-METER-02 and US-INVOICE-01.
 
@@ -669,7 +669,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~10,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.6 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to maintain the bank details used for VietQR so that tenants transfer payment to the correct account.
 - **Dependencies:** US-PROFILE-01.
 
@@ -684,7 +684,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~12,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.2 hours | ~9,000,000 tokens
 - **User story:** As an assigned tenant, I want to scan a VietQR code for my invoice so that I do not have to type the landlord's transfer details manually.
 - **Dependencies:** US-INVOICE-01 and US-VIETQR-01.
 
@@ -705,7 +705,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.5 hours | ~800,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~3.0 hours | ~12,000,000 tokens
 - **User story:** As an assigned tenant, I want to upload proof for an unpaid invoice so that the landlord can verify my bank transfer.
 - **Dependencies:** US-INVOICE-02 and file storage baseline.
 
@@ -722,7 +722,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.0 hours | ~600,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.4 hours | ~9,500,000 tokens
 - **User story:** As a landlord, I want to review payment proof and confirm a received bank transfer so that the invoice and outstanding balance are accurate.
 - **Dependencies:** US-PAYMENT-01.
 
@@ -739,7 +739,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.0 hours | ~400,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.9 hours | ~8,000,000 tokens
 - **User story:** As a landlord or tenant, I want to view the relevant payment history and unpaid balances so that I can resolve payment questions from a shared record.
 - **Dependencies:** US-INVOICE-01, US-PAYMENT-02, and US-AUTH-04.
 
@@ -760,7 +760,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~0.8 hours | ~400,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.2 hours | ~5,500,000 tokens
 - **User story:** As a tenant, I want to receive a reminder when my invoice is overdue so that I can act on an outstanding payment.
 - **Dependencies:** US-INVOICE-04 and a mobile push-notification service.
 
@@ -777,7 +777,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.2 hours | ~550,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.5 hours | ~6,500,000 tokens
 - **User story:** As a landlord, I want to send a reminder for a specific unpaid invoice so that I can follow up without composing a separate message.
 - **Dependencies:** US-INVOICE-02 and a mobile push-notification service.
 
@@ -910,7 +910,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~11,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~3.0 hours | ~12,000,000 tokens
 - **User story:** As a tenant, I want to submit a maintenance request with photographs so that my landlord has enough information to arrange a repair.
 - **Dependencies:** US-TENANT-02, an active lease, and file storage baseline.
 
@@ -928,7 +928,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~10,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.8 hours | ~7,000,000 tokens
 - **User story:** As a tenant, I want to view my submitted maintenance requests and current statuses so that I know whether each issue is being handled.
 - **Dependencies:** US-MAINT-01.
 
@@ -948,7 +948,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~10,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.0 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to review maintenance requests for my properties so that I can decide what action is needed.
 - **Dependencies:** US-MAINT-01.
 
@@ -963,7 +963,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~3.0 hours | ~15,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.5 hours | ~10,000,000 tokens
 - **User story:** As a landlord, I want to update a maintenance request's status so that the tenant can follow repair progress.
 - **Dependencies:** US-MAINT-03.
 
@@ -979,7 +979,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~3.0 hours | ~13,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.8 hours | ~7,500,000 tokens
 - **User story:** As a landlord, I want to view a room's maintenance history so that I can understand recurring issues and prior repairs.
 - **Dependencies:** US-MAINT-01 and US-MAINT-04.
 
@@ -1068,7 +1068,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.0 hours | ~13,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.1 hours | ~9,000,000 tokens
 - **User story:** As a landlord, I want to generate a report for a month/year or custom date range so that I can analyze performance for a clearly defined period.
 - **Dependencies:** US-AUTH-04 and the source-data stories referenced by US-REPORT-02 through US-REPORT-04.
 
@@ -1084,7 +1084,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~3.0 hours | ~13,500,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~2.1 hours | ~9,000,000 tokens
 - **User story:** As a landlord, I want financial and debt metrics in the report so that I can compare expected cash flow with actual collections and identify unpaid amounts.
 - **Dependencies:** US-REPORT-01, US-INVOICE-01, US-PAYMENT-02, US-PAYMENT-03, and US-CHARGE-01.
 
@@ -1100,7 +1100,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~2.4 hours | ~11,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.9 hours | ~8,000,000 tokens
 - **User story:** As a landlord, I want occupancy and tenant-movement metrics in the report so that I can understand property utilization and upcoming lease risk.
 - **Dependencies:** US-REPORT-01, US-ROOM-02, US-LEASE-01, US-LEASE-04, and US-LEASE-06.
 
@@ -1117,7 +1117,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.6 hours | ~8,000,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.7 hours | ~7,000,000 tokens
 - **User story:** As a landlord, I want maintenance metrics in the report so that I can evaluate request volume and resolution performance.
 - **Dependencies:** US-REPORT-01 and US-MAINT-01 through US-MAINT-05.
 
@@ -1133,7 +1133,7 @@ All documents remain concise, use consistent RosiHome terminology and scope, cit
 
 - **Status:** Refined
 - **BE estimation (BE3):** ~1.0 hours | ~700,000 tokens
-- **FE estimation (FE2):** ~1.7 hours | ~14,750,000 tokens
+- **FE estimation (FE2):** ~1.3 hours | ~5,300,000 tokens
 - **User story:** As a landlord, I want to export the generated business report as a PDF so that I can read, archive, or share a stable copy.
 - **Dependencies:** US-REPORT-01 through US-REPORT-04 and a PDF-generation baseline.
 
