@@ -361,6 +361,9 @@ describe("correctMeterReadingService", () => {
       }),
       mocks.trx,
     );
+    expect(mocks.supersedeReading.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.createMeterReading.mock.invocationCallOrder[0],
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "meter_reading.corrected",

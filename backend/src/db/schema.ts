@@ -273,12 +273,9 @@ export const meterReadings = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqueReading: uniqueIndex("meter_readings_unique").on(
-      t.roomId,
-      t.utilityType,
-      t.billingPeriod,
-      t.supersededAt,
-    ),
+    uniqueReading: uniqueIndex("meter_readings_unique")
+      .on(t.roomId, t.utilityType, t.billingPeriod)
+      .where(sql`${t.supersededAt} IS NULL`),
     correctionFk: foreignKey({
       columns: [t.correctionOf],
       foreignColumns: [t.id],

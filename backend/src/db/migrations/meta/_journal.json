@@ -8,6 +8,13 @@
       "when": 1784558977753,
       "tag": "0000_polite_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786697205110,
+      "tag": "0001_fix-meter-reading-active-unique-index",
+      "breakpoints": true
     }
   ]
 }

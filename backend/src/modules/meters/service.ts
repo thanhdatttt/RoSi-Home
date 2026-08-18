@@ -270,6 +270,10 @@ export async function correctMeterReadingService(
 
   const newRow = await db.transaction(async (rawTrx) => {
     const trx = rawTrx as unknown as typeof db;
+    // The active-reading unique index only permits one live reading per
+    // room/utility/period. Supersede first, then insert its replacement; the
+    // surrounding transaction keeps the operation atomic if insertion fails.
+    await supersedeReading(original.id, supersededAt, trx);
     const created = await createMeterReading(
       {
         roomId: original.roomId,
@@ -295,7 +299,6 @@ export async function correctMeterReadingService(
       },
       trx,
     );
-    await supersedeReading(original.id, supersededAt, trx);
     return created;
   });
 
