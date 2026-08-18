@@ -63,6 +63,7 @@ export function RoleBottomNav({ pathname, role }: { pathname: string; role?: Use
     >
       <View
         style={{
+          width: '100%',
           flexDirection: 'row',
           borderRadius: 24,
           borderWidth: 1,
@@ -91,8 +92,7 @@ export function RoleBottomNav({ pathname, role }: { pathname: string; role?: Use
               testID={`bottom-nav-${label.toLowerCase()}`}
               onPress={() => router.replace(href)}
               style={({ pressed }) => ({
-                flexGrow: 1,
-                flexBasis: 0,
+                flex: 1,
                 minWidth: 0,
                 minHeight: 58,
                 alignItems: 'center',
