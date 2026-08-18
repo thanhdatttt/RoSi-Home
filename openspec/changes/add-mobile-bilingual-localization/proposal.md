@@ -24,4 +24,4 @@ RosiHome's mobile UI is currently English-only and strings are distributed acros
 
 - Affected code: `mobile/src/app`, `mobile/src/components`, and new `mobile/src/i18n` modules.
 - No new runtime dependency is required; existing secure/local storage persists the preference.
-- Backend errors, email, PDF, and push-message content remain unchanged in this change.
+- Backend error payloads, email, PDF, and push-message content remain unchanged. The mobile client maps stable API error codes and transport failures to localized presentation messages before displaying them.

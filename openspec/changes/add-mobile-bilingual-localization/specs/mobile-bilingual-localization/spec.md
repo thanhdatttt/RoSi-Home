@@ -54,3 +54,13 @@ The mobile application SHALL preserve backend request fields, response fields, a
 
 - **WHEN** the backend returns an enum such as `Draft` or `Occupied`
 - **THEN** the UI displays its Vietnamese label without changing the value sent to or received from the backend
+
+### Requirement: Localized client error presentation
+
+The mobile client SHALL map stable API error codes and transport failures to presentation messages in the active language without modifying backend error payloads.
+
+#### Scenario: Vietnamese API failure presentation
+
+- **WHEN** Vietnamese is the active language and an API request returns a known error code or times out
+- **THEN** the app presents a Vietnamese client message that explains the failure category
+- **AND** the backend response payload remains unchanged
