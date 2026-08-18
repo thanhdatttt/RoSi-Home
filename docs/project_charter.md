@@ -63,7 +63,7 @@ The team consists of **three part-time backend developers and two part-time fron
 | Role | Name | Responsibilities |
 |---|---|---|
 | Project Sponsor | University Supervisor / Lecturer | Approves the project, provides academic guidance, reviews progress, approves final deliverables. |
-| Project Manager / Team Leader | **Chí** | Plans and monitors the project, maintains Trello and the delivery baseline, coordinates dependencies and communication, manages risks and changes, and reports progress to the Sponsor. |
+| Project Manager / Team Leader | **Chí** | Plans and monitors the project, maintains Trello and the delivery baseline, coordinates dependencies and communication, receives task-completion notifications, approves team documents, manages risks and changes, and reports progress to the Sponsor. |
 | Backend Developer 1 (BE1) | **Chí** | Backend: Auth/Profile (`US-AUTH-01→06`, `US-PROFILE-01`), Tenant/Lease (`US-TENANT-01→02`, `US-LEASE-01→06`), Batch 3 review/test/bug fixing, and Dashboard (`US-DASH-01→02`). Sets up backend and frontend infrastructure and Render CD; writes Product Backlog 2.0, Project Estimation, Project Proposal, and Vision and Scope. |
 | Backend Developer 2 (BE2) | **Đạt** | Backend: Property/Room (`US-PROPERTY-01→02`, `US-ROOM-01→03`), Meter (`US-METER-01→03`), Invoice (`US-INVOICE-01→04`), and Dashboard (`US-DASH-03→04`). Sets up quality tooling and CI; writes the Technical Architecture and Project Charter. |
 | Backend Developer 3 (BE3) | **Minh** | Backend: Utility/Charge (`US-UTILITY-01→02`, `US-CHARGE-01`), Maintenance (`US-MAINT-01→05`), VietQR/Payment/Reminder (`US-VIETQR-01→02`, `US-PAYMENT-01→03`, `US-REMINDER-01→02`), and Report (`US-REPORT-01→05`). Writes Product Backlog Version 1. |
@@ -170,85 +170,63 @@ These activities recur across every batch and are not tied to a single user stor
 | Batch 3 backend review, testing, and bug fixing | Chí | Chí | Đạt, Minh, MXH, Quân | PM |
 | CI workflow maintenance | Đạt | Đạt | Dev Team | PM |
 | CD workflow and Render deployment maintenance | Chí | Chí | Đạt | PM |
-| Documentation authoring and updates | All members, for their own or affected work | all members | — | PM |
-| Documentation review and approval | All members | All members  | — | PM |
-
----
+| Documentation authoring and updates | Assigned member | Chí (PM / Team Leader) | Related member(s) | SPN |
+| Task completion notification | Assigned member | Chí (PM / Team Leader) | Related member(s) | Dev Team |
+| Documentation review and approval | Chí (PM / Team Leader) | Chí (PM / Team Leader) | Document author and related member(s) | SPN |
 
 # 6. Stakeholder Analysis
 
-| Stakeholder | Role in Project | Responsibilities | Accountability (answerable for the outcome) | Access to Project Information/Decisions | Level of Influence | Communication Method | Risks Associated |
-|---|---|---|---|---|---|---|---|
-| **Project Supervisor / Lecturer** | Project Sponsor | Approves milestones, provides academic guidance, evaluates project outcomes, ensures academic standards are met. | **Accountable** for certifying the project meets academic requirements and for the final grade decision | Full — receives all deliverables, attends milestone reviews | **High** — can require rework, reject milestones, or fail the deliverable | Weekly meetings, Email | Delayed feedback or approval may impact project schedule. Changing academic requirements may require document revisions. |
-| **Project Manager (Chí, Team Leader)** | Project Management | Coordinates the team, monitors schedule, manages risks, communicates with supervisor, and oversees project delivery alongside his BE1 workstream and supporting tasks. | **Accountable** to the Supervisor for overall project delivery, schedule, and quality | Full — has access to all team artifacts, boards, and communication channels | **High** — makes day-to-day scope, priority, and process decisions within the approved charter | Daily team meetings, Discord, GG meet, GitHub Projects | Poor coordination may delay development, create scope creep, or reduce team productivity. Chí's combined PM, BE1, infrastructure, deployment, and documentation workload creates an overload risk. |
-| **Development Team (Đạt, Minh, MXH, Quân)** | System Development | Implement backend or frontend work, integrate assigned batches, test, fix defects, and maintain documentation according to Section 4 and the RACI in Section 5. | Each member is **accountable** for their assigned backend or frontend workstream; collectively accountable to the PM for sprint commitments | Full internal access (codebase, backlog, CI); no direct access to Supervisor grading decisions | **High** — can influence technical approach, estimates, and project scope | GitHub, Discord, Daily stand-up meetings | Uneven workload, technical difficulties, missed deadlines, code integration conflicts, member availability due to coursework. |
-| **Self-Managing Landlords** | Primary Client / Product Owner | Provide business requirements, validate business processes, evaluate prototypes, participate in user acceptance testing. | **Not accountable** for project outcomes (they are consulted, not responsible for delivery), but their acceptance is the qualitative measure of product-market fit | Limited — receives summarized findings, prototypes, and surveys; no access to internal project management artifacts | **High for product decisions** — negative feedback on core workflows (e.g., billing, payment) can force a scope or design change; **no influence** over academic schedule or grading | Face-to-face interviews, Phone calls, Zalo, Google Forms | Limited availability, changing requirements, resistance to adopting digital systems, limited pilot participation. |
-| **Tenants** | Secondary End Users | Evaluate usability, test payment workflow, submit maintenance requests, provide feedback on transparency and user experience. | Not accountable for delivery | Limited — receives only the parts of the prototype relevant to the tenant-facing app | **Low–Medium** — feedback can adjust tenant-facing UX details, but does not drive core project scope | Mobile application, Zalo, Google Forms | Limited engagement during testing, incomplete feedback, inconsistent system usage. |
-| **Cloud Service Provider** | Technology Provider | Provides cloud hosting, databases, application deployment services. | Accountable only for the availability/SLA of the infrastructure it provides, not for project delivery | No access to project artifacts; interaction limited to service dashboards/support | **Low** — an outage or quota limit can constrain the team's options, but the provider does not influence project decisions | Cloud management portals, documentation, support tickets | Service outages, quota limitations, student credit expiration, infrastructure downtime. |
-| **GitHub** | Development Platform | Source code repository, version control, collaboration, issue tracking, continuous integration. | Accountable only for platform availability, not project outcomes | No access to project decision-making | **Low** — service-level constraint only | GitHub platform | Repository access issues, merge conflicts, accidental code deletion, service interruption. |
-| **Banking System (VietQR Standard)** | External Integration | Generates standardized QR codes for bank transfers between tenants and landlords. | Accountable only for the correctness of the standard it publishes, not for RosiHome's implementation | No access to project artifacts | **Medium** — RosiHome's payment workflow must conform to VietQR's format, so changes to the standard can force a design change, even though the bank has no direct involvement in the project | Banking applications, VietQR standard documentation | QR generation format changes, incorrect bank information entered by landlords, manual payment verification required. |
-| **University** | Academic Stakeholder | Provides project environment, computing resources, academic supervision, and evaluation. | **Accountable** for setting and enforcing the academic requirements the project must satisfy | Access limited to official reporting/evaluation channels | **High** — sets the non-negotiable constraints (deadlines, assessment criteria) the whole project must operate within | Official university communication channels, meetings | Changes to assessment requirements or project deadlines may affect planning. |
+## 6.1. Stakeholder Contact Matrix
+
+| Stakeholder / Member                     | Contact method                                             | Purpose and escalation path                                                                                              |
+| ---------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Project Supervisor / Lecturer            | University email, class periods, scheduled review meetings | Submit deliverables, request approvals, and clarify academic requirements.                                               |
+| Project Manager / Team Leader (Chí)      | Messenger, class periods, weekly meetings, Google Meet     | Coordinate work, priorities, and risks. Members notify Chí when a document task is complete for his review and approval. |
+| Chí (BE1)                                | Messenger, class periods, weekly meetings, Google Meet     | Coordinate Auth/Profile, Tenant/Lease, Dashboard, infrastructure, and Render deployment work.                            |
+| Đạt (BE2)                                | Messenger, class periods, weekly meetings, Google Meet     | Coordinate Property/Room, Meter, Invoice, CI, and quality-tooling work.                                                  |
+| Minh (BE3)                               | Messenger, class periods, weekly meetings, Google Meet     | Coordinate Utility/Charge, Maintenance, VietQR, Payment, Reminder, and Report work.                                      |
+| Hưng (MXH, FE1)                          | Messenger, class periods, weekly meetings, Google Meet     | Coordinate Auth/Profile, Tenant/Lease, Invoice, and Dashboard mobile work.                                               |
+| Quân (FE2)                               | Messenger, class periods, weekly meetings, Google Meet     | Coordinate Property/Room, Utility/Charge, Meter, Maintenance, Payment, Reminder, and Report mobile work.                 |
+| Self-Managing Landlords / Product Owner  | Face-to-face interviews, Phone calls, Zalo, Google Forms   | Collect requirements, validate workflows, and gather acceptance feedback.                                                |
+| Tenants / Pilot End Users                | Mobile application, Zalo, Google Forms                     | Collect usability, payment-flow, and maintenance-request feedback during pilot testing.                                  |
+| Cloud Service Provider (Render/Supabase) | Cloud management portals, documentation, support tickets   | Monitor deployments, database/storage status, incidents, quotas, and service errors.                                     |
+| GitHub                                   | GitHub platform                                            | Manage source code, reviews, CI checks, and access.                                                                      |
+| Banking System / VietQR Standard         | Banking applications, VietQR standard documentation        | Verify QR format, bank information, and payment-flow compatibility.                                                      |
+| University                               | Official university communication channels, meetings       | Receive assessment updates, deadline changes, and academic/project administration notices.                               |
+
+## 6.2. Stakeholder Risk Register
+
+| Stakeholder / Member                     | Risk                                                                                                         | Likelihood / Impact | Mitigation and owner                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Project Supervisor / Lecturer            | Feedback or approval is delayed; assessment requirements change late.                                        | Low / High          | Schedule reviews early, submit drafts before deadlines. Escalate task to discover unclear requirements and obstacles early.  Owner: PM. |
+| Project Manager / Team Leader (Chí)      | Workload overload from PM, BE1, infrastructure, deployment, and documentation responsibilities.              | High / High         | Delegate work to other members. Owner: Chí.                                                                                             |
+| Chí (BE1)                                | Auth/Profile, Tenant/Lease, Dashboard, infrastructure, and Render tasks compete for the same time.           | High / High         | Split work into batches, request peer review from Đạt/MXH, and freeze non-essential scope. Owner: Chí.                                  |
+| Đạt (BE2)                                | CI/quality tooling or Property/Room, Meter, and Invoice integration is delayed.                              | Medium / High       | Use pull-request review, run CI on every change, and coordinate API contracts with Quân. Owner: Đạt.                                    |
+| Minh (BE3)                               | Utility, Maintenance, VietQR, Payment, Reminder, and Report features have complex cross-module dependencies. | Medium / High       | Implement incrementally, test each integration, and raise dependency blockers in the team channel. Owner: Minh.                         |
+| Hưng (MXH, FE1)                          | Mobile integration is blocked by API changes or delays in Auth, Lease, Invoice, and Dashboard services.      | Medium / High       | Work on UI/UX designs/protoypes on the first batch  and integrate after each backend batch. Owner: Hưng with the related BE owner.      |
+| Quân (FE2)                               | A broad mobile workload causes incomplete integration or inconsistent UI behavior.                           | High / High         | Prioritize by batch, reuse components, and perform joint testing with Đạt/Minh. Owner: Quân.                                            |
+| Self-Managing Landlords / Product Owner  | Requirements change or pilot users are unavailable for validation.                                           | Medium / High       | Confirm acceptance criteria before implementation, use prototypes and written decisions, and review them with the PM. Owner: PM.        |
+| Tenants / Pilot End Users                | Low participation produces incomplete or biased usability feedback.                                          | Medium / Medium     | Recruit more than one pilot user, provide short test scenarios, and collect structured feedback. Owner: Hưng/Quân.                      |
+| Cloud Service Provider (Render/Supabase) | Outage, quota limit, credit expiration, or database/storage misconfiguration interrupts the system.          | High / High         | Monitor dashboards and logs, keep configuration documented, and maintain a local/test fallback. Owner: Chí/Đạt.                         |
+| GitHub                                   | Access failure, merge conflict, accidental deletion, or CI interruption affects delivery.                    | Low / High          | Enforce branch protection and pull requests, verify permissions, and keep local clones of important work. Owner: Đạt.                   |
+| Banking System / VietQR Standard         | QR format or bank information is invalid, or payment verification remains manual.                            | Low / Medium        | Validate against the standard, use test transactions, and require landlord confirmation before recording payment. Owner: Minh.          |
+| University                               | Deadline, or course administration changes during development.                                               | Low / High          | Monitor official announcements and keep schedule/documentation buffers. Owner: PM.                                                      |
 
 ---
 
-# 7. Project Facilities and Resources
-
-## Human Resources
-
-- Project Supervisor
-- Project Manager (Chí)
-- Four additional Software Engineering Students (Đạt, Minh, Hung, Quân)
-- Pilot Landlords
-- Pilot Tenants
-
-## Software Resources
-
-- Visual Studio Code
-- GitHub
-- React / React Native
-- PostgreSQL
-- Render and Supabase
-- Figma
-- Postman
-- Claude Code
-- ChatGPT
-- Gemini
-
-## Hardware Resources
-
-- Student laptops
-- Smartphones (Android/iOS)
-- Cloud servers
-- Internet connection
-
----
-
-# 8. Major Milestones
-
-| Milestone                        | Expected Outcome                                |
-| -------------------------------- | ----------------------------------------------- |
-| Project Charter Approved         | Project officially authorized                   |
-| Requirements & Design Complete   | Functional and technical requirements finalized |
-| MVP Development Complete         | Core system features implemented                |
-| System Testing Complete          | Functional and usability testing completed      |
-| User Acceptance Testing          | Pilot users validate the system                 |
-| Final Deployment & Demonstration | Final presentation and project submission       |
-
----
-
-# 9. Impact Analysis
+# 7. Impact Analysis
 
 | Stakeholder      | Expected Impact                                                                                                                          |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | Landlords        | Reduced administrative workload, improved payment tracking, better visibility into rental operations, fewer calculation errors.          |
 | Tenants          | Increased transparency, easier access to invoices and payment history, better communication regarding maintenance and lease information. |
-| Development Team | Practical experience in software engineering, project management, teamwork, and system deployment.                                       |
+| Development Team | Practical experience in software engineering, project management, teamwork, and system deployment, with the potential to earn income through the application. |
 | University       | Demonstrates successful application of software engineering principles through a real-world capstone project.                            |
 | Supervisor       | Oversees project quality and ensures academic learning outcomes are achieved.                                                            |
 
 ---
 
-# 10. Assumptions
+# 8. Assumptions
 
 - Landlords and tenants have internet-enabled smartphones or computers.
 - Landlords are willing to adopt a digital management system.
