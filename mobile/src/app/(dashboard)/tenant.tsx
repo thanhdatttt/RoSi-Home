@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
@@ -13,6 +13,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 export default function TenantDashboard() {
   const insets = useSafeAreaInsets();
   const { token, user } = useAuth();
+  const router = useRouter();
   const { formatVnd, t } = useI18n();
 
   const [data, setData] = useState<any>(null);
@@ -97,7 +98,7 @@ export default function TenantDashboard() {
                     </Text>
                   </View>
                   <View style={{ marginTop: 16 }}>
-                    <PrimaryButton variant="primary">{t('tenant.payNow')}</PrimaryButton>
+                    <PrimaryButton variant="primary" onPress={() => router.push({ pathname: '/(dashboard)/tenant/invoices/[id]', params: { id: data.nextPayment.invoiceId } } as never)}>{t('tenant.payNow')}</PrimaryButton>
                   </View>
                 </>
               ) : (
@@ -113,7 +114,7 @@ export default function TenantDashboard() {
           <View style={{ paddingHorizontal: 24, marginTop: 32, gap: 12 }}>
             <TenantRow href="/(dashboard)/tenant/invoices" icon={<Receipt size={16} color="#2563eb" />} title={t('tenant.myInvoices')} sub={t('tenant.myInvoicesHint')} />
             <TenantRow href="/(dashboard)/tenant/lease" icon={<FileText size={16} color="#2563eb" />} title={t('tenant.myLease')} sub={t('tenant.myLeaseHint')} />
-            <TenantRow href="/(dashboard)/tenant/reports" icon={<Wallet size={16} color="#2563eb" />} title={t('tenant.myReport')} sub={t('tenant.myReportHint')} />
+            <TenantRow href="/(dashboard)/tenant/payment-history" icon={<Wallet size={16} color="#2563eb" />} title={t('tenant.paymentHistory')} sub={t('tenant.paymentHistoryHint')} />
             <TenantRow href="/(dashboard)/tenant/maintenance" icon={<Wrench size={16} color="#2563eb" />} title={t('tenant.maintenance')} sub={t('tenant.maintenanceHint')} />
           </View>
 

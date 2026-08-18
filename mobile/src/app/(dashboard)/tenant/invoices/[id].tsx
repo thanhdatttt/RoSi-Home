@@ -9,17 +9,14 @@ import { useAuth } from "../../../../contexts/auth-context";
 import { apiRequest, API_BASE } from "../../../../lib/api";
 import * as WebBrowser from "expo-web-browser";
 import { LinearGradient } from "expo-linear-gradient";
-
-const formatVND = (n: number) => {
-  if (n == null || isNaN(n)) return '0';
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function TenantInvoiceDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { formatVnd, statusLabel, t, translateLegacy } = useI18n();
 
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +45,7 @@ export default function TenantInvoiceDetail() {
       const url = `${API_BASE}/api/v1/invoices/${id}/pdf?token=${token}`;
       await WebBrowser.openBrowserAsync(url);
     } catch (err: any) {
-      Alert.alert("Download Error", err.message);
+      Alert.alert(translateLegacy("Download Error"), err.message);
     }
   };
 
@@ -69,13 +66,13 @@ export default function TenantInvoiceDetail() {
           <View style={{ height: 56, width: 56, borderRadius: 16, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldAlert size={24} color="#ef4444" />
           </View>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a', marginTop: 16 }}>403 · Not available</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a', marginTop: 16 }}>403 · {t('invoice.notAvailable')}</Text>
           <Text style={{ fontSize: 14, color: '#64748b', marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
-            This invoice isn't linked to your account, or it hasn't been sent yet.
+            {t('invoice.notAvailableNotice')}
           </Text>
           <Link href={"/(dashboard)/tenant/invoices" as any} asChild>
             <TouchableOpacity style={{ marginTop: 24 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2563eb' }}>Back to my invoices</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2563eb' }}>{t('invoice.backToMine')}</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -110,15 +107,15 @@ export default function TenantInvoiceDetail() {
                 <Text style={{ fontSize: 20, fontWeight: '800', color: '#ffffff' }} numberOfLines={1}>{invoice.billingPeriod}</Text>
               </View>
               <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: isPaid ? '#10b981' : 'rgba(255,255,255,0.2)' }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: '#ffffff' }}>{invoice.status}</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: '#ffffff' }}>{statusLabel(invoice.status)}</Text>
               </View>
             </View>
 
             <View style={{ marginTop: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }}>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Amount due</Text>
-              <Text style={{ fontSize: 32, fontWeight: '800', color: '#ffffff', marginTop: 4 }}>{formatVND(invoice.totalAmount)}</Text>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{t('invoice.amountDue')}</Text>
+              <Text style={{ fontSize: 32, fontWeight: '800', color: '#ffffff', marginTop: 4 }}>{formatVnd(invoice.totalAmount)}</Text>
               <Text style={{ fontSize: 12, marginTop: 4, color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.7)' }}>
-                Due {invoice.dueDate}{overdue ? " · overdue" : ""}
+                {t(overdue ? 'invoice.dueOverdue' : 'invoice.due', { date: invoice.dueDate })}
               </Text>
             </View>
           </View>
@@ -131,30 +128,30 @@ export default function TenantInvoiceDetail() {
           )}
 
           <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-            <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 8 }}>What you're charged</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 8 }}>{t('invoice.chargedItems')}</Text>
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
               {invoice.lineItems?.map((it: any, index: number) => (
                 <View key={it.id || index} style={{ padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: '#f1f5f9' }}>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }} numberOfLines={1}>{it.description || it.type}</Text>
-                    {it.quantity != null && <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{it.quantity} x {formatVND(it.unitRate)}</Text>}
+                    {it.quantity != null && <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{it.quantity} x {formatVnd(it.unitRate)}</Text>}
                   </View>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{formatVND(it.amount)}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{formatVnd(it.amount)}</Text>
                 </View>
               ))}
               <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
-                <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>Total</Text>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>{formatVND(invoice.totalAmount)}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>{t('invoice.total')}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>{formatVnd(invoice.totalAmount)}</Text>
               </View>
             </View>
           </View>
 
           <View style={{ paddingHorizontal: 24, marginTop: 24, gap: 12 }}>
-            <TouchableOpacity onPress={() => router.push({ pathname: "/(dashboard)/tenant/invoices/[id]/vietqr", params: { id: String(id) } } as any)} style={{ height: 48, borderRadius: 12, backgroundColor: '#0f172a', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}><QrCode size={17} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>{isPaid ? "View VietQR receipt reference" : "Pay with VietQR"}</Text></TouchableOpacity>
-            {!isPaid && <PrimaryButton onPress={() => router.push({ pathname: "/(dashboard)/tenant/invoices/[id]/upload-proof", params: { id: String(id) } } as any)}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Upload size={16} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>Upload payment proof</Text></View></PrimaryButton>}
+            <TouchableOpacity onPress={() => router.push({ pathname: "/(dashboard)/tenant/invoices/[id]/vietqr", params: { id: String(id) } } as any)} style={{ height: 48, borderRadius: 12, backgroundColor: '#0f172a', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}><QrCode size={17} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>{isPaid ? t('invoice.viewQrReference') : t('invoice.payWithQr')}</Text></TouchableOpacity>
+            {!isPaid && <PrimaryButton onPress={() => router.push({ pathname: "/(dashboard)/tenant/invoices/[id]/upload-proof", params: { id: String(id) } } as any)}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Upload size={16} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>{t('invoice.uploadProof')}</Text></View></PrimaryButton>}
             <TouchableOpacity onPress={handleDownloadPdf} style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Download size={16} color="#0f172a" />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>Download PDF</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{t('invoice.downloadPdf')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
