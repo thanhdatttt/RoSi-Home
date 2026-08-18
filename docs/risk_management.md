@@ -71,7 +71,7 @@ If we don't test the tools early, we might get stuck with unfixable bugs right b
 Because the frontend needs the backend APIs to work, the 2 frontend developers might be stuck waiting around with nothing to do if the 3 backend developers fall behind.
 
 **Mitigation & Contingency**
-- **Mitigation:** The frontend team will build shared UI components (buttons, nav bars) while waiting. The backend team will also agree on what the API responses will look like early on, so the frontend can use "fake" mock data to keep working.
+- **Mitigation:** The backend team will deliver APIs in batches, so the frontend only waits for the relevant batch instead of the entire backend. The frontend team can integrate each completed batch while continuing to build shared UI components (buttons, nav bars).
 - **Contingency:** If the backend is severely delayed, we will completely drop secondary screens (like detailed tenant profiles) and only focus on making sure the rent payment flow works perfectly.
 
 **Risk Exposure**
@@ -89,8 +89,8 @@ If frontend is completely blocked, all their work gets crammed into the final tw
 We have 3 backend engineers all touching the same PostgreSQL database. If two people change the way tables link together without telling each other, the code will break when we try to merge it.
 
 **Mitigation & Contingency**
-- **Mitigation:** Before writing code, the backend team will agree on exactly what database tables will change. Every pull request that changes the database must be reviewed by the other backend devs before it can be merged.
-- **Contingency:** If a bad database change gets merged and breaks things, we will immediately revert the code, jump on a meeting call, and fix the tables together.
+- **Mitigation:** Before writing code, the backend team will agree on exactly what database tables will change. Anyone who changes the database schema must notify the team in the team Messenger group so everyone knows about the change.
+- **Contingency:** If a bad database change gets merged and breaks things, we will immediately revert the code, hold a meeting, and fix the tables together.
 
 **Risk Exposure**
 Messing up the database structure requires throwing away and rewriting a lot of code.
@@ -125,8 +125,8 @@ Trusting AI blindly can lead to massive security bugs that ruin the whole app ar
 Later in the project, we need external tools for emails, push notifications, and generating PDFs. If we can't figure out how to set them up, we can't finish those features.
 
 **Mitigation & Contingency**
-- **Mitigation:** We will build the code using "fake" stubs first (so the app acts like it sent an email, even if it didn't) to keep development moving. We will test the real external services early to make sure they actually work.
-- **Contingency:** If a service like the email provider is completely broken on Demo Day, we will just use our fake stubs so the app still looks like it's working during the presentation.
+- **Mitigation:** The team will research, prepare, and test multiple free or free-tier external services for email, push notifications, and PDF generation, so we can replace the current service if necessary.
+- **Contingency:** If an external service becomes unavailable, we will switch to one of the prepared alternatives, reconfigure the integration, and continue with the affected feature.
 
 **Risk Exposure**
 Getting stuck trying to configure a broken email server wastes days of coding time.
@@ -179,7 +179,7 @@ If we keep adding features, the app will never be finished in time for the deadl
 With 3 backend developers, it's easy for one person to become the only one who understands a specific part of the code. If they get sick or drop out, no one else knows how to finish their work.
 
 **Mitigation & Contingency**
-- **Mitigation:** We require cross-reviewing code, but our primary defense is using AI codebase-scanning tools (like Cursor or Claude) to quickly read and explain any unfamiliar code written by someone else, making knowledge transfer almost instant.
+- **Mitigation:** During the weekly meeting, the backend team will share current backend information and walk through important modules with the whole team, so everyone can back up each backend area. We will still use AI codebase-scanning tools (like Cursor or Claude) to read and explain unfamiliar code quickly.
 - **Contingency:** If a developer vanishes, another backend dev will take over their tasks immediately, using AI to quickly summarize their recent commits and get up to speed in hours instead of days.
 
 **Risk Exposure**
@@ -197,8 +197,8 @@ Losing the only person who knows how the payment code works will bring the proje
 If the team uses AI heavily for coding, they might hit their monthly message limits on tools like Claude or ChatGPT, suddenly slowing down their coding speed.
 
 **Mitigation & Contingency**
-- **Mitigation:** Developers should pace their usage and use lighter AI models for simple questions to save their limits for the hard stuff.
-- **Contingency:** If a developer runs out of premium AI access, they must switch to free tiers (like Gemini or the free ChatGPT) and just deal with the slower workflow.
+- **Mitigation:** Developers should pace their usage and use lighter AI models for simple questions. The team will also research and prepare multiple free AI agent sources so work can switch to another source at any time if a quota is exhausted.
+- **Contingency:** If a developer runs out of premium AI access, they will switch to one of the prepared free AI agent sources and continue the work.
 
 **Risk Exposure**
 Suddenly losing AI assistance mid-sprint cuts coding speed in half.
@@ -252,7 +252,7 @@ Even though the frontend dashboard is smart and only shows a few items at a time
 
 **Mitigation & Contingency**
 - **Mitigation:** The backend team will use proper database indexes on foreign keys from the start and avoid "N+1 query" mistakes, ensuring the API can fetch those top items instantly without scanning the whole database.
-- **Contingency:** If the database queries are still lagging during the demo, we will hardcode the API to return dummy data for the dashboard charts so the presentation stays fast.
+- **Contingency:** If the dashboard is still slow, we will dedicate more effort to investigate the cause of the delay and fix the underlying queries, indexes, or other bottlenecks before the demo.
 
 **Risk Exposure**
 Bad database queries can easily crash the app or cause 10-second loading screens.
@@ -287,15 +287,15 @@ A server crash during the final presentation ruins the entire project grade.
 Because tenants upload photos of utility meters and payment receipts, we might use up our 1 GB of free file storage on Supabase very quickly.
 
 **Mitigation & Contingency**
-- **Mitigation:** We will write code to compress the images on the user's phone before uploading them, which keeps the file sizes extremely small.
-- **Contingency:** If we still hit the limit, we will use the 650,000 VND we budgeted for the pilot to upgrade Supabase to the $25/month Pro tier.
+- **Mitigation:** We will enforce a maximum file size for every uploaded image and compress images before upload where possible, limiting storage consumption.
+- **Contingency:** If the selected storage service still approaches its limit, we will switch to an external service with more storage or store the files locally on the machine running the server.
 
 **Risk Exposure**
 Uncompressed phone photos will eat through 1 GB of storage in a matter of days.
 - **Max Slip:** ~10–25% schedule slip
-- Probability: **75% (Very Likely, 4)**
+- Probability: **35% (Unlikely, 2)**
 - Impact: **Moderate (2)**
-- **Risk Score: 4 × 2 = 8 — Substantial**
+- **Risk Score: 2 × 2 = 4 — Moderate**
 
 ---
 
@@ -305,15 +305,15 @@ Uncompressed phone photos will eat through 1 GB of storage in a matter of days.
 When a landlord adds a tenant, the app automatically emails the tenant a temporary password. If that email gets flagged as spam, the tenant might not see it and will assume they are locked out of the app.
 
 **Mitigation & Contingency**
-- **Mitigation:** We will configure the email server properly (SPF/DKIM) to avoid spam filters. We will also add a "Resend Email" button and a prompt reminding the landlord to tell the tenant to check their spam folder.
+- **Mitigation:**  We will add clear guidance telling the tenant to check their spam or junk folder if the email cannot be found.
 - **Contingency:** If the email is completely lost, we will show the temporary password directly on the landlord's screen so they can just copy it and text it to the tenant via Zalo.
 
 **Risk Exposure**
 If tenants can't find their passwords, landlords have to spend time playing tech support.
 - **Max Slip:** ~10–25% schedule slip
 - Probability: **55% (Likely, 3)**
-- Impact: **Moderate (2)**
-- **Risk Score: 3 × 2 = 6 — Substantial**
+- Impact: **Slightly harmful (1)**
+- **Risk Score: 3 × 1 = 3 — Tolerable**
 
 ---
 
@@ -341,7 +341,7 @@ If landlords assume the app verifies the money automatically, it will destroy th
 We are storing people's phone numbers, IDs, and financial records. If we make a mistake with our security rules, someone could steal this data.
 
 **Mitigation & Contingency**
-- **Mitigation:** All data must be sent over HTTPS. We will strictly review any code that handles user permissions, and use fake data during testing so we don't accidentally leak real information.
+- **Mitigation:** All data must be sent over HTTPS. Users must be authenticated, and newly created accounts must be verified before they can retrieve sensitive personal information such as phone numbers, ID numbers, and financial records. We will strictly review code that handles user permissions and use fake data during testing so we do not accidentally leak real information.
 - **Contingency:** If we realize data is exposed, we will immediately shut down the database, tell our pilot users and teachers what happened, and fix the bug before turning it back on.
 
 **Risk Exposure**
@@ -377,8 +377,8 @@ Forgotten servers are a classic way for students to lose money unnecessarily.
 Another company could release a free property management app in Vietnam right before we do, making our landlords lose interest in our student project.
 
 **Mitigation & Contingency**
-- **Mitigation:** We will make sure our app has specific features that Vietnamese landlords love (like VietQR integration) to make it better than generic competitors.
-- **Contingency:** If a competitor launches, we will change our pitch. We'll tell the landlords, "Ours is built locally by students just for you, and we will customize it to fit your exact needs."
+- **Mitigation:** We will research the market and target users' workflows carefully to gain clear insights, identify the right pain points, and solve them thoroughly. We will deploy the MVP and attract the first user group as quickly as possible.
+- **Contingency:** We will research competitors and track user metrics over time. We will continue if the results remain healthy, pivot if user numbers decline, and shut down if the product is not viable.
 
 **Risk Exposure**
 A big competitor could steal all our pilot users, leaving us with nothing to present.
@@ -409,8 +409,8 @@ A big competitor could steal all our pilot users, leaving us with nothing to pre
 | RP-12 | VietQR Format Incorrect | 6 | 🟠 Substantial |
 | RP-13 | Dashboard Loads Too Slowly | 9 | 🟠 Substantial |
 | RP-14 | Deployment Failure on Demo Day | 12 | 🔴 Critical |
-| RP-15 | Supabase Free-Tier Runs Out | 8 | 🟠 Substantial |
-| RP-16 | Tenants Don't Get Their Passwords | 6 | 🟠 Substantial |
+| RP-15 | Supabase Free-Tier Runs Out | 4 | 🟡 Moderate |
+| RP-16 | Tenants Don't Get Their Passwords | 3 | 🟢 Tolerable |
 | RP-17 | Tenants Upload Fake Payment Proofs | 12 | 🔴 Critical |
 | RP-18 | Private Data Got Leaked | 12 | 🔴 Critical |
 | RP-19 | Who Pays for the Server Later? | 4 | 🟡 Moderate |
@@ -423,9 +423,9 @@ A big competitor could steal all our pilot users, leaving us with nothing to pre
 | Level | Count |
 |---|---|
 | 🔴 Critical (12–20) | 9 |
-| 🟠 Substantial (6–11) | 10 |
-| 🟡 Moderate (4–5) | 1 |
-| 🟢 Tolerable (1–3) | 0 |
+| 🟠 Substantial (6–11) | 8 |
+| 🟡 Moderate (4–5) | 2 |
+| 🟢 Tolerable (1–3) | 1 |
 
 ---
 
@@ -441,18 +441,18 @@ A big competitor could steal all our pilot users, leaving us with nothing to pre
 | 6 | RP-11 | No One Wants to Test the App | 12 |
 | 7 | RP-14 | Deployment Failure on Demo Day | 12 |
 | 8 | RP-17 | Tenants Upload Fake Payment Proofs | 12 |
-| 9 | RP-18 | We Leak Private Data | 12 |
+| 9 | RP-18 | Private Data Got Leaked | 12 |
 | 10 | RP-02 | React Native Mobile Overrun | 9 |
 | 11 | RP-04 | Database Schema Conflicts | 9 |
 | 12 | RP-06 | Third-Party Services Fail or Block Us | 9 |
 | 13 | RP-09 | Knowledge Silos | 9 |
 | 14 | RP-13 | Dashboard Loads Too Slowly | 9 |
-| 15 | RP-15 | Supabase Free-Tier Runs Out | 8 |
-| 16 | RP-10 | AI Token Limits Exhausted | 6 |
-| 17 | RP-12 | VietQR Format Incorrect | 6 |
-| 18 | RP-16 | Tenants Don't Get Their Passwords | 6 |
-| 19 | RP-20 | Someone Else Builds It First | 6 |
-| 20 | RP-19 | Who Pays for the Server Later? | 4 |
+| 15 | RP-10 | AI Token Limits Exhausted | 6 |
+| 16 | RP-12 | VietQR Format Incorrect | 6 |
+| 17 | RP-20 | Someone Else Builds It First | 6 |
+| 18 | RP-15 | Supabase Free-Tier Runs Out | 4 |
+| 19 | RP-19 | Who Pays for the Server Later? | 4 |
+| 20 | RP-16 | Tenants Don't Get Their Passwords | 3 |
 
 ---
 
