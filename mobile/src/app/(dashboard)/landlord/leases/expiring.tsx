@@ -9,9 +9,11 @@ import {
   listUpcomingExpirations,
   type UpcomingExpirationView,
 } from "../../../../features/leasing/api";
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function Expiring() {
   const { token } = useAuth();
+  const { translateLegacy } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -58,15 +60,15 @@ export default function Expiring() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Leases</Text>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Expiring soon</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Leases')}</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>{translateLegacy('Expiring soon')}</Text>
             </View>
           </View>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
           <Text style={{ paddingHorizontal: 24, fontSize: 12, color: '#64748b', lineHeight: 18, marginBottom: 16 }}>
-            Active leases in your portfolio expiring within the next 30 days. Ended leases are excluded.
+            {translateLegacy('Active leases in your portfolio expiring within the next 30 days. Ended leases are excluded.')}
           </Text>
 
           <View style={{ paddingHorizontal: 24, gap: 8 }}>
@@ -74,7 +76,7 @@ export default function Expiring() {
               <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
             ) : items.length === 0 ? (
               <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', paddingVertical: 40 }}>
-                No leases expiring in this window.
+                {translateLegacy('No leases expiring in this window.')}
               </Text>
             ) : (
               items.map((l) => {
@@ -94,7 +96,7 @@ export default function Expiring() {
                     <View style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
                       <Text style={{ fontWeight: '600', fontSize: 14, color: '#0f172a' }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
                       <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.tenantFullName}</Text>
-                      <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Expires {l.endDate}</Text>
+                      <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{translateLegacy('Expires')} {l.endDate}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', flexShrink: 0, flexDirection: 'row', gap: 8 }}>
                       <Text style={{ fontSize: 14, fontWeight: '700', color: isUrgent ? '#ef4444' : '#2563eb' }}>{days}d</Text>
@@ -107,7 +109,7 @@ export default function Expiring() {
           </View>
 
           <Text style={{ paddingHorizontal: 24, marginTop: 24, fontSize: 11, color: '#94a3b8', lineHeight: 16 }}>
-            Reminder timings (30 / 15 / 7 days) are configured per property under Property → Reminders.
+            {translateLegacy('Reminder timings (30 / 15 / 7 days) are configured per property under Property → Reminders.')}
           </Text>
         </ScrollView>
       </View>

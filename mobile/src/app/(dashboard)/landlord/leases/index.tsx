@@ -6,6 +6,7 @@ import { MobileFrame } from "../../../../components/MobileFrame";
 import { ArrowLeft, Search, FileSignature, CalendarClock, UserPlus } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
 import { listLeases, type LeaseView } from "../../../../features/leasing/api";
+import { useI18n } from '@/i18n/I18nProvider';
 
 const formatVND = (n: number) => {
   if (n == null || isNaN(n)) return '0';
@@ -16,6 +17,7 @@ const TABS = ["Active", "Ended", "All"] as const;
 
 export default function LeasesList() {
   const { token } = useAuth();
+  const { statusLabel, translateLegacy } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Active");
@@ -70,8 +72,8 @@ export default function LeasesList() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Portfolio</Text>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Leases</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Portfolio')}</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>{translateLegacy('Leases')}</Text>
             </View>
             <Link href="/landlord/leases/new" asChild>
               <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
@@ -87,7 +89,7 @@ export default function LeasesList() {
             <TextInput
               value={q}
               onChangeText={setQ}
-              placeholder="Search tenant, property or room"
+              placeholder={translateLegacy('Search tenant, property or room')}
               placeholderTextColor="gray"
               style={{ width: '100%', height: 44, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 40, paddingRight: 16, fontSize: 14 }}
             />
@@ -114,8 +116,8 @@ export default function LeasesList() {
             style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}
           >
             <CalendarClock size={16} color="#2563eb" />
-            <Text style={{ fontSize: 12, color: '#0f172a', flex: 1 }}>Upcoming expirations (next 30 days)</Text>
-            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#2563eb' }}>View</Text>
+            <Text style={{ fontSize: 12, color: '#0f172a', flex: 1 }}>{translateLegacy('Upcoming expirations (next 30 days)')}</Text>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#2563eb' }}>{translateLegacy('View')}</Text>
           </TouchableOpacity>
 
           {loading ? (
@@ -123,7 +125,7 @@ export default function LeasesList() {
           ) : items.length === 0 ? (
             <View style={{ borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e2e8f0', padding: 32, alignItems: 'center', justifyContent: 'center', marginTop: 16 }}>
               <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center' }}>
-                {q ? `No leases match this filter.` : "No leases found."}
+                {translateLegacy(q ? 'No leases match this filter.' : 'No leases found.')}
               </Text>
             </View>
           ) : (
@@ -150,7 +152,7 @@ export default function LeasesList() {
                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(l.agreedRent)}</Text>
                     <View style={{ marginTop: 6, backgroundColor: l.status === "Active" ? 'rgba(37,99,235,0.15)' : '#e2e8f0', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
                       <Text style={{ fontSize: 10, fontWeight: 'bold', color: l.status === "Active" ? '#2563eb' : '#64748b' }}>
-                        {badgeLabel}
+                        {badgeLabel === 'Active' ? statusLabel(badgeLabel) : badgeLabel}
                       </Text>
                     </View>
                   </View>

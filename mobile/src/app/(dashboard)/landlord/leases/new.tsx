@@ -96,19 +96,19 @@ export default function NewLease() {
   const getRawNumber = (val: string) => val.replace(/,/g, "");
 
   async function submit() {
-    if (!name.trim()) return setErr("Tenant full name is required.");
-    if (!/^\+?[\d\s]{8,}$/.test(phone)) return setErr("Enter a valid phone number (used as login username).");
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr("Enter a valid email address.");
-    if (!idNo.trim()) return setErr("Identification number is required.");
-    if (!propertyId) return setErr("Please select a property.");
-    if (!roomId) return setErr("Please select a room.");
+    if (!name.trim()) return setErr(translateLegacy("Tenant full name is required."));
+    if (!/^\+?[\d\s]{8,}$/.test(phone)) return setErr(translateLegacy("Enter a valid phone number (used as login username)."));
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr(translateLegacy("Enter a valid email address."));
+    if (!idNo.trim()) return setErr(translateLegacy("Identification number is required."));
+    if (!propertyId) return setErr(translateLegacy("Please select a property."));
+    if (!roomId) return setErr(translateLegacy("Please select a room."));
 
     const rentRaw = getRawNumber(rent);
     const depositRaw = getRawNumber(deposit);
-    if (Number(rentRaw) <= 0) return setErr("Monthly rent must be greater than 0.");
-    if (Number(depositRaw) < 0) return setErr("Deposit must be zero or more.");
+    if (Number(rentRaw) <= 0) return setErr(translateLegacy("Monthly rent must be greater than 0."));
+    if (Number(depositRaw) < 0) return setErr(translateLegacy("Deposit must be zero or more."));
 
-    if (endDate <= startDate) return setErr("End date must be after start date.");
+    if (endDate <= startDate) return setErr(translateLegacy("End date must be after start date."));
 
     setErr(null);
     setLoading(true);
@@ -131,7 +131,7 @@ export default function NewLease() {
       setTempPassword(res.meta?.tempPassword ?? "");
       setCreated(true);
     } catch (e: any) {
-      setErr(e.message || "Failed to create lease and provision account.");
+      setErr(e.message || translateLegacy("Failed to create lease and provision account."));
     } finally {
       setLoading(false);
     }

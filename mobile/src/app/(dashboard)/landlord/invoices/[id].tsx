@@ -8,10 +8,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { apiRequest, API_BASE } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import * as WebBrowser from "expo-web-browser";
-const formatVND = (n: number) => {
-  return new Intl.NumberFormat("vi-VN").format(n);
-};
-
+import { useI18n } from '@/i18n/I18nProvider';
 type LineItemView = {
   id: string;
   type: string;
@@ -48,6 +45,7 @@ export default function InvoiceDetail() {
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const { token } = useAuth();
+  const { formatDate, formatVnd, statusLabel, t } = useI18n();
   const insets = useSafeAreaInsets();
 
   const fetchDetail = useCallback(async () => {
@@ -74,7 +72,7 @@ export default function InvoiceDetail() {
     try {
       const res = (await apiRequest(`/invoices/${id}/send`, { method: "POST", token })) as any;
       setInvoice(res.data ?? res);
-      setToast("Invoice sent to tenant — a push notification was delivered.");
+      setToast(t('invoice.sentToast'));
       setTimeout(() => setToast(null), 4000);
     } catch (err) {
       console.error(err);
@@ -103,9 +101,9 @@ export default function InvoiceDetail() {
     return (
       <MobileFrame>
         <View style={{ flex: 1, backgroundColor: '#f5f8ff', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#64748b' }}>Invoice not found.</Text>
+          <Text style={{ color: '#64748b' }}>{t('invoice.notFound')}</Text>
           <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
-            <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Go back</Text>
+            <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>{t('common.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </MobileFrame>
@@ -145,7 +143,7 @@ export default function InvoiceDetail() {
                 <Text style={{ fontSize: 20, fontWeight: '800', color: 'white' }} numberOfLines={1}>{invoice.billingPeriod}</Text>
               </View>
               <View style={{ backgroundColor: getStatusBg(), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: 'white' }}>{invoice.status}</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: 'white' }}>{statusLabel(invoice.status)}</Text>
               </View>
             </View>
 
@@ -154,10 +152,10 @@ export default function InvoiceDetail() {
             </Text>
 
             <View style={{ marginTop: 16, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 16 }}>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Total amount</Text>
-              <Text style={{ fontSize: 32, fontWeight: '800', color: 'white', marginTop: 4 }}>{formatVND(invoice.totalAmount)}</Text>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{t('invoice.totalAmount')}</Text>
+              <Text style={{ fontSize: 32, fontWeight: '800', color: 'white', marginTop: 4 }}>{formatVnd(invoice.totalAmount)}</Text>
               <Text style={{ fontSize: 12, color: isOverdue() ? '#fca5a5' : 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-                Issued {invoice.issueDate} · due {invoice.dueDate}
+                {t('invoice.issuedDue', { issued: invoice.issueDate, due: invoice.dueDate })}
               </Text>
             </View>
           </View>
@@ -170,7 +168,7 @@ export default function InvoiceDetail() {
           )}
 
           <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-            <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 8 }}>Itemized breakdown</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 8 }}>{t('invoice.itemizedBreakdown')}</Text>
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
               {invoice.lineItems.map((it, idx) => (
                 <View key={it.id} style={{ padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderBottomWidth: idx === invoice.lineItems.length - 1 ? 0 : 1, borderBottomColor: '#f1f5f9' }}>
@@ -178,35 +176,35 @@ export default function InvoiceDetail() {
                     <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{it.type}</Text>
                     {it.description && <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{it.description}</Text>}
                   </View>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a', flexShrink: 0 }}>{formatVND(it.amount)}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a', flexShrink: 0 }}>{formatVnd(it.amount)}</Text>
                 </View>
               ))}
               <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>Total</Text>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#2563eb' }}>{formatVND(invoice.totalAmount)}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>{t('invoice.total')}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#2563eb' }}>{formatVnd(invoice.totalAmount)}</Text>
               </View>
             </View>
             <Text style={{ marginTop: 8, fontSize: 11, color: '#94a3b8', lineHeight: 16 }}>
-              Surcharges are snapshotted from the configuration effective for {invoice.billingPeriod}. Total is rounded to 2 decimals.
+              {t('invoice.surchargeSnapshot', { period: invoice.billingPeriod })}
             </Text>
           </View>
 
           <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
-              <Row icon={<Calendar size={16} color="#2563eb" />} label="Billing period" value={invoice.billingPeriod} />
+              <Row icon={<Calendar size={16} color="#2563eb" />} label={t('meter.billingPeriod')} value={invoice.billingPeriod} />
               <View style={{ height: 1, backgroundColor: '#f1f5f9' }} />
-              <Row icon={<FileSignature size={16} color="#2563eb" />} label="Lease" value={invoice.leaseId} />
+              <Row icon={<FileSignature size={16} color="#2563eb" />} label={t('invoice.lease')} value={invoice.leaseId} />
               {invoice.sentAt && (
                 <>
                   <View style={{ height: 1, backgroundColor: '#f1f5f9' }} />
-                  <Row icon={<Send size={16} color="#2563eb" />} label="Sent" value={`${new Date(invoice.sentAt).toLocaleDateString()}`} />
+                  <Row icon={<Send size={16} color="#2563eb" />} label={t('status.sent')} value={formatDate(invoice.sentAt)} />
                 </>
               )}
             </View>
           </View>
 
           <View style={{ paddingHorizontal: 24, marginTop: 32, gap: 12 }}>
-            {invoice.status !== "Draft" ? <TouchableOpacity onPress={() => router.push({ pathname: "/(dashboard)/landlord/invoices/[id]/vietqr", params: { id: invoice.id } } as any)} style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}><QrCode size={17} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>Preview tenant VietQR</Text></TouchableOpacity> : null}
+            {invoice.status !== "Draft" ? <TouchableOpacity onPress={() => router.push({ pathname: "/(dashboard)/landlord/invoices/[id]/vietqr", params: { id: invoice.id } } as any)} style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}><QrCode size={17} color="white" /><Text style={{ color: 'white', fontWeight: '700' }}>{t('invoice.previewTenantQr')}</Text></TouchableOpacity> : null}
             {invoice.status === "Draft" ? (
               <PrimaryButton
                 variant="primary"
@@ -216,13 +214,13 @@ export default function InvoiceDetail() {
                 {sending ? <ActivityIndicator color="#ffffff" /> : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Send size={16} color="white" />
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Review & send to tenant</Text>
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>{t('invoice.reviewSend')}</Text>
                   </View>
                 )}
               </PrimaryButton>
             ) : (
               <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center' }}>
-                Already sent — this invoice can be sent only once.
+                {t('invoice.sentOnce')}
               </Text>
             )}
 
@@ -231,14 +229,14 @@ export default function InvoiceDetail() {
               style={{ width: '100%', height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
             >
               <Download size={16} color="#0f172a" />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>Download PDF</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{t('invoice.downloadPdf')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push({ pathname: "/(dashboard)/landlord/leases/[id]", params: { id: invoice.leaseId } } as any)}
               style={{ width: '100%', alignItems: 'center', paddingVertical: 12 }}
             >
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2563eb' }}>Open lease record</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2563eb' }}>{t('invoice.openLease')}</Text>
             </TouchableOpacity>
           </View>
 

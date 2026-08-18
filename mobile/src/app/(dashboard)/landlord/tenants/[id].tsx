@@ -13,11 +13,13 @@ import {
 } from "../../../../features/leasing/api";
 import { useAuth } from "../../../../contexts/auth-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function TenantDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
@@ -52,10 +54,10 @@ export default function TenantDetail() {
   );
 
   async function submit() {
-    if (!form.fullName.trim()) return setErr("Name is required.");
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setErr("Enter a valid email.");
-    if (form.phone.trim().length < 8) return setErr("Enter a valid phone number.");
-    if (!form.idNumber.trim()) return setErr("ID number is required.");
+    if (!form.fullName.trim()) return setErr(t('tenantAdmin.nameRequired'));
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setErr(t('tenantAdmin.emailInvalid'));
+    if (form.phone.trim().length < 8) return setErr(t('tenantAdmin.phoneInvalid'));
+    if (!form.idNumber.trim()) return setErr(t('tenantAdmin.idRequired'));
 
     setErr(null);
     setNotice(null);
@@ -64,7 +66,7 @@ export default function TenantDetail() {
     try {
       const updated = await updateTenant(token, id, form);
       setTenant(updated);
-      setNotice("Saved. Login-identity changes will require the tenant to re-verify.");
+      setNotice(t('tenantAdmin.savedNotice'));
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -74,12 +76,12 @@ export default function TenantDetail() {
 
   function handleArchive() {
     Alert.alert(
-      "Archive Tenant",
-      "Are you sure you want to archive this tenant? Lease, invoice, payment, and audit history will be preserved.",
+      t('tenantAdmin.archiveTitle'),
+      t('tenantAdmin.archiveConfirm'),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         {
-          text: "Archive",
+          text: t('tenantAdmin.archive'),
           style: "destructive",
           onPress: async () => {
             try {
@@ -104,8 +106,8 @@ export default function TenantDetail() {
             </TouchableOpacity>
           </Link>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Tenant</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }} numberOfLines={1}>{tenant?.fullName || "Loading..."}</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('role.tenant')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }} numberOfLines={1}>{tenant?.fullName || t('tenantAdmin.loading')}</Text>
           </View>
         </View>
 
@@ -113,33 +115,33 @@ export default function TenantDetail() {
           {loading ? (
              <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
           ) : !tenant ? (
-             <Text style={{ textAlign: 'center', color: '#94a3b8', marginTop: 32 }}>Tenant not found.</Text>
+             <Text style={{ textAlign: 'center', color: '#94a3b8', marginTop: 32 }}>{t('tenantAdmin.notFound')}</Text>
           ) : (
             <View style={{ gap: 16 }}>
               {/* Field: Full Name */}
               <View>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>Full name</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>{t('tenantAdmin.fullName')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12 }}>
                   <User size={16} color="#94a3b8" style={{ marginRight: 8 }} />
                   <TextInput
                     style={{ flex: 1, fontSize: 15, color: '#0f172a' }}
                     value={form.fullName}
                     onChangeText={(t) => setForm({ ...form, fullName: t })}
-                    placeholder="Enter full name"
+                    placeholder={t('tenantAdmin.enterFullName')}
                   />
                 </View>
               </View>
 
               {/* Field: Email */}
               <View>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>Email</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>{t('tenantAdmin.email')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12 }}>
                   <Mail size={16} color="#94a3b8" style={{ marginRight: 8 }} />
                   <TextInput
                     style={{ flex: 1, fontSize: 15, color: '#0f172a' }}
                     value={form.email}
                     onChangeText={(t) => setForm({ ...form, email: t })}
-                    placeholder="Enter email"
+                    placeholder={t('tenantAdmin.enterEmail')}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
@@ -148,14 +150,14 @@ export default function TenantDetail() {
 
               {/* Field: Phone */}
               <View>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>Phone (login username)</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>{t('tenantAdmin.phoneLogin')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12 }}>
                   <Phone size={16} color="#94a3b8" style={{ marginRight: 8 }} />
                   <TextInput
                     style={{ flex: 1, fontSize: 15, color: '#0f172a' }}
                     value={form.phone}
                     onChangeText={(t) => setForm({ ...form, phone: t })}
-                    placeholder="Enter phone number"
+                    placeholder={t('tenantAdmin.enterPhone')}
                     keyboardType="phone-pad"
                   />
                 </View>
@@ -163,14 +165,14 @@ export default function TenantDetail() {
 
               {/* Field: ID Number */}
               <View>
-                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>ID number</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6 }}>{t('tenantAdmin.idNumber')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12 }}>
                   <IdCard size={16} color="#94a3b8" style={{ marginRight: 8 }} />
                   <TextInput
                     style={{ flex: 1, fontSize: 15, color: '#0f172a' }}
                     value={form.idNumber}
                     onChangeText={(t) => setForm({ ...form, idNumber: t })}
-                    placeholder="Enter ID number"
+                    placeholder={t('tenantAdmin.enterIdNumber')}
                   />
                 </View>
               </View>
@@ -178,7 +180,7 @@ export default function TenantDetail() {
               <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 12, flexDirection: 'row', gap: 8 }}>
                 <ShieldCheck size={16} color="#2563eb" style={{ marginTop: 2 }} />
                 <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
-                  Changing the phone also updates the tenant's login username. Email changes do not imply a completed verification step.
+                  {t('tenantAdmin.phoneNotice')}
                 </Text>
               </View>
 
@@ -187,7 +189,7 @@ export default function TenantDetail() {
 
               <View style={{ marginTop: 8 }}>
                 <PrimaryButton onPress={submit} disabled={submitting}>
-                  {submitting ? "Saving..." : "Save changes"}
+                  {submitting ? t('profile.saving') : t('profile.saveChanges')}
                 </PrimaryButton>
               </View>
 
@@ -196,10 +198,10 @@ export default function TenantDetail() {
                 style={{ marginTop: 16, width: '100%', height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
                 <Archive size={16} color="#ef4444" />
-                <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '600' }}>Archive tenant relationship</Text>
+                <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '600' }}>{t('tenantAdmin.archive')}</Text>
               </TouchableOpacity>
               <Text style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 8, paddingHorizontal: 16 }}>
-                Archiving is a soft-delete. Lease, invoice, payment, and audit history are preserved.
+                {t('tenantAdmin.archiveHistory')}
               </Text>
 
             </View>

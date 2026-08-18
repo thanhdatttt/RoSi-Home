@@ -15,6 +15,7 @@ import {
   type LeaseView,
   type UpdateLeaseInput,
 } from "../../../../features/leasing/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const formatVND = (n: number) => {
   if (n == null || isNaN(n)) return '0';
@@ -56,6 +57,7 @@ export default function LeaseDetail() {
   const { token } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { language, formatDate, statusLabel, translateLegacy } = useI18n();
 
   const [lease, setLease] = useState<LeaseView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ export default function LeaseDetail() {
       setLease(data);
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Could not load lease.");
+      Alert.alert(translateLegacy("Error"), translateLegacy("Could not load lease."));
     } finally {
       setLoading(false);
     }
@@ -119,10 +121,10 @@ export default function LeaseDetail() {
     try {
       let body: UpdateLeaseInput;
       if (kind === "edit") {
-        if (!end) throw new Error("End date is required.");
+        if (!end) throw new Error(translateLegacy("End date is required."));
         body = { endDate: end, agreedRent: Number(getRawNumber(rent)), deposit: Number(getRawNumber(deposit)) };
       } else {
-        if (!start || !end) throw new Error("Start and end date are required.");
+        if (!start || !end) throw new Error(translateLegacy("Start and end date are required."));
         body = { renewalStartDate: start, renewalEndDate: end, agreedRent: Number(getRawNumber(rent)), deposit: Number(getRawNumber(deposit)) };
       }
 
@@ -130,9 +132,11 @@ export default function LeaseDetail() {
 
       setLease(updated);
       setMode("view");
-      setToast(kind === "renew" ? "Lease renewed. Tenant can now see the updated period." : "Lease updated.");
+      setToast(kind === "renew"
+        ? (language === "vi" ? "Đã gia hạn hợp đồng. Người thuê hiện có thể xem thời hạn mới." : "Lease renewed. Tenant can now see the updated period.")
+        : translateLegacy("Lease updated."));
     } catch (e: any) {
-      setErr(e.message || "An error occurred");
+      setErr(e.message || translateLegacy("An error occurred"));
     } finally {
       setSaving(false);
     }
@@ -141,7 +145,7 @@ export default function LeaseDetail() {
   const endLease = async () => {
     if (!token || !lease) return;
     if (!actualEnd) {
-      setErr("Actual end date is required.");
+      setErr(translateLegacy("Actual end date is required."));
       return;
     }
     setSaving(true);
@@ -150,9 +154,11 @@ export default function LeaseDetail() {
       const updated = await endLeaseRequest(token, lease.id, actualEnd);
       setLease(updated);
       setMode("view");
-      setToast(`Lease ended. ${lease.roomName} is now Vacant.`);
+      setToast(language === "vi"
+        ? `Đã kết thúc hợp đồng. Phòng ${lease.roomName} hiện đang trống.`
+        : `Lease ended. ${lease.roomName} is now Vacant.`);
     } catch (e: any) {
-      setErr(e.message || "An error occurred");
+      setErr(e.message || translateLegacy("An error occurred"));
     } finally {
       setSaving(false);
     }
@@ -179,11 +185,11 @@ export default function LeaseDetail() {
                 <ArrowLeft size={16} color="white" />
               </TouchableOpacity>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Lease {lease.id.substring(0,8)}</Text>
-                <Text style={{ fontSize: 20, fontWeight: '800', color: 'white', marginTop: 2 }} numberOfLines={1}>{lease.tenant?.fullName || "Unknown Tenant"}</Text>
+                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>{translateLegacy("Lease ")}{lease.id.substring(0,8)}</Text>
+                <Text style={{ fontSize: 20, fontWeight: '800', color: 'white', marginTop: 2 }} numberOfLines={1}>{lease.tenant?.fullName || translateLegacy("Unknown Tenant")}</Text>
               </View>
               <View style={{ backgroundColor: lease.status === "Active" ? '#60a5fa' : 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                <Text style={{ fontSize: 10, fontWeight: 'bold', color: lease.status === "Active" ? '#0f172a' : 'white' }}>{lease.status}</Text>
+                <Text style={{ fontSize: 10, fontWeight: 'bold', color: lease.status === "Active" ? '#0f172a' : 'white' }}>{statusLabel(lease.status)}</Text>
               </View>
             </View>
             <View style={{ marginTop: 20, flexDirection: 'row', gap: 8 }}>
@@ -205,19 +211,19 @@ export default function LeaseDetail() {
                 <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
                   <Row icon={<DoorOpen size={16} color="#2563eb" />} label="Property · Room" value={`${lease.propertyName} · ${lease.roomName}`} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<Calendar size={16} color="#2563eb" />} label="Lease period" value={`${lease.startDate} → ${lease.endDate}`} />
+                  <Row icon={<Calendar size={16} color="#2563eb" />} label={translateLegacy("Lease period")} value={`${formatDate(lease.startDate)} → ${formatDate(lease.endDate)}`} />
                   {lease.actualEndDate && (
                     <>
                       <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                      <Row icon={<LogOut size={16} color="#2563eb" />} label="Actual end date" value={lease.actualEndDate} />
+                      <Row icon={<LogOut size={16} color="#2563eb" />} label={translateLegacy("Actual end date")} value={formatDate(lease.actualEndDate)} />
                     </>
                   )}
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<User size={16} color="#2563eb" />} label="Tenant contact" value={lease.tenant?.phone || "N/A"} />
+                  <Row icon={<User size={16} color="#2563eb" />} label={translateLegacy("Tenant contact")} value={lease.tenant?.phone || translateLegacy("N/A")} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<ShieldCheck size={16} color="#2563eb" />} label="Room status" value={lease.status === "Active" ? "Occupied (derived)" : "Vacant (derived)"} />
+                  <Row icon={<ShieldCheck size={16} color="#2563eb" />} label={translateLegacy("Room status")} value={translateLegacy(lease.status === "Active" ? "Occupied (derived)" : "Vacant (derived)")} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<Wallet size={16} color="#2563eb" />} label="Last updated" value={new Date(lease.updatedAt).toLocaleDateString()} />
+                  <Row icon={<Wallet size={16} color="#2563eb" />} label={translateLegacy("Last updated")} value={formatDate(lease.updatedAt)} />
                 </View>
               </View>
 
@@ -259,7 +265,7 @@ export default function LeaseDetail() {
                 <View style={{ flex: 1 }}><Field label="Agreed rent" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(rent)} onChangeText={setRent} keyboardType="numeric" /></View>
                 <View style={{ flex: 1 }}><Field label="Deposit" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(deposit)} onChangeText={setDeposit} keyboardType="numeric" /></View>
               </View>
-              <Text style={{ fontSize: 11, color: '#94a3b8' }}>Periods are checked against other leases for {lease.roomName} — overlaps are rejected.</Text>
+              <Text style={{ fontSize: 11, color: '#94a3b8' }}>{language === "vi" ? `Thời hạn được đối chiếu với các hợp đồng khác của ${lease.roomName}; các khoảng trùng lặp sẽ bị từ chối.` : `Periods are checked against other leases for ${lease.roomName} — overlaps are rejected.`}</Text>
 
               {err && <Text style={{ fontSize: 12, color: '#ef4444' }}>{err}</Text>}
 
