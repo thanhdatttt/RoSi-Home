@@ -52,13 +52,48 @@ export type ApiErrorPayload = {
   error?: { code?: string; message?: string; fields?: ApiFieldError[] };
 };
 
+export type ApiErrorLanguage = 'en' | 'vi';
+
+let apiErrorLanguage: ApiErrorLanguage = 'en';
+
+export function setApiErrorLanguage(language: ApiErrorLanguage) {
+  apiErrorLanguage = language;
+}
+
+function localizedApiErrorMessage(status: number, message: string, code?: string) {
+  const vi = apiErrorLanguage === 'vi';
+
+  if (status === 0 && message === 'Request timed out.') {
+    return vi ? 'Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.' : 'Request timed out. Please try again.';
+  }
+  if (status === 0) {
+    return vi ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.' : 'Unable to connect to the server. Check your network and try again.';
+  }
+
+  const knownMessages: Record<string, [string, string]> = {
+    UNAUTHENTICATED: ['Your session has expired. Please sign in again.', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'],
+    FORBIDDEN: ['You do not have permission to perform this action.', 'Bạn không có quyền thực hiện thao tác này.'],
+    NOT_FOUND: ['The requested item could not be found.', 'Không tìm thấy thông tin bạn yêu cầu.'],
+    VALIDATION_ERROR: ['Please check the entered information and try again.', 'Vui lòng kiểm tra lại thông tin đã nhập.'],
+    CONFLICT: ['This action conflicts with the current data. Please refresh and try again.', 'Thao tác xung đột với dữ liệu hiện tại. Vui lòng tải lại và thử lại.'],
+    INTERNAL_ERROR: ['The server encountered an error. Please try again later.', 'Máy chủ gặp lỗi. Vui lòng thử lại sau.'],
+  };
+  const known = code ? knownMessages[code] : undefined;
+  if (known) return vi ? known[1] : known[0];
+
+  if (status >= 500) {
+    return vi ? 'Máy chủ gặp lỗi. Vui lòng thử lại sau.' : 'The server encountered an error. Please try again later.';
+  }
+  return message;
+}
+
 export class ApiRequestError extends Error {
   readonly status: number;
   readonly code?: string;
   readonly fields?: ApiFieldError[];
 
   constructor(status: number, message: string, payload?: ApiErrorPayload) {
-    super(message);
+    super(localizedApiErrorMessage(status, message, payload?.error?.code));
     this.name = 'ApiRequestError';
     this.status = status;
     this.code = payload?.error?.code;

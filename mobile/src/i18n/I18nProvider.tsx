@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Storage } from '@/lib/api';
+import { setApiErrorLanguage, Storage } from '@/lib/api';
 import { messages, type AppLanguage, type TranslationKey } from './messages';
 import { translateLegacy } from './legacy';
 
@@ -44,6 +44,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    setApiErrorLanguage(language);
+  }, [language]);
+
   const value = useMemo<I18nContextValue>(() => {
     const locale = language === 'vi' ? 'vi-VN' : 'en-US';
     const t = (key: TranslationKey, values?: Interpolation) => interpolate(messages[language][key], values);
@@ -64,7 +68,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
           draft: 'status.draft', occupied: 'status.occupied', vacant: 'status.vacant',
           pending: 'status.pending', inprogress: 'status.inProgress', completed: 'status.completed',
           electricity: 'status.electricity', water: 'status.water', sent: 'status.sent', paid: 'status.paid',
-          all: 'status.all', active: 'status.active',
+          all: 'status.all', active: 'status.active', ended: 'status.ended',
         };
         const key = status ? status.replace(/[^a-z]/gi, '').toLowerCase() : '';
         return statusKeys[key] ? t(statusKeys[key]) : status ?? '';
