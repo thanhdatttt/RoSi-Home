@@ -89,11 +89,11 @@ export default function Profile() {
             />
             <View style={{ marginTop: 16 }}>
               <Field
-                label={t('profile.email')}
+                label={t(user?.role === 'Tenant' ? 'profile.contactEmail' : 'profile.email')}
                 value={email}
                 readOnly
                 icon={<Mail size={16} color="gray" />}
-                hint={t('profile.emailHint')}
+                hint={t(user?.role === 'Tenant' ? 'profile.tenantEmailHint' : 'profile.emailHint')}
               />
             </View>
             <View style={{ marginTop: 16 }}>
