@@ -1,659 +1,467 @@
-# Risk Management Plans
+# Risk Management Plan — RosiHome
 
-### Risk Management Plan: RP-01 — Academic Workload Reduces Availability
+## 1. Risk Scales
 
-**1. Objectives (The "Why")**
-- Deliver the MVP within the 8–10 week window without sacrificing quality or deferring demo-day commitments.
+| Probability Band | Label | Range | Score |
+|---|---|---|---|
+| Improbable | Very Low | 0% – 20% | 1 |
+| Unlikely | Low | 21% – 40% | 2 |
+| Likely | Medium | 41% – 60% | 3 |
+| Very Likely | High | 61% – 80% | 4 |
+| Nearly Certain | Extreme | 81% – 100% | 5 |
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Reviewed daily at stand-up
-  1. Daily stand-up log
-  2. Sprint burndown (per batch)
-  3. Scope cut list if velocity drops.
+| Impact Band | Label | Budget/Schedule Slip | Score |
+|---|---|---|---|
+| Slightly harmful | Minor | < 10% | 1 |
+| Harmful | Moderate | 10% – 30% | 2 |
+| Extremely harmful | Severe | 31% – 60% | 3 |
+| Catastrophic | Critical | > 60% | 4 |
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM monitors velocity: Tasks 1, 2, 3
-- all five members report blockers and availability changes: Support of tasks 1
-
-**4. Approach (The "How")**
-- Maintain 8–10 week range as the schedule baseline
-- Treat Week 10 as contingency, not automatic additional scope. Daily 10-minute async stand-up. Rebalance assignments when a member signals reduced availability. Cut non-essential stories (notifications, PDF export, analytics) before cutting the deadline.
-
-**5. Resources (The "How Much")**
-- ~50,000 VND in coordination overhead within existing budget.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — common in student teams, exams/coursework overlap the project.
-- Severity: **Harmful** (2) — buffer week absorbs it, but repeated hits compress the schedule.
-- Risk Score: **3 × 2 = 6 — Substantial risk**
-- Time of Occurrence: any week, peak risk around exam periods (~Weeks 4–7).
-- Warning Signs: a member misses 2+ consecutive stand-ups; sprint velocity drops >20% for 2 sprints in a row; recurring "reduced availability" notes in the blocker log.
+> **Risk Score** = Probability Score (1–5) × Impact Score (1–4)
+> 
+> **Note on Impact Score:** The final Impact Score is determined by the *higher* of the Budget Slip or Schedule Slip percentages.
+> 
+> **Risk Level:** 1–3 Tolerable · 4–5 Moderate · 6–11 Substantial · 12–20 Critical
 
 ---
 
-### Risk Management Plan: RP-02 — React Native Mobile Overrun
-
-**1. Objectives (The "Why")**
-- Keep mobile delivery within the planned 2-batch FE window (Weeks 3–8) without blocking system integration testing.
-
-**2. Deliverables and Milestones (The "What" and "When")**
-- Walking skeleton: end of Week 5. Walking-skeleton mobile app (login → invoice view → QR) by end of FE Batch 1
-- fully integrated: end of Week 8. Feature-complete by FE Batch 3.
-
-**3. Responsibilities (The "Who" and "Where")**
-- FE1 (MXH) and FE2 (Quân): Tasks 1, 2
-- PM monitors weekly: Support of tasks 1
-
-**4. Approach (The "How")**
-- Build a thin end-to-end vertical slice in the first FE sprint to surface React Native/Expo surprises early. Use AI tools to scaffold screens from the shared design system. Reuse API business logic via the shared REST API. Begin UI scaffolding in parallel with BE Batch 1 using agreed contracts.
-
-**5. Resources (The "How Much")**
-- ~80,000 VND in extra planning within existing budget.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — team is new to RN/Expo but has a vertical-slice safety net.
-- Severity: **Harmful** (2) — would block integration testing if it slips.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: Weeks 3–8 (FE build window).
-- Warning Signs: walking skeleton not done by end of Week 5; recurring Expo/RN build errors blocking work >2 days; FE velocity below plan at Batch 1 close.
+## 2. Risk Items
 
 ---
 
-### Risk Management Plan: RP-03 — Frontend Critical-Path Bottleneck
+### RP-01 — Academic Workload Reduces Availability
 
-**1. Objectives (The "Why")**
-- Prevent the sequential BE-leads-FE batch model from creating a frontend backlog that delays MVP candidate status.
+**Description**
+The team consists of full-time students. When midterms or final projects hit, everyone will be busy at the same time, meaning we will write less code and fall behind schedule.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- FE Batch 1 integrated: Week 5. Integrated and verified FE batch per batch boundary (not "all FE at once").
+**Mitigation & Contingency**
+- **Mitigation:** We planned an 8–10 week schedule but intentionally left Week 10 empty as a buffer. We also hold weekly meetings to check everyone's availability and shift tasks if someone is slammed with exams.
+- **Contingency:** If we burn through the buffer and are still behind, the team will have to work overtime and put in extra hours on the weekends. If that's not enough, we will cut a "nice-to-have" feature (like advanced reporting) to make sure the core app is finished.
 
-**3. Responsibilities (The "Who" and "Where")**
-- FE1 (MXH), FE2 (Quân): Tasks 1
-- Batch integration owner appointed at each boundary: Support of tasks 1
-
-**4. Approach (The "How")**
-- Build shared UI components and navigation during BE Batch 1 (FE pre-work). Define API contracts before BE implementation so FE can use mocks. Integrate each batch rather than building all FE screens then integrating all at once.
-
-**5. Resources (The "How Much")**
-- No additional cash cost
-- Need time management discipline.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — structural consequence of the sequential BE→FE model.
-- Severity: **Harmful** (2) — delays MVP candidate status but doesn't stop the project.
-- Risk Score: **3 × 2 = 6 — Substantial risk**
-- Time of Occurrence: each batch boundary (Weeks 2, 4, 6, 8).
-- Warning Signs: FE backlog size growing batch-over-batch; a batch not integrated by its boundary date; FE velocity trailing BE velocity by >30%.
+**Risk Exposure**
+Without a buffer or extra hours, an academic crunch will severely delay the project.
+- **Max Slip:** ~30–50% schedule slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Severe (3)**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-04 — Cross-Module API/Schema Conflict
+### RP-02 — React Native Mobile Overrun
 
-**1. Objectives (The "Why")**
-- Prevent merge conflicts and rework caused by incompatible schema or API changes, especially across the three non-overlapping BE domains (Chí: auth/lease, Dat: property/meter/invoice, Minh: maintenance/payment/report).
+**Description**
+The frontend developers (2 people) are learning React Native and Expo for the first time. Fighting with unknown tools usually causes weird build errors that take days to fix.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Contract agreement completed before each batch starts (before Weeks 2, 4, 6, 8).
-  1. Pre-batch API and data contract agreements
-  2. Mandatory affected-owner PR review for shared schema changes.
+**Mitigation & Contingency**
+- **Mitigation:** We will build a very thin, end-to-end "vertical slice" in the very first sprint just to see if Expo throws any surprises. We will also use AI tools to quickly generate the boring UI layouts so we can focus on the hard logic.
+- **Contingency:** If Expo is still causing massive blocking issues by Week 4, we will abandon the mobile app and just build a mobile-friendly web app (PWA) so we actually have something to show on demo day.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Batch integration owner (named per batch per Project Plan): Tasks 1, 2
-- PM resolves conflicts: Support of tasks 1
-
-**4. Approach (The "How")**
-- Hold a pre-batch contract meeting
-- Document API contracts and Drizzle schema changes in the PR before merge
-- All changes to shared database tables require approval from every affected module owner. Use separate feature branches/worktrees per story to isolate merge conflicts.
-
-**5. Resources (The "How Much")**
-- ~60,000 VND in planning meeting effort within budget.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — mitigated by pre-batch contract meetings, but 3 independent BE owners create exposure.
-- Severity: **Harmful** (2) — causes rework and merge delays, not a project blocker.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: start of each batch (Weeks 2, 4, 6, 8).
-- Warning Signs: a schema PR rejected by an affected owner; >1 shared-migration merge conflict per week; a pre-batch contract meeting skipped or held without all owners.
+**Risk Exposure**
+If we don't test the tools early, we might get stuck with unfixable bugs right before the deadline.
+- **Max Slip:** ~30–40% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Severe (3)**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-05 — Over-Reliance on AI-Generated Code
+### RP-03 — Frontend Waiting on Backend
 
-**1. Objectives (The "Why")**
-- Ensure every merged story meets the Universial Definition of Done, including authorization, ownership, and security requirements, regardless of whether code was AI-generated.
+**Description**
+Because the frontend needs the backend APIs to work, the 2 frontend developers might be stuck waiting around with nothing to do if the 3 backend developers fall behind.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Review policy in place before Batch 1 coding begins.
-  1. PR review checklist
-  2. Author explanation of business/security logic
-  3. CI test coverage.
+**Mitigation & Contingency**
+- **Mitigation:** The frontend team will build shared UI components (buttons, nav bars) while waiting. The backend team will also agree on what the API responses will look like early on, so the frontend can use "fake" mock data to keep working.
+- **Contingency:** If the backend is severely delayed, we will completely drop secondary screens (like detailed tenant profiles) and only focus on making sure the rent payment flow works perfectly.
 
-**3. Responsibilities (The "Who" and "Where")**
-- All five developers: Tasks 1, 2, 3
-- Reviewer is always a non-author: Support of tasks 1
-
-**4. Approach (The "How")**
-- Every PR must include: author comment explaining business or security logic, non-author reviewer approval, automated tests covering the main success and authorization paths. Follow the project plan's Implementation Procedure. Weekly team code walkthrough for complex modules.
-
-**5. Resources (The "How Much")**
-- No additional cash cost
-- Built into team review overhead (~25% of capacity per resource baseline).
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — heavy AI-assisted coding across all five members.
-- Severity: **Harmful** (2) — could ship security/authorization defects.
-- Risk Score: **3 × 2 = 6 — Substantial risk**
-- Time of Occurrence: continuous, from Batch 1 onward.
-- Warning Signs: a PR merged without non-author review; missing author explanation comment on a PR; CI security/authorization test coverage falling below target.
+**Risk Exposure**
+If frontend is completely blocked, all their work gets crammed into the final two weeks.
+- **Max Slip:** ~35–50% schedule slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Severe (3)**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-06 — Cron/Email/Push/PDF Infrastructure Unavailable
+### RP-04 — Database Schema Conflicts
 
-**1. Objectives (The "Why")**
-- Prevent Batch 3 (INVOICE-01, VIETQR-02, REMINDER-01/02) and Batch 4 (REPORT-05 PDF export) from being blocked by an unready external integration.
+**Description**
+We have 3 backend engineers all touching the same PostgreSQL database. If two people change the way tables link together without telling each other, the code will break when we try to merge it.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Interface definitions: before Batch 2 ends (Week 5)
-  1. Provider interface definitions
-  2. Development adapters (stubs)
-  3. End-to-end tests with real providers before batch acceptance.
+**Mitigation & Contingency**
+- **Mitigation:** Before writing code, the backend team will agree on exactly what database tables will change. Every pull request that changes the database must be reviewed by the other backend devs before it can be merged.
+- **Contingency:** If a bad database change gets merged and breaks things, we will immediately revert the code, jump on a meeting call, and fix the tables together.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Dev 4 (Security and external-service foundation owner per assignments): Tasks 1, 2, 3
-- Dev 5 (PDF generation interface owner): Support of tasks 1
-
-**4. Approach (The "How")**
-- Define provider interfaces early (Batch 0)
-- Implement development adapters so stories can be coded and tested without live external services
-- Validate real provider integration (Email, Expo push, Render cron) before Batch 3 stories reach the Done state.
-
-**5. Resources (The "How Much")**
-- No additional cash cost
-- Interface design is included in existing story effort estimates.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — mitigated by stub adapters, but real third-party services are outside team control.
-- Severity: **Harmful** (2) — blocks specific batches, not the whole project.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: before Batch 3 (~Week 6) and Batch 4 (~Week 8).
-- Warning Signs: stub adapters not ready by Batch 2 close; provider sandbox/account not verified; end-to-end test against a real provider fails.
+**Risk Exposure**
+Messing up the database structure requires throwing away and rewriting a lot of code.
+- **Max Slip:** ~30–40% rework slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Severe (3)**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-07 — Unclear or Shifting Requirements
+### RP-05 — Over-Reliance on AI Code
 
-**1. Objectives (The "Why")**
-- Prevent mid-batch rework caused by unresolved product decisions or late landlord feedback.
+**Description**
+Everyone on the team uses AI tools (like Copilot or ChatGPT). AI can confidently write code that looks correct but actually has huge security flaws, especially around who is allowed to see what data.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Batch-level readiness review at each batch kickoff
-  1. All "Needs Clarification" items resolved before their batch
-- Change log maintained continuously.
-  1. change request log.
+**Mitigation & Contingency**
+- **Mitigation:** You can't just copy-paste AI code and merge it. Developers must cross-check the AI's functionality against the acceptance criteria in the product backlog. We also require manual testing, automated tests, and GitHub is configured to require at least one contributor approval before a branch can be merged.
+- **Contingency:** If bad AI code manages to bypass the GitHub Actions and manual reviews to reach the main branch, we will immediately fix the logic in the very next commit.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM manages resolution: Tasks 1, 2
-- Landlord representative reviews and approves: Support of tasks 1
-
-**4. Approach (The "How")**
-- Hold a pre-batch readiness review
-- Resolve "Needs Clarification" items using experience and bounded assumptions documented in the backlog decision record
-- Formal change request for any post-sign-off additions.
-
-**5. Resources (The "How Much")**
-- ~60,000 VND in interview/workshop effort.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — classic top risk per "Software Risk Check List" (Unclear requirements, Too many requirement changes).
-- Severity: **Harmful** (2) — causes rework, not project failure.
-- Risk Score: **3 × 2 = 6 — Substantial risk**
-- Time of Occurrence: each batch kickoff.
-- Warning Signs: >2 "Needs Clarification" items still open at batch kickoff; landlord feedback contradicts an earlier sign-off; change-request log growing faster than usual.
+**Risk Exposure**
+Trusting AI blindly can lead to massive security bugs that ruin the whole app architecture.
+- **Max Slip:** ~35–50% rework slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Severe (3)**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-08 — Scope Creep
+### RP-06 — Third-Party Services Fail or Block Us
 
-**1. Objectives (The "Why")**
-- Protect the 8–10 week timeline by restricting work to the approved scope.
+**Description**
+Later in the project, we need external tools for emails, push notifications, and generating PDFs. If we can't figure out how to set them up, we can't finish those features.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Scope freeze from Day 1
-  1. Frozen MVP backlog
-  2. "Later" feature list
-  3. Change request log.
+**Mitigation & Contingency**
+- **Mitigation:** We will build the code using "fake" stubs first (so the app acts like it sent an email, even if it didn't) to keep development moving. We will test the real external services early to make sure they actually work.
+- **Contingency:** If a service like the email provider is completely broken on Demo Day, we will just use our fake stubs so the app still looks like it's working during the presentation.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM enforces: Tasks 1, 2, 3
-- Requires Sponsor approval for any baseline change: Support of tasks 1
-
-**4. Approach (The "How")**
-- Any feature idea not in the approved backlog goes to the "later" list
-- Formal change request required per Project Plan and SOW.
-- No feature is implemented without team consensus and Sponsor approval.
-
-**5. Resources (The "How Much")**
-- No additional cash cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — process control (scope freeze + sponsor gate) reduces frequency.
-- Severity: **Extremely harmful** (3) — if it slips through, it directly threatens the fixed timeline.
-- Risk Score: **2 × 3 = 6 — Substantial risk**
-- Time of Occurrence: any time after Day 1, peak risk near demo day as team feels pressure to "add one more thing."
-- Warning Signs: a feature request bypasses the "later" list; a PR contains functionality outside the frozen backlog; Sponsor is asked to approve an unplanned demo feature late in the schedule.
+**Risk Exposure**
+Getting stuck trying to configure a broken email server wastes days of coding time.
+- **Max Slip:** ~30–45% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Severe (3)**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-09 — Batch Owner Unavailability (Knowledge Silo)
+### RP-07 — Landlords Change Their Minds
 
-**1. Objectives (The "Why")**
-- Prevent a single team member's unavailability from blocking an entire domain batch.
+**Description**
+When we show the app to landlords, they might suddenly ask for things to work differently, forcing us to throw away code we already wrote.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Documentation current per story
-  1. Module documentation wiki
-- Backup owners assigned before started
-  1. Backup owner matrix
-- Cross-training by Week 3.
-  1. Cross-review logs.
+**Mitigation & Contingency**
+- **Mitigation:** Before we start coding a new feature, the team will make sure we fully understand what the landlord actually needs.
+- **Contingency:** If a landlord demands a big change after we've already built it, the Project Manager will politely say no and promise to put it in "Version 2.0," protecting our current deadline.
 
-**3. Responsibilities (The "Who" and "Where")**
-- All team members: Tasks 1, 2, 3
-- PM assigns backup owners before batch start: Support of tasks 2
-
-**4. Approach (The "How")**
-- Atomic commits with meaningful messages
-- Mandatory PR cross-review (reviewer must be from a different domain)
-- PM maintains a backup owner matrix
-- Each member documents their module's API, migration, and business logic before the next batch starts.
-
-**5. Resources (The "How Much")**
-- No additional cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — cross-training and backup-owner assignment reduce likelihood.
-- Severity: **Harmful** (2) — can stall one domain's batch, mitigated by backups.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: any batch boundary.
-- Warning Signs: module documentation not updated for >1 week; no backup owner assigned before a batch starts; single-author commit share >80% in a module.
+**Risk Exposure**
+Constantly rewriting code to chase changing opinions will destroy our schedule.
+- **Max Slip:** ~30–45% schedule slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Severe (3)**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-10 — AI Token Quota Exhausted or Plan Expires
+### RP-08 — Scope Creep
 
-**1. Objectives (The "Why")**
-- Maintain AI-assisted development velocity throughout all four batches.
+**Description**
+As the app starts to look good, people will get excited and want to add fun new features that aren't in the original plan.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Weekly review: Weekly AI usage tracking report
-- Alert at 80% of each cohort's budget spend alert thresholds configured.
+**Mitigation & Contingency**
+- **Mitigation:** We are freezing the scope on Day 1. Any cool new idea goes straight onto a "do it later" list. The PM's job is to enforce this rule strictly every week.
+- **Contingency:** If a new feature is absolutely necessary, we will try to swap it by dropping an old feature. If no old features can be dropped because they are all critical, the team must authorize emergency overtime.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM monitors: Tasks 1, 2
-- Each developer tracks their own cohort usage: Support of tasks 1
-
-**4. Approach (The "How")**
-- Monitor usage weekly.
-- Use lower-cost model tiers (Gemini Flash, Claude Haiku) for routine CRUD stories
-- Reserve premium models for complex stories
-- The contingency reserve covers moderate API overruns.
-
-**5. Resources (The "How Much")**
-- 500,000 VND contingency reserve already budgeted.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — usage tracking + tiered model strategy reduce likelihood.
-- Severity: **Harmful** (2) — slows velocity but contingency reserve absorbs cost.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: any week; cumulative exposure increases toward project end.
-- Warning Signs: 80%-of-budget alert triggers for any cohort; unexpected spike in premium-model calls; a developer reports quota-exceeded errors.
+**Risk Exposure**
+If we keep adding features, the app will never be finished in time for the deadline.
+- **Max Slip:** > 60% schedule slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Catastrophic (4)**
+- **Risk Score: 4 × 4 = 16 — Critical**
 
 ---
 
-### Risk Management Plan: RP-11 — Insufficient Pilot Landlords for UAT
+### RP-09 — Knowledge Silos
 
-**1. Objectives (The "Why")**
-- Confirm that the MVP satisfies real landlord workflows with at least 3 pilot participants before the final demonstration.
+**Description**
+With 3 backend developers, it's easy for one person to become the only one who understands a specific part of the code. If they get sick or drop out, no one else knows how to finish their work.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Begin outreach Week 1
-  1. Landlord recruitment list
-  2. UAT session notes
-  3. Consent forms.
+**Mitigation & Contingency**
+- **Mitigation:** We require cross-reviewing code, but our primary defense is using AI codebase-scanning tools (like Cursor or Claude) to quickly read and explain any unfamiliar code written by someone else, making knowledge transfer almost instant.
+- **Contingency:** If a developer vanishes, another backend dev will take over their tasks immediately, using AI to quickly summarize their recent commits and get up to speed in hours instead of days.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM leads: Tasks 1, 2, 3
-- All team members contribute via personal networks: Support of tasks 1
-
-**4. Approach (The "How")**
-- Reach out immediately via personal contacts
-- Post in social landlord groups
-- Engage local boarding-house communities
-- Do not wait for the app to be finished before starting outreach.
-
-**5. Resources (The "How Much")**
-- No cash cost
-- PM time.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — early, multi-channel outreach reduces likelihood but recruitment is inherently uncertain.
-- Severity: **Extremely harmful** (3) — without real UAT, MVP validity and demo credibility are undermined.
-- Risk Score: **2 × 3 = 6 — Substantial risk**
-- Time of Occurrence: ongoing from Week 1, critical by Week 6.
-- Warning Signs: fewer than 3 landlords committed by Week 3; no outreach responses after 2 weeks; consent forms not returned by prospective participants.
+**Risk Exposure**
+Losing the only person who knows how the payment code works will bring the project to a halt.
+- **Max Slip:** ~30–40% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Severe (3)**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-12 — VietQR Format Incorrect or Changed
+### RP-10 — AI Token Limits Exhausted
 
-**1. Objectives (The "Why")**
-- Ensure the payment QR code parses correctly in all major Vietnamese banking apps.
+**Description**
+If the team uses AI heavily for coding, they might hit their monthly message limits on tools like Claude or ChatGPT, suddenly slowing down their coding speed.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- QR integration tested before VIETQR-02 is marked Done (Batch 3, Week 6).
-  1. VietQR format test suite
-  2. Banking app compatibility list (Vietcombank, Techcombank, MBBank).
+**Mitigation & Contingency**
+- **Mitigation:** Developers should pace their usage and use lighter AI models for simple questions to save their limits for the hard stuff.
+- **Contingency:** If a developer runs out of premium AI access, they must switch to free tiers (like Gemini or the free ChatGPT) and just deal with the slower workflow.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Dev 3 (Minh — payment module owner): Tasks 1, 2
-
-**4. Approach (The "How")**
-- Implement strictly against VietQR/NAPAS official documentation
-- Include automated QR payload format check in tests.
-- Test generated codes with some banking apps before acceptance.
-
-**5. Resources (The "How Much")**
-- No additional cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Low** (Highly unlikely, 1) — spec is public and stable; team implements strictly against official documentation.
-- Severity: **Harmful** (2) — would block payment verification for affected banks.
-- Risk Score: **1 × 2 = 2 — Tolerable risk**
-- Time of Occurrence: before Batch 3 / Week 6.
-- Warning Signs: a NAPAS/VietQR spec update notice; QR fails to scan in ≥1 tested banking app; payload checksum mismatch in the automated test suite.
+**Risk Exposure**
+Suddenly losing AI assistance mid-sprint cuts coding speed in half.
+- **Max Slip:** ~15–25% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Moderate (2)**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-13 — Report and Dashboard Performance
+### RP-11 — No One Wants to Test the App
 
-**1. Objectives (The "Why")**
-- Deliver performant business reports and dashboards that are acceptable to pilot landlords with 5–30 rooms.
+**Description**
+If we wait until the app is perfectly finished to find landlords to test it, we might end up with zero testers, proving that no one actually wants the product.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Performance validated before REPORT-01 acceptance (Batch 4, Week 8).
-  1. Performance test results with representative data (5–30 rooms × 3–6 months)
-  2. Indexed query plan.
+**Mitigation & Contingency**
+- **Mitigation:** We will start messaging landlords on Zalo and Facebook groups in Week 1, long before the app is done, to get a waiting list of people ready to test it.
+- **Contingency:** If we can't find real landlords, we will ask friends or family members to pretend to be landlords so we can at least get some basic usability testing done for the demo.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Dev 3 (Minh — report owner): Tasks 1, 2
-- Dev 2 (Dat — dashboard 03/04 owner): Support of tasks 1
-
-**4. Approach (The "How")**
-- Use indexed foreign keys in Drizzle schema from the start
-- Add pagination and date-range filtering to all report endpoints
-- Profile slow queries using Supabase query analyzer.
-
-**5. Resources (The "How Much")**
-- No additional cash cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — data volumes are small (5–30 rooms), but indexing/pagination must be done correctly.
-- Severity: **Harmful** (2) — degrades UX at pilot demo, not a system failure.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: before Batch 4 / Week 8.
-- Warning Signs: query response time >2s with representative data; missing index detected in the query plan; dashboard fails to load smoothly at the 30-room dataset size.
+**Risk Exposure**
+Building an app that nobody uses is a complete failure of the MVP.
+- **Max Slip:** > 60% schedule/budget slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Catastrophic (4)**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-14 — CI/CD or Deployment Failure
+### RP-12 — VietQR Format Incorrect
 
-**1. Objectives (The "Why")**
-- Maintain a continuously deployable baseline that all five team members can validate against.
+**Description**
+If we don't strictly follow the official NAPAS rules for generating VietQR codes, the QR codes won't scan properly in the tenant's banking apps.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- CI verified at Batch 0 (infrastructure setup)
-  1. CI pipeline
-  2. Previous-revision rollback procedure
-  3. Local demo environment.
+**Mitigation & Contingency**
+- **Mitigation:** Read the official documentation carefully. Developers must physically scan the generated QR codes with their own banking apps to prove they work before finishing the task.
+- **Contingency:** If the QR code generation is broken, the app will just display the landlord's bank account number in plain text so the tenant can copy and paste it manually.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Dev 3 (Dat): Task 1
-- All devs: Tasks 2, 3
-- PM is release owner: Support of tasks 1
-
-**4. Approach (The "How")**
-- Fix failed CI checks before merge per DoD
-- Retain previous deployable revision
-- Configure the deployment pipeline to deploy only on passing builds
-- Maintain a local environment as a demo fallback (critical for demo day if cloud is down).
-
-**5. Resources (The "How Much")**
-- No additional cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — DoD gate and pinned rollback reduce likelihood.
-- Severity: **Extremely harmful** (3) — a failure right at demo day would be highly visible and hard to recover from quickly.
-- Risk Score: **2 × 3 = 6 — Substantial risk**
-- Time of Occurrence: Batch 0 setup, and any time after (peak sensitivity near demo day).
-- Warning Signs: CI pipeline red for more than 1 day; a rollback rehearsal fails; a build succeeds locally but fails in CI.
+**Risk Exposure**
+Edge cases in banking formats easily break the QR codes if we don't test them.
+- **Max Slip:** ~10–25% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Moderate (2)**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-15 — Supabase Free-Tier Quota Reached
+### RP-13 — Dashboard Loads Too Slowly
 
-**1. Objectives (The "Why")**
-- Keep cloud infrastructure operational throughout the 8-10 week development and pilot period.
+**Description**
+Even though the frontend dashboard is smart and only shows a few items at a time (like the top 3 buildings with a "see all" pagination button), the backend API can still be extremely slow if the database doesn't have proper indexes.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Usage monitored from Batch 2 when maintenance photos and payment proofs are introduced.
-  1. Weekly Supabase usage report
-  2. Image compression implementation.
+**Mitigation & Contingency**
+- **Mitigation:** The backend team will use proper database indexes on foreign keys from the start and avoid "N+1 query" mistakes, ensuring the API can fetch those top items instantly without scanning the whole database.
+- **Contingency:** If the database queries are still lagging during the demo, we will hardcode the API to return dummy data for the dashboard charts so the presentation stays fast.
 
-**3. Responsibilities (The "Who" and "Where")**
-- Dev 2 (Chi — database foundation owner): Tasks 1, 2
-- Dev 4 (Hung): Support of tasks 1
-
-**4. Approach (The "How")**
-- Compress maintenance and payment proof images client-side before upload
-- Delete test/duplicate files during development
-- Monitor Supabase dashboard weekly
-- Delete stale pilot accounts before demo.
-
-**5. Resources (The "How Much")**
-- ~100,000 VND for one month of Supabase Pro if free tier is reached (within contingency).
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — free-tier storage/bandwidth limits are typically tight once image uploads start.
-- Severity: **Slightly harmful** (1) — a paid-tier upgrade path is already budgeted, so impact is easily contained.
-- Risk Score: **3 × 1 = 3 — Tolerable risk**
-- Time of Occurrence: from Batch 2 (photo/proof uploads) onward.
-- Warning Signs: weekly usage report shows >70% of quota; a storage/bandwidth warning email from Supabase; test/duplicate files not cleaned up before demo.
+**Risk Exposure**
+Bad database queries can easily crash the app or cause 10-second loading screens.
+- **Max Slip:** ~30–40% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Severe (3)**
+- **Risk Score: 3 × 3 = 9 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-16 — Tenant Onboarding Flow Fails UAT
+### RP-14 — Deployment Failure on Demo Day
 
-**1. Objectives (The "Why")**
-- Validate that the two-sided platform's tenant onboarding is discoverable and executable by non-technical users.
+**Description**
+If our cloud server on Render crashes, or we break the app right before the presentation, we won't have anything to show the teachers.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Usability test before Batch 2 acceptance (Week 5).
-  1. Usability test with at least one proxy tenant
-  2. Onboarding guide (optional).
+**Mitigation & Contingency**
+- **Mitigation:** Developers must make sure the app actually runs properly on their own laptops before merging code. We won't merge any risky new code right before Demo Day.
+- **Contingency:** If the cloud server is completely dead during the presentation, we will run the app locally on a developer's laptop to show it to the audience.
 
-**3. Responsibilities (The "Who" and "Where")**
-- FE1 (MXH — tenant/lease UI owner): Tasks 1, 2
-- PM coordinates test: Support of tasks 1
-
-**4. Approach (The "How")**
-- Test the full tenant provisioning flow (landlord creates lease → system sends temp password email → tenant logs in via email link) with at least one proxy user before marking US-TENANT-02 as Done
-- Include a simple in-app onboarding guide (optional).
-
-**5. Resources (The "How Much")**
-- No additional cash cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — usability testing before acceptance catches most issues early.
-- Severity: **Harmful** (2) — a failed onboarding flow undermines pilot adoption.
-- Risk Score: **2 × 2 = 4 — Moderate risk**
-- Time of Occurrence: before Batch 2 acceptance / Week 5.
-- Warning Signs: proxy tenant cannot complete the flow unaided; temp-password email not received or delayed; more than 2 confusion points recorded during the usability test.
+**Risk Exposure**
+A server crash during the final presentation ruins the entire project grade.
+- **Max Slip:** > 60% schedule slip (Demo Fails)
+- Probability: **55% (Likely, 3)**
+- Impact: **Catastrophic (4)**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-17 — Fake Payment Screenshot
+### RP-15 — Supabase Free-Tier Runs Out
 
-**1. Objectives (The "Why")**
-- Ensure landlords understand the system's manual verification limitation so they are not misled about payment confirmation.
+**Description**
+Because tenants upload photos of utility meters and payment receipts, we might use up our 1 GB of free file storage on Supabase very quickly.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Disclaimer in place before UAT (Week 6).
-  1. Clear UI disclaimer on the payment verification screen
-  2. Onboarding guidance (optional).
+**Mitigation & Contingency**
+- **Mitigation:** We will write code to compress the images on the user's phone before uploading them, which keeps the file sizes extremely small.
+- **Contingency:** If we still hit the limit, we will use the 650,000 VND we budgeted for the pilot to upgrade Supabase to the $25/month Pro tier.
 
-**3. Responsibilities (The "Who" and "Where")**
-- FE1 (MXH — payment UI): Tasks 1, 2
-- PM verifies in UAT checklist: Support of tasks 1
-
-**4. Approach (The "How")**
-- Display: "Please check your own banking app to confirm payment before marking as Paid." Include this in the notification or on the payment verification screen.
-
-**5. Resources (The "How Much")**
-- No additional cost.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — manual verification is inherently exploitable; expect it to be attempted at least once during pilot.
-- Severity: **Slightly harmful** (1) — a UI disclaimer fully addresses expectations; no system failure results.
-- Risk Score: **3 × 1 = 3 — Tolerable risk**
-- Time of Occurrence: before UAT / Week 6, ongoing during pilot.
-- Warning Signs: a build ships without the disclaimer; a UAT tester marks a fake payment "Paid" without checking their banking app; a landlord raises a trust complaint about payment status.
+**Risk Exposure**
+Uncompressed phone photos will eat through 1 GB of storage in a matter of days.
+- **Max Slip:** ~10–25% schedule slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Moderate (2)**
+- **Risk Score: 4 × 2 = 8 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-18 — US AI Service Inaccessible from Vietnam
+### RP-16 — Tenants Don't Get Their Passwords
 
-**1. Objectives (The "Why")**
-- Maintain full team implementation capacity if one AI cohort loses access.
+**Description**
+When a landlord adds a tenant, the app automatically emails the tenant a temporary password. If that email gets flagged as spam, the tenant might not see it and will assume they are locked out of the app.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Fallback plan documented before Batch 1
-  1. Documented AI provider fallback plan
-- Reviewed at each batch boundary.
-  1. Preserved local project context.
+**Mitigation & Contingency**
+- **Mitigation:** We will configure the email server properly (SPF/DKIM) to avoid spam filters. We will also add a "Resend Email" button and a prompt reminding the landlord to tell the tenant to check their spam folder.
+- **Contingency:** If the email is completely lost, we will show the temporary password directly on the landlord's screen so they can just copy it and text it to the tenant via Zalo.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM: Tasks 1, 2
-- OpenAI cohort members: Support of tasks 1
-
-**4. Approach (The "How")**
-- OpenAI cohort members have documented fallback to Antigravity (Google Gemini) per the resource capacity baseline
-- Maintain VPN and alternative network access as a contingency
-- Ensure all local project context (backlog, architecture, codebase) is documented so any model can be substituted
-- Prioritize critical-path stories for the Google cohort if OpenAI access is lost.
-
-**5. Resources (The "How Much")**
-- No additional cash cost for the fallback
-- VPN cost covered by contingency if needed.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — access disruptions are episodic and outside team control, but not the common case.
-- Severity: **Extremely harmful** (3) — removes a meaningful share of the team's AI-assisted capacity if it hits.
-- Risk Score: **2 × 3 = 6 — Substantial risk**
-- Time of Occurrence: any week; more likely during periods of regulatory or network change.
-- Warning Signs: OpenAI cohort members report blocked API calls; VPN becomes required to reach the provider; sustained latency or outage lasting more than 1 day.
+**Risk Exposure**
+If tenants can't find their passwords, landlords have to spend time playing tech support.
+- **Max Slip:** ~10–25% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Moderate (2)**
+- **Risk Score: 3 × 2 = 6 — Substantial**
 
 ---
 
-### Risk Management Plan: RP-19 — Data Privacy or Security Violation
+### RP-17 — Tenants Upload Fake Payment Proofs
 
-**1. Objectives (The "Why")**
-- Protect tenant PII throughout development and pilot
-- Ensure authorization enforcement is correct at the API layer.
+**Description**
+Because the app doesn't connect directly to the bank, a tenant could upload a fake screenshot saying they paid. If the landlord trusts the app blindly, they might get scammed.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Authorization verified in every story's CI tests from Batch 1
-  1. Authorization tests per story
-  2. HTTPS-only configuration
-  3. Privacy notice for pilot users.
+**Mitigation & Contingency**
+- **Mitigation:** We will put a very clear warning message in the app: "Always check your actual bank app to confirm you received the money before approving this."
+- **Contingency:** If a landlord gets tricked by a fake screenshot, we will manually ban the tenant's account from the system.
 
-**3. Responsibilities (The "Who" and "Where")**
-- All dev: Tasks 1, 2, 3
-- Reviewer for all auth/PII stories: Support of tasks 1
-
-**4. Approach (The "How")**
-- Use synthetic/test data during development
-- HTTPS on all endpoints
-- JWT authorization enforced at the API per the Global DoD
-- Never log or return passwords, tokens, or cross-tenant data
-- Security-sensitive story is reviewed
-- Basic privacy notice to all pilot users before sharing their real data.
-
-**5. Resources (The "How Much")**
-- ~50,000 VND for SSL/domain (already in budget).
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **Medium** (Unlikely, 2) — mandatory CI authorization tests and security review reduce likelihood.
-- Severity: **Extremely harmful** (3) — a real PII leak would compromise pilot trust and could force the pilot to halt.
-- Risk Score: **2 × 3 = 6 — Substantial risk**
-- Time of Occurrence: continuous, from Batch 1 onward; highest stakes once real pilot data is used.
-- Warning Signs: an authorization test missing or failing in CI; PII found in application logs; an endpoint reachable over plain HTTP.
+**Risk Exposure**
+If landlords assume the app verifies the money automatically, it will destroy their trust in the product.
+- **Max Slip:** ~30–50% budget/trust slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Severe (3)**
+- **Risk Score: 4 × 3 = 12 — Critical**
 
 ---
 
-### Risk Management Plan: RP-20 — No Post-Project Owner
+### RP-18 — Private Data Got Leaked
 
-**1. Objectives (The "Why")**
-- Avoid undefined cloud cost obligations or a production system with no maintainer.
+**Description**
+We are storing people's phone numbers, IDs, and financial records. If we make a mistake with our security rules, someone could steal this data.
 
-**2. Deliverables and Milestones (The "What" and "When")**
-- Decision before Week 10 (1 week before demo day).
-  1. Documented team decision
-  2. Clean archive or handover package.
+**Mitigation & Contingency**
+- **Mitigation:** All data must be sent over HTTPS. We will strictly review any code that handles user permissions, and use fake data during testing so we don't accidentally leak real information.
+- **Contingency:** If we realize data is exposed, we will immediately shut down the database, tell our pilot users and teachers what happened, and fix the bug before turning it back on.
 
-**3. Responsibilities (The "Who" and "Where")**
-- PM: Tasks 1, 2
-- Supervisor approves the plan: Support of tasks 1
-
-**4. Approach (The "How")**
-- Option A: Clean archive — shut down cloud resources, write a comprehensive README, archive the repository at demo day.
-- Option B: One volunteer commits to post-graduation maintenance with documented infrastructure, costs (VND 200,000-400,000/month), and responsibilities. Decide explicitly with supervisor.
-
-**5. Resources (The "How Much")**
-- Option A: No ongoing cost.
-- Option B: ~VND 200,000-400,000/month cloud costs.
-
-**6. Risk Characterization (Quantitative)**
-- Probability: **High** (Likely, 3) — common outcome for student capstone projects absent an explicit decision.
-- Severity: **Slightly harmful** (1) — both Option A and B are pre-planned and bounded, so undecided status is easily resolved.
-- Risk Score: **3 × 1 = 3 — Tolerable risk**
-- Time of Occurrence: decision due by Week 9–10.
-- Warning Signs: no volunteer identified by Week 9; supervisor has not approved a plan by Week 9; a cloud billing alert arrives with no assigned payer.
+**Risk Exposure**
+Leaking personal data will instantly kill the pilot program and the project.
+- **Max Slip:** > 60% schedule slip
+- Probability: **55% (Likely, 3)**
+- Impact: **Catastrophic (4)**
+- **Risk Score: 3 × 4 = 12 — Critical**
 
 ---
 
-## 7. Risk Monitoring Dashboard
+### RP-19 — Who Pays for the Server Later?
 
-| Risk Item | Score | Risk Level | Ranking (This) | Ranking (Last) | Risk Resolution Progress |
-|---|---|---|---|---|---|
-| RP-01 — Academic Workload Reduces Availability | 6 | Substantial | 1 | — | Not started|
-| RP-03 — Frontend Critical-Path Bottleneck | 6 | Substantial | 2 | — | Not started|
-| RP-05 — Over-Reliance on AI-Generated Code | 6 | Substantial | 3 | — | Not started|
-| RP-07 — Unclear or Shifting Requirements | 6 | Substantial | 4 | — | Not started|
-| RP-08 — Scope Creep | 6 | Substantial | 5 | — | Not started|
-| RP-11 — Insufficient Pilot Landlords for UAT | 6 | Substantial | 6 | — | Not started|
-| RP-14 — CI/CD or Deployment Failure | 6 | Substantial | 7 | — | Not started|
-| RP-18 — US AI Service Inaccessible from Vietnam | 6 | Substantial | 8 | — | Not started|
-| RP-19 — Data Privacy or Security Violation | 6 | Substantial | 9 | — | Not started|
-| RP-02 — React Native Mobile Overrun | 4 | Moderate | 10 | — | Not started|
-| RP-04 — Cross-Module API/Schema Conflict | 4 | Moderate | 11 | — | Not started|
-| RP-06 — Cron/Email/Push/PDF Infra Unavailable | 4 | Moderate | 12 | — | Not started|
-| RP-09 — Batch Owner Unavailability | 4 | Moderate | 13 | — | Not started|
-| RP-10 — AI Token Quota Exhausted | 4 | Moderate | 14 | — | Not started|
-| RP-13 — Report and Dashboard Performance | 4 | Moderate | 15 | — | Not started|
-| RP-16 — Tenant Onboarding Flow Fails UAT | 4 | Moderate | 16 | — | Not started|
-| RP-15 — Supabase Free-Tier Quota Reached | 3 | Tolerable | 17 | — | Not started|
-| RP-17 — Fake Payment Screenshot | 3 | Tolerable | 18 | — | Not started|
-| RP-20 — No Post-Project Owner | 3 | Tolerable | 19 | — | Not started|
-| RP-12 — VietQR Format Incorrect or Changed | 2 | Tolerable | 20 | — | Not started|
+**Description**
+After we get our grade, the servers will keep running and charging money. If we don't decide who is paying for it, it will drain someone's personal bank account.
+
+**Mitigation & Contingency**
+- **Mitigation:** By Week 9, the team needs to formally decide if we are shutting the app down completely, or if someone wants to take it over and pay for it.
+- **Contingency:** If no one wants it, we will export all the data and permanently delete the cloud servers one week after the final presentation.
+
+**Risk Exposure**
+Forgotten servers are a classic way for students to lose money unnecessarily.
+- **Max Slip:** < 10% budget slip
+- Probability: **75% (Very Likely, 4)**
+- Impact: **Minor (1)**
+- **Risk Score: 4 × 1 = 4 — Moderate**
+
+---
+
+### RP-20 — Someone Else Builds It First
+
+**Description**
+Another company could release a free property management app in Vietnam right before we do, making our landlords lose interest in our student project.
+
+**Mitigation & Contingency**
+- **Mitigation:** We will make sure our app has specific features that Vietnamese landlords love (like VietQR integration) to make it better than generic competitors.
+- **Contingency:** If a competitor launches, we will change our pitch. We'll tell the landlords, "Ours is built locally by students just for you, and we will customize it to fit your exact needs."
+
+**Risk Exposure**
+A big competitor could steal all our pilot users, leaving us with nothing to present.
+- **Max Slip:** ~30–40% schedule slip
+- Probability: **35% (Unlikely, 2)**
+- Impact: **Severe (3)**
+- **Risk Score: 2 × 3 = 6 — Substantial**
+
+---
+
+## 3. Risk Summary Dashboard
+
+### 3.1 Risk Register
+
+| ID | Risk Title | Risk Score | Risk Level |
+|---|---|---|---|
+| RP-01 | Academic Workload Reduces Availability | 12 | 🔴 Critical |
+| RP-02 | React Native Mobile Overrun | 9 | 🟠 Substantial |
+| RP-03 | Frontend Waiting on Backend | 12 | 🔴 Critical |
+| RP-04 | Database Schema Conflicts | 9 | 🟠 Substantial |
+| RP-05 | Over-Reliance on AI Code | 12 | 🔴 Critical |
+| RP-06 | Third-Party Services Fail or Block Us | 9 | 🟠 Substantial |
+| RP-07 | Landlords Change Their Minds | 12 | 🔴 Critical |
+| RP-08 | Scope Creep | 16 | 🔴 Critical |
+| RP-09 | Knowledge Silos | 9 | 🟠 Substantial |
+| RP-10 | AI Token Limits Exhausted | 6 | 🟠 Substantial |
+| RP-11 | No One Wants to Test the App | 12 | 🔴 Critical |
+| RP-12 | VietQR Format Incorrect | 6 | 🟠 Substantial |
+| RP-13 | Dashboard Loads Too Slowly | 9 | 🟠 Substantial |
+| RP-14 | Deployment Failure on Demo Day | 12 | 🔴 Critical |
+| RP-15 | Supabase Free-Tier Runs Out | 8 | 🟠 Substantial |
+| RP-16 | Tenants Don't Get Their Passwords | 6 | 🟠 Substantial |
+| RP-17 | Tenants Upload Fake Payment Proofs | 12 | 🔴 Critical |
+| RP-18 | Private Data Got Leaked | 12 | 🔴 Critical |
+| RP-19 | Who Pays for the Server Later? | 4 | 🟡 Moderate |
+| RP-20 | Someone Else Builds It First | 6 | 🟠 Substantial |
+
+---
+
+### 3.2 Risk Level Summary
+
+| Level | Count |
+|---|---|
+| 🔴 Critical (12–20) | 9 |
+| 🟠 Substantial (6–11) | 10 |
+| 🟡 Moderate (4–5) | 1 |
+| 🟢 Tolerable (1–3) | 0 |
+
+---
+
+### 3.3 Priority Rankings
+
+| Rank | ID | Risk Title | Risk Score |
+|---|---|---|---|
+| 1 | RP-08 | Scope Creep | 16 |
+| 2 | RP-01 | Academic Workload Reduces Availability | 12 |
+| 3 | RP-03 | Frontend Waiting on Backend | 12 |
+| 4 | RP-05 | Over-Reliance on AI Code | 12 |
+| 5 | RP-07 | Landlords Change Their Minds | 12 |
+| 6 | RP-11 | No One Wants to Test the App | 12 |
+| 7 | RP-14 | Deployment Failure on Demo Day | 12 |
+| 8 | RP-17 | Tenants Upload Fake Payment Proofs | 12 |
+| 9 | RP-18 | We Leak Private Data | 12 |
+| 10 | RP-02 | React Native Mobile Overrun | 9 |
+| 11 | RP-04 | Database Schema Conflicts | 9 |
+| 12 | RP-06 | Third-Party Services Fail or Block Us | 9 |
+| 13 | RP-09 | Knowledge Silos | 9 |
+| 14 | RP-13 | Dashboard Loads Too Slowly | 9 |
+| 15 | RP-15 | Supabase Free-Tier Runs Out | 8 |
+| 16 | RP-10 | AI Token Limits Exhausted | 6 |
+| 17 | RP-12 | VietQR Format Incorrect | 6 |
+| 18 | RP-16 | Tenants Don't Get Their Passwords | 6 |
+| 19 | RP-20 | Someone Else Builds It First | 6 |
+| 20 | RP-19 | Who Pays for the Server Later? | 4 |
+
+---
+
+### 3.4 Top Watch Items
+
+The following risks have the highest **Risk Score** and demand immediate action/enforcement from Day 1:
+
+1. **RP-08 (Scope Creep)** — Without a hard freeze, failure is nearly certain.
+2. **RP-18 (Data Privacy)** — Security rules and HTTPS must be enforced to prevent a catastrophic leak.
+3. **RP-14 (Deployment Failure)** — The app must run locally first to prevent Demo Day failure.
+4. **RP-11 (UAT Recruitment)** — Landlord outreach must start in Week 1 to prevent an empty MVP.
+5. **RP-05 (AI Over-reliance)** — Non-author review must be strictly enforced to prevent severe bugs.
