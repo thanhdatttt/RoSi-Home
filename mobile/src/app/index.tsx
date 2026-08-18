@@ -6,9 +6,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../components/MobileFrame";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { Home, KeyRound } from "lucide-react-native";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Welcome() {
   const insets = useSafeAreaInsets();
+  const { t } = useI18n();
 
   return (
     <MobileFrame>
@@ -45,12 +47,12 @@ export default function Welcome() {
           </View>
 
           <View className="mt-auto mb-10">
-            <Text className="text-[#60a5fa] text-xs uppercase tracking-[4px] mb-4">Rentals, simplified</Text>
+            <Text className="text-[#60a5fa] text-xs uppercase tracking-[4px] mb-4">{t('welcome.tagline')}</Text>
             <Text className="font-extrabold text-[38px] leading-[40px] text-white">
-              Manage rentals from your pocket.
+              {t('welcome.title')}
             </Text>
             <Text style={{ marginTop: 16, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22 }}>
-              Landlords run properties end-to-end. Tenants get a clean view of payments, repairs and documents — via an account their landlord sets up.
+              {t('welcome.description')}
             </Text>
           </View>
         </View>
@@ -66,7 +68,7 @@ export default function Welcome() {
         }}>
           <Link href="/register" asChild>
             <PrimaryButton variant="primary">
-              Create landlord account
+              {t('welcome.createLandlord')}
             </PrimaryButton>
           </Link>
 
@@ -74,13 +76,13 @@ export default function Welcome() {
             <PrimaryButton variant="outline">
               <View className="flex-row items-center justify-center gap-2">
                 <KeyRound size={16} color="black" />
-                <Text style={{ color: '#101828', fontWeight: '600', fontSize: 14 }}>Sign in</Text>
+                <Text style={{ color: '#101828', fontWeight: '600', fontSize: 14 }}>{t('auth.signIn')}</Text>
               </View>
             </PrimaryButton>
           </Link>
 
           <Text style={{ textAlign: 'center', fontSize: 11, color: '#667085', paddingTop: 4 }}>
-            Tenants: use the credentials sent by your landlord.
+            {t('welcome.tenantHint')}
           </Text>
         </View>
       </View>

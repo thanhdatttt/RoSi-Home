@@ -14,6 +14,7 @@ import {
   type PropertyView,
   type RoomView,
 } from "../../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const PAGE_SIZE = 5;
 
@@ -21,6 +22,7 @@ export default function PropertyDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { formatVnd, statusLabel, t } = useI18n();
 
   const [property, setProperty] = useState<PropertyView | null>(null);
   const [rooms, setRooms] = useState<RoomView[]>([]);
@@ -76,12 +78,12 @@ export default function PropertyDetail() {
 
   const confirmDeleteRoom = (room: RoomView) => {
     Alert.alert(
-      "Delete Room",
-      `Are you sure you want to delete "${room.name || 'Unnamed Room'}"? This action cannot be undone.`,
+      t('property.deleteRoom'),
+      t('property.deleteRoomConfirmation', { name: room.name || t('property.unnamedRoom') }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('common.cancel'), style: "cancel" },
         {
-          text: "Delete",
+          text: t('common.delete'),
           style: "destructive",
           onPress: async () => {
             try {
@@ -110,10 +112,10 @@ export default function PropertyDetail() {
     return (
       <MobileFrame>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f8ff', paddingHorizontal: 24 }}>
-          <Text style={{ color: '#94a3b8', textAlign: 'center' }}>Property not found.</Text>
+          <Text style={{ color: '#94a3b8', textAlign: 'center' }}>{t('property.notFound')}</Text>
           <Link href="/landlord/properties" asChild>
             <TouchableOpacity style={{ marginTop: 16, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#f1f5f9', borderRadius: 8 }}>
-              <Text style={{ fontWeight: '600' }}>Go back</Text>
+              <Text style={{ fontWeight: '600' }}>{t('property.goBack')}</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -143,7 +145,7 @@ export default function PropertyDetail() {
                 </TouchableOpacity>
               </Link>
               <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Property</Text>
+                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>{t('property.eyebrow')}</Text>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: '#ffffff' }} numberOfLines={1}>{property.name}</Text>
               </View>
               <Link href={`/landlord/properties/${id}/edit`} asChild>
@@ -162,15 +164,15 @@ export default function PropertyDetail() {
             <View style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flex: 1, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 12, alignItems: 'center', marginRight: 8 }}>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff' }}>{property.units}</Text>
-                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Rooms</Text>
+                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{t('property.rooms')}</Text>
               </View>
               <View style={{ flex: 1, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 12, alignItems: 'center', marginRight: 8 }}>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff' }}>{occupiedCount}/{property.units}</Text>
-                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Occupied</Text>
+                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{t('status.occupied')}</Text>
               </View>
               <View style={{ flex: 1, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 12, alignItems: 'center' }}>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: '#ffffff' }}>{property.units - occupiedCount}</Text>
-                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Vacant</Text>
+                <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{t('status.vacant')}</Text>
               </View>
             </View>
           </View>
@@ -179,16 +181,16 @@ export default function PropertyDetail() {
           <View style={{ paddingHorizontal: 24, marginTop: -16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderRadius: 16, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', padding: 12, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
               <View style={{ flex: 1 }}>
-                <ConfigLink href={`/landlord/properties/${id}/utilities`} icon={<Zap size={16} color="#2563eb" />} label="Utilities" />
+                <ConfigLink href={`/landlord/properties/${id}/utilities`} icon={<Zap size={16} color="#2563eb" />} label={t('property.utilities')} />
               </View>
               <View style={{ flex: 1 }}>
-                <ConfigLink href={`/landlord/properties/${id}/surcharges`} icon={<Receipt size={16} color="#2563eb" />} label="Surcharges" />
+                <ConfigLink href={`/landlord/properties/${id}/surcharges`} icon={<Receipt size={16} color="#2563eb" />} label={t('property.surcharges')} />
               </View>
               <View style={{ flex: 1 }}>
-                <ConfigLink href={`/landlord/properties/${id}/reminders`} icon={<BellRing size={16} color="#2563eb" />} label="Reminders" />
+                <ConfigLink href={`/landlord/properties/${id}/reminders`} icon={<BellRing size={16} color="#2563eb" />} label={t('property.reminders')} />
               </View>
               <View style={{ flex: 1 }}>
-                <ConfigLink href={`/landlord/properties/${id}/rooms/new`} icon={<Plus size={16} color="white" />} label="Add room" highlight />
+                <ConfigLink href={`/landlord/properties/${id}/rooms/new`} icon={<Plus size={16} color="white" />} label={t('property.addRoom')} highlight />
               </View>
             </View>
           </View>
@@ -196,17 +198,17 @@ export default function PropertyDetail() {
           {/* Rooms list */}
           <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>Rooms</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{t('property.rooms')}</Text>
               <Link href={`/landlord/properties/${id}/rooms/new`} asChild>
                 <TouchableOpacity>
-                  <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>+ Add</Text>
+                  <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('property.add')}</Text>
                 </TouchableOpacity>
               </Link>
             </View>
             <View style={{ gap: 8 }}>
               {rooms.length === 0 ? (
                 <View style={{ padding: 16, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#e2e8f0', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>No rooms configured yet.</Text>
+                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('property.noRooms')}</Text>
                 </View>
               ) : (
                 rooms.map((r) => (
@@ -235,16 +237,16 @@ export default function PropertyDetail() {
                           <DoorOpen size={20} color="#2563eb" />
                         </View>
                         <View style={{ flex: 1, paddingRight: 8 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || "Unnamed Room"}</Text>
+                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || t('property.unnamedRoom')}</Text>
                           <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>
-                            {r.status === "Occupied" ? "Occupied" : "No active lease"}
+                            {r.status === "Occupied" ? statusLabel(r.status) : t('property.noActiveLease')}
                           </Text>
                         </View>
                         <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '700' }}>{r.baseRent.toLocaleString()} VNĐ</Text>
+                          <Text style={{ fontSize: 14, fontWeight: '700' }}>{formatVnd(r.baseRent)}</Text>
                           <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: r.status === "Occupied" ? 'rgba(37,99,235,0.2)' : '#f1f5f9' }}>
                             <Text style={{ fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, color: r.status === "Occupied" ? '#2563eb' : '#94a3b8' }}>
-                              {r.status}
+                              {statusLabel(r.status)}
                             </Text>
                           </View>
                         </View>
@@ -259,7 +261,7 @@ export default function PropertyDetail() {
                   disabled={loadingMore}
                   style={{ paddingVertical: 12, borderRadius: 16, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' }}
                 >
-                  {loadingMore ? <ActivityIndicator size="small" color="#2563eb" /> : <Text style={{ color: '#2563eb', fontWeight: '600', fontSize: 14 }}>Load More</Text>}
+                  {loadingMore ? <ActivityIndicator size="small" color="#2563eb" /> : <Text style={{ color: '#2563eb', fontWeight: '600', fontSize: 14 }}>{t('property.loadMore')}</Text>}
                 </TouchableOpacity>
               )}
             </View>

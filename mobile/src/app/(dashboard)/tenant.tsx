@@ -8,15 +8,12 @@ import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { Bell, UserCircle2, Wallet, Wrench, FileText, ChevronRight, Receipt } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
-
-const formatVND = (n: number) => {
-  if (n == null || isNaN(n)) return '0';
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function TenantDashboard() {
   const insets = useSafeAreaInsets();
   const { token, user } = useAuth();
+  const { formatVnd, t } = useI18n();
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +35,7 @@ export default function TenantDashboard() {
     }, [token])
   );
 
-  const firstName = user?.fullName ? user.fullName.split(' ')[0] : "Tenant";
+  const firstName = user?.fullName ? user.fullName.split(' ')[0] : t('role.tenant');
 
   if (loading) {
     return (
@@ -65,10 +62,10 @@ export default function TenantDashboard() {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flex: 1, paddingRight: 16 }}>
-                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Tenant</Text>
-                <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginTop: 4 }} numberOfLines={1}>Welcome, {firstName}</Text>
+                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>{t('role.tenant')}</Text>
+                <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginTop: 4 }} numberOfLines={1}>{t('dashboard.welcome', { name: firstName })}</Text>
                 <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-                  {data ? `${data.propertyName} · ${data.roomName}` : "No active lease"}
+                  {data ? `${data.propertyName} · ${data.roomName}` : t('dashboard.noActiveLease')}
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -85,9 +82,9 @@ export default function TenantDashboard() {
             <View style={{ marginTop: 24, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', padding: 20 }}>
               {data?.nextPayment ? (
                 <>
-                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Next payment due</Text>
+                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{t('tenant.nextPaymentDue')}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4 }}>
-                    <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff' }}>{formatVND(data.nextPayment.amount)} VNĐ</Text>
+                    <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff' }}>{formatVnd(data.nextPayment.amount)}</Text>
                     <Text style={{ fontSize: 12, color: '#60a5fa', fontWeight: '600' }}>
                       {(() => {
                         const [y, m, d] = data.nextPayment.dueDate.split('-');
@@ -95,18 +92,18 @@ export default function TenantDashboard() {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         const days = Math.round((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                        return days < 0 ? 'overdue' : days === 0 ? 'today' : `in ${days} days`;
+                        return days < 0 ? t('time.overdue') : days === 0 ? t('time.today') : t('time.inDays', { days });
                       })()}
                     </Text>
                   </View>
                   <View style={{ marginTop: 16 }}>
-                    <PrimaryButton variant="primary">Pay now</PrimaryButton>
+                    <PrimaryButton variant="primary">{t('tenant.payNow')}</PrimaryButton>
                   </View>
                 </>
               ) : (
                 <View style={{ alignItems: 'center', paddingVertical: 12 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>All caught up!</Text>
-                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>No payments due right now.</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>{t('tenant.allCaughtUp')}</Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>{t('tenant.noPaymentsDue')}</Text>
                 </View>
               )}
             </View>
@@ -114,19 +111,19 @@ export default function TenantDashboard() {
 
           {/* Menu rows */}
           <View style={{ paddingHorizontal: 24, marginTop: 32, gap: 12 }}>
-            <TenantRow href="/(dashboard)/tenant/invoices" icon={<Receipt size={16} color="#2563eb" />} title="My invoices" sub="Sent and paid bills only" />
-            <TenantRow href="/(dashboard)/tenant/lease" icon={<FileText size={16} color="#2563eb" />} title="My lease" sub="Room, period, rent and deposit" />
-            <TenantRow href="/(dashboard)/tenant/reports" icon={<Wallet size={16} color="#2563eb" />} title="My report" sub="Payment and outstanding summary" />
-            <TenantRow href="/(dashboard)/tenant/maintenance" icon={<Wrench size={16} color="#2563eb" />} title="Repairs & maintenance" sub="Submit and track repair requests" />
+            <TenantRow href="/(dashboard)/tenant/invoices" icon={<Receipt size={16} color="#2563eb" />} title={t('tenant.myInvoices')} sub={t('tenant.myInvoicesHint')} />
+            <TenantRow href="/(dashboard)/tenant/lease" icon={<FileText size={16} color="#2563eb" />} title={t('tenant.myLease')} sub={t('tenant.myLeaseHint')} />
+            <TenantRow href="/(dashboard)/tenant/reports" icon={<Wallet size={16} color="#2563eb" />} title={t('tenant.myReport')} sub={t('tenant.myReportHint')} />
+            <TenantRow href="/(dashboard)/tenant/maintenance" icon={<Wrench size={16} color="#2563eb" />} title={t('tenant.maintenance')} sub={t('tenant.maintenanceHint')} />
           </View>
 
           {/* Announcements */}
           <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 12 }}>Announcements</Text>
+            <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 12 }}>{t('tenant.announcements')}</Text>
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600' }}>Water maintenance on Saturday</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600' }}>{t('tenant.waterMaintenance')}</Text>
               <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, lineHeight: 18 }}>
-                Supply will be off between 9am–1pm as scheduled by GWCL. Sorry for the inconvenience.
+                {t('tenant.waterMaintenanceHint')}
               </Text>
             </View>
           </View>

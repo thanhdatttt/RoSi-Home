@@ -1,6 +1,6 @@
 import '../global.css';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';
 import * as Notifications from 'expo-notifications';
@@ -10,15 +10,20 @@ export { ErrorBoundary } from 'expo-router';
 
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { openNotificationLink } from '@/features/notifications/routing';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+const supportsNativeNotifications = Platform.OS === 'ios' || Platform.OS === 'android';
+
+if (supportsNativeNotifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -26,7 +31,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !supportsNativeNotifications) return;
     const openResponse = (response: Notifications.NotificationResponse | null) => {
       const linkRef = response?.notification.request.content.data?.linkRef;
       if (typeof linkRef === 'string') openNotificationLink(router, user, linkRef);
@@ -87,15 +92,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthProvider>
-          <AuthGuard>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(dashboard)" />
-            </Stack>
-          </AuthGuard>
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <AuthGuard>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(dashboard)" />
+              </Stack>
+            </AuthGuard>
+          </AuthProvider>
+        </I18nProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

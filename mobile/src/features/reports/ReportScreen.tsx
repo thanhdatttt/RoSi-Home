@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { AlertTriangle, Building2, Download, Receipt, Wrench } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const dateText = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthText = (date: Date) => dateText(date).slice(0, 7);
@@ -19,6 +20,7 @@ const sum = (value: RevenueBreakdown) => value.rent + value.electricity + value.
 
 export function ReportScreen() {
   const { token, user } = useAuth(); const router = useRouter();
+  const { translateLegacy } = useI18n();
   const [periodType, setPeriodType] = useState<"month" | "custom">("month");
   const [month, setMonth] = useState(new Date()); const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1)); const [endDate, setEndDate] = useState(new Date());
   const [report, setReport] = useState<ReportView | null>(null); const [history, setHistory] = useState<PaymentHistory | null>(null); const [loading, setLoading] = useState(false); const [downloading, setDownloading] = useState(false); const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function ReportScreen() {
   const tenantPaid = tenantEntries.filter((entry) => entry.status === "Paid").reduce((total, entry) => total + entry.amount, 0);
 
   async function runReport() {
-    if (periodType === "custom" && startDate > endDate) return setError("Start date cannot be after end date.");
+    if (periodType === "custom" && startDate > endDate) return setError('Start date cannot be after end date.');
     setLoading(true); setError(null);
     try { setReport(await generateReport(token, periodType === "month" ? { periodType, month: monthText(month) } : { periodType, startDate: dateText(startDate), endDate: dateText(endDate) })); }
     catch (e: any) { setError(e.message); } finally { setLoading(false); }
@@ -44,7 +46,7 @@ export function ReportScreen() {
   return <MobileFrame><View style={{ flex: 1, backgroundColor: "#f5f8ff" }}><ScreenHeader eyebrow={landlord ? "Portfolio analytics" : "Tenant account"} title={landlord ? "Business report" : "My report"} />
     <ScrollView contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 48 }}>
       {landlord ? <View style={{ padding: 16, borderRadius: 18, backgroundColor: "white", borderWidth: 1, borderColor: "#e2e8f0" }}>
-        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>{(["month", "custom"] as const).map((type) => <TouchableOpacity key={type} onPress={() => setPeriodType(type)} style={{ flex: 1, alignItems: "center", padding: 10, borderRadius: 10, backgroundColor: periodType === type ? "#2563eb" : "#e2e8f0" }}><Text style={{ color: periodType === type ? "white" : "#475569", fontWeight: "700" }}>{type === "month" ? "Month" : "Custom range"}</Text></TouchableOpacity>)}</View>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>{(["month", "custom"] as const).map((type) => <TouchableOpacity key={type} onPress={() => setPeriodType(type)} style={{ flex: 1, alignItems: "center", padding: 10, borderRadius: 10, backgroundColor: periodType === type ? "#2563eb" : "#e2e8f0" }}><Text style={{ color: periodType === type ? "white" : "#475569", fontWeight: "700" }}>{translateLegacy(type === "month" ? "Month" : "Custom range")}</Text></TouchableOpacity>)}</View>
         {periodType === "month" ? <DatePicker label="Reporting month" value={month} onChange={setMonth} monthOnly /> : <View style={{ flexDirection: "row", gap: 10 }}><DatePicker label="Start date" value={startDate} onChange={setStartDate} /><DatePicker label="End date" value={endDate} onChange={setEndDate} /></View>}
         {error ? <Text style={{ color: "#b91c1c", marginVertical: 12 }}>{error}</Text> : <View style={{ height: 16 }} />}
         <PrimaryButton disabled={loading} onPress={runReport}>{loading ? "Generating..." : "Generate report"}</PrimaryButton>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, Modal } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface DatePickerProps {
   value: Date;
@@ -13,6 +14,7 @@ interface DatePickerProps {
 
 export function DatePicker({ value, onChange, label, compact = false, monthOnly = false }: DatePickerProps) {
   const [show, setShow] = useState(false);
+  const { language, translateLegacy } = useI18n();
 
   const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShow(false);
@@ -31,7 +33,9 @@ export function DatePicker({ value, onChange, label, compact = false, monthOnly 
   const m = String(value.getMonth() + 1).padStart(2, '0');
   const d = String(value.getDate()).padStart(2, '0');
 
-  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const MONTHS = language === 'vi'
+    ? ["tháng 1", "tháng 2", "tháng 3", "tháng 4", "tháng 5", "tháng 6", "tháng 7", "tháng 8", "tháng 9", "tháng 10", "tháng 11", "tháng 12"]
+    : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const formatted = monthOnly ? `${MONTHS[value.getMonth()]} ${y}` : `${y}-${m}-${d}`;
 
   if (Platform.OS === 'web') {
@@ -42,7 +46,7 @@ export function DatePicker({ value, onChange, label, compact = false, monthOnly 
             ? { fontSize: 11, color: '#94a3b8', marginBottom: 4 }
             : { marginBottom: 6, fontSize: 12, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }
           }>
-            {label}
+            {translateLegacy(label)}
           </Text>
         )}
         <input
@@ -74,7 +78,7 @@ export function DatePicker({ value, onChange, label, compact = false, monthOnly 
           ? { fontSize: 11, color: '#94a3b8', marginBottom: 4 }
           : { marginBottom: 6, fontSize: 12, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }
         }>
-          {label}
+          {translateLegacy(label)}
         </Text>
       )}
 
@@ -104,7 +108,7 @@ export function DatePicker({ value, onChange, label, compact = false, monthOnly 
                 accentColor="#2563eb"
               />
               <TouchableOpacity onPress={() => setShow(false)} style={{ marginTop: 8, marginHorizontal: 8, height: 48, backgroundColor: '#2563eb', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Confirm</Text>
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>{translateLegacy('Confirm')}</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={{ flex: 1 }} onPress={() => setShow(false)} />

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "@/components/MobileFrame";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
+import { useI18n } from "@/i18n/I18nProvider";
 const formatVND = (n: number) => {
   return new Intl.NumberFormat("vi-VN").format(n);
 };
@@ -33,6 +34,7 @@ export default function InvoicesList() {
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { formatVnd, statusLabel, t, translateLegacy } = useI18n();
 
   const fetchInvoices = useCallback(async () => {
     if (!token) return;
@@ -80,8 +82,8 @@ export default function InvoicesList() {
               <ArrowLeft size={16} color="black" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Billing</Text>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Invoices</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Billing')}</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>{translateLegacy('Invoices')}</Text>
             </View>
           </View>
         </View>
@@ -94,7 +96,7 @@ export default function InvoicesList() {
             <TextInput
               value={q}
               onChangeText={setQ}
-              placeholder="Search invoice, tenant or room"
+              placeholder={translateLegacy('Search invoice, tenant or room')}
               placeholderTextColor="#94a3b8"
               style={{ width: '100%', height: 44, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 40, paddingRight: 16, fontSize: 14, color: '#0f172a' }}
             />
@@ -107,7 +109,7 @@ export default function InvoicesList() {
                 onPress={() => setTab(t)}
                 style={{ flex: 1, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === t ? '#ffffff' : 'transparent', shadowColor: tab === t ? '#000' : 'transparent', shadowOpacity: tab === t ? 0.05 : 0, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: tab === t ? 1 : 0 }}
               >
-                <Text style={{ fontSize: 12, fontWeight: '600', color: tab === t ? '#0f172a' : '#64748b' }}>{t}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: tab === t ? '#0f172a' : '#64748b' }}>{statusLabel(t)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -122,7 +124,7 @@ export default function InvoicesList() {
           {loading && items.length === 0 ? (
             <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
           ) : items.length === 0 ? (
-            <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', paddingVertical: 40 }}>No invoices in this view.</Text>
+            <Text style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', paddingVertical: 40 }}>{t('invoice.noneInView')}</Text>
           ) : (
             items.map((i) => (
               <TouchableOpacity
@@ -139,12 +141,12 @@ export default function InvoicesList() {
                   <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }} numberOfLines={1}>{i.tenantName} · {i.roomName}</Text>
                   <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{i.billingPeriod} · {i.id}</Text>
                   <Text style={{ fontSize: 11, fontWeight: isOverdue(i) ? '600' : '400', color: isOverdue(i) ? '#ef4444' : '#94a3b8', marginTop: 2 }}>
-                    Due {i.dueDate}{isOverdue(i) ? " · overdue" : ""}
+                    {isOverdue(i) ? t('invoice.dueOverdue', { date: i.dueDate }) : t('invoice.due', { date: i.dueDate })}
                   </Text>
                 </View>
 
                 <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(i.totalAmount)}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVnd(i.totalAmount)}</Text>
                   <StatusPill status={i.status} />
                 </View>
 
@@ -154,7 +156,7 @@ export default function InvoicesList() {
           )}
 
           <Text style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 16, lineHeight: 16 }}>
-            Drafts are landlord-only. Tenants see an invoice after you send it.
+            {t('invoice.landlordDraftHint')}
           </Text>
         </ScrollView>
       </View>
@@ -163,6 +165,7 @@ export default function InvoicesList() {
 }
 
 function StatusPill({ status }: { status: "Draft" | "Sent" | "Paid" }) {
+  const { statusLabel } = useI18n();
   const getStyle = () => {
     switch (status) {
       case "Draft": return { bg: '#e2e8f0', text: '#64748b' };
@@ -174,7 +177,7 @@ function StatusPill({ status }: { status: "Draft" | "Sent" | "Paid" }) {
 
   return (
     <View style={{ marginTop: 4, backgroundColor: s.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
-      <Text style={{ fontSize: 10, fontWeight: '700', color: s.text }}>{status}</Text>
+      <Text style={{ fontSize: 10, fontWeight: '700', color: s.text }}>{statusLabel(status)}</Text>
     </View>
   );
 }

@@ -2,28 +2,30 @@ import { type Href, useRouter } from 'expo-router';
 import { Building2, House, ReceiptText, UserRound, Wrench, type LucideIcon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useI18n } from '@/i18n/I18nProvider';
+import type { TranslationKey } from '@/i18n/messages';
 
 type UserRole = 'Landlord' | 'Tenant';
 
 type NavigationItem = {
-  label: string;
+  labelKey: TranslationKey;
   href: Href;
   icon: LucideIcon;
 };
 
 const LANDLORD_ITEMS: NavigationItem[] = [
-  { label: 'Home', href: '/landlord', icon: House },
-  { label: 'Properties', href: '/landlord/properties', icon: Building2 },
-  { label: 'Invoices', href: '/landlord/invoices', icon: ReceiptText },
-  { label: 'Repairs', href: '/landlord/maintenance', icon: Wrench },
-  { label: 'Profile', href: '/profile', icon: UserRound },
+  { labelKey: 'nav.home', href: '/landlord', icon: House },
+  { labelKey: 'nav.properties', href: '/landlord/properties', icon: Building2 },
+  { labelKey: 'nav.invoices', href: '/landlord/invoices', icon: ReceiptText },
+  { labelKey: 'nav.repairs', href: '/landlord/maintenance', icon: Wrench },
+  { labelKey: 'nav.profile', href: '/profile', icon: UserRound },
 ];
 
 const TENANT_ITEMS: NavigationItem[] = [
-  { label: 'Home', href: '/tenant', icon: House },
-  { label: 'Invoices', href: '/tenant/invoices', icon: ReceiptText },
-  { label: 'Repairs', href: '/tenant/maintenance', icon: Wrench },
-  { label: 'Profile', href: '/profile', icon: UserRound },
+  { labelKey: 'nav.home', href: '/tenant', icon: House },
+  { labelKey: 'nav.invoices', href: '/tenant/invoices', icon: ReceiptText },
+  { labelKey: 'nav.repairs', href: '/tenant/maintenance', icon: Wrench },
+  { labelKey: 'nav.profile', href: '/profile', icon: UserRound },
 ];
 
 /**
@@ -32,16 +34,18 @@ const TENANT_ITEMS: NavigationItem[] = [
  * the only navigation affordance.
  */
 function isPrimaryArea(pathname: string, role: UserRole) {
-  const primaryPaths = role === 'Landlord'
-    ? ['/landlord/properties', '/landlord/invoices', '/landlord/maintenance', '/profile']
-    : ['/tenant/invoices', '/tenant/maintenance', '/profile'];
-
-  return primaryPaths.includes(pathname);
+  // The dashboard landing pages are intentionally uncluttered. Once a user
+  // enters a role module, the dock remains available on list and detail views.
+  if (pathname === '/profile') return true;
+  return role === 'Landlord'
+    ? pathname.startsWith('/landlord/')
+    : pathname.startsWith('/tenant/');
 }
 
 export function RoleBottomNav({ pathname, role }: { pathname: string; role?: UserRole }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useI18n();
 
   if (!role || !isPrimaryArea(pathname, role)) return null;
 
@@ -73,13 +77,14 @@ export function RoleBottomNav({ pathname, role }: { pathname: string; role?: Use
           elevation: 5,
         }}
       >
-        {items.map(({ label, href, icon: Icon }) => {
+        {items.map(({ labelKey, href, icon: Icon }) => {
+          const label = t(labelKey);
           const selected = pathname === href;
           const color = selected ? '#155eef' : '#718096';
 
           return (
             <Pressable
-              key={label}
+              key={labelKey}
               accessibilityRole="tab"
               accessibilityLabel={label}
               accessibilityState={{ selected }}

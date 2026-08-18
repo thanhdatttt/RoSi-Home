@@ -8,11 +8,13 @@ import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail, Lock } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { ApiRequestError } from "../../lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Login() {
   const router = useRouter();
   const { login, loading } = useAuth();
   const insets = useSafeAreaInsets();
+  const { t } = useI18n();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,26 +56,26 @@ export default function Login() {
             </TouchableOpacity>
           </Link>
           <View>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Welcome back</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Sign in to RosiHome</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('auth.welcomeBack')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.signInToRosiHome')}</Text>
           </View>
         </View>
 
         {/* Form */}
         <View style={{ flex: 1, paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom + 16, 24) }}>
           <Field
-            label="Email or phone number"
+            label={t('auth.emailOrPhone')}
             autoCapitalize="none"
-            placeholder="you@email.com or phone"
+            placeholder={t('auth.emailOrPhonePlaceholder')}
             icon={<Mail size={16} color="gray" />}
             value={email}
             onChangeText={setEmail}
           />
           <View style={{ marginTop: 16 }}>
             <Field
-              label="Password"
+              label={t('auth.password')}
               secureTextEntry
-              placeholder="Your password"
+              placeholder={t('auth.passwordPlaceholder')}
               icon={<Lock size={16} color="gray" />}
               value={password}
               onChangeText={setPassword}
@@ -88,11 +90,11 @@ export default function Login() {
                 trackColor={{ false: '#e2e8f0', true: '#2563eb' }}
                 thumbColor="#ffffff"
               />
-              <Text style={{ fontSize: 12, color: '#64748b' }}>Remember me</Text>
+              <Text style={{ fontSize: 12, color: '#64748b' }}>{t('auth.rememberMe')}</Text>
             </View>
             <Link href="/forgot-password" asChild>
               <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>Forgot password?</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('auth.forgotPassword')}</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -104,14 +106,14 @@ export default function Login() {
           )}
 
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? t('auth.signingIn') : t('auth.signIn')}
           </PrimaryButton>
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
-            <Text style={{ fontSize: 12, color: '#94a3b8' }}>No account yet?</Text>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('auth.noAccountYet')}</Text>
             <Link href="/register" asChild>
               <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Register as landlord</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>{t('auth.registerLandlord')}</Text>
               </TouchableOpacity>
             </Link>
           </View>
