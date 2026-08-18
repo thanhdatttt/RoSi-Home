@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
 import { Field } from "../../components/ui/Field";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { ArrowLeft, Mail, Lock } from "lucide-react-native";
+import { ArrowLeft, Mail, Lock, Phone } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { ApiRequestError } from "../../lib/api";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -16,19 +16,19 @@ export default function Login() {
   const insets = useSafeAreaInsets();
   const { t } = useI18n();
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
   async function submit() {
-    if (!email || !password) {
-      setErr("The email or password you entered is incorrect.");
+    if (!identifier || !password) {
+      setErr(t('auth.loginCredentialsRequired'));
       return;
     }
     setErr(null);
     try {
-      const user = await login(email.trim(), password, rememberMe);
+      const user = await login(identifier.trim(), password, rememberMe);
       if (user.mustChangePassword) {
         router.push("/force-change-password");
       } else if (user.role === 'Tenant') {
@@ -37,10 +37,10 @@ export default function Login() {
         router.push("/landlord");
       }
     } catch (e: any) {
-      if (e instanceof ApiRequestError) {
-        setErr(e.message || "Invalid credentials.");
+      if (e instanceof ApiRequestError && e.code === 'UNAUTHENTICATED') {
+        setErr(t('auth.invalidCredentials'));
       } else {
-        setErr("An unexpected error occurred. Please try again.");
+        setErr(t('auth.signInFailed'));
       }
     }
   }
@@ -64,13 +64,18 @@ export default function Login() {
         {/* Form */}
         <View style={{ flex: 1, paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom + 16, 24) }}>
           <Field
-            label={t('auth.emailOrPhone')}
+            label={t('auth.loginIdentifier')}
             autoCapitalize="none"
-            placeholder={t('auth.emailOrPhonePlaceholder')}
+            placeholder={t('auth.loginIdentifierPlaceholder')}
             icon={<Mail size={16} color="gray" />}
-            value={email}
-            onChangeText={setEmail}
+            value={identifier}
+            onChangeText={setIdentifier}
           />
+          <View style={{ marginTop: 12, padding: 14, borderRadius: 14, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', gap: 12 }}>
+            <Text style={{ color: '#1e3a8a', fontSize: 12, fontWeight: '700' }}>{t('auth.loginIdentifierHint')}</Text>
+            <IdentifierGuide icon={<Mail size={18} color="#2563eb" />} title={t('auth.landlordIdentifierTitle')} hint={t('auth.landlordIdentifierHint')} />
+            <IdentifierGuide icon={<Phone size={18} color="#2563eb" />} title={t('auth.tenantIdentifierTitle')} hint={t('auth.tenantIdentifierHint')} />
+          </View>
           <View style={{ marginTop: 16 }}>
             <Field
               label={t('auth.password')}
@@ -120,5 +125,19 @@ export default function Login() {
         </View>
       </View>
     </MobileFrame>
+  );
+}
+
+function IdentifierGuide({ icon, title, hint }: { icon: React.ReactNode; title: string; hint: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+      <View style={{ width: 30, height: 30, borderRadius: 10, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center' }}>
+        {icon}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: '#1e3a8a', fontSize: 12, fontWeight: '700' }}>{title}</Text>
+        <Text style={{ color: '#475569', fontSize: 12, lineHeight: 17, marginTop: 2 }}>{hint}</Text>
+      </View>
+    </View>
   );
 }
