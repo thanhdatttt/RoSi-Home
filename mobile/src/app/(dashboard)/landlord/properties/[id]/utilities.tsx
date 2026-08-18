@@ -17,6 +17,7 @@ import {
 } from "../../../../../features/portfolio/api";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type Schedule = {
   id: string;
@@ -44,11 +45,6 @@ const parseDate = (s: string): Date => {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 };
 
-const fmtMonth = (d: Date) => {
-  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-};
-
 function mapRate(r: UtilityRateView): Schedule {
   return {
     id: r.id,
@@ -60,11 +56,11 @@ function mapRate(r: UtilityRateView): Schedule {
   };
 }
 
-const rateSummary = (s: Schedule) =>
-  `${Number(s.elec).toLocaleString()} VNĐ/kWh · ${
+const rateSummary = (s: Schedule, locale: string, flatLabel: string) =>
+  `${Number(s.elec).toLocaleString(locale)} VNĐ/kWh · ${
     s.waterMethod === "metered"
-      ? `${Number(s.waterMetered).toLocaleString()} VNĐ/m³`
-      : `${Number(s.waterFlat).toLocaleString()} VNĐ flat`
+      ? `${Number(s.waterMetered).toLocaleString(locale)} VNĐ/m³`
+      : `${Number(s.waterFlat).toLocaleString(locale)} VNĐ ${flatLabel}`
   }`;
 
 export default function UtilitiesConfig() {
@@ -72,6 +68,9 @@ export default function UtilitiesConfig() {
   const insets = useSafeAreaInsets();
 
   const { token } = useAuth();
+  const { language, translateLegacy } = useI18n();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const fmtMonth = useCallback((date: Date) => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(date), [locale]);
 
   const [active, setActive] = useState<Schedule | null>(null);
   const [upcoming, setUpcoming] = useState<Schedule | null>(null);
@@ -129,14 +128,14 @@ export default function UtilitiesConfig() {
 
   async function submit() {
     setErr(null);
-    if (elec === "" || Number(elec) < 0) return setErr("Electricity rate must be non-negative.");
-    if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr("Water rate must be non-negative.");
-    if (waterMethod === "flat" && (waterFlat === "" || Number(waterFlat) < 0)) return setErr("Flat water amount must be non-negative.");
+    if (elec === "" || Number(elec) < 0) return setErr(translateLegacy("Electricity rate must be non-negative."));
+    if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr(translateLegacy("Water rate must be non-negative."));
+    if (waterMethod === "flat" && (waterFlat === "" || Number(waterFlat) < 0)) return setErr(translateLegacy("Flat water amount must be non-negative."));
 
     const d1st = new Date(month.getFullYear(), month.getMonth(), 1);
     const curr1st = thisMonth1st();
 
-    if (d1st <= curr1st) return setErr("Rate changes must take effect in a future month.");
+    if (d1st <= curr1st) return setErr(translateLegacy("Rate changes must take effect in a future month."));
 
     const payload: ScheduleUtilityRateInput = {
       electricityRatePerKwh: Number(elec),
@@ -153,22 +152,22 @@ export default function UtilitiesConfig() {
       setActive(res.current ? mapRate(res.current) : null);
       setUpcoming(res.upcoming ? mapRate(res.upcoming) : null);
 
-      setSaved(`Saved. New rates start ${fmtMonth(d1st)}.`);
+      setSaved(language === "vi" ? `Đã lưu. Đơn giá mới bắt đầu từ ${fmtMonth(d1st)}.` : `Saved. New rates start ${fmtMonth(d1st)}.`);
       setMode("view");
     } catch (error: any) {
-      setErr(error.message || "Failed to save rate");
+      setErr(error.message || translateLegacy("Failed to save rate"));
     }
   }
 
   async function handleCancelUpcoming() {
     if (!upcoming) return;
     Alert.alert(
-      "Cancel Scheduled Change",
-      "Are you sure you want to cancel the scheduled rate change?",
+      translateLegacy("Cancel Scheduled Change"),
+      translateLegacy("Are you sure you want to cancel the scheduled rate change?"),
       [
-        { text: "No", style: "cancel" },
+        { text: translateLegacy("No"), style: "cancel" },
         {
-          text: "Yes, cancel it",
+          text: translateLegacy("Yes, cancel it"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -178,7 +177,7 @@ export default function UtilitiesConfig() {
               setActive(res.current ? mapRate(res.current) : null);
               setUpcoming(res.upcoming ? mapRate(res.upcoming) : null);
             } catch (error: any) {
-              setErr(error.message || "Failed to cancel change");
+              setErr(error.message || translateLegacy("Failed to cancel change"));
             } finally {
               setLoading(false);
             }
@@ -237,7 +236,7 @@ export default function UtilitiesConfig() {
                         <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#059669' }}>In effect</Text>
                       </View>
                     </View>
-                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(active)}</Text>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(active, locale, translateLegacy("Flat"))}</Text>
                     <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Since {fmtMonth(active.effectiveMonth)}</Text>
                   </View>
                 </View>
@@ -252,7 +251,7 @@ export default function UtilitiesConfig() {
                           <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#64748b' }}>Pending</Text>
                         </View>
                       </View>
-                      <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(upcoming)}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(upcoming, locale, translateLegacy("Flat"))}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
                         <CalendarClock size={12} color="#94a3b8" />
                         <Text style={{ fontSize: 11, color: '#94a3b8' }}>Starts {fmtMonth(upcoming.effectiveMonth)}</Text>
@@ -294,7 +293,7 @@ export default function UtilitiesConfig() {
                   monthOnly
                 />
                 <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                  Takes effect on 1 {fmtMonth(month)}. Earlier months are closed for billing.
+                  {translateLegacy("Takes effect on 1 ")}{fmtMonth(month)}. {translateLegacy("Earlier months are closed for billing.")}
                 </Text>
               </View>
 
@@ -378,7 +377,7 @@ export default function UtilitiesConfig() {
 
               <View style={{ gap: 8, marginTop: 8 }}>
                 <PrimaryButton onPress={submit}>
-                  {`Schedule for ${fmtMonth(month)}`}
+                  {translateLegacy("Schedule for ")}{fmtMonth(month)}
                 </PrimaryButton>
                 <TouchableOpacity
                   onPress={() => setMode("view")}

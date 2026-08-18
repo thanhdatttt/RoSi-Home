@@ -11,6 +11,7 @@ import {
 } from "../../../../../features/leasing/api";
 import { getProperty, type PropertyView } from "../../../../../features/portfolio/api";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const OFFSETS = [30, 15, 7] as const;
 
@@ -18,6 +19,7 @@ export default function Reminders() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { language, translateLegacy } = useI18n();
 
   const [property, setProperty] = useState<PropertyView | null>(null);
   const [on, setOn] = useState<Record<number, boolean>>({ 30: false, 15: false, 7: false });
@@ -95,7 +97,7 @@ export default function Reminders() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }} numberOfLines={1}>{property?.name || 'Property'}</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }} numberOfLines={1}>{property?.name || translateLegacy('Property')}</Text>
               <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Lease reminders</Text>
             </View>
           </View>
@@ -113,7 +115,7 @@ export default function Reminders() {
             {OFFSETS.map((d, index) => (
               <View key={d} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: index < OFFSETS.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
                 <View style={{ flex: 1, paddingRight: 16 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{d} days before expiration</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{language === 'vi' ? `${d} ngày trước khi hết hạn` : `${d} days before expiration`}</Text>
                   <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Configured for landlord + tenant</Text>
                 </View>
                 <Switch
@@ -134,7 +136,7 @@ export default function Reminders() {
             {saved && (
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
                 <Check size={16} color="#2563eb" />
-                <Text style={{ fontSize: 12, fontWeight: '600', color: '#2563eb' }}>Saved for {property?.name}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: '#2563eb' }}>{language === 'vi' ? `Đã lưu cho ${property?.name}` : `Saved for ${property?.name}`}</Text>
               </View>
             )}
           </View>

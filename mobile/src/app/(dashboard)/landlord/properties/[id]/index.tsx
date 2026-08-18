@@ -22,7 +22,7 @@ export default function PropertyDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  const { formatVnd, statusLabel, t } = useI18n();
+  const { formatVnd, statusLabel, t, translateLegacy } = useI18n();
 
   const [property, setProperty] = useState<PropertyView | null>(null);
   const [rooms, setRooms] = useState<RoomView[]>([]);
@@ -90,7 +90,7 @@ export default function PropertyDetail() {
               await deleteRoom(token, room.id);
               fetchInitialData();
             } catch (err: any) {
-              Alert.alert("Error", err.message || "Failed to delete room");
+              Alert.alert(translateLegacy("Error"), err.message || translateLegacy("Failed to delete room"));
             }
           }
         }

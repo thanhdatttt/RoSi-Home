@@ -14,6 +14,7 @@ import {
   type SurchargeView,
 } from "../../../../../features/portfolio/api";
 import { useAuth } from "../../../../../contexts/auth-context";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const toLocalISOString = (d: Date) => {
   const y = d.getFullYear();
@@ -29,16 +30,13 @@ const parseDate = (s: string): Date => {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 };
 
-const fmtDate = (s: string) => {
-  const d = parseDate(s);
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-};
-
 export default function SurchargesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { language, translateLegacy } = useI18n();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const fmtDate = useCallback((value: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(parseDate(value)), [locale]);
 
   const [groups, setGroups] = useState<Awaited<ReturnType<typeof listPropertySurcharges>>['data']>([]);
   const [loading, setLoading] = useState(true);
@@ -105,19 +103,19 @@ export default function SurchargesConfig() {
 
   async function handleDelete(surchargeId: string, name: string) {
     Alert.alert(
-      "Delete Surcharge",
-      `Are you sure you want to delete "${name}"? This cannot be undone.`,
+      translateLegacy("Delete Surcharge"),
+      language === "vi" ? `Bạn có chắc muốn xóa khoản phụ thu “${name}”? Thao tác này không thể hoàn tác.` : `Are you sure you want to delete "${name}"? This cannot be undone.`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: translateLegacy("Cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: translateLegacy("Delete"),
           style: "destructive",
           onPress: async () => {
             try {
               await deletePropertySurcharge(token, surchargeId);
               fetchSurcharges();
             } catch (e: any) {
-              Alert.alert("Error", e.message || "Failed to delete surcharge.");
+              Alert.alert(translateLegacy("Error"), e.message || translateLegacy("Failed to delete surcharge."));
             }
           },
         },
@@ -126,7 +124,7 @@ export default function SurchargesConfig() {
   }
 
   async function submit() {
-    if (!form.name.trim()) return setErr("Name is required.");
+    if (!form.name.trim()) return setErr(translateLegacy("Name is required."));
     const rawAmt = getRawNumber(form.amount);
 
     setSubmitting(true);
@@ -137,11 +135,11 @@ export default function SurchargesConfig() {
 
       if (useEnd && startStr > endStr!) {
         setSubmitting(false);
-        return setErr("End date cannot be before start date.");
+        return setErr(translateLegacy("End date cannot be before start date."));
       }
       if (rawAmt === "" || Number(rawAmt) < 0) {
         setSubmitting(false);
-        return setErr("Amount must be non-negative.");
+        return setErr(translateLegacy("Amount must be non-negative."));
       }
 
       if (formMode === "edit" && editingId) {
@@ -166,7 +164,7 @@ export default function SurchargesConfig() {
       setEditingId(null);
       fetchSurcharges();
     } catch (e: any) {
-      setErr(e.message || "Failed to save surcharge.");
+      setErr(e.message || translateLegacy("Failed to save surcharge."));
     } finally {
       setSubmitting(false);
     }
@@ -305,7 +303,7 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : "ongoing"}
+                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : translateLegacy("ongoing")}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
@@ -342,7 +340,7 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : " - ongoing"}
+                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : ` - ${translateLegacy("ongoing")}`}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>

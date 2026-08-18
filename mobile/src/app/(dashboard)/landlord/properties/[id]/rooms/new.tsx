@@ -11,6 +11,7 @@ import {
   createRoom,
   listRooms,
 } from "../../../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const MAX_ROOMS = 50;
 
@@ -19,6 +20,7 @@ export default function NewRooms() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { language, translateLegacy } = useI18n();
 
   const [prefix, setPrefix] = useState("P");
   const [start, setStart] = useState("101");
@@ -78,15 +80,15 @@ export default function NewRooms() {
   const rentNum = Number(rentRaw);
 
   const errors = {
-    prefix: !prefix.trim() ? "Prefix is required." : "",
-    start: !start || Number.isNaN(startNum) || startNum < 0 ? "Enter a valid start number." : "",
+    prefix: !prefix.trim() ? translateLegacy("Prefix is required.") : "",
+    start: !start || Number.isNaN(startNum) || startNum < 0 ? translateLegacy("Enter a valid start number.") : "",
     count:
       !count || Number.isNaN(countNum) || countNum < 1
-        ? "Add at least 1 room."
+        ? translateLegacy("Add at least 1 room.")
         : countNum > MAX_ROOMS
-          ? `Maximum ${MAX_ROOMS} rooms at once.`
+          ? (language === "vi" ? `Tối đa ${MAX_ROOMS} phòng trong một lần.` : `Maximum ${MAX_ROOMS} rooms at once.`)
           : "",
-    rent: rentRaw === "" || Number.isNaN(rentNum) || rentNum < 0 ? "Rent must be zero or more." : "",
+    rent: rentRaw === "" || Number.isNaN(rentNum) || rentNum < 0 ? translateLegacy("Rent must be zero or more.") : "",
   };
   const valid = !Object.values(errors).some(Boolean);
 
@@ -135,7 +137,7 @@ export default function NewRooms() {
       }
       setDone(true);
     } catch (err: any) {
-      setSubmitError(err.message || "Failed to create rooms");
+      setSubmitError(err.message || translateLegacy("Failed to create rooms"));
     } finally {
       setSaving(false);
     }
@@ -149,10 +151,10 @@ export default function NewRooms() {
             <Check size={24} color="white" />
           </View>
           <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 16 }}>
-            {names.length} room{names.length > 1 ? "s" : ""} created
+            {language === "vi" ? `Đã tạo ${names.length} phòng` : `${names.length} room${names.length > 1 ? "s" : ""} created`}
           </Text>
           <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 8, lineHeight: 20 }}>
-            Every new room starts as <Text style={{ fontWeight: '700', color: '#0f172a' }}>Vacant</Text> at {rentNum.toLocaleString()} VNĐ / month. You can still edit each room individually.
+            {language === "vi" ? "Mỗi phòng mới bắt đầu ở trạng thái " : "Every new room starts as "}<Text style={{ fontWeight: '700', color: '#0f172a' }}>{translateLegacy("Vacant")}</Text>{language === "vi" ? ` với giá ${rentNum.toLocaleString("vi-VN")} VNĐ / tháng. Bạn vẫn có thể chỉnh sửa từng phòng.` : ` at ${rentNum.toLocaleString()} VNĐ / month. You can still edit each room individually.`}
           </Text>
           <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
             <Text style={{ fontSize: 14, lineHeight: 20 }}>{names.join(" · ")}</Text>
@@ -243,7 +245,7 @@ export default function NewRooms() {
 
           <View style={{ marginTop: 24 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Creating..." : `Create ${names.length || 0} room${names.length === 1 ? "" : "s"}`}
+              {saving ? translateLegacy("Creating...") : (language === "vi" ? `Tạo ${names.length || 0} phòng` : `Create ${names.length || 0} room${names.length === 1 ? "" : "s"}`)}
             </PrimaryButton>
           </View>
         </ScrollView>

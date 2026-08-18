@@ -8,11 +8,13 @@ import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Building2, MapPin, Navigation } from "lucide-react-native";
 import { useAuth } from "../../../../../contexts/auth-context";
 import { getProperty, updateProperty } from "../../../../../features/portfolio/api";
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function EditProperty() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   const [name, setName] = useState("");
@@ -33,7 +35,7 @@ export default function EditProperty() {
         setLocality(data.locality || "");
       } catch (err) {
         console.error("Failed to load property", err);
-        setError("Failed to load property details.");
+        setError(t('propertyAdmin.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -43,7 +45,7 @@ export default function EditProperty() {
 
   const handleSave = async () => {
     if (!name.trim() || !address.trim()) {
-      setError("Name and address are required.");
+      setError(t('propertyAdmin.nameAddressRequired'));
       return;
     }
     setError(null);
@@ -56,7 +58,7 @@ export default function EditProperty() {
       });
       router.back();
     } catch (err: any) {
-      setError(err.message || "Failed to update property");
+      setError(err.message || t('propertyAdmin.updateFailed'));
     } finally {
       setSaving(false);
     }
@@ -86,8 +88,8 @@ export default function EditProperty() {
             </TouchableOpacity>
           </Link>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Edit Property</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Details</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('propertyAdmin.edit')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('propertyAdmin.details')}</Text>
           </View>
         </View>
 
@@ -127,7 +129,7 @@ export default function EditProperty() {
 
           <View style={{ marginTop: 32, marginBottom: 32 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? t('profile.saving') : t('profile.saveChanges')}
             </PrimaryButton>
           </View>
         </ScrollView>
