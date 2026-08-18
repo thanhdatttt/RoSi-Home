@@ -268,6 +268,28 @@ rosihome/
 
 ---
 
+# Running Locally
+
+To run the application locally, follow these steps:
+
+1. Start the backend service:
+   ```bash
+   cd backend
+   npm run dev
+   ```
+2. Get the IPv4 address of the laptop running the backend.
+3. Update the `apiUrl` in `mobile/app.json` with your IPv4 address:
+   ```json
+   "extra": {
+      "apiUrl": "http://<YOUR_IPV4>:3000",
+   ```
+4. Run Expo and clear the cache:
+   ```bash
+   npx expo start -c --go
+   ```
+
+---
+
 # Development Workflow
 
 ```text
