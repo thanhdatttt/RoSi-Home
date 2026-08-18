@@ -110,22 +110,38 @@ A Responsibility Assignment Matrix (RACI) maps every deliverable to the people i
 
 | Delivery Item | Responsible | Accountable | Consulted | Informed |
 |---|---|---|---|---|
-| F-01 User Registration, Authentication, and Profile Management (AUTH-01→06, PROFILE-01) | Chí (BE1), MXH (FE1) | Chí | LR (role/ownership rules only) | SPN |
-| F-02 Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Đạt (BE2), Quân (FE2) | Đạt | LR | SPN |
-| F-03 Tenant Information and Account Management (TENANT-01→02) | Chí (BE1), MXH (FE1) | Chí | LR, TN | SPN |
-| F-04 Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Minh (BE3), Quân (FE2) | Minh | LR | SPN |
-| F-05 Utility Meter Reading and Calculation (METER-01→03) | Đạt (BE2), Quân (FE2) | Đạt | LR | SPN |
-| F-06 Billing and Invoice Generation (INVOICE-01→04) | Đạt (BE2), MXH (FE1) | Đạt | LR | TN, SPN |
-| F-07 VietQR Payment Integration (VIETQR-01→02) | Minh (BE3), Quân (FE2) | Minh | LR | TN, SPN |
-| F-08 Payment Verification and Tracking (PAYMENT-01→03) | Minh (BE3), Quân (FE2) | Minh | LR, TN | SPN |
-| F-09 Rent Payment Reminders (REMINDER-01→02) | Minh (BE3), Quân (FE2) | Minh | LR | TN, SPN |
-| F-10 Digital Lease Tracking (LEASE-01→04) | Chí (BE1), MXH (FE1) | Chí | LR | TN, SPN |
-| F-11 Automated Lease Renewal Reminders (LEASE-05→06) | Chí (BE1), MXH (FE1) | Chí | LR | TN, SPN |
-| F-12 Maintenance Request Submission (MAINT-01→02) | Minh (BE3), Quân (FE2) | Minh | TN, LR | SPN |
-| F-13 Maintenance Status Tracking (MAINT-03→05) | Minh (BE3), Quân (FE2) | Minh | LR | TN, SPN |
-| F-14 Dashboard (DASH-01→02) | Chí (BE1), MXH (FE1) | Chí | LR | SPN |
-| F-14 Dashboard (DASH-03→04) | Đạt (BE2), MXH (FE1) | Đạt | LR | SPN |
-| F-15 Monthly Business Report and Analytics (REPORT-01→05) | Minh (BE3), Quân (FE2) | Minh | LR | SPN |
+| F-01-BE Backend API and business logic — User Registration, Authentication, and Profile (AUTH-01→06, PROFILE-01) | Chí (BE1) | Chí (BE1) | MXH (FE1), LR | SPN |
+| F-01-FE Frontend UI/UX and API integration — User Registration, Authentication, and Profile (AUTH-01→06, PROFILE-01) | MXH (FE1) | MXH (FE1) | Chí (BE1), LR | SPN |
+| F-02-BE Backend API and business logic — Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Đạt (BE2) | Đạt (BE2) | Quân (FE2), LR | SPN |
+| F-02-FE Frontend UI/UX and API integration — Property and Room Management (PROPERTY-01→02, ROOM-01→03) | Quân (FE2) | Quân (FE2) | Đạt (BE2), LR | SPN |
+| F-03-BE Backend API and business logic — Tenant Information and Account Management (TENANT-01→02) | Chí (BE1) | Chí (BE1) | MXH (FE1), LR, TN | SPN |
+| F-03-FE Frontend UI/UX and API integration — Tenant Information and Account Management (TENANT-01→02) | MXH (FE1) | MXH (FE1) | Chí (BE1), LR, TN | SPN |
+| F-04-BE Backend API and business logic — Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR | SPN |
+| F-04-FE Frontend UI/UX and API integration — Utility Pricing and Property Surcharge Configuration (UTILITY-01→02, CHARGE-01) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR | SPN |
+| F-05-BE Backend API and business logic — Utility Meter Reading and Calculation (METER-01→03) | Đạt (BE2) | Đạt (BE2) | Quân (FE2), LR | SPN |
+| F-05-FE Frontend UI/UX and API integration — Utility Meter Reading and Calculation (METER-01→03) | Quân (FE2) | Quân (FE2) | Đạt (BE2), LR | SPN |
+| F-06-BE Backend API and business logic — Billing and Invoice Generation (INVOICE-01→04) | Đạt (BE2) | Đạt (BE2) | MXH (FE1), LR | TN, SPN |
+| F-06-FE Frontend UI/UX and API integration — Billing and Invoice Generation (INVOICE-01→04) | MXH (FE1) | MXH (FE1) | Đạt (BE2), LR | TN, SPN |
+| F-07-BE Backend API and business logic — VietQR Payment Integration (VIETQR-01→02) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR | TN, SPN |
+| F-07-FE Frontend UI/UX and API integration — VietQR Payment Integration (VIETQR-01→02) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR | TN, SPN |
+| F-08-BE Backend API and business logic — Payment Verification and Tracking (PAYMENT-01→03) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR, TN | SPN |
+| F-08-FE Frontend UI/UX and API integration — Payment Verification and Tracking (PAYMENT-01→03) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR, TN | SPN |
+| F-09-BE Backend API and business logic — Rent Payment Reminders (REMINDER-01→02) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR | TN, SPN |
+| F-09-FE Frontend UI/UX and API integration — Rent Payment Reminders (REMINDER-01→02) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR | TN, SPN |
+| F-10-BE Backend API and business logic — Digital Lease Tracking (LEASE-01→04) | Chí (BE1) | Chí (BE1) | MXH (FE1), LR | TN, SPN |
+| F-10-FE Frontend UI/UX and API integration — Digital Lease Tracking (LEASE-01→04) | MXH (FE1) | MXH (FE1) | Chí (BE1), LR | TN, SPN |
+| F-11-BE Backend API and business logic — Automated Lease Renewal Reminders (LEASE-05→06) | Chí (BE1) | Chí (BE1) | MXH (FE1), LR | TN, SPN |
+| F-11-FE Frontend UI/UX and API integration — Automated Lease Renewal Reminders (LEASE-05→06) | MXH (FE1) | MXH (FE1) | Chí (BE1), LR | TN, SPN |
+| F-12-BE Backend API and business logic — Maintenance Request Submission (MAINT-01→02) | Minh (BE3) | Minh (BE3) | Quân (FE2), TN, LR | SPN |
+| F-12-FE Frontend UI/UX and API integration — Maintenance Request Submission (MAINT-01→02) | Quân (FE2) | Quân (FE2) | Minh (BE3), TN, LR | SPN |
+| F-13-BE Backend API and business logic — Maintenance Status Tracking (MAINT-03→05) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR | TN, SPN |
+| F-13-FE Frontend UI/UX and API integration — Maintenance Status Tracking (MAINT-03→05) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR | TN, SPN |
+| F-14A-BE Backend API and business logic — Dashboard (DASH-01→02) | Chí (BE1) | Chí (BE1) | MXH (FE1), LR | SPN |
+| F-14A-FE Frontend UI/UX and API integration — Dashboard (DASH-01→02) | MXH (FE1) | MXH (FE1) | Chí (BE1), LR | SPN |
+| F-14B-BE Backend API and business logic — Dashboard (DASH-03→04) | Đạt (BE2) | Đạt (BE2) | MXH (FE1), LR | SPN |
+| F-14B-FE Frontend UI/UX and API integration — Dashboard (DASH-03→04) | MXH (FE1) | MXH (FE1) | Đạt (BE2), LR | SPN |
+| F-15-BE Backend API and business logic — Monthly Business Report and Analytics (REPORT-01→05) | Minh (BE3) | Minh (BE3) | Quân (FE2), LR | SPN |
+| F-15-FE Frontend UI/UX and API integration — Monthly Business Report and Analytics (REPORT-01→05) | Quân (FE2) | Quân (FE2) | Minh (BE3), LR | SPN |
 | TASK-TECH-01 Set up backend infrastructure | Chí | Chí | Đạt, Minh | SPN |
 | TASK-TECH-02 Set up frontend infrastructure | Chí | Chí | MXH, Quân | SPN |
 | TASK-TECH-03 Set up quality tooling | Đạt | Đạt | Chí, Minh, MXH, Quân | SPN |

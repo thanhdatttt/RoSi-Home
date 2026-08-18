@@ -3,13 +3,9 @@
 
 # 1. Background, Context, and Overview
 
-Vietnam has experienced continuous growth in the number of small-scale rental properties, including boarding houses, mini apartments, and rental rooms managed by individual landlords. Unlike large property management companies, these landlords typically own between one and thirty rental units and manage every aspect of their rental business independently. Daily operations such as calculating rent and utility bills, collecting payments, tracking lease agreements, responding to maintenance requests, and monitoring business performance are often performed manually using calculators, spreadsheets, notebooks, and messaging applications such as Zalo.
+Small landlords in Vietnam often manage one to thirty rental units using notebooks, spreadsheets, calculators, Zalo, and banking applications. This fragmented workflow makes rent and utility calculation, payment tracking, lease renewal, maintenance management, and business monitoring time-consuming and error-prone.
 
-Although this approach is familiar and inexpensive, it creates significant operational inefficiencies. Monthly rent calculation requires landlords to manually record electricity and water meter readings before calculating charges for every tenant individually. Payment records are often scattered across bank transactions and chat messages, making it difficult to verify completed payments or resolve disputes. Lease renewal dates rely heavily on the landlord's memory, increasing the risk of forgotten contract expirations and unexpected vacancies. Maintenance requests submitted through phone calls or messaging applications can easily be overlooked because there is no centralized tracking mechanism. As rental portfolios grow, landlords also struggle to obtain a clear overview of occupancy, revenue, expenses, and overall business performance.
-
-RosiHome is proposed as a lightweight property management platform specifically designed for self-managing landlords. Rather than targeting enterprise property management companies, the system focuses on digitizing the everyday workflow of small landlords while remaining simple and affordable. The application consolidates room management, tenant management, automated utility calculation, QR-code-based rent payment, payment history, lease tracking, maintenance request management, and financial dashboards into a single platform accessible by both landlords and tenants.
-
-The vision of RosiHome is to replace fragmented manual processes with a centralized digital solution that reduces administrative workload, improves transparency between landlords and tenants, minimizes human error, and enables landlords to manage their rental business more efficiently. By automating repetitive administrative tasks while providing accurate and accessible records, the system allows landlords to spend less time performing routine operations and more time making informed business decisions.
+RosiHome is a lightweight platform that centralizes these activities for landlords and tenants. It provides room and tenant management, utility billing, invoices, VietQR payment instructions, payment history, lease tracking, maintenance requests, and dashboards. The goal is to reduce administrative effort, improve transparency, and support more efficient rental management.
 
 ---
 
@@ -342,46 +338,21 @@ Unlike the current domain model, the future domain centralizes all business info
 
 ---
 
-# 10. Assumptions
+# 10. Intended Business Plan
 
-The successful implementation and operation of RosiHome depends on several assumptions made during project planning and development.
+RosiHome is expected to generate revenue primarily from landlords through the following possible plans:
 
-- Self-managing landlords are willing to replace their existing manual workflows with a digital property management system after a short learning period.
-- Landlords have access to smartphones or computers with a stable internet connection to manage their rental properties through the application.
-- Tenants possess smartphones capable of accessing the application, viewing invoices, scanning VietQR payment codes, and uploading payment receipts.
-- Utility meter readings will continue to be entered manually by landlords, and these readings are assumed to be accurate.
-- Payments are transferred directly between the tenant's bank account and the landlord's bank account using the VietQR standard. RosiHome does not process or hold any financial transactions.
-- Landlords remain responsible for verifying uploaded payment receipts against their own banking applications before confirming payment within the system.
-- Lease agreements continue to be negotiated outside the application, while RosiHome serves as a digital repository for lease information and renewal reminders.
-- The MVP will be deployed for a relatively small number of landlords managing between one and thirty rental units, which aligns with the project's intended target users.
-- Cloud hosting services, database infrastructure, and third-party services used by the application remain available throughout the project lifecycle.
+- **Monthly subscription:** recurring payment for access to the core property-management features.
+- **Annual subscription:** discounted yearly payment for landlords who commit to longer-term use.
+- **Premium lifetime plan:** one-time payment for permanent access to a defined feature set, subject to reasonable service and infrastructure limitations.
+- **Optional paid add-ons:** additional storage, advanced reports, or future automation features.
 
-These assumptions establish the operating environment for the MVP and define the conditions under which the proposed solution is expected to achieve its intended objectives.
-
-# 11. Risks
-Although RosiHome has been designed to address the operational challenges of self-managing landlords, several risks may affect the successful development and adoption of the system. Identifying these risks early enables appropriate mitigation strategies throughout the project lifecycle.
-
-|Risk|Description|Mitigation Strategy|
-|---|---|---|
-|**Project schedule delays**|Development may be delayed due to coursework, examinations, or unforeseen technical challenges within the student team.|Prioritize core MVP features, follow an iterative development approach, and postpone non-essential functionality if necessary.|
-|**Scope creep**|Additional feature requests may expand the project beyond the planned schedule and available resources.|Freeze the MVP feature set after requirements approval and place additional features in a future development roadmap.|
-|**User adoption resistance**|Some landlords may prefer continuing with familiar tools such as Excel, notebooks, or Zalo instead of learning a new system.|Design a simple, intuitive interface and provide an easy onboarding process that closely matches landlords' existing workflows.|
-|**Incorrect manual data entry**|Meter readings, tenant information, or payment verification may contain human errors because these processes still require manual input.|Implement input validation, confirmation dialogs, and editable records to reduce the impact of data entry mistakes.|
-|**Payment verification limitations**|Since payments are transferred directly between banks, RosiHome cannot automatically verify whether a payment has been successfully completed.|Require landlords to verify uploaded payment receipts against their banking application before confirming payment within the system.|
-|**Limited pilot users**|The project may not obtain enough real landlords and tenants to fully evaluate system usability during testing.|Conduct pilot testing through personal networks and gather user feedback early in the development process.|
-|**Cloud service dependency**|System availability depends on third-party cloud hosting and database services.|Use reliable cloud providers with backup and recovery mechanisms to minimize service interruptions.|
-|**Data privacy concerns**|The application stores tenant personal information, lease records, and payment history, which must be protected from unauthorized access.|Implement authentication, role-based access control, encrypted communication, and secure database management practices.|
-
-Overall, the identified risks are considered manageable because they primarily relate to project management, user adoption, and operational procedures rather than fundamental technical limitations. Proper planning, scope management, and user-centered design will significantly reduce the likelihood and impact of these risks.
+Tenants are not expected to pay for basic access. The final pricing and plan limits will be determined after the MVP pilot validates willingness to pay and operating costs. RosiHome will not generate revenue by holding tenant funds or charging a fee for processing bank transfers.
 
 ---
 
-# 12. Conclusion
+# 11. Conclusion
 
-RosiHome addresses the operational challenges faced by self-managing landlords by replacing fragmented manual processes with a centralized property management platform. The current rental management workflow relies heavily on notebooks, spreadsheets, calculators, and messaging applications, resulting in repetitive administrative work, calculation errors, inconsistent record keeping, and limited visibility into business performance.
+RosiHome replaces fragmented rental-management tasks with one centralized platform for billing, payments, leases, maintenance, and reporting. This improves operational efficiency and transparency for landlords and tenants.
 
-The proposed system streamlines the rental management process by integrating property management, tenant management, lease tracking, automated utility calculation, billing, VietQR-based payments, maintenance request management, and business reporting into a single application. By providing landlords and tenants with centralized access to rental information, the system improves operational efficiency, increases transparency, and reduces disputes caused by missing or inconsistent records.
-
-The project scope focuses on delivering the core functionality required for a practical Minimum Viable Product while deliberately excluding advanced capabilities such as artificial intelligence, rental market benchmarking, IoT integration, and automatic payment verification. These exclusions ensure that the project remains achievable within the available resources and development timeline while establishing a solid foundation for future enhancements.
-
-Ultimately, RosiHome demonstrates how a lightweight, localized property management solution can simplify the everyday workflow of self-managing landlords in Vietnam. By reducing administrative burden and improving access to accurate information, the system supports more efficient rental operations and lays the groundwork for future innovations that can further enhance decision-making and business performance.
+The MVP deliberately excludes advanced features such as AI analytics, market benchmarking, IoT integration, and automatic payment verification so that the project remains achievable within the available resources and timeline. These exclusions leave a clear foundation for future development.
