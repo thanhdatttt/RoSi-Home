@@ -20,22 +20,26 @@
 The project adopts an **Iterative and Incremental Development (IID) / Kanban model with Dependency-Based Delivery Batches**.
 
 ```text
-[Phase 1: Project Initiation & Architecture Baseline] (Week 1)
+[Weeks 1–4: Inception, Exploratory Research & Concept Pivot]
+       │
+       ▼ (RosiHome MVP Active Delivery Baseline)
+[Phase 1: Technical Setup & Architecture Baseline] (Week 5)
        │
        ▼
-[Phase 2: Overlapping Incremental Construction & Integration] (Weeks 2–8)
-       ├── Batch 1 (Foundation): Auth, Profile, Property, Room, Utility
+[Phase 2: Overlapping Incremental Construction & Integration] (Weeks 5–8)
+       ├── Batch 1 (Foundation): Auth, Profile, Property, Room, Utility (Week 5)
        │      └── [FE UI Mocks & Design System] ──► [FE Batch 1 Live Integration]
-       ├── Batch 2 (Core Operations): Tenant, Lease, Meter, Maintenance
+       ├── Batch 2 (Core Operations): Tenant, Lease, Meter, Maintenance (Week 6)
        │      └── [FE Batch 2 UI Mocks] ──────────► [FE Batch 2 Live Integration]
-       ├── Batch 3 (Billing & Settlement): Invoice, VietQR, Proof, Payment, Reminder
+       ├── Batch 3 (Billing & Settlement): Invoice, VietQR, Proof, Payment, Reminder (Week 7)
        │      └── [FE Batch 3 UI Mocks] ──────────► [FE Batch 3 Live Integration]
-       └── Batch 4 (Analytics & Reporting): Dashboard, Operational & Financial Reports
+       └── Batch 4 (Analytics & Reporting): Dashboard, Operational & Financial Reports (Week 8)
               └── [FE Batch 4 UI Mocks] ──────────► [FE Batch 4 Live Integration]
        │
        ▼
-[Phase 3: System Integration, Verification & Closure] (Weeks 9–10)
+[Phase 3: System Integration, Verification & Landlord Pilot] (Weeks 9–10)
 ```
+
 
 ### 2.2 Tailoring Rationale
 1. **AI-Assisted Development Velocity**: With team members utilizing AI coding agents (Claude Code, Gemini), code generation is rapid but completed at irregular intervals. Kanban removes artificial sprint boundaries while maintaining continuous delivery flow.

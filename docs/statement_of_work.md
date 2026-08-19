@@ -127,17 +127,18 @@ Acceptance does not imply production-scale availability or long-term commercial 
 
 ## 6. Schedule and Milestones
 
-The planned duration is 8–10 calendar weeks. The exact dates will follow the academic calendar.
+The total course spans 10 calendar weeks. Following the project pivot at Week 4/5, active development of the RosiHome MVP is executed in Weeks 5–10 (~30 working days):
 
 | Milestone | Target Period | Acceptance Evidence |
 |---|---|---|
-| M1 – Planning and technical baseline | Week 1 | Approved backlog, architecture, assignments, plan, and environments |
-| M2 – Foundation available | Weeks 2–3 | Batch 1 APIs/UI foundations integrated |
-| M3 – Core business workflows | Weeks 3–5 | Batch 2 workflows deployed |
-| M4 – Billing/payment workflow | Weeks 5–7 | Batch 3 workflow deployed |
-| M5 – Dashboard/report workflow | Weeks 7–8 | Batch 4 outputs deployed |
-| M6 – MVP candidate | Week 9 | Integrated application, validation evidence, and documentation |
-| M7 – Final delivery | Week 10 if required | Corrected deployed revision and academic demonstration |
+| M1 – Technical baseline & setup | Week 5 (Day 2) | Approved Backlog 2.0, architecture, CI pipeline, environments |
+| M2 – Foundation available | End of Week 5 | Batch 1 APIs/UI foundations integrated (68 SP) |
+| M3 – Core business workflows | End of Week 6 | Batch 2 workflows deployed (87 SP — 50% MVP) |
+| M4 – Billing/payment workflow | End of Week 7 | Batch 3 workflow deployed (58 SP) |
+| M5 – Dashboard/report workflow | End of Week 8 | Batch 4 outputs deployed (34 SP — 100% Backlog) |
+| M6 – Pilot candidate & Live testing | Week 9 | 7-day live pilot with 2 landlords in TP.HCM completed |
+| M7 – Final delivery & Defense | Week 10 | Final verified revision, user guide, and academic demonstration |
+
 
 Week 10 is schedule contingency for integration, external-service, deployment, or sponsor-feedback rework. It is not automatic additional scope.
 

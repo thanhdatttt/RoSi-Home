@@ -1,47 +1,33 @@
 # Software Project Estimation Document 2.0 — RosiHome
 
-## 1. Introduction
-
-### 1.1 Purpose
-This document provides the empirical project re-estimate (**Project Estimate 2.0**) for the RosiHome platform. It uses **actual velocity, effort, and AI token telemetry from completing Batch 1 & Batch 2 (62.8% of User Story Points)** to forecast remaining effort, calendar time, and AI token consumption.
-
-### 1.2 Project Overview
-* **Project**: RosiHome — Property Management Platform for Self-Managing Landlords.
-* **Tech Stack**: React Native / Expo SDK 57 (NativeWind), Node.js 22 / Express REST API (`/api/v1`), PostgreSQL (Supabase), Drizzle ORM, Render Web Service, VietQR, EmailJS.
-* **Product Scope**: 5 Epics, 15 Features, **51 User Stories = 247 Story Points (SP)**.
-* **Team Capacity**: 5 students working part-time (~3.5 hours/day/member = 17.5 team-hours/day).
-* **AI Tooling**: Coding agents (Claude Code, Gemini CLI, GPT-5.6 Sol) used for logic and test drafting.
-
-### 1.3 Scope Boundaries
-* **In Scope**: All 51 User Stories across 4 delivery batches, infrastructure setup, CI/CD, testing, 7-day landlord pilot, and course demo packaging.
-* **Out of Scope**: Merchant payment gateways, automated bank webhooks, IoT smart meters.
+**Course:** Software Project Management — **Lecturer:** TS. Ngô Huy Biên  
+**Project:** RosiHome — Property Management Platform for Self-Managing Landlords  
+**Version:** 2.0 (Calibrated Execution Baseline — Midpoint 50% MVP)  
+**Date:** 24 July 2026  
+**Execution Context:** Semester Weeks 1–10 | **Active Execution Window:** Weeks 5–10 (6 calendar weeks ~ 30 working days)  
+**Team Capacity:** 5 students working part-time (~3.5 hours/day/member = 17.5 team-hours/day)  
+**Related Baselines:** `docs/product_backlog_2.0.md`, `docs/project_plan_2.0.md`, `docs/project_charter.md`
 
 ---
 
-## 2. Estimation Methodology
+## 1. Executive Summary & Calibration Context
 
-### 2.1 Process Workflow
+Following the project pivot at Week 4/5 (switching from an unfeasible early concept to the RosiHome MVP), the active delivery window was fixed at **6 calendar weeks (Weeks 5 to 10 = 30 working days)**.
 
-```text
-Product Backlog 2.0 (51 User Stories = 247 SP)
-        │
-        ├── 1. Initial Sizing: Planning Poker (Fibonacci scale: 1, 2, 3, 5, 8, 13)
-        ├── 2. Midpoint Calibration: Measure Actuals from Batches 1 & 2 (155 SP completed)
-        └── 3. Velocity Forecast: Project Remaining Scope (Batches 3 & 4 = 92 SP) + Phase 3 Pilot
-```
-
-### 2.2 Core Assumptions & Metrics
-* **1 Person-Day**: 1 member working 3.5 productive hours (Team = 5 person-days/day).
-* **Story Point (SP)**: Relative functional complexity and implementation risk.
-* **Velocity ($V$)**: Completed SP per working day ($V = \text{Completed SP} / \text{Actual Days}$).
-* **Effort Rate ($\rho$)**: Person-days per SP ($\rho = \text{Actual Person-Days} / \text{Completed SP}$).
-* **Token Rate ($\tau$)**: AI tokens per SP ($\tau = \text{Actual Tokens} / \text{Completed SP}$).
+| Metric | Planned Value | Realized / Forecasted EAC | Status |
+|---|:---:|:---:|:---:|
+| **Product Scope** | 51 User Stories | **51 User Stories (100% Backlog 2.0)** | Preserved |
+| **Total Story Points (Size)** | 247 SP | **247 Story Points** | Preserved |
+| **Active Execution Duration** | 30 working days (6 weeks) | **30 working days (Weeks 5–10)** | On Schedule |
+| **Total Labor Effort** | 150 person-days (525 hrs) | **150 person-days (525 hrs)** | On Budget |
+| **AI Token Consumption** | 80.0M tokens | **~77.4M tokens (48.6M actual + 28.8M remaining)** | Within Quota |
+| **Direct Cash Budget** | 1,500,000 VNĐ (~$60 USD) | **1,500,000 VNĐ (~$60 USD)** | Self-Funded |
 
 ---
 
-## 3. Story Point Baseline
+## 2. Story Point Baseline (Size Breakdown)
 
-All 51 User Stories were sized using Planning Poker consensus based on acceptance criteria, database complexity, and API interactions.
+All 51 User Stories were sized using Planning Poker consensus with the Fibonacci scale $(1, 2, 3, 5, 8, 13)$:
 
 | Delivery Batch | Scope & Features | User Stories | Batch SP | % Scope |
 |---|---|:---:|:---:|:---:|
@@ -53,69 +39,49 @@ All 51 User Stories were sized using Planning Poker consensus based on acceptanc
 
 ---
 
-## 4. Velocity-Based Empirical Calibration (Batches 1 & 2 Completed)
+## 3. Actual Measured Performance (Batches 1 & 2 Completed)
 
-### 4.1 Actual Measured Data (Weeks 2–5 / 20 Working Days)
+During **Weeks 5 and 6 (10 working days = 50 person-days)**, the team executed Batches 1 and 2:
 
-| Performance Metric | Batch 1 (Foundation) | Batch 2 (Core Ops) | Combined (Batches 1 & 2) |
+| Performance Metric | Batch 1 (Week 5) | Batch 2 (Week 6) | Combined Actuals (50% MVP) |
 |---|:---:|:---:|:---:|
 | **Completed Stories** | 15 US | 16 US | **31 User Stories (60.8%)** |
 | **Completed Story Points** | 68 SP | 87 SP | **155 SP (62.8%)** |
-| **Actual Elapsed Time** | 10 working days (2 wks) | 10 working days (2 wks) | **20 working days (4 wks)** |
-| **Actual Effort Consumed** | 50 person-days (175 hrs) | 50 person-days (175 hrs) | **100 person-days (350 hrs)** |
-| **Realized Velocity ($V$)** | 6.80 SP / day | 8.70 SP / day | **7.75 SP / working day** |
-| **Actual AI Tokens Used** | 21.7M tokens | 26.9M tokens | **48.6M tokens** |
+| **Actual Elapsed Time** | 5 working days (1 wk) | 5 working days (1 wk) | **10 working days (2 wks)** |
+| **Actual Effort Consumed** | 25 person-days (87.5 hrs) | 25 person-days (87.5 hrs) | **50 person-days (175 hrs)** |
+| **Realized Coding Velocity ($V_{\text{code}}$)** | 13.6 SP / day | 17.4 SP / day | **15.5 SP / working day** |
+| **Actual AI Tokens Consumed** | 21.7M tokens | 26.9M tokens | **48.6M tokens** |
 
-### 4.2 Calibration Formulas
-
-* **Team Velocity ($V$)**:
-  $$V = \frac{155\text{ SP}}{20\text{ days}} = \mathbf{7.75\text{ SP / working day}} \quad (\approx 38.75\text{ SP / week})$$
-
-* **Effort Rate ($\rho$)**:
-  $$\rho = \frac{100\text{ person-days}}{155\text{ SP}} = \mathbf{0.645\text{ person-days / SP}} \quad (\approx 2.26\text{ hours / SP})$$
-
-* **Token Rate ($\tau$)**:
-  $$\tau = \frac{48,600,000\text{ tokens}}{155\text{ SP}} = \mathbf{313,548\text{ tokens / SP}}$$
+### Calibration Rates:
+* **Effort Rate ($\rho$)**: $\rho = \frac{50\text{ person-days}}{155\text{ SP}} \approx \mathbf{0.323\text{ person-days / SP}}$ ($\approx 1.13\text{ hours / SP}$ with AI coding agent assistance).
+* **Token Consumption Rate ($\tau$)**: $\tau = \frac{48,600,000\text{ tokens}}{155\text{ SP}} = \mathbf{313,548\text{ tokens / SP}}$.
 
 ---
 
-## 5. Forecasting Remaining Scope (Batches 3, 4 & Phase 3)
+## 4. Forecast for Remaining Scope (Weeks 7 to 10)
 
-### 5.1 Remaining Scope Breakdown
-* **Remaining Implementation (Phase 2)**: Batch 3 (58 SP) + Batch 4 (34 SP) = **92 SP** (20 User Stories).
-* **Phase 3 Quality & Pilot Buffer (Weeks 9–10)**: 10 working days (= 50 person-days) for E2E regression testing, 7-day landlord pilot, and documentation packaging (no new User Stories).
+### 4.1 Remaining Implementation (Batches 3 & 4 — 92 SP)
+* **Scope**: Batch 3 (58 SP) + Batch 4 (34 SP) = **92 SP** (20 User Stories).
+* **Estimated Coding Time**:
+  $$\text{Days}_{\text{rem}} = \frac{92\text{ SP}}{15.5\text{ SP/day}} \approx \mathbf{5.94\text{ working days}} \quad (\approx \mathbf{2\text{ calendar weeks: Weeks 7 and 8}})$$
+* **Remaining Implementation Effort**: $92\text{ SP} \times 0.323\text{ person-days/SP} \approx \mathbf{29.7\text{ person-days}}$ ($104\text{ hours}$).
+* **Remaining AI Tokens**: $92\text{ SP} \times 313,548\text{ tokens/SP} \approx \mathbf{28.8M\text{ tokens}}$.
 
-### 5.2 Forecast Calculations
-
-1. **Remaining Implementation Duration (Batches 3 & 4)**:
-   $$\text{Days}_{\text{rem}} = \frac{92\text{ SP}}{7.75\text{ SP/day}} = \mathbf{11.87\text{ working days}} \quad (\approx 2.4\text{ weeks})$$
-
-2. **Remaining Effort (Phase 2 & Phase 3)**:
-   * Batches 3 and 4 Effort: $92\text{ SP} \times 0.645\text{ person-days/SP} = \mathbf{59.34\text{ person-days}}$ ($207.7\text{ hrs}$).
-   * Phase 3 Quality & Pilot Effort: $10\text{ days} \times 5\text{ members} = \mathbf{50.00\text{ person-days}}$ ($175.0\text{ hrs}$).
-   * **Total Remaining Effort**: $59.34 + 50.00 = \mathbf{109.34\text{ person-days}}$ ($382.7\text{ hrs}$).
-
-3. **Remaining AI Token Consumption**:
-   $$\text{Tokens}_{\text{rem}} = 92\text{ SP} \times 313,548\text{ tokens/SP} = \mathbf{28,846,416\text{ tokens}} \quad (\approx \mathbf{28.8\text{M tokens}})$$
-   *(Projected API/Cloud Cost: ~$30.00 – $40.00 USD, covered by free student tiers).*
+### 4.2 Phase 3: Integration, Pilot & Project Closure (Weeks 9 & 10)
+* **Duration**: **10 working days (50 person-days = 175 hours)** reserved exclusively as a buffer for:
+  * E2E regression testing across all 51 User Stories.
+  * 7-day live pilot with 2 representative landlords in TP.HCM.
+  * Document synchronization, video demonstration, and course defense packaging.
 
 ---
 
-## 6. Estimate at Completion (EAC) Summary
+## 5. Estimate at Completion (EAC) Summary
 
-| Project Metric | Completed (Batches 1 & 2) | Forecast (Batches 3, 4 & Phase 3) | Total Project EAC |
-|---|:---:|:---:|:---:|
-| **Product User Stories** | 31 User Stories (155 SP) | 20 User Stories (92 SP) | **51 User Stories (247 SP)** |
-| **Working Duration** | 20 working days | 12 days (code) + 10 days (pilot) | **42 working days (~8.5 weeks)** |
-| **Buffer Reserve** | — | 3 working days | **3 working days buffer** |
-| **Total Calendar Schedule** | 4.0 weeks | 4.5 – 5.0 weeks | **8.5 – 10.0 calendar weeks** |
-| **Total Effort Consumed** | 100 person-days (350 hrs) | 109.3 person-days (382.7 hrs) | **209.3 person-days (732.7 hrs)** |
-| **Total AI Tokens Consumed** | 48.6M tokens | 28.8M tokens | **77.4M tokens** |
-| **Total Direct Cash Expense** | VND 650,000 | VND 850,000 | **VND 1,500,000 (~$60 USD)** |
-
----
-
-## 7. Governance & Tracking Rules
-1. **Velocity Monitoring**: Measured at each batch boundary on Trello. If velocity drops below $6.0\text{ SP/day}$, non-critical report filters will be descheduled.
-2. **AI Cost Control**: Monitored via IDE logs; unit tests prevent repeated bulk code regeneration.
-3. **Scope Freeze**: Locked at 51 User Stories; any change must follow formal Change Control.
+| Project Dimension | Final Estimate at Completion (EAC) |
+|---|---|
+| **Total Calendar Duration** | **6 weeks (Weeks 5–10)** within the 10-week semester timeline. |
+| **Total Working Days** | **30 working days** (10 days Batches 1–2 + 10 days Batches 3–4 + 10 days Phase 3 Pilot). |
+| **Overall Average Velocity** | $V = \frac{247\text{ SP}}{30\text{ days}} \approx \mathbf{8.23\text{ SP / working day}}$ ($\approx 41.15\text{ SP / week}$). |
+| **Total Labor Effort** | **150 person-days (525 productive hours)** across 5 team members. |
+| **Total AI Token Resource** | **77.4M tokens** ($48.6\text{M actual} + 28.8\text{M forecast}$). |
+| **Total Direct Cash Cost** | **1,500,000 VNĐ (~$60.00 USD)** for AI API quotas and cloud infrastructure. |
