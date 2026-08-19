@@ -7,8 +7,8 @@ import { registerJobs } from "./jobs/index.js";
 const app = createApp();
 const port = config.port;
 
-const server = app.listen(port, () => {
-  console.log(`RosiHome backend listening on :${port} (${config.nodeEnv})`);
+const server = app.listen(port, "0.0.0.0", () => {
+  console.log(`RosiHome backend listening on 0.0.0.0:${port} (${config.nodeEnv})`);
 });
 
 registerJobs();
