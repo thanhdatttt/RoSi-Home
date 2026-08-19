@@ -157,7 +157,7 @@ A User Story enters `Ready` and may begin implementation only when:
 
 ## 7. Engineering Policies & Quality Controls
 
-* **Work-In-Progress (WIP) Limit**: Each developer works on at most **1 User Story at a time** to maximize throughput and minimize multitasking overhead.
+* **Work-In-Progress (WIP) Limit**: Each developer works on at most **1 Task at a time** (a task can group multiple related User Stories within a feature module) to maximize throughput and minimize multitasking overhead.
 * **Git Branching Strategy**:
   - `main`: Protected integration baseline. Direct commits and force pushes are blocked.
   - `feature/<story-id>`: Short-lived feature branches created from `main`.

@@ -41,7 +41,7 @@ RosiHome MVP (51 US / 247 SP)
 ## 3. Delivery Methodology & Workflow
 
 * **Kanban Flow:** `Backlog` $\rightarrow$ `Ready (DoR)` $\rightarrow$ `In Dev` $\rightarrow$ `PR Review` $\rightarrow$ `CI Test Gate` $\rightarrow$ `Merge & Deploy Staging` $\rightarrow$ `Mobile Integration` $\rightarrow$ `Done (DoD)`.
-* **WIP Limit:** Strictly **1 active Story per developer** to eliminate multitasking.
+* **WIP Limit:** Strictly **1 active Task per developer** (each task may group multiple related User Stories within a feature module) to eliminate multitasking.
 * **Sashimi Handoff:** Backend runs 1 batch ahead of Frontend $\rightarrow$ Frontend always integrates against live staging APIs.
 
 ```text

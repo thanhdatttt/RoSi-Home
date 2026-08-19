@@ -8,7 +8,7 @@
 | Status | Draft pending backlog selection and named assignments |
 | Planned duration | Five working days, plus setup/dry run |
 | Planned human capacity | 75–100 team-hours |
-| Initial WIP | Maximum five active implementation stories |
+| Initial WIP | Maximum five active implementation tasks (1 task per person) |
 | Related methodology | `docs/cost_time_resources/estimation_methodology.md` |
 | Related capacity baseline | `docs/cost_time_resources/resource_capacity_baseline.md` |
 
