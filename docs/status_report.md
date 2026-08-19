@@ -25,7 +25,7 @@
 - **Budget usage & Estimated final cost:** Total actual spend: **3,850,000 VND / 4,250,000 VND** (**90.6%** of budget) $\rightarrow$ **UNDER BUDGET (Saved ~400,000 VND)**.
 - **Issues and resolutions:** 
   - Frontend UI integration errors with backend API contracts $\rightarrow$ Refactored API client adapters and unified data mapping.
-  - High volume of defects requiring team overtime (OT) $\rightarrow$ Conducted intensive bug-fixing sprints to stabilize the MVP before final release.
+  - High volume of defects requiring team overtime (OT) $\rightarrow$ Utilized the Phase 3 buffer and intensive bug-fixing sessions to stabilize the MVP before final release.
 - **Changes and impacts:** 0 scope creep stories (100% adherence to the Product Backlog 2.0 51-story baseline).
 - **Updated product backlog:**
   - *Stories completed (51/51 US):* 
