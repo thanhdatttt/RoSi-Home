@@ -70,7 +70,7 @@ Add the following variables in Render. Do not commit the real `.env` file or exp
 
 Render's email destination and notification level are workspace/service settings, not Blueprint fields. In Render Dashboard, open **Integrations → Notifications**, choose **Email** as the destination, and set **All notifications**. This sends email for both failed builds/deploys and deploys that successfully go live.
 
-The current `render.yaml` intentionally ends its build command with `&& exit 1` to simulate a failed deploy. Remove that suffix after testing.
+The backend `build` script currently ends with `&& exit 1` to simulate a failed deploy. Remove that suffix from `backend/package.json` after testing.
 
 ## 5. Database configuration and migration
 
