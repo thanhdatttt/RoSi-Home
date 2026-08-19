@@ -9,13 +9,13 @@
 | Storage | Supabase Storage |
 | Source repository | GitHub repository for RosiHome |
 | Provisioning method | Manual configuration through Render Dashboard |
-| Infrastructure as Code | Not currently used; no `render.yaml` |
+| Infrastructure as Code | `render.yaml` |
 | Production URL | <https://rosi-home.onrender.com> |
 | Health endpoint | <https://rosi-home.onrender.com/health> |
 
 ## 2. Render Web Service setup
 
-1. Open Render and create a project or Web Service.
+1. Open Render and create a project or Web Service. The repository also contains a `render.yaml` Blueprint with the service root, build command, start command, and health check already configured.
 2. Connect the service to the RosiHome GitHub repository.
 3. Select branch `main`.
 4. Configure the service as follows:
@@ -23,7 +23,7 @@
    | Setting | Value |
    |---|---|
    | Root Directory | `backend` |
-   | Build Command | `npm install && npm run build` |
+   | Build Command | `npm ci && npm run build` |
    | Start Command | `npm start` |
    | Auto-Deploy | `After CI check pass` |
    | Service Notifications | `All notifications` |
@@ -39,7 +39,7 @@ Render is a PaaS, so the project does not need a separate shell script. The depl
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run build
 npm start
 ```
@@ -66,6 +66,12 @@ Add the following variables in Render. Do not commit the real `.env` file or exp
 | `EMAILJS_PUBLIC_KEY` | EmailJS public key |
 | `EMAILJS_PRIVATE_KEY` | EmailJS private key/access token |
 
+## 4.1. Deploy notification email
+
+Render's email destination and notification level are workspace/service settings, not Blueprint fields. In Render Dashboard, open **Integrations → Notifications**, choose **Email** as the destination, and set **All notifications**. This sends email for both failed builds/deploys and deploys that successfully go live.
+
+The current `render.yaml` intentionally ends its build command with `&& exit 1` to simulate a failed deploy. Remove that suffix after testing.
+
 ## 5. Database configuration and migration
 
 The backend uses PostgreSQL with Drizzle ORM. Migration files are stored in `backend/src/db/migrations`.
@@ -74,7 +80,7 @@ For a new production database or after adding a migration, run:
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run db:migrate
 ```
 
@@ -129,7 +135,7 @@ The backend uses the private buckets `maintenance-photos` and `payment-proofs`.
 ```text
 Push or merge to main
         -> GitHub Actions CI passes
-        -> Render npm install && npm run build
+        -> Render npm ci && npm run build
         -> Render npm start
         -> Verify health, API, logs, and notifications
 ```
@@ -153,4 +159,3 @@ After deployment:
 The `/health` endpoint currently confirms that the Express process is running; it does not test the database or third-party services.
 
 If a deployment fails, inspect **Deploys/Logs** and redeploy the last stable commit. Rolling back application code does not automatically roll back database migrations.
-
