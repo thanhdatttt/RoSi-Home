@@ -30,3 +30,9 @@ web-build/
 # Telemetry data, reports and scripts must never be committed.
 codex-telemetry/
 codex-telemetry.zip
+
+# Exam preparation guides & helper scripts (kept local, never commit)
+docs/final_oral_exam/
+docs/final_oral_exam_guide.md
+scripts/
+

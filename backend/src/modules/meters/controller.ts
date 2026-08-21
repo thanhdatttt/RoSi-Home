@@ -2,7 +2,18 @@ import type { Request, Response } from "express";
 import {
   recordMeterReadingService,
   correctMeterReadingService,
+  listMeterReadingsService,
 } from "./service.js";
+import type { MeterReadingListQuery } from "./schema.js";
+
+async function list(req: Request, res: Response): Promise<void> {
+  const result = await listMeterReadingsService(
+    req.user!.id,
+    req.params.roomId,
+    req.query as unknown as MeterReadingListQuery,
+  );
+  res.status(200).json(result);
+}
 
 async function record(req: Request, res: Response): Promise<void> {
   const view = await recordMeterReadingService(
@@ -22,4 +33,4 @@ async function correct(req: Request, res: Response): Promise<void> {
   res.status(200).json({ data: view });
 }
 
-export { record, correct };
+export { list, record, correct };

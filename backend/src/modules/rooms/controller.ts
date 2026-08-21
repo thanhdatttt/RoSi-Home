@@ -20,10 +20,12 @@ async function bulk(req: Request, res: Response): Promise<void> {
 }
 
 async function list(req: Request, res: Response): Promise<void> {
+  const { search } = req.query;
   const result = await listRoomsService(
     req.user!.id,
     req.params.propertyId,
     req.query as unknown as Pagination,
+    search as string | undefined
   );
   res.status(200).json(result);
 }

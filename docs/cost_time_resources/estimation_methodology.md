@@ -191,7 +191,7 @@ Initial WIP limits are provisional and must be adjusted using pilot evidence:
 
 Increasing agent count is permitted only when downstream queues remain within their WIP limits and quality measures do not materially deteriorate.
 
-Although the team's stated theoretical maximum is 13 concurrent agent sessions, the pilot will not begin at that limit. The initial implementation WIP limit is **five stories, with no more than one active implementation story per team member**. Concurrency may be increased in controlled steps only after review, testing, integration, and deployment queues remain stable. This prevents theoretical tool concurrency from being mistaken for demonstrated delivery capacity.
+Although the team's stated theoretical maximum is 13 concurrent agent sessions, the pilot will not begin at that limit. The initial implementation WIP limit is **five active tasks, with no more than one active implementation task per team member (each task can group related user stories within a module)**. Concurrency may be increased in controlled steps only after review, testing, integration, and deployment queues remain stable. This prevents theoretical tool concurrency from being mistaken for demonstrated delivery capacity.
 
 ## 8. Definition of Ready and Definition of Done
 

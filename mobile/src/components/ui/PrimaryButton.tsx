@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, Text, TouchableOpacityProps } from "react-native";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type Variant = "primary" | "mint" | "ghost" | "outline";
 
@@ -27,6 +28,7 @@ const textStyles: Record<Variant, string> = {
 
 export const PrimaryButton = React.forwardRef<React.ElementRef<typeof TouchableOpacity>, Props>(
   ({ variant = "primary", className, children, disabled, ...props }, ref) => {
+    const { translateLegacy } = useI18n();
     return (
       <TouchableOpacity
         ref={ref}
@@ -39,13 +41,18 @@ export const PrimaryButton = React.forwardRef<React.ElementRef<typeof TouchableO
         disabled={disabled}
         {...props}
       >
-        {typeof children === "string" ? (
-          <Text className={twMerge("text-sm font-semibold", textStyles[variant])}>
-            {children}
-          </Text>
-        ) : (
-          children
-        )}
+        {React.Children.map(children, (child) => {
+          if (typeof child === "string" || typeof child === "number") {
+            const str = String(child).trim();
+            if (!str) return null;
+            return (
+              <Text className={twMerge("text-sm font-semibold", textStyles[variant])}>
+                {translateLegacy(str)}
+              </Text>
+            );
+          }
+          return child;
+        })}
       </TouchableOpacity>
     );
   }

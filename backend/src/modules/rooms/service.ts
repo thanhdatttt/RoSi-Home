@@ -76,11 +76,12 @@ export async function listRoomsService(
   landlordId: string,
   propertyId: string,
   p: Pagination,
+  search?: string,
 ): Promise<Paginated<RoomView>> {
   await assertPropertyOwned(propertyId, landlordId);
   const [rows, total] = await Promise.all([
-    listRoomsByProperty(propertyId, p),
-    countRoomsByProperty(propertyId),
+    listRoomsByProperty(propertyId, p, search),
+    countRoomsByProperty(propertyId, search),
   ]);
   return paginate(rows.map((r) => serialize(r, r.status)), total, p);
 }

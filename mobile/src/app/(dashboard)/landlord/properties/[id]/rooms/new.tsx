@@ -4,9 +4,15 @@ import { Link, useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../../components/MobileFrame";
 import { PrimaryButton } from "../../../../../../components/ui/PrimaryButton";
+import { MoneyInput } from "../../../../../../components/ui/MoneyInput";
 import { ArrowLeft, Check } from "lucide-react-native";
 import { useAuth } from "../../../../../../contexts/auth-context";
-import { apiRequest } from "../../../../../../lib/api";
+import {
+  bulkCreateRooms,
+  createRoom,
+  listRooms,
+} from "../../../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const MAX_ROOMS = 50;
 
@@ -15,13 +21,14 @@ export default function NewRooms() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  
+  const { language, translateLegacy, t } = useI18n();
+
   const [prefix, setPrefix] = useState("P");
   const [start, setStart] = useState("101");
   const [count, setCount] = useState("6");
   const [rent, setRent] = useState("1200000");
   const [existingRooms, setExistingRooms] = useState<{ prefix: string; num: number }[]>([]);
-  
+
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -32,13 +39,13 @@ export default function NewRooms() {
     if (!token) return;
     (async () => {
       try {
-        const data = await apiRequest<any>(`/rooms/properties/${id}`, { token });
-        const rooms: any[] = data.data || data;
+        const result = await listRooms(token, id, 1, 100);
+        const rooms = result.data;
         if (!rooms.length) return;
 
         // Extract prefix + number from room names (e.g. "P101" → prefix "P", number 101)
         const parsed = rooms
-          .map((r: any) => {
+          .map((r) => {
             const match = (r.name || "").match(/^([A-Za-z]*)(\d+)$/);
             if (!match) return null;
             return { prefix: match[1], num: parseInt(match[2], 10) };
@@ -74,22 +81,22 @@ export default function NewRooms() {
   const rentNum = Number(rentRaw);
 
   const errors = {
-    prefix: !prefix.trim() ? "Prefix is required." : "",
-    start: !start || Number.isNaN(startNum) || startNum < 0 ? "Enter a valid start number." : "",
+    prefix: !prefix.trim() ? translateLegacy("Prefix is required.") : "",
+    start: !start || Number.isNaN(startNum) || startNum < 0 ? translateLegacy("Enter a valid start number.") : "",
     count:
       !count || Number.isNaN(countNum) || countNum < 1
-        ? "Add at least 1 room."
+        ? translateLegacy("Add at least 1 room.")
         : countNum > MAX_ROOMS
-          ? `Maximum ${MAX_ROOMS} rooms at once.`
+          ? (language === "vi" ? `Tối đa ${MAX_ROOMS} phòng trong một lần.` : `Maximum ${MAX_ROOMS} rooms at once.`)
           : "",
-    rent: rentRaw === "" || Number.isNaN(rentNum) || rentNum < 0 ? "Rent must be zero or more." : "",
+    rent: rentRaw === "" || Number.isNaN(rentNum) || rentNum < 0 ? translateLegacy("Rent must be zero or more.") : "",
   };
   const valid = !Object.values(errors).some(Boolean);
 
   const names = useMemo(() => {
     if (Number.isNaN(startNum) || Number.isNaN(countNum)) return [];
     const n = Math.min(Math.max(countNum || 0, 0), MAX_ROOMS);
-    
+
     const taken = new Set(
       existingRooms
         .filter(r => r.prefix === prefix.trim())
@@ -109,34 +116,23 @@ export default function NewRooms() {
     return generated;
   }, [prefix, startNum, countNum, existingRooms]);
 
-  const formatMoney = (val: string) => {
-    if (!val) return "";
-    const numeric = val.replace(/\D/g, "");
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
   const handleSave = async () => {
     setTouched(true);
     if (!valid) return;
-    
+
     setSubmitError(null);
     setSaving(true);
-    
+
     try {
-      // Use the actual backend bulk endpoint for atomic batch creation
-      await apiRequest<any>(`/rooms/properties/${id}/bulk`, {
-        method: 'POST',
-        token,
-        body: {
-          rooms: names.map(name => ({
-            name,
-            baseRent: rentNum,
-          }))
-        },
-      });
+      const roomInputs = names.map(name => ({ name, baseRent: rentNum }));
+      if (roomInputs.length === 1) {
+        await createRoom(token, id, roomInputs[0]);
+      } else {
+        await bulkCreateRooms(token, id, roomInputs);
+      }
       setDone(true);
     } catch (err: any) {
-      setSubmitError(err.message || "Failed to create rooms");
+      setSubmitError(err.message || translateLegacy("Failed to create rooms"));
     } finally {
       setSaving(false);
     }
@@ -150,10 +146,10 @@ export default function NewRooms() {
             <Check size={24} color="white" />
           </View>
           <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 16 }}>
-            {names.length} room{names.length > 1 ? "s" : ""} created
+            {language === "vi" ? `Đã tạo ${names.length} phòng` : `${names.length} room${names.length > 1 ? "s" : ""} created`}
           </Text>
           <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 8, lineHeight: 20 }}>
-            Every new room starts as <Text style={{ fontWeight: '700', color: '#0f172a' }}>Vacant</Text> at {rentNum.toLocaleString()} VNĐ / month. You can still edit each room individually.
+            {language === "vi" ? "Mỗi phòng mới bắt đầu ở trạng thái " : "Every new room starts as "}<Text style={{ fontWeight: '700', color: '#0f172a' }}>{translateLegacy("Vacant")}</Text>{language === "vi" ? ` với giá ${rentNum.toLocaleString("vi-VN")} VNĐ / tháng. Bạn vẫn có thể chỉnh sửa từng phòng.` : ` at ${rentNum.toLocaleString()} VNĐ / month. You can still edit each room individually.`}
           </Text>
           <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
             <Text style={{ fontSize: 14, lineHeight: 20 }}>{names.join(" · ")}</Text>
@@ -168,17 +164,15 @@ export default function NewRooms() {
 
   return (
     <MobileFrame>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: '#f5f8ff' }}
       >
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="#2563eb" />
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Rooms</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>Create many rooms</Text>
@@ -202,6 +196,14 @@ export default function NewRooms() {
             error={touched ? errors.prefix : ""}
           />
           <View style={{ marginTop: 16 }}>
+            <MoneyInput
+              label={translateLegacy('Shared base rent (VNĐ)')}
+              placeholder="0"
+              value={rent}
+              onChangeText={setRent}
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
             <TplField
               label="Start number"
               keyboardType="number-pad"
@@ -220,15 +222,7 @@ export default function NewRooms() {
               error={touched ? errors.count : ""}
             />
           </View>
-          <View style={{ marginTop: 16 }}>
-            <TplField
-              label="Shared base rent (VNĐ)"
-              keyboardType="decimal-pad"
-              value={formatMoney(rent)}
-              onChangeText={setRent}
-              error={touched ? errors.rent : ""}
-            />
-          </View>
+
 
           {/* Preview */}
           <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>
@@ -237,14 +231,14 @@ export default function NewRooms() {
               {names.length ? names.join(" · ") : "—"}
             </Text>
           </View>
-          
+
           {submitError && (
             <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{submitError}</Text>
           )}
 
           <View style={{ marginTop: 24 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Creating..." : `Create ${names.length || 0} room${names.length === 1 ? "" : "s"}`}
+              {saving ? translateLegacy("Creating...") : (language === "vi" ? `Tạo ${names.length || 0} phòng` : `Create ${names.length || 0} room${names.length === 1 ? "" : "s"}`)}
             </PrimaryButton>
           </View>
         </ScrollView>

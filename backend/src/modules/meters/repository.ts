@@ -1,9 +1,10 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { meterReadings } from "../../db/schema.js";
 import { findActiveRoom } from "../rooms/repository.js";
 import { findProperty } from "../properties/repository.js";
 import { NotFoundError } from "../../lib/errors.js";
+import type { Pagination } from "../../lib/pagination.js";
 
 export type MeterReadingRow = typeof meterReadings.$inferSelect;
 
@@ -72,6 +73,39 @@ export async function findMeterReadingById(
   return row ?? null;
 }
 
+function activeRoomReadingsScope(roomId: string, billingPeriod?: string) {
+  return and(
+    eq(meterReadings.roomId, roomId),
+    billingPeriod ? eq(meterReadings.billingPeriod, billingPeriod) : undefined,
+    isNull(meterReadings.supersededAt),
+  );
+}
+
+export async function listActiveMeterReadings(
+  roomId: string,
+  pagination: Pagination,
+  billingPeriod?: string,
+): Promise<MeterReadingRow[]> {
+  return db
+    .select()
+    .from(meterReadings)
+    .where(activeRoomReadingsScope(roomId, billingPeriod))
+    .orderBy(desc(meterReadings.billingPeriod), desc(meterReadings.createdAt))
+    .limit(pagination.pageSize)
+    .offset((pagination.page - 1) * pagination.pageSize);
+}
+
+export async function countActiveMeterReadings(
+  roomId: string,
+  billingPeriod?: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(meterReadings)
+    .where(activeRoomReadingsScope(roomId, billingPeriod));
+  return Number(row?.value ?? 0);
+}
+
 export async function createMeterReading(
   values: {
     roomId: string;
@@ -90,6 +124,7 @@ export async function createMeterReading(
     locality: string | null;
     tenantCount: number | null;
     recordedBy: string;
+    correctionOf: string | null;
   },
   executor: typeof db = db,
 ): Promise<MeterReadingRow> {

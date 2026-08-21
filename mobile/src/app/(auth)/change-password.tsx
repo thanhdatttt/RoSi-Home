@@ -8,11 +8,13 @@ import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Lock, Check } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { ApiRequestError } from "../../lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function ChangePassword() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { changePassword, loading } = useAuth();
+  const { t } = useI18n();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -20,17 +22,17 @@ export default function ChangePassword() {
   const [apiError, setApiError] = useState<string | null>(null);
 
   const rules = [
-    { label: "At least 8 characters", ok: next.length >= 8 },
-    { label: "At least 1 letter", ok: /[a-zA-Z]/.test(next) },
-    { label: "At least 1 number", ok: /\d/.test(next) },
-    { label: "Different from current password", ok: next.length > 0 && next !== current },
+    { id: 'minimum-length', label: t('auth.passwordMinimumLength'), ok: next.length >= 8 },
+    { id: 'letter', label: t('auth.passwordMustContainLetter'), ok: /[a-zA-Z]/.test(next) },
+    { id: 'number', label: t('auth.passwordMustContainNumber'), ok: /\d/.test(next) },
+    { id: 'different', label: t('auth.passwordMustDiffer'), ok: next.length > 0 && next !== current },
   ];
 
   async function submit() {
     const errs: Record<string, string> = {};
-    if (!current) errs.current = "Enter your current password";
-    if (!rules.every((r) => r.ok)) errs.next = "Password doesn't meet the policy";
-    if (confirm !== next) errs.confirm = "Passwords don't match";
+    if (!current) errs.current = t('auth.currentPasswordRequired');
+    if (!rules.every((r) => r.ok)) errs.next = t('auth.passwordPolicyNotMet');
+    if (confirm !== next) errs.confirm = t('auth.passwordsDoNotMatch');
     setErrors(errs);
     setApiError(null);
     if (Object.keys(errs).length) return;
@@ -41,22 +43,27 @@ export default function ChangePassword() {
         newPassword: next,
         newPasswordConfirmation: confirm,
       });
-      router.push("/profile");
+      router.replace("/login");
     } catch (e: any) {
       if (e instanceof ApiRequestError) {
         if (e.fields) {
           const fieldErrors: Record<string, string> = {};
+          const errorKeyByField = {
+            currentPassword: 'auth.currentPasswordRequired',
+            newPassword: 'auth.passwordPolicyNotMet',
+            newPasswordConfirmation: 'auth.passwordsDoNotMatch',
+          } as const;
           e.fields.forEach((f) => {
-            if (f.field === 'currentPassword') fieldErrors.current = f.message;
-            if (f.field === 'newPassword') fieldErrors.next = f.message;
-            if (f.field === 'newPasswordConfirmation') fieldErrors.confirm = f.message;
+            const key = errorKeyByField[f.field as keyof typeof errorKeyByField];
+            const nameByField: Record<string, string> = { currentPassword: 'current', newPassword: 'next', newPasswordConfirmation: 'confirm' };
+            if (key && nameByField[f.field]) fieldErrors[nameByField[f.field]] = t(key);
           });
           setErrors(fieldErrors);
         } else {
-          setApiError(e.message || "Failed to change password.");
+          setApiError(t('auth.passwordChangeFailed'));
         }
       } else {
-        setApiError("An unexpected error occurred. Please try again.");
+        setApiError(t('auth.passwordChangeFailed'));
       }
     }
   }
@@ -66,57 +73,55 @@ export default function ChangePassword() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/profile" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Security</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Change password</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('auth.security')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.changePassword')}</Text>
           </View>
         </View>
 
         {/* Form */}
         <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 24) }}>
-          <Field 
-            label="Current password" 
-            secureTextEntry 
-            placeholder="Enter current password" 
-            icon={<Lock size={16} color="gray" />} 
-            value={current} 
-            onChangeText={setCurrent} 
-            error={errors.current} 
+          <Field
+            label={t('auth.currentPassword')}
+            secureTextEntry
+            placeholder={t('auth.currentPasswordPlaceholder')}
+            icon={<Lock size={16} color="gray" />}
+            value={current}
+            onChangeText={setCurrent}
+            error={errors.current}
           />
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="New password" 
-              secureTextEntry 
-              placeholder="Choose a new password" 
-              icon={<Lock size={16} color="gray" />} 
-              value={next} 
-              onChangeText={setNext} 
-              error={errors.next} 
+            <Field
+              label={t('auth.newPassword')}
+              secureTextEntry
+              placeholder={t('auth.newPasswordPlaceholder')}
+              icon={<Lock size={16} color="gray" />}
+              value={next}
+              onChangeText={setNext}
+              error={errors.next}
             />
           </View>
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Confirm new password" 
-              secureTextEntry 
-              placeholder="Re-enter new password" 
-              icon={<Lock size={16} color="gray" />} 
-              value={confirm} 
-              onChangeText={setConfirm} 
-              error={errors.confirm} 
+            <Field
+              label={t('auth.confirmNewPassword')}
+              secureTextEntry
+              placeholder={t('auth.confirmNewPasswordPlaceholder')}
+              icon={<Lock size={16} color="gray" />}
+              value={confirm}
+              onChangeText={setConfirm}
+              error={errors.confirm}
             />
           </View>
 
           {/* Policy checklist */}
           <View style={{ borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 14, marginTop: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 8 }}>Password policy</Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 8 }}>{t('auth.passwordPolicy')}</Text>
             <View style={{ gap: 6 }}>
               {rules.map((r) => (
-                <View key={r.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ height: 16, width: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: r.ok ? '#2563eb' : '#f1f5f9' }}>
                     <Check size={10} color={r.ok ? "#ffffff" : "gray"} />
                   </View>
@@ -126,14 +131,14 @@ export default function ChangePassword() {
             </View>
           </View>
 
-          {apiError && (
+          {apiError ? (
             <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
               <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
-          )}
+          ) : null}
 
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
-            {loading ? "Updating..." : "Update password"}
+            {loading ? t('auth.updatingPassword') : t('auth.updatePassword')}
           </PrimaryButton>
         </ScrollView>
       </View>

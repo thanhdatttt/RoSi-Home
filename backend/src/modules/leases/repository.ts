@@ -167,6 +167,7 @@ export async function insertLease(
     tenantInfoId: string;
     startDate: string;
     endDate: string;
+    headcount: number;
     agreedRent: number;
     deposit: number;
     createdBy: string;

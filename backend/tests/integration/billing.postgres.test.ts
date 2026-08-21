@@ -248,10 +248,10 @@ describe("Billing Foundation PostgreSQL integration", () => {
     });
 
     const result = await dbPool.query(
-      "SELECT monthly_amount, effective_from FROM surcharges WHERE name = 'Internet' AND active = true AND deleted_at IS NULL",
+      "SELECT monthly_amount, effective_from::text AS effective_from FROM surcharges WHERE name = 'Internet' AND active = true AND deleted_at IS NULL",
     );
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0].monthly_amount).toBe(120000);
-    expect(new Date(result.rows[0].effective_from).toISOString().startsWith("2099-07-01")).toBe(true);
+    expect(result.rows[0].effective_from).toBe("2099-07-01");
   });
 });
