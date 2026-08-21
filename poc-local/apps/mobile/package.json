@@ -1,0 +1,25 @@
+{
+  "name": "@rosi-home-poc/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "start:lan": "expo start --lan --port 8082",
+    "web": "expo start --web --port 8082",
+    "typecheck": "tsc --noEmit",
+    "export:web": "expo export --platform web --output-dir dist --clear"
+  },
+  "dependencies": {
+    "expo": "~54.0.36",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "~0.21.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  }
+}

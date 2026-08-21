@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "RoSi-Home Local PoC",
+    "slug": "rosi-home-local-poc",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "RoSi-Home Local PoC connects to the developer's API on the same private Wi-Fi network.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
