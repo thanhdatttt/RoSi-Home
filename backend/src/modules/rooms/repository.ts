@@ -31,22 +31,31 @@ export async function createRoom(
   return row;
 }
 
-export async function countRoomsByProperty(propertyId: string): Promise<number> {
+export async function countRoomsByProperty(propertyId: string, search?: string): Promise<number> {
+  let condition = and(eq(rooms.propertyId, propertyId), isNull(rooms.deletedAt));
+  if (search) {
+    condition = and(condition, sql`${rooms.name} ILIKE ${`%${search}%`}`);
+  }
   const [row] = await db
     .select({ value: count() })
     .from(rooms)
-    .where(and(eq(rooms.propertyId, propertyId), isNull(rooms.deletedAt)));
+    .where(condition);
   return Number(row?.value ?? 0);
 }
 
 export async function listRoomsByProperty(
   propertyId: string,
   p: Pagination,
+  search?: string
 ): Promise<RoomWithStatus[]> {
+  let condition = and(eq(rooms.propertyId, propertyId), isNull(rooms.deletedAt));
+  if (search) {
+    condition = and(condition, sql`${rooms.name} ILIKE ${`%${search}%`}`);
+  }
   const rows = await db
     .select({ ...getTableColumns(rooms), status: roomStatusExpr })
     .from(rooms)
-    .where(and(eq(rooms.propertyId, propertyId), isNull(rooms.deletedAt)))
+    .where(condition)
     .orderBy(asc(rooms.name))
     .limit(p.pageSize)
     .offset((p.page - 1) * p.pageSize);

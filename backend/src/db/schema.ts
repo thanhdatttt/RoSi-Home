@@ -215,6 +215,7 @@ export const leases = pgTable(
     startDate: date("start_date").notNull(),
     endDate: date("end_date").notNull(),
     actualEndDate: date("actual_end_date"),
+    headcount: integer("headcount").notNull().default(1),
     agreedRent: integer("agreed_rent").notNull(),
     deposit: integer("deposit").notNull(),
     status: leaseStatusEnum("status").notNull().default("Active"),
@@ -230,6 +231,22 @@ export const leases = pgTable(
     uniqueTenantActive: uniqueIndex("leases_tenant_active")
       .on(t.tenantInfoId)
       .where(sql`${t.deletedAt} IS NULL AND ${t.status} = 'Active'`),
+  }),
+);
+
+export const leaseCoTenants = pgTable(
+  "lease_co_tenants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    leaseId: uuid("lease_id")
+      .notNull()
+      .references(() => leases.id),
+    tenantInfoId: uuid("tenant_info_id")
+      .notNull()
+      .references(() => tenantInfo.id),
+  },
+  (t) => ({
+    uniqueLeaseTenant: uniqueIndex("lease_co_tenants_unique").on(t.leaseId, t.tenantInfoId),
   }),
 );
 

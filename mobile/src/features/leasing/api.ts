@@ -44,6 +44,8 @@ export type LeaseView = {
 export type CreateLeaseInput = {
   roomId: string;
   tenant: { fullName: string; phone: string; idNumber: string; email: string };
+  coTenants?: { fullName: string; phone: string; email: string }[];
+  headcount?: number;
   startDate: string;
   endDate: string;
   agreedRent: number;
@@ -61,6 +63,7 @@ export type UpdateLeaseInput = {
 export type LeaseProvisioningMeta = {
   tenantAccountProvisioned: boolean;
   tempPassword?: string;
+  coTenantsProvisioned?: { fullName: string; phone: string; tempPassword?: string }[];
 };
 
 export type UpcomingExpirationView = {

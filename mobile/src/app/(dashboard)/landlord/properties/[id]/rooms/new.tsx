@@ -4,6 +4,7 @@ import { Link, useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../../components/MobileFrame";
 import { PrimaryButton } from "../../../../../../components/ui/PrimaryButton";
+import { MoneyInput } from "../../../../../../components/ui/MoneyInput";
 import { ArrowLeft, Check } from "lucide-react-native";
 import { useAuth } from "../../../../../../contexts/auth-context";
 import {
@@ -20,7 +21,7 @@ export default function NewRooms() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  const { language, translateLegacy } = useI18n();
+  const { language, translateLegacy, t } = useI18n();
 
   const [prefix, setPrefix] = useState("P");
   const [start, setStart] = useState("101");
@@ -115,12 +116,6 @@ export default function NewRooms() {
     return generated;
   }, [prefix, startNum, countNum, existingRooms]);
 
-  const formatMoney = (val: string) => {
-    if (!val) return "";
-    const numeric = val.replace(/\D/g, "");
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
   const handleSave = async () => {
     setTouched(true);
     if (!valid) return;
@@ -203,6 +198,14 @@ export default function NewRooms() {
             error={touched ? errors.prefix : ""}
           />
           <View style={{ marginTop: 16 }}>
+            <MoneyInput
+              label={translateLegacy('Shared base rent (VNĐ)')}
+              placeholder="0"
+              value={rent}
+              onChangeText={setRent}
+            />
+          </View>
+          <View style={{ marginTop: 16 }}>
             <TplField
               label="Start number"
               keyboardType="number-pad"
@@ -221,15 +224,7 @@ export default function NewRooms() {
               error={touched ? errors.count : ""}
             />
           </View>
-          <View style={{ marginTop: 16 }}>
-            <TplField
-              label="Shared base rent (VNĐ)"
-              keyboardType="decimal-pad"
-              value={formatMoney(rent)}
-              onChangeText={setRent}
-              error={touched ? errors.rent : ""}
-            />
-          </View>
+
 
           {/* Preview */}
           <View style={{ marginTop: 24, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16 }}>

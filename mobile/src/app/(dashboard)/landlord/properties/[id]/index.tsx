@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, TextInput } from "react-native";
 import { Link, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
-import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight, Trash2, BellRing } from "lucide-react-native";
+import { ArrowLeft, Pencil, Plus, DoorOpen, Zap, Droplets, Receipt, MapPin, ChevronRight, Trash2, BellRing, Search } from "lucide-react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../../../../contexts/auth-context";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../../../../../features/portfolio/api";
 import { useI18n } from "@/i18n/I18nProvider";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 export default function PropertyDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,6 +30,13 @@ export default function PropertyDetail() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const fetchInitialData = useCallback(async () => {
     if (!token) return;
@@ -37,7 +44,7 @@ export default function PropertyDetail() {
     try {
       const [propData, roomsResult] = await Promise.all([
         getProperty(token, id),
-        listRooms(token, id, 1, PAGE_SIZE),
+        listRooms(token, id, 1, PAGE_SIZE, debouncedSearchQuery),
       ]);
       setProperty(propData);
       setRooms(roomsResult.data);
@@ -53,7 +60,7 @@ export default function PropertyDetail() {
   useFocusEffect(
     useCallback(() => {
       fetchInitialData();
-    }, [fetchInitialData])
+    }, [fetchInitialData, debouncedSearchQuery])
   );
 
   const loadMoreRooms = async () => {
@@ -61,7 +68,7 @@ export default function PropertyDetail() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const roomsResult = await listRooms(token, id, nextPage, PAGE_SIZE);
+      const roomsResult = await listRooms(token, id, nextPage, PAGE_SIZE, debouncedSearchQuery);
       setRooms(prev => {
         const existingIds = new Set(prev.map(r => r.id));
         const filteredNew = roomsResult.data.filter(d => !existingIds.has(d.id));
@@ -199,11 +206,16 @@ export default function PropertyDetail() {
           <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{t('property.rooms')}</Text>
-              <Link href={`/landlord/properties/${id}/rooms/new`} asChild>
-                <TouchableOpacity>
-                  <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('property.add')}</Text>
-                </TouchableOpacity>
-              </Link>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 12, height: 44, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 16 }}>
+              <Search size={16} color="#94a3b8" />
+              <TextInput
+                style={{ flex: 1, marginLeft: 8, fontSize: 14, color: '#0f172a' }}
+                placeholder={translateLegacy("Search rooms...")}
+                placeholderTextColor="#94a3b8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
             </View>
             <View style={{ gap: 8 }}>
               {rooms.length === 0 ? (

@@ -138,9 +138,11 @@ export function listRooms(
   propertyId: string,
   page: number,
   pageSize: number,
+  search?: string,
 ): Promise<ApiListEnvelope<RoomView>> {
+  const qs = search ? `&search=${encodeURIComponent(search)}` : '';
   return apiRequestWithEnvelope<RoomView[]>(
-    `/rooms/properties/${propertyId}?page=${page}&pageSize=${pageSize}`,
+    `/rooms/properties/${propertyId}?page=${page}&pageSize=${pageSize}${qs}`,
     { token },
   ) as Promise<ApiListEnvelope<RoomView>>;
 }

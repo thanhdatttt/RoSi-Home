@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { Field } from "../../../../components/ui/Field";
+import { MoneyInput } from "../../../../components/ui/MoneyInput";
 import { DatePicker } from "../../../../components/ui/DatePicker";
 import { ArrowLeft, FileSignature, DoorOpen, Calendar, Wallet, ShieldCheck, Pencil, LogOut, User, Check } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
@@ -262,8 +263,8 @@ export default function LeaseDetail() {
               )}
               <DatePicker label="End date" value={end ? new Date(end) : new Date()} onChange={(d) => setEnd(d.toISOString().slice(0, 10))} />
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flex: 1 }}><Field label="Agreed rent" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(rent)} onChangeText={setRent} keyboardType="numeric" /></View>
-                <View style={{ flex: 1 }}><Field label="Deposit" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(deposit)} onChangeText={setDeposit} keyboardType="numeric" /></View>
+                <View style={{ flex: 1 }}><MoneyInput label="Agreed rent" icon={<Wallet size={16} color="#64748b" />} value={rent} onChangeText={setRent} /></View>
+                <View style={{ flex: 1 }}><MoneyInput label="Deposit" icon={<Wallet size={16} color="#64748b" />} value={deposit} onChangeText={setDeposit} /></View>
               </View>
               <Text style={{ fontSize: 11, color: '#94a3b8' }}>{language === "vi" ? `Thời hạn được đối chiếu với các hợp đồng khác của ${lease.roomName}; các khoảng trùng lặp sẽ bị từ chối.` : `Periods are checked against other leases for ${lease.roomName} — overlaps are rejected.`}</Text>
 

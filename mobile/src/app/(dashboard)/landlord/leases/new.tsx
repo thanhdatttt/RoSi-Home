@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Modal, TextInput, Clipboard } from "react-native";
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Modal, TextInput, Clipboard, Switch } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
 import { Field } from "../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { DatePicker } from "../../../../components/ui/DatePicker";
+import { MoneyInput } from "../../../../components/ui/MoneyInput";
 import { ArrowLeft, Mail, User, Phone, IdCard, Building2, DoorOpen, Calendar, Wallet, ShieldCheck, Copy, Check, KeyRound } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
 import { createLease } from "../../../../features/leasing/api";
@@ -46,6 +47,7 @@ export default function NewLease() {
   });
   const [rent, setRent] = useState("");
   const [deposit, setDeposit] = useState("");
+  const [hasDeposit, setHasDeposit] = useState(false);
 
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,6 +56,25 @@ export default function NewLease() {
   const [tempPassword, setTempPassword] = useState("");
   const [tenantAccountProvisioned, setTenantAccountProvisioned] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  const [headcount, setHeadcount] = useState("1");
+  const [coTenants, setCoTenants] = useState<{fullName: string, phone: string, email: string}[]>([]);
+  const [coTenantsProvisioned, setCoTenantsProvisioned] = useState<{fullName: string, phone: string, tempPassword?: string}[]>([]);
+
+  useEffect(() => {
+    const num = parseInt(headcount, 10);
+    if (!isNaN(num) && num > 1) {
+      setCoTenants(prev => {
+        const next = [...prev];
+        while (next.length < num - 1) {
+          next.push({ fullName: '', phone: '', email: '' });
+        }
+        return next.slice(0, num - 1);
+      });
+    } else {
+      setCoTenants([]);
+    }
+  }, [headcount]);
 
   // Fetch properties on mount
   useEffect(() => {
@@ -88,13 +109,6 @@ export default function NewLease() {
     fetchRooms();
   }, [propertyId, token]);
 
-  const formatMoney = (val: string) => {
-    if (!val) return "";
-    const numeric = val.replace(/\D/g, "");
-    return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-  const getRawNumber = (val: string) => val.replace(/,/g, "");
-
   async function submit() {
     if (!name.trim()) return setErr(translateLegacy("Tenant full name is required."));
     if (!/^\+?[\d\s]{8,}$/.test(phone)) return setErr(translateLegacy("Enter a valid phone number (used as login username)."));
@@ -103,10 +117,19 @@ export default function NewLease() {
     if (!propertyId) return setErr(translateLegacy("Please select a property."));
     if (!roomId) return setErr(translateLegacy("Please select a room."));
 
-    const rentRaw = getRawNumber(rent);
-    const depositRaw = getRawNumber(deposit);
-    if (Number(rentRaw) <= 0) return setErr(translateLegacy("Monthly rent must be greater than 0."));
-    if (Number(depositRaw) < 0) return setErr(translateLegacy("Deposit must be zero or more."));
+    if (Number(rent) <= 0) return setErr(translateLegacy("Monthly rent must be greater than 0."));
+    const finalDeposit = hasDeposit ? Number(deposit) : 0;
+    if (finalDeposit < 0) return setErr(translateLegacy("Deposit must be zero or more."));
+
+    const numHeadcount = parseInt(headcount, 10);
+    if (isNaN(numHeadcount) || numHeadcount < 1) return setErr("Headcount must be at least 1.");
+
+    for (let i = 0; i < coTenants.length; i++) {
+      const ct = coTenants[i];
+      if (!ct.fullName.trim()) return setErr(`Co-tenant ${i + 1} full name is required.`);
+      if (!/^\+?[\d\s]{8,}$/.test(ct.phone)) return setErr(`Co-tenant ${i + 1} valid phone number is required.`);
+      if (!/^\S+@\S+\.\S+$/.test(ct.email)) return setErr(`Co-tenant ${i + 1} valid email is required.`);
+    }
 
     if (endDate <= startDate) return setErr(translateLegacy("End date must be after start date."));
 
@@ -124,11 +147,14 @@ export default function NewLease() {
           },
           startDate: toLocalDateString(startDate),
           endDate: toLocalDateString(endDate),
-          agreedRent: Number(rentRaw),
-          deposit: Number(depositRaw),
+          agreedRent: Number(rent),
+          deposit: finalDeposit,
+          headcount: numHeadcount,
+          coTenants,
       });
       setTenantAccountProvisioned(res.meta?.tenantAccountProvisioned ?? false);
       setTempPassword(res.meta?.tempPassword ?? "");
+      setCoTenantsProvisioned(res.meta?.coTenantsProvisioned ?? []);
       setCreated(true);
     } catch (e: any) {
       setErr(e.message || translateLegacy("Failed to create lease and provision account."));
@@ -165,7 +191,7 @@ export default function NewLease() {
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
             <Summary icon={<Calendar size={16} color="#2563eb" />} label="Lease starts" value={toLocalDateString(startDate)} />
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
-            <Summary icon={<Wallet size={16} color="#2563eb" />} label="Monthly rent" value={`${Number(getRawNumber(rent)).toLocaleString()} VNĐ`} />
+            <Summary icon={<Wallet size={16} color="#2563eb" />} label="Monthly rent" value={`${Number(rent).toLocaleString()} VNĐ`} />
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
             <Summary icon={<Phone size={16} color="#2563eb" />} label="Username (phone)" value={phone} />
           </View>
@@ -194,8 +220,26 @@ export default function NewLease() {
             </View>
           </View> : null}
 
+          {coTenantsProvisioned.map((ct, idx) => (
+            <View key={idx} style={{ marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(16,185,129,0.4)', backgroundColor: 'rgba(16,185,129,0.1)', padding: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <KeyRound size={16} color="#10b981" />
+                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontWeight: '700', color: '#10b981' }}>Co-Tenant: {ct.phone}</Text>
+              </View>
+              {ct.tempPassword ? (
+                <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12 }}>
+                    <Text style={{ fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 16, letterSpacing: 2 }}>{ct.tempPassword}</Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={{ marginTop: 8, fontSize: 13, color: '#10b981' }}>Account was reused.</Text>
+              )}
+            </View>
+          ))}
+
           <View style={{ marginTop: 'auto', paddingTop: 24 }}>
-            <PrimaryButton onPress={() => router.navigate('/landlord')}>Back to dashboard</PrimaryButton>
+            <PrimaryButton onPress={() => router.back()}>Back</PrimaryButton>
           </View>
         </View>
       </MobileFrame>
@@ -206,11 +250,9 @@ export default function NewLease() {
     <MobileFrame>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Link href="/landlord" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Leases')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{translateLegacy('New lease')}</Text>
@@ -237,7 +279,21 @@ export default function NewLease() {
             <View style={{ marginBottom: 16 }}>
               <Field label="Email address" placeholder="tenant@email.com" keyboardType="email-address" icon={<Mail size={16} color="gray" />} value={email} onChangeText={setEmail} />
             </View>
-            <Field label="Identification number" placeholder="GHA-XXXXXXX-X" icon={<IdCard size={16} color="gray" />} value={idNo} onChangeText={setIdNo} />
+            <View style={{ marginBottom: 16 }}>
+              <Field label="Identification number" placeholder="GHA-XXXXXXX-X" icon={<IdCard size={16} color="gray" />} value={idNo} onChangeText={setIdNo} />
+            </View>
+            <Field label="Headcount (Number of people staying)" placeholder="1" keyboardType="number-pad" icon={<User size={16} color="gray" />} value={headcount} onChangeText={setHeadcount} />
+            
+            {coTenants.map((ct, idx) => (
+              <View key={idx} style={{ marginTop: 16, padding: 12, borderRadius: 12, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 12 }}>Co-tenant {idx + 1}</Text>
+                <View style={{ gap: 12 }}>
+                  <TextInput style={{ height: 44, borderRadius: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14 }} placeholder="Full name" value={ct.fullName} onChangeText={(val) => setCoTenants(prev => prev.map((p, i) => i === idx ? { ...p, fullName: val } : p))} />
+                  <TextInput style={{ height: 44, borderRadius: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14 }} placeholder="Phone" keyboardType="phone-pad" value={ct.phone} onChangeText={(val) => setCoTenants(prev => prev.map((p, i) => i === idx ? { ...p, phone: val } : p))} />
+                  <TextInput style={{ height: 44, borderRadius: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14 }} placeholder="Email" keyboardType="email-address" value={ct.email} onChangeText={(val) => setCoTenants(prev => prev.map((p, i) => i === idx ? { ...p, email: val } : p))} />
+                </View>
+              </View>
+            ))}
           </View>
 
           <View style={{ marginBottom: 16 }}>
@@ -280,13 +336,15 @@ export default function NewLease() {
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Field label="Monthly rent (VNĐ)" keyboardType="decimal-pad" icon={<Wallet size={16} color="gray" />} value={formatMoney(rent)} onChangeText={setRent} />
+            <View style={{ gap: 16 }}>
+              <MoneyInput label="Monthly rent (VNĐ)" icon={<Wallet size={16} color="gray" />} value={rent} onChangeText={setRent} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 13, fontWeight: '600' }}>Deposit required?</Text>
+                <Switch value={hasDeposit} onValueChange={setHasDeposit} trackColor={{ false: "#e2e8f0", true: "#2563eb" }} />
               </View>
-              <View style={{ flex: 1 }}>
-                <Field label="Deposit (VNĐ)" keyboardType="decimal-pad" icon={<Wallet size={16} color="gray" />} value={formatMoney(deposit)} onChangeText={setDeposit} />
-              </View>
+              {hasDeposit ? (
+                <MoneyInput label="Deposit (VNĐ)" icon={<Wallet size={16} color="gray" />} value={deposit} onChangeText={setDeposit} />
+              ) : null}
             </View>
           </View>
 

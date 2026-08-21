@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "@/components/MobileFrame";
 import { Field } from "@/components/ui/Field";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { Globe2, Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
+import { Globe2, Mail, User, ShieldCheck, KeyRound, LogOut, ArrowLeft } from "lucide-react-native";
 import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/api";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -58,8 +58,11 @@ export default function Profile() {
     <MobileFrame>
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingBottom: 16, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <View>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, paddingTop: Math.max(insets.top + 16, 56), flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('profile.eyebrow')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('profile.title')}</Text>
           </View>
