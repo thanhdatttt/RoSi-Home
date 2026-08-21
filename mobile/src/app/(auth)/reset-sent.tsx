@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { MobileFrame } from "../../components/MobileFrame";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { MailCheck } from "lucide-react-native";
@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 
 export default function ResetSent() {
   const { t } = useI18n();
+  const router = useRouter();
   return (
     <MobileFrame>
       <View className="flex-1 flex-col items-center justify-center px-8 bg-background">
@@ -20,12 +21,18 @@ export default function ResetSent() {
         </Text>
 
         <View className="mt-8 w-full gap-2">
-          <Link href="/login" asChild>
+          <TouchableOpacity onPress={() => {
+            if (router.canDismiss()) {
+              router.dismiss(2);
+            } else {
+              router.replace('/login');
+            }
+          }}>
             <PrimaryButton variant="primary">{t('auth.backToSignIn')}</PrimaryButton>
-          </Link>
-          <Link href="/forgot-password" asChild>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()}>
             <PrimaryButton variant="ghost">{t('auth.sendAgain')}</PrimaryButton>
-          </Link>
+          </TouchableOpacity>
         </View>
       </View>
     </MobileFrame>

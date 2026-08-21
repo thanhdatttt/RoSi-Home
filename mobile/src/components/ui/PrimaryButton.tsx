@@ -41,13 +41,18 @@ export const PrimaryButton = React.forwardRef<React.ElementRef<typeof TouchableO
         disabled={disabled}
         {...props}
       >
-        {typeof children === "string" ? (
-          <Text className={twMerge("text-sm font-semibold", textStyles[variant])}>
-            {translateLegacy(children)}
-          </Text>
-        ) : (
-          children
-        )}
+        {React.Children.map(children, (child) => {
+          if (typeof child === "string" || typeof child === "number") {
+            const str = String(child).trim();
+            if (!str) return null;
+            return (
+              <Text className={twMerge("text-sm font-semibold", textStyles[variant])}>
+                {translateLegacy(str)}
+              </Text>
+            );
+          }
+          return child;
+        })}
       </TouchableOpacity>
     );
   }

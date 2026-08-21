@@ -73,11 +73,9 @@ export default function ChangePassword() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/profile" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('auth.security')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.changePassword')}</Text>
@@ -133,11 +131,11 @@ export default function ChangePassword() {
             </View>
           </View>
 
-          {apiError && (
+          {apiError ? (
             <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
               <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
-          )}
+          ) : null}
 
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
             {loading ? t('auth.updatingPassword') : t('auth.updatePassword')}

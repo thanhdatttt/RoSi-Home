@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Switch } from "react-native";
+import { View, Text, TouchableOpacity, Switch, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../components/MobileFrame";
@@ -50,11 +50,9 @@ export default function Login() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('auth.welcomeBack')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.signInToRosiHome')}</Text>
@@ -62,7 +60,7 @@ export default function Login() {
         </View>
 
         {/* Form */}
-        <View style={{ flex: 1, paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom + 16, 24) }}>
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 16, 24) }}>
           <Field
             label={t('auth.loginIdentifier')}
             autoCapitalize="none"
@@ -97,18 +95,16 @@ export default function Login() {
               />
               <Text style={{ fontSize: 12, color: '#64748b' }}>{t('auth.rememberMe')}</Text>
             </View>
-            <Link href="/forgot-password" asChild>
-              <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('auth.forgotPassword')}</Text>
-              </TouchableOpacity>
+            <Link href="/forgot-password" style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>
+              {t('auth.forgotPassword')}
             </Link>
           </View>
 
-          {err && (
+          {err ? (
             <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
               <Text style={{ fontSize: 12, color: '#ef4444' }}>{err}</Text>
             </View>
-          )}
+          ) : null}
 
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
             {loading ? t('auth.signingIn') : t('auth.signIn')}
@@ -116,13 +112,11 @@ export default function Login() {
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
             <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('auth.noAccountYet')}</Text>
-            <Link href="/register" asChild>
-              <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>{t('auth.registerLandlord')}</Text>
-              </TouchableOpacity>
+            <Link href="/register" replace style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>
+              {t('auth.registerLandlord')}
             </Link>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </MobileFrame>
   );

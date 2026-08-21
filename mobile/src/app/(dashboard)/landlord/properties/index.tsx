@@ -109,11 +109,9 @@ export default function PropertiesList() {
             <Text style={{ marginTop: 3, fontSize: 29, lineHeight: 34, letterSpacing: -0.8, color: '#14213d', fontWeight: '800' }}>{t('propertyAdmin.properties')}</Text>
             <Text style={{ marginTop: 5, color: '#718096', fontSize: 13 }}>{t('propertyAdmin.overview')}</Text>
           </View>
-          <Link href="/landlord/properties/new" asChild>
-            <TouchableOpacity accessibilityLabel={t('propertyAdmin.add')} style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: '#155eef', alignItems: 'center', justifyContent: 'center', shadowColor: '#155eef', shadowOpacity: 0.24, shadowOffset: { width: 0, height: 8 }, shadowRadius: 12, elevation: 5 }}>
-              <Plus size={22} strokeWidth={2.5} color="white" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push('/landlord/properties/new')} accessibilityLabel={t('propertyAdmin.add')} style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: '#155eef', alignItems: 'center', justifyContent: 'center', shadowColor: '#155eef', shadowOpacity: 0.24, shadowOffset: { width: 0, height: 8 }, shadowRadius: 12, elevation: 5 }}>
+            <Plus size={22} strokeWidth={2.5} color="white" />
+          </TouchableOpacity>
         </View>
 
         {/* Portfolio snapshot */}
@@ -187,26 +185,22 @@ export default function PropertiesList() {
                   </TouchableOpacity>
                 )}
               >
-                <Link href={`/landlord/properties/${p.id}`} asChild>
-                  <TouchableOpacity style={{ borderRadius: 20, borderWidth: 1, borderColor: '#e1e8f2', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 13, shadowColor: '#20345a', shadowOpacity: 0.045, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10, elevation: 1 }}>
-                    <View style={{ height: 52, width: 52, borderRadius: 16, backgroundColor: '#eaf1ff', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Building2 size={22} strokeWidth={2.25} color="#155eef" />
+                <TouchableOpacity onPress={() => router.push(`/landlord/properties/${p.id}`)} style={{ borderRadius: 20, borderWidth: 1, borderColor: '#e1e8f2', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 13, shadowColor: '#20345a', shadowOpacity: 0.045, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10, elevation: 1 }}>
+                  <View style={{ height: 52, width: 52, borderRadius: 16, backgroundColor: '#eaf1ff', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Building2 size={22} strokeWidth={2.25} color="#155eef" />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ color: '#172554', fontWeight: '800', fontSize: 15 }} numberOfLines={1}>{p.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
+                      <MapPin size={13} color="#7c8ba3" />
+                      <Text style={{ flex: 1, fontSize: 12, color: '#718096' }} numberOfLines={1}>{p.address}</Text>
                     </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={{ color: '#172554', fontWeight: '800', fontSize: 15 }} numberOfLines={1}>{p.name}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
-                        <MapPin size={13} color="#7c8ba3" />
-                        <Text style={{ flex: 1, fontSize: 12, color: '#718096' }} numberOfLines={1}>{p.address}</Text>
-                      </View>
-                    </View>
-                    <View style={{ alignItems: 'flex-end', flexShrink: 0, gap: 6 }}>
-                      <View style={{ backgroundColor: '#edf7f1', borderRadius: 99, paddingHorizontal: 8, paddingVertical: 4 }}>
-                        <Text style={{ fontSize: 11, color: '#277a51', fontWeight: '800' }}>{p.occupied || 0}/{p.units || 0}</Text>
-                      </View>
-                      <ArrowUpRight size={15} color="#8a99ae" />
-                    </View>
-                  </TouchableOpacity>
-                </Link>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', flexShrink: 0, backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#155eef' }}>{p.occupied}/{p.units}</Text>
+                    <Text style={{ fontSize: 10, color: '#64748b', fontWeight: '700', marginTop: 2, textTransform: 'uppercase' }}>{t('dashboard.occupied')}</Text>
+                  </View>
+                </TouchableOpacity>
               </Swipeable>
             ))
           )}

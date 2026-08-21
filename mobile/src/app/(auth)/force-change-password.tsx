@@ -125,11 +125,11 @@ export default function ForceChangePassword() {
             </View>
           </View>
 
-          {apiError && (
-            <View className="rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 mb-4">
-              <Text className="text-xs text-destructive">{apiError}</Text>
+          {apiError ? (
+            <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
-          )}
+          ) : null}
 
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
             {loading ? t('auth.settingPassword') : t('auth.setPasswordAndContinue')}

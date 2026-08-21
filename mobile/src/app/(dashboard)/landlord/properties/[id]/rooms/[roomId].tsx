@@ -81,11 +81,9 @@ export default function EditRoom() {
       >
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="white" />
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('room.eyebrow')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('room.details')}</Text>
@@ -124,12 +122,14 @@ export default function EditRoom() {
             </PrimaryButton>
           </View>
           <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: 10 }}>{t('room.operations')}</Text>
-          <Link href={{ pathname: "/(dashboard)/landlord/properties/[id]/rooms/[roomId]/meters" as any, params: { id, roomId } }} asChild>
-            <TouchableOpacity style={{ borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: 'white', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}><Gauge size={20} color="#2563eb" /><Text style={{ fontWeight: '700', color: '#0f172a' }}>{t('room.meterReadings')}</Text></TouchableOpacity>
-          </Link>
-          <Link href={{ pathname: "/(dashboard)/landlord/properties/[id]/rooms/[roomId]/maintenance" as any, params: { id, roomId } }} asChild>
-            <TouchableOpacity style={{ borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: 'white', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}><Wrench size={20} color="#2563eb" /><Text style={{ fontWeight: '700', color: '#0f172a' }}>{t('room.maintenanceRequests')}</Text></TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push(`/(dashboard)/landlord/properties/${id}/rooms/${roomId}/meters`)} style={{ borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: 'white', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <Gauge size={20} color="#2563eb" />
+            <Text style={{ fontWeight: '700', color: '#0f172a' }}>{t('room.meterReadings')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push(`/(dashboard)/landlord/properties/${id}/rooms/${roomId}/maintenance`)} style={{ borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: 'white', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Wrench size={20} color="#2563eb" />
+            <Text style={{ fontWeight: '700', color: '#0f172a' }}>{t('room.maintenanceRequests')}</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </MobileFrame>

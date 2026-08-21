@@ -82,11 +82,9 @@ export default function EditProperty() {
       >
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href={`/landlord/properties/${id}`} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="#2563eb" />
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('propertyAdmin.edit')}</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('propertyAdmin.details')}</Text>

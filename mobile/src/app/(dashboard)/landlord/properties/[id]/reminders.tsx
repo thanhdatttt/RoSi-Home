@@ -17,6 +17,7 @@ const OFFSETS = [30, 15, 7] as const;
 
 export default function Reminders() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
   const { language, translateLegacy } = useI18n();
@@ -91,11 +92,9 @@ export default function Reminders() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Link href={{ pathname: "/(dashboard)/landlord/properties/[id]", params: { id } } as any} asChild>
-              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
-                <ArrowLeft size={16} color="black" />
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity onPress={() => router.push(`/(dashboard)/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowLeft size={16} color="#2563eb" />
+            </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }} numberOfLines={1}>{property?.name || translateLegacy('Property')}</Text>
               <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Lease reminders</Text>

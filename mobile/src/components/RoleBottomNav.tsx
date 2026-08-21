@@ -37,6 +37,8 @@ function isPrimaryArea(pathname: string, role: UserRole) {
   // The dashboard landing pages are intentionally uncluttered. Once a user
   // enters a role module, the dock remains available on list and detail views.
   if (pathname === '/profile') return true;
+  if (pathname === '/landlord' || pathname === '/landlord/' || pathname === '/tenant' || pathname === '/tenant/') return false;
+  
   return role === 'Landlord'
     ? pathname.startsWith('/landlord/')
     : pathname.startsWith('/tenant/');
@@ -65,6 +67,8 @@ export function RoleBottomNav({ pathname, role }: { pathname: string; role?: Use
         style={{
           width: '100%',
           flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
           borderRadius: 24,
           borderWidth: 1,
           borderColor: '#e5eaf3',

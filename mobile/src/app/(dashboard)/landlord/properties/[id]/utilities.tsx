@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from "react-native";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
 import { DatePicker } from "../../../../../components/ui/DatePicker";
@@ -65,6 +65,7 @@ const rateSummary = (s: Schedule, locale: string, flatLabel: string) =>
 
 export default function UtilitiesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const { token } = useAuth();
@@ -192,11 +193,9 @@ export default function UtilitiesConfig() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
           {mode === "view" ? (
-            <Link href={`/landlord/properties/${id}`} asChild>
-              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-                <ArrowLeft size={16} color="black" />
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowLeft size={16} color="#2563eb" />
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={() => setMode("view")} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowLeft size={16} color="black" />

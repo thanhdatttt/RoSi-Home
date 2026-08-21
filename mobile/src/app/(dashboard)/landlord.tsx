@@ -8,8 +8,10 @@ import { Building2, Bell, TrendingUp, UserCircle2, FileText, Receipt, FilePlus, 
 import { useAuth } from "../../contexts/auth-context";
 import { apiRequest } from "../../lib/api";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useRouter } from "expo-router";
 
 export default function LandlordDashboard() {
+  const router = useRouter();
   const { token, user } = useAuth();
   const insets = useSafeAreaInsets();
   const { formatVnd, t } = useI18n();
@@ -97,11 +99,9 @@ export default function LandlordDashboard() {
                     <Bell size={16} color="white" />
                   </TouchableOpacity>
                 </Link>
-                <Link href="/profile" asChild>
-                  <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                    <UserCircle2 size={16} color="white" />
-                  </TouchableOpacity>
-                </Link>
+                <TouchableOpacity onPress={() => router.push('/profile')} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                  <UserCircle2 size={16} color="white" />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -185,39 +185,44 @@ export default function LandlordDashboard() {
 
                 {/* Overdue invoice rows */}
                 {outstanding.overdueInvoices?.map((inv: any, idx: number) => (
-                  <Link key={inv.invoiceId} href={{ pathname: "/(dashboard)/landlord/invoices/[id]", params: { id: inv.invoiceId } } as any} asChild>
-                    <TouchableOpacity style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderBottomWidth: idx < outstanding.overdueInvoices.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={{ fontWeight: '600', fontSize: 14, color: '#0f172a' }} numberOfLines={1}>{inv.tenant} · {inv.room}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                          <AlertTriangle size={12} color="#ef4444" />
-                          <Text style={{ fontSize: 12, color: '#ef4444' }}>{t('dashboard.dueOverdue', { date: inv.dueDate })}</Text>
-                        </View>
+                  <TouchableOpacity key={inv.invoiceId} onPress={() => router.push(`/landlord/invoices/${inv.invoiceId}`)} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderBottomWidth: idx < outstanding.overdueInvoices.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 14, color: '#0f172a' }} numberOfLines={1}>{inv.tenant} · {inv.room}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                        <AlertTriangle size={12} color="#ef4444" />
+                        <Text style={{ fontSize: 12, color: '#ef4444' }}>{t('dashboard.dueOverdue', { date: inv.dueDate })}</Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVnd(inv.amount)}</Text>
-                        <ChevronRight size={14} color="#94a3b8" />
-                      </View>
-                    </TouchableOpacity>
-                  </Link>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVnd(inv.amount)}</Text>
+                      <ChevronRight size={14} color="#94a3b8" />
+                    </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
           )}
 
           {/* Expiring Leases section */}
-          {expiring.length > 0 && (
-            <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{t('dashboard.expiringLeases')}</Text>
+          <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{t('dashboard.expiringLeases')}</Text>
+              {expiring.length > 0 && (
                 <Link href={"/(dashboard)/landlord/leases/expiring" as any} asChild>
                   <TouchableOpacity>
                     <Text style={{ fontSize: 13, color: '#2563eb', fontWeight: '600' }}>{t('dashboard.seeAll')}</Text>
                   </TouchableOpacity>
                 </Link>
-              </View>
-              <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-                {expiring.map((l, index) => {
+              )}
+            </View>
+            <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+              {expiring.length === 0 ? (
+                <View style={{ padding: 24, alignItems: 'center', justifyContent: 'center' }}>
+                  <CalendarClock size={32} color="#cbd5e1" />
+                  <Text style={{ fontSize: 14, color: '#64748b', marginTop: 12, textAlign: 'center' }}>{t('dashboard.noExpiringLeases')}</Text>
+                </View>
+              ) : (
+                expiring.map((l, index) => {
                   const [y, m, d] = l.endDate.split('-');
                   const end = new Date(Number(y), Number(m) - 1, Number(d));
                   const today = new Date();
@@ -226,35 +231,31 @@ export default function LandlordDashboard() {
                   const isUrgent = days <= 15;
 
                   return (
-                    <Link key={l.leaseId} href={{ pathname: "/(dashboard)/landlord/leases/[id]", params: { id: l.leaseId } } as any} asChild>
-                      <TouchableOpacity style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, borderBottomWidth: index < expiring.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
-                        <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: isUrgent ? 'rgba(239,68,68,0.1)' : 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <CalendarClock size={20} color={isUrgent ? '#ef4444' : '#2563eb'} />
-                        </View>
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                          <Text style={{ fontWeight: '600', fontSize: 15, color: '#0f172a' }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
-                          <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.tenantFullName} · {t('dashboard.expires', { date: l.endDate })}</Text>
-                        </View>
-                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                          <Text style={{ fontSize: 13, fontWeight: '700', color: isUrgent ? '#ef4444' : '#0f172a' }}>{t('dashboard.days', { days })}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    </Link>
+                    <TouchableOpacity key={l.leaseId} onPress={() => router.push(`/landlord/leases/${l.leaseId}`)} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, borderBottomWidth: index < expiring.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
+                      <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: isUrgent ? 'rgba(239,68,68,0.1)' : 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <CalendarClock size={20} color={isUrgent ? '#ef4444' : '#2563eb'} />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={{ fontWeight: '600', fontSize: 15, color: '#0f172a' }} numberOfLines={1}>{l.propertyName} · {l.roomName}</Text>
+                        <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{l.tenantFullName} · {t('dashboard.expires', { date: l.endDate })}</Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: isUrgent ? '#ef4444' : '#0f172a' }}>{t('dashboard.days', { days })}</Text>
+                      </View>
+                    </TouchableOpacity>
                   );
-                })}
-              </View>
+                })
+              )}
             </View>
-          )}
+          </View>
 
           {/* Properties section */}
           <View style={{ paddingHorizontal: 24, marginTop: 32 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Text style={{ fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{t('nav.properties')}</Text>
-              <Link href="/landlord/properties" asChild>
-                <TouchableOpacity>
-                  <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('dashboard.seeAll')}</Text>
-                </TouchableOpacity>
-              </Link>
+              <TouchableOpacity onPress={() => router.push('/landlord/properties')}>
+                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600' }}>{t('dashboard.seeAll')}</Text>
+              </TouchableOpacity>
             </View>
             <View style={{ gap: 12 }}>
               {properties.length > 0 ? (
@@ -289,36 +290,34 @@ function QuickAction({ icon, label }: { icon: React.ReactNode; label: string }) 
 }
 
 function QuickActionLink({ to, icon, label, blue }: { to: string; icon: React.ReactNode; label: string; blue?: boolean }) {
+  const router = useRouter();
   return (
-    <Link href={to as any} asChild>
-      <TouchableOpacity style={{ flexDirection: 'column', alignItems: 'center', gap: 6, paddingVertical: 8 }}>
-        <View style={{ height: 40, width: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: blue ? '#2563eb' : 'rgba(37,99,235,0.15)' }}>
-          {icon}
-        </View>
-        <Text style={{ fontSize: 10, fontWeight: '600', color: '#0f172a', textAlign: 'center' }}>{label}</Text>
-      </TouchableOpacity>
-    </Link>
+    <TouchableOpacity onPress={() => router.push(to as any)} style={{ flexDirection: 'column', alignItems: 'center', gap: 6, paddingVertical: 8 }}>
+      <View style={{ height: 40, width: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: blue ? '#2563eb' : 'rgba(37,99,235,0.15)' }}>
+        {icon}
+      </View>
+      <Text style={{ fontSize: 10, fontWeight: '600', color: '#0f172a', textAlign: 'center' }}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 function PropertyCard({ id, title, address, units, occupied }: { id: string; title: string; address: string; units: number; occupied: number }) {
   const { t } = useI18n();
+  const router = useRouter();
   return (
-    <Link href={{ pathname: "/landlord/properties/[id]", params: { id } } as any} asChild>
-      <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ height: 48, width: 48, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Building2 size={20} color="#2563eb" />
-        </View>
-        <View style={{ flex: 1, paddingRight: 8 }}>
-          <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{title}</Text>
-          <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>{address}</Text>
-        </View>
-        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-          <Text style={{ fontSize: 14, fontWeight: '700' }}>{occupied}/{units}</Text>
-          <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('dashboard.occupied')}</Text>
-        </View>
-      </TouchableOpacity>
-    </Link>
+    <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}`)} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ height: 48, width: 48, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Building2 size={20} color="#2563eb" />
+      </View>
+      <View style={{ flex: 1, paddingRight: 8 }}>
+        <Text style={{ fontWeight: '600', fontSize: 14 }} numberOfLines={1}>{title}</Text>
+        <Text style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>{address}</Text>
+      </View>
+      <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+        <Text style={{ fontSize: 14, fontWeight: '700' }}>{occupied}/{units}</Text>
+        <Text style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('dashboard.occupied')}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 

@@ -33,7 +33,7 @@ const configuredApiUrl =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
   (Constants.expoConfig?.extra?.apiUrl as string | undefined);
 
-const API_BASE_URL = (configuredApiUrl ?? 'http://localhost:3000').replace(/\/$/, '');
+const API_BASE_URL = (configuredApiUrl ?? 'http://192.168.0.101:3000').replace(/\/$/, '');
 
 export type ApiFieldError = { field: string; message: string };
 export type ApiListMeta = { page: number; pageSize: number; total: number };

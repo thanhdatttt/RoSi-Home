@@ -66,20 +66,16 @@ export default function LeasesList() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Link href="/landlord" asChild>
-              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
-                <ArrowLeft size={16} color="black" />
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity onPress={() => router.push('/landlord')} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowLeft size={16} color="black" />
+            </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Portfolio')}</Text>
               <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>{translateLegacy('Leases')}</Text>
             </View>
-            <Link href="/landlord/leases/new" asChild>
-              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
-                <UserPlus size={16} color="white" />
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity onPress={() => router.push('/landlord/leases/new')} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
+              <UserPlus size={16} color="white" />
+            </TouchableOpacity>
           </View>
 
           <View style={{ marginTop: 16, position: 'relative' }}>

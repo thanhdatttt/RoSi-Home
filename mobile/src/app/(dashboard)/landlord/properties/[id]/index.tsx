@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, TextInput } from "react-native";
-import { Link, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { Link, useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
@@ -20,6 +20,7 @@ const PAGE_SIZE = 10;
 
 export default function PropertyDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
   const { formatVnd, statusLabel, t, translateLegacy } = useI18n();
@@ -120,11 +121,9 @@ export default function PropertyDetail() {
       <MobileFrame>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f8ff', paddingHorizontal: 24 }}>
           <Text style={{ color: '#94a3b8', textAlign: 'center' }}>{t('property.notFound')}</Text>
-          <Link href="/landlord/properties" asChild>
-            <TouchableOpacity style={{ marginTop: 16, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#f1f5f9', borderRadius: 8 }}>
-              <Text style={{ fontWeight: '600' }}>{t('property.goBack')}</Text>
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.push('/landlord/properties')} style={{ marginTop: 16, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#f1f5f9', borderRadius: 8 }}>
+            <Text style={{ fontWeight: '600' }}>{t('property.goBack')}</Text>
+          </TouchableOpacity>
         </View>
       </MobileFrame>
     );
@@ -146,20 +145,16 @@ export default function PropertyDetail() {
             />
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Link href="/landlord/properties" asChild>
-                <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                  <ArrowLeft size={16} color="white" />
-                </TouchableOpacity>
-              </Link>
+              <TouchableOpacity onPress={() => router.push('/landlord/properties')} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                <ArrowLeft size={16} color="white" />
+              </TouchableOpacity>
               <View style={{ flex: 1, paddingRight: 8 }}>
                 <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>{t('property.eyebrow')}</Text>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: '#ffffff' }} numberOfLines={1}>{property.name}</Text>
               </View>
-              <Link href={`/landlord/properties/${id}/edit`} asChild>
-                <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-                  <Pencil size={16} color="white" />
-                </TouchableOpacity>
-              </Link>
+              <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}/edit`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                <Pencil size={16} color="white" />
+              </TouchableOpacity>
             </View>
 
             <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -243,27 +238,25 @@ export default function PropertyDetail() {
                       </TouchableOpacity>
                     )}
                   >
-                    <Link href={`/landlord/properties/${id}/rooms/${r.id}`} asChild>
-                      <TouchableOpacity style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <View style={{ height: 44, width: 44, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <DoorOpen size={20} color="#2563eb" />
-                        </View>
-                        <View style={{ flex: 1, paddingRight: 8 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || t('property.unnamedRoom')}</Text>
-                          <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>
-                            {r.status === "Occupied" ? statusLabel(r.status) : t('property.noActiveLease')}
+                    <TouchableOpacity onPress={() => router.push(`/landlord/properties/${id}/rooms/${r.id}`)} style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ height: 44, width: 44, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <DoorOpen size={20} color="#2563eb" />
+                      </View>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{r.name || t('property.unnamedRoom')}</Text>
+                        <Text style={{ fontSize: 12, color: '#94a3b8' }} numberOfLines={1}>
+                          {r.status === "Occupied" ? statusLabel(r.status) : t('property.noActiveLease')}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700' }}>{formatVnd(r.baseRent)}</Text>
+                        <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: r.status === "Occupied" ? 'rgba(37,99,235,0.2)' : '#f1f5f9' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, color: r.status === "Occupied" ? '#2563eb' : '#94a3b8' }}>
+                            {statusLabel(r.status)}
                           </Text>
                         </View>
-                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
-                          <Text style={{ fontSize: 14, fontWeight: '700' }}>{formatVnd(r.baseRent)}</Text>
-                          <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: r.status === "Occupied" ? 'rgba(37,99,235,0.2)' : '#f1f5f9' }}>
-                            <Text style={{ fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, color: r.status === "Occupied" ? '#2563eb' : '#94a3b8' }}>
-                              {statusLabel(r.status)}
-                            </Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                    </Link>
+                      </View>
+                    </TouchableOpacity>
                   </Swipeable>
                 ))
               )}
@@ -285,14 +278,13 @@ export default function PropertyDetail() {
 }
 
 function ConfigLink({ href, icon, label, highlight }: { href: string; icon: React.ReactNode; label: string; highlight?: boolean }) {
+  const router = useRouter();
   return (
-    <Link href={href as any} asChild>
-      <TouchableOpacity style={{ flexDirection: 'column', alignItems: 'center', gap: 6, paddingVertical: 8 }}>
-        <View style={{ height: 40, width: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: highlight ? '#2563eb' : 'rgba(37,99,235,0.1)' }}>
-          {icon}
-        </View>
-        <Text style={{ fontSize: 10, fontWeight: '600', color: '#0f172a', textAlign: 'center' }}>{label}</Text>
-      </TouchableOpacity>
-    </Link>
+    <TouchableOpacity onPress={() => router.push(href as any)} style={{ flexDirection: 'column', alignItems: 'center', gap: 6, paddingVertical: 8 }}>
+      <View style={{ height: 40, width: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: highlight ? '#2563eb' : 'rgba(37,99,235,0.1)' }}>
+        {icon}
+      </View>
+      <Text style={{ fontSize: 10, fontWeight: '600', color: '#0f172a', textAlign: 'center' }}>{label}</Text>
+    </TouchableOpacity>
   );
 }
