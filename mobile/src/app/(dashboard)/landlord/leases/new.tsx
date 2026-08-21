@@ -175,7 +175,7 @@ export default function NewLease() {
 
     return (
       <MobileFrame>
-        <View style={{ flex: 1, backgroundColor: '#f5f8ff', paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: Math.max(insets.bottom + 24, 32) }}>
+        <ScrollView style={{ flex: 1, backgroundColor: '#f5f8ff' }} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: Math.max(insets.bottom + 24, 32) }} showsVerticalScrollIndicator={false}>
           <View style={{ height: 56, width: 56, borderRadius: 16, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
             <Check size={24} color="white" />
           </View>
@@ -238,10 +238,10 @@ export default function NewLease() {
             </View>
           ))}
 
-          <View style={{ marginTop: 'auto', paddingTop: 24 }}>
+          <View style={{ marginTop: 24 }}>
             <PrimaryButton onPress={() => router.back()}>Back</PrimaryButton>
           </View>
-        </View>
+        </ScrollView>
       </MobileFrame>
     );
   }

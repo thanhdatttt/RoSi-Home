@@ -74,12 +74,14 @@ function localizedApiErrorMessage(status: number, message: string, code?: string
     UNAUTHENTICATED: ['Your session has expired. Please sign in again.', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'],
     FORBIDDEN: ['You do not have permission to perform this action.', 'Bạn không có quyền thực hiện thao tác này.'],
     NOT_FOUND: ['The requested item could not be found.', 'Không tìm thấy thông tin bạn yêu cầu.'],
-    VALIDATION_ERROR: ['Please check the entered information and try again.', 'Vui lòng kiểm tra lại thông tin đã nhập.'],
-    CONFLICT: ['This action conflicts with the current data. Please refresh and try again.', 'Thao tác xung đột với dữ liệu hiện tại. Vui lòng tải lại và thử lại.'],
     INTERNAL_ERROR: ['The server encountered an error. Please try again later.', 'Máy chủ gặp lỗi. Vui lòng thử lại sau.'],
   };
   const known = code ? knownMessages[code] : undefined;
   if (known) return vi ? known[1] : known[0];
+  
+  if (message && message !== "Conflict" && message !== "Bad Request") {
+    return message;
+  }
 
   if (status >= 500) {
     return vi ? 'Máy chủ gặp lỗi. Vui lòng thử lại sau.' : 'The server encountered an error. Please try again later.';
