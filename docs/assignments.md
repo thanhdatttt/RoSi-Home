@@ -3,9 +3,9 @@
 ## 1. Planning Rules
 
 - The team has five full-stack developers and one half-day batch provides approximately 3–4 hours per developer.
-- A developer pulls at most one user story at a time. A blank slot means the developer reviews, tests, integrates, or helps unblock active work instead of pulling a blocked story.
-- A batch starts only after the dependencies of its assigned stories have reached `Accepted Done`.
-- An unfinished story carries over and keeps its WIP slot; the next dependent story does not start early.
+- A developer pulls at most one task at a time (each task can group multiple related user stories). A blank slot means the developer reviews, tests, integrates, or helps unblock active work instead of pulling a blocked task.
+- A batch starts only after the dependencies of its assigned tasks have reached `Accepted Done`.
+- An unfinished task carries over and keeps its WIP slot; the next dependent task does not start early.
 - No developer is the sole reviewer of their own story.
 - Infrastructure tasks establish the delivery baseline and are not counted as completed user-story throughput.
 
