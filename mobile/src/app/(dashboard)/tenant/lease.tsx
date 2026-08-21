@@ -6,16 +6,13 @@ import { MobileFrame } from "../../../components/MobileFrame";
 import { ArrowLeft, DoorOpen, Calendar, Wallet, ShieldCheck, CalendarClock } from "lucide-react-native";
 import { useAuth } from "../../../contexts/auth-context";
 import { apiRequest } from "../../../lib/api";
-
-const formatVND = (n: number) => {
-  if (n == null || isNaN(n)) return '0';
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function TenantLease() {
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
-  
+  const { formatVnd, statusLabel, t } = useI18n();
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,11 +54,11 @@ export default function TenantLease() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>My lease</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>{t('lease.myLease')}</Text>
             </View>
           </View>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 16, color: '#64748b' }}>No active lease found.</Text>
+            <Text style={{ fontSize: 16, color: '#64748b' }}>{t('lease.noneActive')}</Text>
           </View>
         </View>
       </MobileFrame>
@@ -89,8 +86,8 @@ export default function TenantLease() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>My tenancy</Text>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a', marginTop: 4 }}>My lease</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('lease.myTenancy')}</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a', marginTop: 4 }}>{t('lease.myLease')}</Text>
             </View>
           </View>
 
@@ -99,7 +96,7 @@ export default function TenantLease() {
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.2)', backgroundColor: 'rgba(37,99,235,0.05)', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <CalendarClock size={20} color="#2563eb" />
               <Text style={{ flex: 1, fontSize: 12, color: '#0f172a', lineHeight: 18 }}>
-                Your lease expires on <Text style={{ fontWeight: '700' }}>{data.endDate}</Text> — in {days} days. You'll get a reminder before it ends.
+                {t('lease.expiryNotice', { date: data.endDate, days })}
               </Text>
             </View>
           </View>
@@ -107,40 +104,40 @@ export default function TenantLease() {
           {/* Details */}
           <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
             <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-              <Row icon={<DoorOpen size={16} color="#2563eb" />} label="Property · Room" value={`${data.propertyName} · ${data.roomName}`} isFirst={true} />
-              <Row icon={<Calendar size={16} color="#2563eb" />} label="Lease period" value={`${data.startDate} → ${data.endDate}`} />
-              <Row icon={<Wallet size={16} color="#2563eb" />} label="Agreed rent" value={`${formatVND(data.agreedRent)} VNĐ / month`} />
-              <Row icon={<Wallet size={16} color="#2563eb" />} label="Deposit" value={`${formatVND(data.deposit)} VNĐ`} />
-              <Row icon={<ShieldCheck size={16} color="#2563eb" />} label="Status" value={data.status} />
+              <Row icon={<DoorOpen size={16} color="#2563eb" />} label={t('lease.propertyRoom')} value={`${data.propertyName} · ${data.roomName}`} isFirst={true} />
+              <Row icon={<Calendar size={16} color="#2563eb" />} label={t('lease.period')} value={`${data.startDate} → ${data.endDate}`} />
+              <Row icon={<Wallet size={16} color="#2563eb" />} label={t('lease.agreedRent')} value={t('lease.perMonth', { amount: formatVnd(data.agreedRent) })} />
+              <Row icon={<Wallet size={16} color="#2563eb" />} label={t('lease.deposit')} value={formatVnd(data.deposit)} />
+              <Row icon={<ShieldCheck size={16} color="#2563eb" />} label={t('lease.status')} value={statusLabel(data.status)} />
             </View>
             <Text style={{ marginTop: 12, fontSize: 11, color: '#64748b', lineHeight: 16 }}>
-              Lease information is maintained by your landlord. RosiHome stores the record only — it isn't an electronic signature.
+              {t('lease.recordNotice')}
             </Text>
           </View>
 
           {/* Utilities & Services */}
           {(data.utilities || data.surcharges?.length > 0) && (
             <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 12 }}>Utilities & Services</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#64748b', marginBottom: 12 }}>{t('lease.utilitiesServices')}</Text>
               <View style={{ borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
                 {data.utilities && (
                   <>
-                    <Row icon={<Wallet size={16} color="#2563eb" />} label="Electricity" value={`${formatVND(data.utilities.electricityRatePerKwh)} VNĐ / kWh`} isFirst={true} />
-                    <Row icon={<Wallet size={16} color="#2563eb" />} label="Water" value={
+                    <Row icon={<Wallet size={16} color="#2563eb" />} label={t('lease.electricity')} value={t('lease.perKwh', { amount: formatVnd(data.utilities.electricityRatePerKwh) })} isFirst={true} />
+                    <Row icon={<Wallet size={16} color="#2563eb" />} label={t('lease.water')} value={
                       data.utilities.waterBillingMethod === 'Flat'
-                        ? `${formatVND(data.utilities.waterFlatAmountPerTenant ?? 0)} VNĐ / person`
-                        : `${formatVND(data.utilities.waterRatePerM3 ?? 0)} VNĐ / m³`
+                        ? t('lease.perPerson', { amount: formatVnd(data.utilities.waterFlatAmountPerTenant ?? 0) })
+                        : t('lease.perM3', { amount: formatVnd(data.utilities.waterRatePerM3 ?? 0) })
                     } />
                   </>
                 )}
-                
+
                 {data.surcharges?.map((surcharge: any, idx: number) => (
-                  <Row 
-                    key={surcharge.name} 
-                    icon={<Wallet size={16} color="#2563eb" />} 
-                    label={surcharge.name} 
-                    value={`${formatVND(surcharge.monthlyAmount)} VNĐ / month`} 
-                    isFirst={!data.utilities && idx === 0} 
+                  <Row
+                    key={surcharge.name}
+                    icon={<Wallet size={16} color="#2563eb" />}
+                    label={surcharge.name}
+                    value={t('lease.perMonth', { amount: formatVnd(surcharge.monthlyAmount) })}
+                    isFirst={!data.utilities && idx === 0}
                   />
                 ))}
               </View>

@@ -32,6 +32,12 @@ export const createLeaseSchema = z
   .object({
     roomId: z.string().uuid("roomId must be a valid id."),
     tenant: tenantInputSchema,
+    coTenants: z.array(z.object({
+      fullName: z.string().trim().min(1, "Full name is required."),
+      phone: z.string().trim().min(1, "Phone is required.").regex(/^[0-9+()\-\s]+$/, "Phone contains invalid characters."),
+      email: z.string().trim().email("Invalid email."),
+    })).optional(),
+    headcount: z.number().int().min(1).default(1),
     startDate: dateStr,
     endDate: dateStr,
     agreedRent: money,

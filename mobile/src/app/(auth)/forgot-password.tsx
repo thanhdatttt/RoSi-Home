@@ -8,18 +8,20 @@ import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { ApiRequestError } from "../../lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Forgot() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { forgotPassword, loading } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
 
   async function submit() {
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-      setApiError("Enter a valid email address.");
+      setApiError(t('auth.emailInvalid'));
       return;
     }
     setApiError(null);
@@ -28,9 +30,9 @@ export default function Forgot() {
       router.push("/reset-sent");
     } catch (e: any) {
       if (e instanceof ApiRequestError) {
-        setApiError(e.message || "Failed to send reset link.");
+        setApiError(t('auth.passwordResetRequestFailed'));
       } else {
-        setApiError("An unexpected error occurred. Please try again.");
+        setApiError(t('auth.passwordResetRequestFailed'));
       }
     }
   }
@@ -40,11 +42,9 @@ export default function Forgot() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/login" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
         </View>
 
         {/* Content */}
@@ -52,37 +52,40 @@ export default function Forgot() {
           <View style={{ height: 56, width: 56, borderRadius: 16, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <Mail size={24} color="#2563eb" />
           </View>
-          <Text style={{ fontSize: 24, fontWeight: '800' }}>Forgot password?</Text>
+          <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.forgotPassword')}</Text>
           <Text style={{ fontSize: 14, color: '#94a3b8', marginTop: 8, lineHeight: 20 }}>
-            Enter the email linked to your RosiHome account. If it matches an account, we'll send a time-limited reset link — we won't confirm either way for security.
+            {t('auth.forgotPasswordDescription')}
+          </Text>
+          <Text style={{ fontSize: 12, color: '#64748b', marginTop: 10, lineHeight: 18 }}>
+            {t('auth.forgotPasswordTenantNotice')}
           </Text>
           <View style={{ marginTop: 24, marginBottom: 24 }}>
-            <Field 
-              label="Email address" 
-              placeholder="you@email.com" 
+            <Field
+              label={t('auth.email')}
+              placeholder="you@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
-              icon={<Mail size={16} color="gray" />} 
-              value={email} 
-              onChangeText={setEmail} 
+              icon={<Mail size={16} color="gray" />}
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
-          {apiError && (
+          {apiError ? (
             <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 }}>
               <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
-          )}
+          ) : null}
           <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
-            {loading ? "Sending..." : "Send reset link"}
+            {loading ? t('auth.sending') : t('auth.sendNewPassword')}
           </PrimaryButton>
-          
+
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
-            <Text style={{ fontSize: 12, color: '#94a3b8' }}>Remembered it?</Text>
-            <Link href="/login" asChild>
-              <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Back to sign in</Text>
-              </TouchableOpacity>
-            </Link>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('auth.rememberedPassword')}</Text>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>
+                {t('auth.backToSignIn')}
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>

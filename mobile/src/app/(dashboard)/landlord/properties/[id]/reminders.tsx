@@ -5,28 +5,38 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../../components/MobileFrame";
 import { ArrowLeft, BellRing, Check } from "lucide-react-native";
 import { useAuth } from "../../../../../contexts/auth-context";
-import { apiRequest } from "../../../../../lib/api";
+import {
+  getLeaseReminderConfig,
+  updateLeaseReminderConfig,
+} from "../../../../../features/leasing/api";
+import { getProperty, type PropertyView } from "../../../../../features/portfolio/api";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const OFFSETS = [30, 15, 7] as const;
 
 export default function Reminders() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
-  
-  const [property, setProperty] = useState<any>(null);
+  const { language, translateLegacy } = useI18n();
+
+  const [property, setProperty] = useState<PropertyView | null>(null);
   const [on, setOn] = useState<Record<number, boolean>>({ 30: false, 15: false, 7: false });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const fetchConfig = useCallback(async () => {
-    if (!token || !id) return;
+    if (!token || !id) {
+      setLoading(false);
+      return;
+    }
     try {
       const [propData, configData] = await Promise.all([
-        apiRequest<any>(`/properties/${id}`, { token }),
-        apiRequest<any>(`/properties/${id}/lease-reminder-config`, { token })
+        getProperty(token, id),
+        getLeaseReminderConfig(token, id),
       ]);
       setProperty(propData);
       setOn({
@@ -48,14 +58,10 @@ export default function Reminders() {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      await apiRequest(`/properties/${id}/lease-reminder-config`, {
-        method: "PATCH",
-        token,
-        body: {
+      await updateLeaseReminderConfig(token, id, {
           remindAt30Days: on[30],
           remindAt15Days: on[15],
           remindAt7Days: on[7],
-        }
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -86,13 +92,11 @@ export default function Reminders() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Link href={{ pathname: "/(dashboard)/landlord/properties/[id]", params: { id } } as any} asChild>
-              <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
-                <ArrowLeft size={16} color="black" />
-              </TouchableOpacity>
-            </Link>
+            <TouchableOpacity onPress={() => router.push(`/(dashboard)/landlord/properties/${id}`)} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(37,99,235,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowLeft size={16} color="#2563eb" />
+            </TouchableOpacity>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }} numberOfLines={1}>{property?.name || 'Property'}</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }} numberOfLines={1}>{property?.name || translateLegacy('Property')}</Text>
               <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Lease reminders</Text>
             </View>
           </View>
@@ -102,7 +106,7 @@ export default function Reminders() {
           <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8 }}>
             <BellRing size={16} color="#2563eb" style={{ marginTop: 2 }} />
             <Text style={{ flex: 1, fontSize: 12, color: '#0f172a', lineHeight: 18 }}>
-              Push reminders go to you and the assigned tenant only, for active leases in this property. Each reminder is sent once per lease and timing.
+              These settings request reminders for the landlord and assigned tenant on active leases. Actual push delivery is verified separately from saving this configuration.
             </Text>
           </View>
 
@@ -110,8 +114,8 @@ export default function Reminders() {
             {OFFSETS.map((d, index) => (
               <View key={d} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: index < OFFSETS.length - 1 ? 1 : 0, borderBottomColor: '#f1f5f9' }}>
                 <View style={{ flex: 1, paddingRight: 16 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{d} days before expiration</Text>
-                  <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Mobile push to landlord + tenant</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>{language === 'vi' ? `${d} ngày trước khi hết hạn` : `${d} days before expiration`}</Text>
+                  <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Configured for landlord + tenant</Text>
                 </View>
                 <Switch
                   value={on[d]}
@@ -127,11 +131,11 @@ export default function Reminders() {
             <PrimaryButton onPress={saveConfig} disabled={saving}>
               {saving ? "Saving..." : "Save reminder settings"}
             </PrimaryButton>
-            
+
             {saved && (
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
                 <Check size={16} color="#2563eb" />
-                <Text style={{ fontSize: 12, fontWeight: '600', color: '#2563eb' }}>Saved for {property?.name}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: '#2563eb' }}>{language === 'vi' ? `Đã lưu cho ${property?.name}` : `Saved for ${property?.name}`}</Text>
               </View>
             )}
           </View>

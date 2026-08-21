@@ -2,6 +2,7 @@ import React, { forwardRef, useState, type ReactNode } from "react";
 import { View, Text, TextInput, TextInputProps, TouchableOpacity } from "react-native";
 import { twMerge } from "tailwind-merge";
 import { Eye, EyeOff } from "lucide-react-native";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export interface FieldProps extends TextInputProps {
   label: string;
@@ -14,11 +15,12 @@ export interface FieldProps extends TextInputProps {
 export const Field = forwardRef<TextInput, FieldProps>(
   ({ label, icon, hint, error, className, secureTextEntry, ...props }, ref) => {
     const [isSecure, setIsSecure] = useState(secureTextEntry);
+    const { translateLegacy } = useI18n();
 
     return (
       <View className="mb-4">
         <Text className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {label}
+          {translateLegacy(label)}
         </Text>
         <View className="relative justify-center">
           {icon && (
@@ -38,6 +40,7 @@ export const Field = forwardRef<TextInput, FieldProps>(
             )}
             placeholderTextColor="#888" // Replace with appropriate muted-foreground hex if needed
             {...props}
+            placeholder={props.placeholder ? translateLegacy(props.placeholder) : props.placeholder}
           />
           {secureTextEntry && (
             <TouchableOpacity 
@@ -53,7 +56,7 @@ export const Field = forwardRef<TextInput, FieldProps>(
           )}
         </View>
         {hint && !error && (
-          <Text className="mt-1 text-xs text-muted-foreground">{hint}</Text>
+          <Text className="mt-1 text-xs text-muted-foreground">{translateLegacy(hint)}</Text>
         )}
         {error && (
           <Text className="mt-1 text-xs text-destructive">{error}</Text>

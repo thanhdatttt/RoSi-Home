@@ -215,6 +215,7 @@ export const leases = pgTable(
     startDate: date("start_date").notNull(),
     endDate: date("end_date").notNull(),
     actualEndDate: date("actual_end_date"),
+    headcount: integer("headcount").notNull().default(1),
     agreedRent: integer("agreed_rent").notNull(),
     deposit: integer("deposit").notNull(),
     status: leaseStatusEnum("status").notNull().default("Active"),
@@ -230,6 +231,22 @@ export const leases = pgTable(
     uniqueTenantActive: uniqueIndex("leases_tenant_active")
       .on(t.tenantInfoId)
       .where(sql`${t.deletedAt} IS NULL AND ${t.status} = 'Active'`),
+  }),
+);
+
+export const leaseCoTenants = pgTable(
+  "lease_co_tenants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    leaseId: uuid("lease_id")
+      .notNull()
+      .references(() => leases.id),
+    tenantInfoId: uuid("tenant_info_id")
+      .notNull()
+      .references(() => tenantInfo.id),
+  },
+  (t) => ({
+    uniqueLeaseTenant: uniqueIndex("lease_co_tenants_unique").on(t.leaseId, t.tenantInfoId),
   }),
 );
 
@@ -273,12 +290,9 @@ export const meterReadings = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqueReading: uniqueIndex("meter_readings_unique").on(
-      t.roomId,
-      t.utilityType,
-      t.billingPeriod,
-      t.supersededAt,
-    ),
+    uniqueReading: uniqueIndex("meter_readings_unique")
+      .on(t.roomId, t.utilityType, t.billingPeriod)
+      .where(sql`${t.supersededAt} IS NULL`),
     correctionFk: foreignKey({
       columns: [t.correctionOf],
       foreignColumns: [t.id],

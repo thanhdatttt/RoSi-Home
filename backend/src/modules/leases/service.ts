@@ -12,6 +12,7 @@ import {
   addDays,
   UPCOMING_EXPIRATION_WINDOW_DAYS,
 } from "./rules.js";
+import { leaseCoTenants } from "../../db/schema.js";
 import {
   assertPropertyOwnedByLandlord,
   assertRoomOwnedByLandlord,
@@ -140,7 +141,7 @@ async function assertNoOverlap(
 export async function createLeaseService(
   landlordId: string,
   input: CreateLeaseInput,
-): Promise<{ lease: LeaseView; tenantAccountProvisioned: boolean; tempPassword?: string }> {
+): Promise<{ lease: LeaseView; tenantAccountProvisioned: boolean; tempPassword?: string; coTenantsProvisioned?: { fullName: string; phone: string; tempPassword?: string }[] }> {
   await assertRoomOwnedByLandlord(input.roomId, landlordId);
   assertLeasePeriod(input.startDate, input.endDate);
 
@@ -179,6 +180,7 @@ export async function createLeaseService(
           tenantInfoId: tenantRow.id,
           startDate: input.startDate,
           endDate: input.endDate,
+          headcount: input.headcount,
           agreedRent: input.agreedRent,
           deposit: input.deposit,
           createdBy: landlordId,
@@ -195,6 +197,23 @@ export async function createLeaseService(
         },
         trx,
       );
+
+      const coTenantsProvisioned: { fullName: string; phone: string; tempPassword?: string }[] = [];
+      if (input.coTenants && input.coTenants.length > 0) {
+        for (const ct of input.coTenants) {
+          const ctRow = await createTenantInfo(landlordId, { ...ct, idNumber: "CO-" + crypto.randomUUID() }, trx);
+          await trx.insert(leaseCoTenants).values({ leaseId: lease.id, tenantInfoId: ctRow.id });
+          const ctProv = await provisionTenantAccount({
+            id: ctRow.id,
+            fullName: ctRow.fullName,
+            phone: ctRow.phone,
+            email: ctRow.email,
+          }, trx);
+          if (ctProv.provisioned) {
+            coTenantsProvisioned.push({ fullName: ctRow.fullName, phone: ctRow.phone, tempPassword: ctProv.tempPassword });
+          }
+        }
+      }
 
       await writeAudit(
         {
@@ -213,7 +232,7 @@ export async function createLeaseService(
       );
 
       const detail = await findLeaseForLandlord(landlordId, lease.id, trx);
-      return { lease: serialize(detail!), tenantAccountProvisioned: provisioned, tempPassword };
+      return { lease: serialize(detail!), tenantAccountProvisioned: provisioned, tempPassword, coTenantsProvisioned };
     });
   } catch (err) {
     // Second line of defense: leases_tenant_active (one Active lease per
@@ -347,6 +366,7 @@ async function applyRenewal(
           tenantInfoId: existing.tenantInfoId,
           startDate: renewalStartDate,
           endDate: renewalEndDate,
+          headcount: existing.headcount,
           agreedRent: input.agreedRent ?? existing.agreedRent,
           deposit: input.deposit ?? existing.deposit,
           createdBy: landlordId,

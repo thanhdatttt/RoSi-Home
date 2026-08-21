@@ -1,5 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { apiRequest, onApiError, setOnTokenRefreshed, Storage, TOKEN_KEY, REFRESH_KEY } from '@/lib/api';
+import {
+  apiRequest,
+  clearApiSession,
+  configureApiSession,
+  setOnSessionExpired,
+  setOnTokenRefreshed,
+  Storage,
+  TOKEN_KEY,
+  REFRESH_KEY,
+  USER_KEY,
+} from '@/lib/api';
 
 export type AuthUser = {
   id: string;
@@ -15,7 +25,7 @@ type AuthContextValue = {
   token: string | null;
   loading: boolean;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
-  register: (data: any) => Promise<AuthUser>;
+  register: (data: RegisterInput) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   changePassword: (data: any) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,6 +33,13 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+type RegisterInput = {
+  fullName: string;
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+};
 
 type LoginResponse = {
   accessToken: string;
@@ -33,13 +50,24 @@ type LoginResponse = {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  async function clearLocalSession() {
+    clearApiSession();
+    await Promise.all([
+      Storage.deleteItemAsync(TOKEN_KEY),
+      Storage.deleteItemAsync(REFRESH_KEY),
+      Storage.deleteItemAsync(USER_KEY),
+    ]);
+    setToken(null);
+    setUser(null);
+  }
 
   async function refreshProfile() {
     if (!token) return;
     try {
       const me = await apiRequest<any>('/profile', { token });
-      setUser((prev) => prev ? { ...prev, ...me } : { ...me, mustChangePassword: false });
+      setUser((prev) => prev ? { ...prev, ...me } : prev);
     } catch (err) {
       console.error("Failed to refresh profile", err);
     }
@@ -49,18 +77,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const storedToken = await Storage.getItemAsync(TOKEN_KEY);
-      if (storedToken && !cancelled) {
+      const [storedToken, storedRefreshToken, storedUserJson] = await Promise.all([
+        Storage.getItemAsync(TOKEN_KEY),
+        Storage.getItemAsync(REFRESH_KEY),
+        Storage.getItemAsync(USER_KEY),
+      ]);
+      if (storedToken && storedRefreshToken && storedUserJson && !cancelled) {
+        configureApiSession(storedRefreshToken, true);
         setToken(storedToken);
         try {
+          const storedUser = JSON.parse(storedUserJson) as AuthUser;
           const me = await apiRequest<any>('/profile', { token: storedToken });
-          if (!cancelled) setUser({ ...me, mustChangePassword: false });
+          if (!cancelled) setUser({ ...storedUser, ...me });
         } catch {
-          // Stored token is no longer valid — drop it.
-          await Storage.deleteItemAsync(TOKEN_KEY);
-          if (!cancelled) setToken(null);
+          await clearLocalSession();
         }
       }
+      if (!cancelled) setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -72,12 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOnTokenRefreshed((newToken) => {
       setToken(newToken);
     });
-    
-    return onApiError((error) => {
-      if (error.status === 401) {
-        logout();
-      }
+    setOnSessionExpired(() => {
+      void clearLocalSession();
     });
+    return () => {
+      setOnTokenRefreshed(null);
+      setOnSessionExpired(null);
+    };
   }, []);
 
   async function login(username: string, password: string, rememberMe: boolean = false) {
@@ -87,37 +121,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         body: { username, password },
       });
+      configureApiSession(result.refreshToken, rememberMe);
       if (rememberMe) {
-        await Storage.setItemAsync(TOKEN_KEY, result.accessToken);
-        await Storage.setItemAsync(REFRESH_KEY, result.refreshToken);
+        await Promise.all([
+          Storage.setItemAsync(TOKEN_KEY, result.accessToken),
+          Storage.setItemAsync(REFRESH_KEY, result.refreshToken),
+          Storage.setItemAsync(USER_KEY, JSON.stringify(result.user)),
+        ]);
       } else {
-        // Do not persist session
-        await Storage.deleteItemAsync(TOKEN_KEY);
-        await Storage.deleteItemAsync(REFRESH_KEY);
+        await Promise.all([
+          Storage.deleteItemAsync(TOKEN_KEY),
+          Storage.deleteItemAsync(REFRESH_KEY),
+          Storage.deleteItemAsync(USER_KEY),
+        ]);
       }
       setToken(result.accessToken);
       setUser(result.user);
-      
+
       // Fetch full profile in background to populate fullName and email
       apiRequest<any>('/profile', { token: result.accessToken })
         .then(me => setUser(prev => prev ? { ...prev, ...me } : prev))
         .catch(err => console.error("Failed to fetch profile on login", err));
-        
+
       return result.user;
     } finally {
       setLoading(false);
     }
   }
 
-  async function register(data: any) {
+  async function register(data: RegisterInput) {
     setLoading(true);
     try {
       await apiRequest('/auth/register', {
         method: 'POST',
         body: data,
       });
-      // After successful registration, log them in immediately with persistent session
-      return await login(data.email, data.password, true);
     } finally {
       setLoading(false);
     }
@@ -143,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         body: data,
       });
+      await clearLocalSession();
     } finally {
       setLoading(false);
     }
@@ -161,10 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Best-effort server logout; always clear local state.
     } finally {
-      await Storage.deleteItemAsync(TOKEN_KEY);
-      await Storage.deleteItemAsync(REFRESH_KEY);
-      setToken(null);
-      setUser(null);
+      await clearLocalSession();
     }
   }
 
