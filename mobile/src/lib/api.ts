@@ -1,63 +1,99 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const isWeb = Platform.OS === 'web';
 
 export const Storage = {
   getItemAsync: async (key: string) => {
-    if (isWeb) return localStorage.getItem(key);
+    if (isWeb) return globalThis.localStorage?.getItem(key) ?? null;
     return SecureStore.getItemAsync(key);
   },
   setItemAsync: async (key: string, value: string) => {
     if (isWeb) {
-      localStorage.setItem(key, value);
+      globalThis.localStorage?.setItem(key, value);
       return;
     }
-    return SecureStore.setItemAsync(key, value);
+    await SecureStore.setItemAsync(key, value);
   },
   deleteItemAsync: async (key: string) => {
     if (isWeb) {
-      localStorage.removeItem(key);
+      globalThis.localStorage?.removeItem(key);
       return;
     }
-    return SecureStore.deleteItemAsync(key);
+    await SecureStore.deleteItemAsync(key);
   },
 };
 
 export const TOKEN_KEY = 'rosihome.accessToken';
 export const REFRESH_KEY = 'rosihome.refreshToken';
+export const USER_KEY = 'rosihome.user';
 
-// Base URL of the RosiHome backend. Point this at your dev machine's LAN
-// address (e.g. http://192.168.1.20:3000) when testing on a physical device,
-// since `localhost` inside the Expo app resolves to the phone, not your laptop.
-const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiUrl as string | undefined) ??
-  process.env.API_BASE_URL ??
-  'http://localhost:3000';
+const configuredApiUrl =
+  process.env.EXPO_PUBLIC_API_BASE_URL ??
+  (Constants.expoConfig?.extra?.apiUrl as string | undefined);
+
+const API_BASE_URL = (configuredApiUrl ?? 'http://localhost:3000').replace(/\/$/, '');
+
+export type ApiFieldError = { field: string; message: string };
+export type ApiListMeta = { page: number; pageSize: number; total: number };
+export type ApiEnvelope<T> = { data: T };
+export type ApiListEnvelope<T> = { data: T[]; meta: ApiListMeta };
 
 export type ApiRequestOptions = {
-  method?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   token?: string | null;
-  body?: unknown;
+  body?: unknown | FormData;
   headers?: Record<string, string>;
+  timeoutMs?: number;
 };
 
 export type ApiErrorPayload = {
-  error?: { code?: string; message?: string; fields?: { field: string; message: string }[] };
+  error?: { code?: string; message?: string; fields?: ApiFieldError[] };
 };
 
-export class ApiRequestError extends Error {
-  status: number;
-  code?: string;
-  fields?: { field: string; message: string }[];
+export type ApiErrorLanguage = 'en' | 'vi';
 
-  constructor(
-    status: number,
-    message: string,
-    payload?: ApiErrorPayload,
-  ) {
-    super(message);
+let apiErrorLanguage: ApiErrorLanguage = 'en';
+
+export function setApiErrorLanguage(language: ApiErrorLanguage) {
+  apiErrorLanguage = language;
+}
+
+function localizedApiErrorMessage(status: number, message: string, code?: string) {
+  const vi = apiErrorLanguage === 'vi';
+
+  if (status === 0 && message === 'Request timed out.') {
+    return vi ? 'Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.' : 'Request timed out. Please try again.';
+  }
+  if (status === 0) {
+    return vi ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.' : 'Unable to connect to the server. Check your network and try again.';
+  }
+
+  const knownMessages: Record<string, [string, string]> = {
+    UNAUTHENTICATED: ['Your session has expired. Please sign in again.', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'],
+    FORBIDDEN: ['You do not have permission to perform this action.', 'Bạn không có quyền thực hiện thao tác này.'],
+    NOT_FOUND: ['The requested item could not be found.', 'Không tìm thấy thông tin bạn yêu cầu.'],
+    VALIDATION_ERROR: ['Please check the entered information and try again.', 'Vui lòng kiểm tra lại thông tin đã nhập.'],
+    CONFLICT: ['This action conflicts with the current data. Please refresh and try again.', 'Thao tác xung đột với dữ liệu hiện tại. Vui lòng tải lại và thử lại.'],
+    INTERNAL_ERROR: ['The server encountered an error. Please try again later.', 'Máy chủ gặp lỗi. Vui lòng thử lại sau.'],
+  };
+  const known = code ? knownMessages[code] : undefined;
+  if (known) return vi ? known[1] : known[0];
+
+  if (status >= 500) {
+    return vi ? 'Máy chủ gặp lỗi. Vui lòng thử lại sau.' : 'The server encountered an error. Please try again later.';
+  }
+  return message;
+}
+
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code?: string;
+  readonly fields?: ApiFieldError[];
+
+  constructor(status: number, message: string, payload?: ApiErrorPayload) {
+    super(localizedApiErrorMessage(status, message, payload?.error?.code));
     this.name = 'ApiRequestError';
     this.status = status;
     this.code = payload?.error?.code;
@@ -66,189 +102,222 @@ export class ApiRequestError extends Error {
 }
 
 type ErrorInterceptor = (error: ApiRequestError) => void;
-const interceptors: ErrorInterceptor[] = [];
+const interceptors = new Set<ErrorInterceptor>();
 
 export function onApiError(handler: ErrorInterceptor) {
-  interceptors.push(handler);
+  interceptors.add(handler);
   return () => {
-    const idx = interceptors.indexOf(handler);
-    if (idx > -1) interceptors.splice(idx, 1);
+    interceptors.delete(handler);
   };
 }
 
 let onTokenRefreshedCallback: ((newToken: string) => void) | null = null;
-export function setOnTokenRefreshed(cb: ((newToken: string) => void) | null) {
-  onTokenRefreshedCallback = cb;
+let onSessionExpiredCallback: (() => void) | null = null;
+
+export function setOnTokenRefreshed(callback: ((newToken: string) => void) | null) {
+  onTokenRefreshedCallback = callback;
 }
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
+export function setOnSessionExpired(callback: (() => void) | null) {
+  onSessionExpiredCallback = callback;
 }
 
-async function refreshTokens(): Promise<string | null> {
-  const refreshToken = await Storage.getItemAsync(REFRESH_KEY);
-  if (!refreshToken) return null;
+let refreshPromise: Promise<string | null> | null = null;
+let sessionRefreshToken: string | null = null;
+let persistSession = false;
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
+export function configureApiSession(refreshToken: string | null, persist: boolean) {
+  sessionRefreshToken = refreshToken;
+  persistSession = persist;
+}
 
-    if (!res.ok) {
-      await Storage.deleteItemAsync(TOKEN_KEY);
-      await Storage.deleteItemAsync(REFRESH_KEY);
+export function clearApiSession() {
+  sessionRefreshToken = null;
+  persistSession = false;
+}
+
+async function clearStoredSession() {
+  await Promise.all([
+    Storage.deleteItemAsync(TOKEN_KEY),
+    Storage.deleteItemAsync(REFRESH_KEY),
+    Storage.deleteItemAsync(USER_KEY),
+  ]);
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const storedRefreshToken = await Storage.getItemAsync(REFRESH_KEY);
+    const refreshToken = sessionRefreshToken ?? storedRefreshToken;
+    if (!refreshToken) return null;
+
+    if (!sessionRefreshToken && storedRefreshToken) {
+      sessionRefreshToken = storedRefreshToken;
+      persistSession = true;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        await clearStoredSession();
+        clearApiSession();
+        return null;
+      }
+
+      const envelope = (await response.json()) as ApiEnvelope<{
+        accessToken: string;
+        refreshToken: string;
+      }>;
+      const { accessToken, refreshToken: rotatedRefreshToken } = envelope.data;
+
+      sessionRefreshToken = rotatedRefreshToken;
+      if (persistSession) {
+        await Promise.all([
+          Storage.setItemAsync(TOKEN_KEY, accessToken),
+          Storage.setItemAsync(REFRESH_KEY, rotatedRefreshToken),
+        ]);
+      }
+      onTokenRefreshedCallback?.(accessToken);
+      return accessToken;
+    } catch {
       return null;
     }
+  })().finally(() => {
+    refreshPromise = null;
+  });
 
-    const json = await res.json();
-    const newAccess = json.data.accessToken;
-    const newRefresh = json.data.refreshToken;
-    
-    await Storage.setItemAsync(TOKEN_KEY, newAccess);
-    await Storage.setItemAsync(REFRESH_KEY, newRefresh);
-    
-    if (onTokenRefreshedCallback) {
-      onTokenRefreshedCallback(newAccess);
+  return refreshPromise;
+}
+
+function isFormData(body: unknown): body is FormData {
+  return typeof FormData !== 'undefined' && body instanceof FormData;
+}
+
+function makeBody(body: ApiRequestOptions['body']): BodyInit | undefined {
+  if (body === undefined) return undefined;
+  if (isFormData(body)) return body;
+  return JSON.stringify(body);
+}
+
+function makeHeaders(
+  body: ApiRequestOptions['body'],
+  token: string | null | undefined,
+  headers: Record<string, string>,
+) {
+  return {
+    Accept: 'application/json',
+    ...(body === undefined || isFormData(body) ? {} : { 'Content-Type': 'application/json' }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...headers,
+  };
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiRequestError(0, 'Request timed out.');
     }
-    
-    return newAccess;
-  } catch (err) {
-    return null;
+    throw new ApiRequestError(0, 'Unable to connect to the server.');
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-/**
- * Thin fetch wrapper around the RosiHome REST API. Resolves to the `data`
- * field of the standard success envelope (`{ data: ... }`, or `{ data, meta }`
- * for lists). Throws `ApiRequestError` on non-2xx responses.
- */
+async function requestResponse(
+  path: string,
+  options: ApiRequestOptions,
+  allowRefresh = true,
+): Promise<Response> {
+  const {
+    method = 'GET',
+    token,
+    body,
+    headers = {},
+    timeoutMs = 15_000,
+  } = options;
+  const url = `${API_BASE_URL}/api/v1${path}`;
+  const init: RequestInit = {
+    method,
+    headers: makeHeaders(body, token, headers),
+    body: makeBody(body),
+  };
+
+  let response = await fetchWithTimeout(url, init, timeoutMs);
+
+  if (response.status === 401 && token && allowRefresh) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      response = await requestResponse(
+        path,
+        { ...options, token: refreshedToken },
+        false,
+      );
+    } else {
+      onSessionExpiredCallback?.();
+    }
+  }
+
+  return response;
+}
+
+async function readJson(response: Response): Promise<Record<string, unknown> & ApiErrorPayload> {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown> & ApiErrorPayload;
+  } catch {
+    throw new ApiRequestError(response.status, 'The server returned an invalid response.');
+  }
+}
+
+function throwApiError(response: Response, payload: ApiErrorPayload): never {
+  const error = new ApiRequestError(
+    response.status,
+    payload.error?.message ?? `Request failed with status ${response.status}`,
+    payload,
+  );
+  interceptors.forEach((handler) => handler(error));
+  throw error;
+}
+
+export async function apiRequestWithEnvelope<T = unknown, M = ApiListMeta>(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<{ data: T; meta?: M }> {
+  const response = await requestResponse(path, options);
+  const payload = await readJson(response);
+  if (!response.ok) throwApiError(response, payload);
+  return payload as { data: T; meta?: M };
+}
+
 export async function apiRequest<T = unknown>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const { method = 'GET', token, body, headers = {} } = options;
-
-  const finalHeaders: Record<string, string> = { ...headers };
-  if (body !== undefined) finalHeaders['Content-Type'] = 'application/json';
-  if (token) finalHeaders.Authorization = `Bearer ${token}`;
-
-  let res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-    method,
-    headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  if (res.status === 401 && token) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      refreshTokens().then(newToken => {
-        isRefreshing = false;
-        if (newToken) {
-          onRefreshed(newToken);
-        } else {
-          // If refresh failed, notify subscribers with empty token to trigger 401 error
-          onRefreshed("");
-        }
-      });
-    }
-
-    const newToken = await new Promise<string>((resolve) => {
-      refreshSubscribers.push(resolve);
-    });
-
-    if (newToken) {
-      finalHeaders.Authorization = `Bearer ${newToken}`;
-      res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-        method,
-        headers: finalHeaders,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
-    }
-  }
-
-  const text = await res.text();
-  const json = text ? (JSON.parse(text) as Record<string, unknown> & ApiErrorPayload) : {};
-
-  if (!res.ok) {
-    const errPayload = json as ApiErrorPayload;
-    const message =
-      errPayload.error?.message ?? `Request failed with status ${res.status}`;
-    const err = new ApiRequestError(res.status, message, errPayload);
-    
-    // Notify global interceptors (like AuthProvider for auto-logout)
-    interceptors.forEach((fn) => fn(err));
-    
-    throw err;
-  }
-
-  return json.data as T;
+  const envelope = await apiRequestWithEnvelope<T>(path, options);
+  return envelope.data;
 }
 
-/**
- * Same as apiRequest, but returns the full envelope including meta data.
- */
-export async function apiRequestWithEnvelope<T = unknown, M = unknown>(
+export async function apiRequestRaw(
   path: string,
   options: ApiRequestOptions = {},
-): Promise<{ data: T; meta?: M }> {
-  const { method = 'GET', token, body, headers = {} } = options;
-
-  const finalHeaders: Record<string, string> = { ...headers };
-  if (body !== undefined) finalHeaders['Content-Type'] = 'application/json';
-  if (token) finalHeaders.Authorization = `Bearer ${token}`;
-
-  let res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-    method,
-    headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  if (res.status === 401 && token) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      refreshTokens().then(newToken => {
-        isRefreshing = false;
-        if (newToken) {
-          onRefreshed(newToken);
-        } else {
-          onRefreshed("");
-        }
-      });
-    }
-
-    const newToken = await new Promise<string>((resolve) => {
-      refreshSubscribers.push(resolve);
-    });
-
-    if (newToken) {
-      finalHeaders.Authorization = `Bearer ${newToken}`;
-      res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-        method,
-        headers: finalHeaders,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
-    }
+): Promise<Response> {
+  const response = await requestResponse(path, options);
+  if (!response.ok) {
+    const payload = await readJson(response);
+    throwApiError(response, payload);
   }
-
-  const text = await res.text();
-  const json = text ? (JSON.parse(text) as Record<string, unknown> & ApiErrorPayload) : {};
-
-  if (!res.ok) {
-    const errPayload = json as ApiErrorPayload;
-    const message =
-      errPayload.error?.message ?? `Request failed with status ${res.status}`;
-    const err = new ApiRequestError(res.status, message, errPayload);
-    interceptors.forEach((fn) => fn(err));
-    throw err;
-  }
-
-  return json as { data: T; meta?: M };
+  return response;
 }
 
 export const API_BASE = API_BASE_URL;

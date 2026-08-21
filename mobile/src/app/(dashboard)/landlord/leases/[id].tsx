@@ -6,9 +6,16 @@ import { MobileFrame } from "../../../../components/MobileFrame";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { Field } from "../../../../components/ui/Field";
 import { DatePicker } from "../../../../components/ui/DatePicker";
-import { ArrowLeft, FileSignature, DoorOpen, Calendar, Wallet, ShieldCheck, Pencil, LogOut, Receipt, ChevronRight, User, Check } from "lucide-react-native";
+import { ArrowLeft, FileSignature, DoorOpen, Calendar, Wallet, ShieldCheck, Pencil, LogOut, User, Check } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
-import { apiRequest } from "../../../../lib/api";
+import {
+  endLease as endLeaseRequest,
+  getLease,
+  updateLease,
+  type LeaseView,
+  type UpdateLeaseInput,
+} from "../../../../features/leasing/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const formatVND = (n: number) => {
   if (n == null || isNaN(n)) return '0';
@@ -50,11 +57,11 @@ export default function LeaseDetail() {
   const { token } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { language, formatDate, statusLabel, translateLegacy } = useI18n();
 
-  const [lease, setLease] = useState<any>(null);
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [lease, setLease] = useState<LeaseView | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [mode, setMode] = useState<"view" | "edit" | "renew" | "end">("view");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -68,13 +75,11 @@ export default function LeaseDetail() {
   const fetchLease = useCallback(async () => {
     if (!token || !id) return;
     try {
-      const data = await apiRequest<any>(`/leases/${id}`, { token });
+      const data = await getLease(token, id);
       setLease(data);
-      // Optional: fetch invoices for this lease if an endpoint exists, 
-      // or we just leave it empty for now.
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Could not load lease.");
+      Alert.alert(translateLegacy("Error"), translateLegacy("Could not load lease."));
     } finally {
       setLoading(false);
     }
@@ -87,6 +92,7 @@ export default function LeaseDetail() {
   );
 
   const enterEdit = () => {
+    if (!lease) return;
     setEnd(lease.endDate);
     setRent(String(lease.agreedRent));
     setDeposit(String(lease.deposit));
@@ -94,11 +100,12 @@ export default function LeaseDetail() {
   };
 
   const enterRenew = () => {
+    if (!lease) return;
     const d1 = new Date(lease.startDate);
     const d2 = new Date(lease.endDate);
     const durationMs = d2.getTime() - d1.getTime();
     const newEnd = new Date(d2.getTime() + durationMs);
-    
+
     setStart(lease.endDate);
     setEnd(newEnd.toISOString().slice(0, 10));
     setRent(String(lease.agreedRent));
@@ -107,55 +114,51 @@ export default function LeaseDetail() {
   };
 
   const save = async (kind: "edit" | "renew") => {
-    if (!token) return;
+    if (!token || !lease) return;
     setErr(null);
     setSaving(true);
-    
+
     try {
-      let body: any = {};
+      let body: UpdateLeaseInput;
       if (kind === "edit") {
-        if (!end) throw new Error("End date is required.");
+        if (!end) throw new Error(translateLegacy("End date is required."));
         body = { endDate: end, agreedRent: Number(getRawNumber(rent)), deposit: Number(getRawNumber(deposit)) };
       } else {
-        if (!start || !end) throw new Error("Start and end date are required.");
+        if (!start || !end) throw new Error(translateLegacy("Start and end date are required."));
         body = { renewalStartDate: start, renewalEndDate: end, agreedRent: Number(getRawNumber(rent)), deposit: Number(getRawNumber(deposit)) };
       }
-      
-      const updated = await apiRequest(`/leases/${lease.id}`, {
-        method: "PATCH",
-        token,
-        body
-      });
-      
+
+      const updated = await updateLease(token, lease.id, body);
+
       setLease(updated);
       setMode("view");
-      setToast(kind === "renew" ? "Lease renewed. Tenant can now see the updated period." : "Lease updated.");
+      setToast(kind === "renew"
+        ? (language === "vi" ? "Đã gia hạn hợp đồng. Người thuê hiện có thể xem thời hạn mới." : "Lease renewed. Tenant can now see the updated period.")
+        : translateLegacy("Lease updated."));
     } catch (e: any) {
-      setErr(e.message || "An error occurred");
+      setErr(e.message || translateLegacy("An error occurred"));
     } finally {
       setSaving(false);
     }
   };
 
   const endLease = async () => {
-    if (!token) return;
+    if (!token || !lease) return;
     if (!actualEnd) {
-      setErr("Actual end date is required.");
+      setErr(translateLegacy("Actual end date is required."));
       return;
     }
     setSaving(true);
     setErr(null);
     try {
-      const updated = await apiRequest(`/leases/${lease.id}/end`, {
-        method: "POST",
-        token,
-        body: { actualEndDate: actualEnd }
-      });
+      const updated = await endLeaseRequest(token, lease.id, actualEnd);
       setLease(updated);
       setMode("view");
-      setToast(`Lease ended. ${lease.roomName} is now Vacant.`);
+      setToast(language === "vi"
+        ? `Đã kết thúc hợp đồng. Phòng ${lease.roomName} hiện đang trống.`
+        : `Lease ended. ${lease.roomName} is now Vacant.`);
     } catch (e: any) {
-      setErr(e.message || "An error occurred");
+      setErr(e.message || translateLegacy("An error occurred"));
     } finally {
       setSaving(false);
     }
@@ -175,18 +178,18 @@ export default function LeaseDetail() {
     <MobileFrame>
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 32, 96) }}>
-          
+
           <View style={{ paddingHorizontal: 24, paddingTop: Math.max(insets.top + 16, 56), paddingBottom: 24, backgroundColor: '#1e3a8a', borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
                 <ArrowLeft size={16} color="white" />
               </TouchableOpacity>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>Lease {lease.id.substring(0,8)}</Text>
-                <Text style={{ fontSize: 20, fontWeight: '800', color: 'white', marginTop: 2 }} numberOfLines={1}>{lease.tenant?.fullName || "Unknown Tenant"}</Text>
+                <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#60a5fa', fontWeight: '600' }}>{translateLegacy("Lease ")}{lease.id.substring(0,8)}</Text>
+                <Text style={{ fontSize: 20, fontWeight: '800', color: 'white', marginTop: 2 }} numberOfLines={1}>{lease.tenant?.fullName || translateLegacy("Unknown Tenant")}</Text>
               </View>
               <View style={{ backgroundColor: lease.status === "Active" ? '#60a5fa' : 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                <Text style={{ fontSize: 10, fontWeight: 'bold', color: lease.status === "Active" ? '#0f172a' : 'white' }}>{lease.status}</Text>
+                <Text style={{ fontSize: 10, fontWeight: 'bold', color: lease.status === "Active" ? '#0f172a' : 'white' }}>{statusLabel(lease.status)}</Text>
               </View>
             </View>
             <View style={{ marginTop: 20, flexDirection: 'row', gap: 8 }}>
@@ -208,51 +211,28 @@ export default function LeaseDetail() {
                 <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
                   <Row icon={<DoorOpen size={16} color="#2563eb" />} label="Property · Room" value={`${lease.propertyName} · ${lease.roomName}`} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<Calendar size={16} color="#2563eb" />} label="Lease period" value={`${lease.startDate} → ${lease.endDate}`} />
+                  <Row icon={<Calendar size={16} color="#2563eb" />} label={translateLegacy("Lease period")} value={`${formatDate(lease.startDate)} → ${formatDate(lease.endDate)}`} />
                   {lease.actualEndDate && (
                     <>
                       <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                      <Row icon={<LogOut size={16} color="#2563eb" />} label="Actual end date" value={lease.actualEndDate} />
+                      <Row icon={<LogOut size={16} color="#2563eb" />} label={translateLegacy("Actual end date")} value={formatDate(lease.actualEndDate)} />
                     </>
                   )}
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<User size={16} color="#2563eb" />} label="Tenant contact" value={lease.tenant?.phone || "N/A"} />
+                  <Row icon={<User size={16} color="#2563eb" />} label={translateLegacy("Tenant contact")} value={lease.tenant?.phone || translateLegacy("N/A")} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<ShieldCheck size={16} color="#2563eb" />} label="Room status" value={lease.status === "Active" ? "Occupied (derived)" : "Vacant (derived)"} />
+                  <Row icon={<ShieldCheck size={16} color="#2563eb" />} label={translateLegacy("Room status")} value={translateLegacy(lease.status === "Active" ? "Occupied (derived)" : "Vacant (derived)")} />
                   <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />
-                  <Row icon={<Wallet size={16} color="#2563eb" />} label="Last updated" value={new Date(lease.updatedAt).toLocaleDateString()} />
-                </View>
-              </View>
-
-              <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
-                <Text style={{ fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 8 }}>Invoices</Text>
-                <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-                  {invoices.length === 0 ? (
-                    <Text style={{ padding: 16, fontSize: 12, color: '#94a3b8' }}>No invoices for this lease yet.</Text>
-                  ) : (
-                    invoices.map((i, idx) => (
-                      <React.Fragment key={i.id}>
-                        <TouchableOpacity style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                          <Receipt size={16} color="#2563eb" />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 14, fontWeight: '600' }}>{i.period}</Text>
-                            <Text style={{ fontSize: 12, color: '#64748b' }}>{i.status} · due {i.dueDate}</Text>
-                          </View>
-                          <ChevronRight size={16} color="#94a3b8" />
-                        </TouchableOpacity>
-                        {idx < invoices.length - 1 && <View style={{ height: 1, backgroundColor: '#e2e8f0' }} />}
-                      </React.Fragment>
-                    ))
-                  )}
+                  <Row icon={<Wallet size={16} color="#2563eb" />} label={translateLegacy("Last updated")} value={formatDate(lease.updatedAt)} />
                 </View>
               </View>
 
               <View style={{ paddingHorizontal: 24, marginTop: 24, gap: 8 }}>
-                <TouchableOpacity onPress={enterEdit} style={{ width: '100%', height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <TouchableOpacity onPress={enterEdit} disabled={lease.status !== "Active"} style={{ width: '100%', height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: lease.status !== "Active" ? 0.4 : 1 }}>
                   <Pencil size={16} color="#0f172a" />
                   <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }}>Update lease terms</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={enterRenew}
                   disabled={lease.status !== "Active"}
                   style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#2563eb', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: lease.status !== "Active" ? 0.4 : 1 }}
@@ -260,7 +240,7 @@ export default function LeaseDetail() {
                   <FileSignature size={16} color="white" />
                   <Text style={{ fontSize: 14, fontWeight: '600', color: 'white' }}>Record renewal</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setMode("end")}
                   disabled={lease.status !== "Active"}
                   style={{ width: '100%', height: 48, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239,68,68,0.4)', backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: lease.status !== "Active" ? 0.4 : 1 }}
@@ -285,10 +265,10 @@ export default function LeaseDetail() {
                 <View style={{ flex: 1 }}><Field label="Agreed rent" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(rent)} onChangeText={setRent} keyboardType="numeric" /></View>
                 <View style={{ flex: 1 }}><Field label="Deposit" icon={<Wallet size={16} color="#64748b" />} value={formatMoney(deposit)} onChangeText={setDeposit} keyboardType="numeric" /></View>
               </View>
-              <Text style={{ fontSize: 11, color: '#94a3b8' }}>Periods are checked against other leases for {lease.roomName} — overlaps are rejected.</Text>
-              
+              <Text style={{ fontSize: 11, color: '#94a3b8' }}>{language === "vi" ? `Thời hạn được đối chiếu với các hợp đồng khác của ${lease.roomName}; các khoảng trùng lặp sẽ bị từ chối.` : `Periods are checked against other leases for ${lease.roomName} — overlaps are rejected.`}</Text>
+
               {err && <Text style={{ fontSize: 12, color: '#ef4444' }}>{err}</Text>}
-              
+
               <PrimaryButton onPress={() => save(mode)} disabled={saving}>
                 {saving ? "Saving..." : (mode === "renew" ? "Save renewal" : "Save changes")}
               </PrimaryButton>
@@ -306,9 +286,9 @@ export default function LeaseDetail() {
                 </Text>
               </View>
               <DatePicker label="Actual end date" value={actualEnd ? new Date(actualEnd) : new Date()} onChange={(d) => setActualEnd(d.toISOString().slice(0, 10))} />
-              
+
               {err && <Text style={{ fontSize: 12, color: '#ef4444' }}>{err}</Text>}
-              
+
               <TouchableOpacity onPress={endLease} disabled={saving} style={{ height: 48, borderRadius: 12, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center' }}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={{ fontSize: 14, fontWeight: '600', color: 'white' }}>Confirm end of lease</Text>}
               </TouchableOpacity>

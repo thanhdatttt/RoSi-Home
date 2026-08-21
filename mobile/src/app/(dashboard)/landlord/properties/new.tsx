@@ -7,7 +7,12 @@ import { Field } from "../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Building2, MapPin, Navigation, Zap, Droplets, Plus, X } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
-import { apiRequest } from "../../../../lib/api";
+import {
+  createProperty,
+  type CreatePropertyInput,
+  type UtilityRatesInput,
+} from "../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type WaterMethod = "Metered" | "Flat";
 type Surcharge = { name: string; amount: string };
@@ -23,6 +28,7 @@ export default function NewProperty() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { language, translateLegacy } = useI18n();
 
   // ── Property basics ──
   const [name, setName] = useState("");
@@ -48,32 +54,32 @@ export default function NewProperty() {
 
   const handleSave = async () => {
     if (!name.trim() || !address.trim()) {
-      return setError("Name and address are required.");
+      return setError(translateLegacy("Name and address are required."));
     }
     if (rawNumber(electricRate) <= 0) {
-      return setError("Electricity rate is required.");
+      return setError(translateLegacy("Electricity rate is required."));
     }
     if (waterMethod === "Metered" && rawNumber(waterRate) <= 0) {
-      return setError("Water rate per m³ is required for metered billing.");
+      return setError(translateLegacy("Water rate per m³ is required for metered billing."));
     }
     if (waterMethod === "Flat" && rawNumber(waterFlat) <= 0) {
-      return setError("Water flat amount per tenant is required.");
+      return setError(translateLegacy("Water flat amount per tenant is required."));
     }
 
     // Validate surcharges if any
     for (let i = 0; i < surcharges.length; i++) {
       if (!surcharges[i].name.trim()) {
-        return setError(`Surcharge #${i + 1} needs a name.`);
+        return setError(language === "vi" ? `Khoản phụ thu #${i + 1} cần có tên.` : `Surcharge #${i + 1} needs a name.`);
       }
       if (rawNumber(surcharges[i].amount) <= 0) {
-        return setError(`Surcharge "${surcharges[i].name}" needs an amount > 0.`);
+        return setError(language === "vi" ? `Khoản phụ thu “${surcharges[i].name}” cần có số tiền lớn hơn 0.` : `Surcharge "${surcharges[i].name}" needs an amount > 0.`);
       }
     }
 
     setError(null);
     setSaving(true);
     try {
-      const utilityRates: Record<string, unknown> = {
+      const utilityRates: UtilityRatesInput = {
         electricityRatePerKwh: rawNumber(electricRate),
         waterBillingMethod: waterMethod,
       };
@@ -83,7 +89,7 @@ export default function NewProperty() {
         utilityRates.waterFlatAmountPerTenant = rawNumber(waterFlat);
       }
 
-      const body: Record<string, unknown> = {
+      const body: CreatePropertyInput = {
         name: name.trim(),
         address: address.trim(),
         utilityRates,
@@ -96,15 +102,10 @@ export default function NewProperty() {
         }));
       }
 
-      const res = await apiRequest<any>('/properties', {
-        method: 'POST',
-        token,
-        body,
-      });
-      const id = res?.data?.id ?? res?.id;
-      router.replace(`/landlord/properties/${id}`);
+      const property = await createProperty(token, body);
+      router.replace(`/landlord/properties/${property.id}`);
     } catch (err: any) {
-      setError(err.message || "Failed to create property.");
+      setError(err.message || translateLegacy("Failed to create property."));
     } finally {
       setSaving(false);
     }

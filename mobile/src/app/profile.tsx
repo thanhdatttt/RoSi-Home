@@ -5,15 +5,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "@/components/MobileFrame";
 import { Field } from "@/components/ui/Field";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { ArrowLeft, Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
+import { Globe2, Mail, User, ShieldCheck, KeyRound, LogOut } from "lucide-react-native";
 import { useAuth } from "@/contexts/auth-context";
 import { apiRequest } from "@/lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Profile() {
   const { user, token, logout, refreshProfile } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+  const { language, setLanguage, roleLabel, t } = useI18n();
+
   const [name, setName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
   const [saved, setSaved] = useState(false);
@@ -56,15 +58,10 @@ export default function Profile() {
     <MobileFrame>
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href={user?.role === 'Tenant' ? "/tenant" : "/landlord"} asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16, paddingTop: Math.max(insets.top + 16, 56) }}>
           <View>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Account</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Your profile</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('profile.eyebrow')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('profile.title')}</Text>
           </View>
         </View>
 
@@ -78,44 +75,65 @@ export default function Profile() {
             </View>
             <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(37,99,235,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
               <ShieldCheck size={12} color="#2563eb" />
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#2563eb' }}>{user?.role || "Landlord"}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#2563eb' }}>{roleLabel(user?.role || 'Landlord')}</Text>
             </View>
           </View>
 
           {/* Form */}
           <View style={{ paddingHorizontal: 24 }}>
-            <Field 
-              label="Full name" 
-              value={name} 
-              onChangeText={setName} 
-              icon={<User size={16} color="gray" />} 
+            <Field
+              label={t('profile.fullName')}
+              value={name}
+              onChangeText={setName}
+              icon={<User size={16} color="gray" />}
             />
             <View style={{ marginTop: 16 }}>
-              <Field 
-                label="Email (login identifier)" 
-                value={email} 
-                readOnly 
-                icon={<Mail size={16} color="gray" />} 
-                hint="Contact support to change your login email." 
+              <Field
+                label={t(user?.role === 'Tenant' ? 'profile.contactEmail' : 'profile.email')}
+                value={email}
+                readOnly
+                icon={<Mail size={16} color="gray" />}
+                hint={t(user?.role === 'Tenant' ? 'profile.tenantEmailHint' : 'profile.emailHint')}
               />
             </View>
             <View style={{ marginTop: 16 }}>
-              <Text style={{ fontSize: 12, fontWeight: '500', color: '#0f172a', marginBottom: 6, marginLeft: 4 }}>Role</Text>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#0f172a', marginBottom: 6, marginLeft: 4 }}>{t('profile.role')}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(241,245,249,0.5)', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 16, height: 48, borderRadius: 16 }}>
                 <ShieldCheck size={16} color="#64748b" />
-                <Text style={{ fontSize: 14, fontWeight: '500', color: '#0f172a' }}>{user?.role || "Landlord"}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: '#0f172a' }}>{roleLabel(user?.role || 'Landlord')}</Text>
+              </View>
+            </View>
+
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#0f172a', marginBottom: 6, marginLeft: 4 }}>{t('profile.language')}</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {(['vi', 'en'] as const).map((option) => {
+                  const selected = language === option;
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      onPress={() => void setLanguage(option)}
+                      style={{ flex: 1, height: 48, borderRadius: 16, borderWidth: 1, borderColor: selected ? '#2563eb' : '#e2e8f0', backgroundColor: selected ? 'rgba(37,99,235,0.1)' : '#ffffff', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7 }}
+                    >
+                      <Globe2 size={16} color={selected ? '#2563eb' : '#64748b'} />
+                      <Text style={{ color: selected ? '#2563eb' : '#334155', fontSize: 13, fontWeight: '700' }}>{t(option === 'vi' ? 'language.vietnamese' : 'language.english')}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
 
             {saved && (
               <View style={{ borderRadius: 8, backgroundColor: 'rgba(37,99,235,0.15)', borderWidth: 1, borderColor: 'rgba(37,99,235,0.3)', paddingHorizontal: 12, paddingVertical: 8, marginTop: 16 }}>
-                <Text style={{ fontSize: 12, color: '#2563eb' }}>Profile updated.</Text>
+                <Text style={{ fontSize: 12, color: '#2563eb' }}>{t('profile.updated')}</Text>
               </View>
             )}
 
             <View style={{ marginTop: 16 }}>
               <PrimaryButton variant="primary" onPress={handleSave} disabled={saving}>
-                {saving ? "Saving..." : "Save changes"}
+                {saving ? t('profile.saving') : t('profile.saveChanges')}
               </PrimaryButton>
             </View>
           </View>
@@ -128,13 +146,13 @@ export default function Profile() {
                   <KeyRound size={16} color="#2563eb" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600' }}>Change password</Text>
-                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>Replace a temporary or old password.</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600' }}>{t('profile.changePassword')}</Text>
+                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('profile.changePasswordHint')}</Text>
                 </View>
               </TouchableOpacity>
             </Link>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               onPress={handleLogout}
               style={{ borderRadius: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.05)', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}
             >
@@ -142,8 +160,8 @@ export default function Profile() {
                 <LogOut size={16} color="#ef4444" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#ef4444' }}>Log out</Text>
-                <Text style={{ fontSize: 12, color: '#94a3b8' }}>Ends your session on this device.</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#ef4444' }}>{t('profile.logout')}</Text>
+                <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('profile.logoutHint')}</Text>
               </View>
             </TouchableOpacity>
           </View>

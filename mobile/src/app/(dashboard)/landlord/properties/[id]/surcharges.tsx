@@ -6,8 +6,15 @@ import { MobileFrame } from "../../../../../components/MobileFrame";
 import { DatePicker } from "../../../../../components/ui/DatePicker";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Receipt, Plus, Trash2, Edit2, CalendarClock, CheckCircle2 } from "lucide-react-native";
-import { apiRequest } from "../../../../../lib/api";
+import {
+  createPropertySurcharge,
+  deletePropertySurcharge,
+  listPropertySurcharges,
+  updatePropertySurcharge,
+  type SurchargeView,
+} from "../../../../../features/portfolio/api";
 import { useAuth } from "../../../../../contexts/auth-context";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const toLocalISOString = (d: Date) => {
   const y = d.getFullYear();
@@ -23,53 +30,30 @@ const parseDate = (s: string): Date => {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 };
 
-const fmtDate = (s: string) => {
-  const d = parseDate(s);
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-};
-
-type SurchargeView = {
-  id: string;
-  propertyId: string;
-  name: string;
-  monthlyAmount: number;
-  effectiveFrom: string;
-  effectiveTo: string | null;
-  active: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type GroupedSurcharge = {
-  name: string;
-  current: SurchargeView | null;
-  upcoming: SurchargeView | null;
-};
-
 export default function SurchargesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
+  const { language, translateLegacy } = useI18n();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const fmtDate = useCallback((value: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(parseDate(value)), [locale]);
 
-  const [groups, setGroups] = useState<GroupedSurcharge[]>([]);
+  const [groups, setGroups] = useState<Awaited<ReturnType<typeof listPropertySurcharges>>['data']>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [formMode, setFormMode] = useState<"hidden" | "add" | "edit">("hidden");
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", start: new Date(), end: new Date() });
   const [useEnd, setUseEnd] = useState(false);
-  const [editingIsActive, setEditingIsActive] = useState(false);
-  const [originalStartStr, setOriginalStartStr] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
   const fetchSurcharges = useCallback(async () => {
     try {
-      const res = await apiRequest<any>(`/charges/properties/${id}/surcharges`, { token });
-      setGroups(Array.isArray(res) ? res : []);
+      if (!token) return;
+      const res = await listPropertySurcharges(token, id);
+      setGroups(res.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -88,18 +72,6 @@ export default function SurchargesConfig() {
   };
   const getRawNumber = (val: string) => val.replace(/,/g, "");
 
-  const openEdit = (s: SurchargeView) => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const isActive = s.effectiveFrom <= todayStr;
-    setEditingId(s.id);
-    setEditingIsActive(isActive);
-    setOriginalStartStr(s.effectiveFrom);
-    setForm({ name: s.name, amount: s.monthlyAmount.toString(), start: parseDate(s.effectiveFrom), end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date() });
-    setUseEnd(!!s.effectiveTo);
-    setFormMode("edit");
-  };
-
   function openAdd(prefill?: { name: string; amount: string }) {
     if (formMode === "add" && !prefill) {
       setFormMode("hidden");
@@ -110,10 +82,9 @@ export default function SurchargesConfig() {
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     nextMonth.setDate(1);
-    
+
     setForm({ name: prefill?.name || "", amount: prefill?.amount || "", start: nextMonth, end: nextMonth });
     setUseEnd(false);
-    setEditingIsActive(false);
     setErr(null);
   }
 
@@ -127,25 +98,24 @@ export default function SurchargesConfig() {
       end: s.effectiveTo ? parseDate(s.effectiveTo) : new Date(),
     });
     setUseEnd(!!s.effectiveTo);
-    setEditingIsActive(false);
     setErr(null);
   }
 
   async function handleDelete(surchargeId: string, name: string) {
     Alert.alert(
-      "Delete Surcharge",
-      `Are you sure you want to delete "${name}"? This cannot be undone.`,
+      translateLegacy("Delete Surcharge"),
+      language === "vi" ? `Bạn có chắc muốn xóa khoản phụ thu “${name}”? Thao tác này không thể hoàn tác.` : `Are you sure you want to delete "${name}"? This cannot be undone.`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: translateLegacy("Cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: translateLegacy("Delete"),
           style: "destructive",
           onPress: async () => {
             try {
-              await apiRequest(`/charges/${surchargeId}`, { method: "DELETE", token });
+              await deletePropertySurcharge(token, surchargeId);
               fetchSurcharges();
             } catch (e: any) {
-              Alert.alert("Error", e.message || "Failed to delete surcharge.");
+              Alert.alert(translateLegacy("Error"), e.message || translateLegacy("Failed to delete surcharge."));
             }
           },
         },
@@ -154,61 +124,47 @@ export default function SurchargesConfig() {
   }
 
   async function submit() {
-    if (!form.name.trim()) return setErr("Name is required.");
+    if (!form.name.trim()) return setErr(translateLegacy("Name is required."));
     const rawAmt = getRawNumber(form.amount);
-    
+
     setSubmitting(true);
     setErr(null);
     try {
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const startStr = toLocalISOString(form.start);
       const endStr = useEnd ? toLocalISOString(form.end) : null;
-      
+
       if (useEnd && startStr > endStr!) {
         setSubmitting(false);
-        return setErr("End date cannot be before start date.");
+        return setErr(translateLegacy("End date cannot be before start date."));
       }
       if (rawAmt === "" || Number(rawAmt) < 0) {
         setSubmitting(false);
-        return setErr("Amount must be non-negative.");
+        return setErr(translateLegacy("Amount must be non-negative."));
       }
 
-      // If we are editing an active surcharge but we change the start date to a future month, 
-      // we are actually trying to SCHEDULE a new change, not mutate the active one's start date.
-      if (formMode === "edit" && editingIsActive && startStr > todayStr && startStr !== originalStartStr) {
-        // Create new instead of updating
-        const body: any = {
-          name: form.name.trim(),
-          monthlyAmount: Number(rawAmt),
-          effectiveFrom: startStr,
-          effectiveTo: endStr,
-        };
-        await apiRequest(`/charges/properties/${id}/surcharges`, { method: "POST", token, body });
-      } else if (formMode === "edit") {
-        const payload: any = { 
+      if (formMode === "edit" && editingId) {
+        const payload = {
           name: form.name,
           monthlyAmount: Number(rawAmt),
           effectiveFrom: startStr,
           effectiveTo: endStr,
         };
-        await apiRequest(`/charges/${editingId}`, { method: "PATCH", token, body: payload });
+        await updatePropertySurcharge(token, editingId, payload);
       } else {
-        if (rawAmt === "" || Number(rawAmt) < 0) return setErr("Amount must be non-negative.");
-        const body: any = {
+        const body = {
           name: form.name.trim(),
           monthlyAmount: Number(rawAmt),
-          effectiveFrom: toLocalISOString(form.start),
-          effectiveTo: useEnd ? toLocalISOString(form.end) : null,
+          effectiveFrom: startStr,
+          effectiveTo: endStr,
         };
-        await apiRequest(`/charges/properties/${id}/surcharges`, { method: "POST", token, body });
+        await createPropertySurcharge(token, id, body);
       }
 
       setFormMode("hidden");
       setEditingId(null);
       fetchSurcharges();
     } catch (e: any) {
-      setErr(e.message || "Failed to save surcharge.");
+      setErr(e.message || translateLegacy("Failed to save surcharge."));
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +183,7 @@ export default function SurchargesConfig() {
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Property</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>Surcharges</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => openAdd()}
             style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}
           >
@@ -236,10 +192,10 @@ export default function SurchargesConfig() {
         </View>
 
         <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-          
+
           <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 16 }}>
             <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1, paddingRight: 8 }}>
-              Surcharges take effect on the 1st of each month. Active surcharges can be edited (name, amount, end date) but their start date is locked.
+              Surcharges take effect on the 1st of each month. Changes to an active surcharge are scheduled for a future month; only upcoming schedules can be edited.
             </Text>
           </View>
 
@@ -248,14 +204,14 @@ export default function SurchargesConfig() {
               <Text style={{ fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>
                 {formMode === "edit" ? "Edit surcharge" : "New surcharge"}
               </Text>
-              
+
               <TextInput
                 value={form.name}
                 onChangeText={(text) => setForm({ ...form, name: text })}
                 placeholder="e.g. Internet"
                 style={{ width: '100%', height: 44, borderRadius: 8, backgroundColor: '#f5f8ff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 12, fontSize: 14, fontWeight: '500', marginTop: 12, color: '#0f172a' }}
               />
-              
+
               <View style={{ position: 'relative', justifyContent: 'center', marginTop: 12 }}>
                 <View style={{ position: 'absolute', left: 12, zIndex: 10 }}>
                   <Text style={{ fontSize: 12, fontWeight: '700', color: '#94a3b8' }}>Amt</Text>
@@ -271,7 +227,7 @@ export default function SurchargesConfig() {
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <DatePicker 
+                  <DatePicker
                     label="Applies from"
                     value={form.start}
                     onChange={(d) => setForm({ ...form, start: d })}
@@ -288,7 +244,7 @@ export default function SurchargesConfig() {
                       <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '500' }}>+ Add End Date</Text>
                     </TouchableOpacity>
                   ) : (
-                    <DatePicker 
+                    <DatePicker
                       value={form.end}
                       onChange={(d) => setForm({ ...form, end: d })}
                       compact
@@ -299,15 +255,13 @@ export default function SurchargesConfig() {
               </View>
 
               <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
-                {editingIsActive 
-                  ? "Changing the start date to a future month will schedule a new rate change."
-                  : "Rate changes strictly take effect on the 1st of the selected month."}
+                Rate changes strictly take effect on the 1st of the selected month.
               </Text>
 
               {err && <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>{err}</Text>}
-              
+
               <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => { setFormMode("hidden"); setEditingId(null); }}
                   style={{ flex: 1, height: 48, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
                 >
@@ -349,20 +303,20 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : "ongoing"}
+                          {fmtDate(g.current.effectiveFrom)} - {g.current.effectiveTo ? fmtDate(g.current.effectiveTo) : translateLegacy("ongoing")}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                         <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.current.monthlyAmount)} VNĐ</Text>
                         <View style={{ flexDirection: 'row', gap: 4 }}>
-                          <TouchableOpacity 
-                            onPress={() => openEdit(g.current!)} 
+                          <TouchableOpacity
+                            onPress={() => openAdd({ name: g.current!.name, amount: g.current!.monthlyAmount.toString() })}
                             style={{ height: 28, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Text style={{ fontSize: 11, fontWeight: '600', color: '#475569' }}>Edit</Text>
+                            <Text style={{ fontSize: 11, fontWeight: '600', color: '#475569' }}>Schedule change</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity 
-                            onPress={() => handleDelete(g.current!.id, g.name)} 
+                          <TouchableOpacity
+                            onPress={() => handleDelete(g.current!.id, g.name)}
                             style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <Trash2 size={12} color="#ef4444" />
@@ -371,7 +325,7 @@ export default function SurchargesConfig() {
                       </View>
                     </View>
                   )}
-                  
+
                   {/* Upcoming (scheduled) rate */}
                   {g.upcoming && (
                     <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderTopWidth: g.current ? 1 : 0, borderTopColor: '#f1f5f9' }}>
@@ -386,20 +340,20 @@ export default function SurchargesConfig() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
-                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : " - ongoing"}
+                          {fmtDate(g.upcoming.effectiveFrom)}{g.upcoming.effectiveTo ? ` - ${fmtDate(g.upcoming.effectiveTo)}` : ` - ${translateLegacy("ongoing")}`}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                         <Text style={{ fontSize: 14, fontWeight: '700' }}>{fmtMoney(g.upcoming.monthlyAmount)} VNĐ</Text>
                         <View style={{ flexDirection: 'row', gap: 4 }}>
-                          <TouchableOpacity 
-                            onPress={() => openEditUpcoming(g.upcoming!)} 
+                          <TouchableOpacity
+                            onPress={() => openEditUpcoming(g.upcoming!)}
                             style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <Edit2 size={12} color="#475569" />
                           </TouchableOpacity>
-                          <TouchableOpacity 
-                            onPress={() => handleDelete(g.upcoming!.id, g.name)} 
+                          <TouchableOpacity
+                            onPress={() => handleDelete(g.upcoming!.id, g.name)}
                             style={{ height: 28, width: 28, borderRadius: 8, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}
                           >
                             <Trash2 size={12} color="#ef4444" />

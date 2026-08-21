@@ -43,6 +43,22 @@ Every `Items` must satisfy all items below before its status moves to `Done`. It
 - `tokens not separately recorded` means the task was included in blended activity or no task-level token measurement exists; no token amount is invented.
 - `session-history estimate` is an approximate planning value inferred from the document's size, calculation work, and repeated drafting/revision prompts; it is not measured token telemetry.
 
+### FE2 quota-planning allocation
+
+- This allocation covers the 28 FE2 stories in the `Team scope` table of `docs/estimate/Observed Delivery Inputs.md`.
+- Planning cap: **228.8M tokens**, calculated as **130% × 176M** Codex quota.
+- Planned FE2 effort: **53.9 hours** across 28 stories. Story hours are complexity-weighted; the 13.9-hour Batch 1 subtotal remains consistent with the observed 13–14-hour Batch 1 range.
+- It is a complexity-weighted planning budget, not measured token usage. The 118.0M Batch 1 observation in `Observed Delivery Inputs.md` remains historical evidence and is not overwritten by this forecast.
+- Higher allocations cover cross-role flows, media upload/proof review, workflow state changes, derived calculations, or report aggregation. Simple settings, list, and reminder screens receive lower allocations.
+
+| Delivery batch | FE2 stories | Planned effort | Planned token allocation |
+| --- | ---: | ---: | ---: |
+| Batch 1 — Property, room, utility, surcharge | 8 | 13.9h | 62.5M |
+| Batch 2 — Meter and maintenance | 8 | 17.1h | 70.0M |
+| Batch 3 — VietQR, payment, reminder | 7 | 13.8h | 58.0M |
+| Batch 4 — Reports | 5 | 9.1h | 38.3M |
+| **Total** | **28** | **53.9h** | **228.8M** |
+
 For all product stories:
 
 - The delivery surface is the React Native mobile app; a Web implementation is not required.

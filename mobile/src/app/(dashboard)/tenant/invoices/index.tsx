@@ -6,6 +6,7 @@ import { MobileFrame } from "../../../../components/MobileFrame";
 import { ArrowLeft, Receipt, ChevronRight, EyeOff } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
 import { apiRequest } from "../../../../lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const formatVND = (n: number) => {
   if (n == null || isNaN(n)) return '0';
@@ -15,7 +16,8 @@ const formatVND = (n: number) => {
 export default function TenantInvoices() {
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
-  
+  const { formatVnd, statusLabel, t, translateLegacy } = useI18n();
+
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,8 +60,8 @@ export default function TenantInvoices() {
               </TouchableOpacity>
             </Link>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Billing</Text>
-              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a', marginTop: 4 }}>My invoices</Text>
+              <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Billing')}</Text>
+              <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a', marginTop: 4 }}>{translateLegacy('My invoices')}</Text>
             </View>
           </View>
 
@@ -67,14 +69,14 @@ export default function TenantInvoices() {
             <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', padding: 12, flexDirection: 'row', gap: 8 }}>
               <EyeOff size={16} color="#94a3b8" style={{ marginTop: 2 }} />
               <Text style={{ flex: 1, fontSize: 12, color: '#64748b', lineHeight: 18 }}>
-                You only see invoices your landlord has sent. Drafts stay hidden until they're confirmed.
+                {t('invoice.tenantHint')}
               </Text>
             </View>
           </View>
 
           <View style={{ paddingHorizontal: 24, marginTop: 16, gap: 12 }}>
             {invoices.length === 0 ? (
-              <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', paddingVertical: 32 }}>No invoices found.</Text>
+              <Text style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', paddingVertical: 32 }}>{t('invoice.noneForTenant')}</Text>
             ) : (
               invoices.map((i) => {
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -93,13 +95,13 @@ export default function TenantInvoices() {
                         <Text style={{ fontSize: 14, fontWeight: '600', color: '#0f172a' }} numberOfLines={1}>{i.billingPeriod}</Text>
                         <Text style={{ fontSize: 12, color: '#64748b', marginTop: 2 }} numberOfLines={1}>{i.roomName}</Text>
                         <Text style={{ fontSize: 11, marginTop: 4, fontWeight: overdue ? '600' : '400', color: overdue ? '#ef4444' : '#94a3b8' }}>
-                          Due {i.dueDate}{overdue ? " · overdue" : ""}
+                          {overdue ? t('invoice.dueOverdue', { date: i.dueDate }) : t('invoice.due', { date: i.dueDate })}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end', flexShrink: 0, paddingRight: 4 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVND(i.totalAmount)}</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>{formatVnd(i.totalAmount)}</Text>
                         <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, backgroundColor: i.status === 'Paid' ? '#2563eb' : 'rgba(37,99,235,0.1)' }}>
-                          <Text style={{ fontSize: 10, fontWeight: '700', color: i.status === 'Paid' ? '#ffffff' : '#2563eb' }}>{i.status}</Text>
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: i.status === 'Paid' ? '#ffffff' : '#2563eb' }}>{statusLabel(i.status)}</Text>
                         </View>
                       </View>
                       <ChevronRight size={16} color="#94a3b8" />

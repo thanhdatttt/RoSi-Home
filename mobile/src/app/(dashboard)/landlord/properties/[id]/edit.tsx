@@ -7,18 +7,20 @@ import { Field } from "../../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Building2, MapPin, Navigation } from "lucide-react-native";
 import { useAuth } from "../../../../../contexts/auth-context";
-import { apiRequest } from "../../../../../lib/api";
+import { getProperty, updateProperty } from "../../../../../features/portfolio/api";
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function EditProperty() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { token } = useAuth();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
-  
+
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [locality, setLocality] = useState("");
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +29,13 @@ export default function EditProperty() {
     async function fetchProperty() {
       if (!token) return;
       try {
-        const data = await apiRequest<any>(`/properties/${id}`, { token });
+        const data = await getProperty(token, id);
         setName(data.name || "");
         setAddress(data.address || "");
         setLocality(data.locality || "");
       } catch (err) {
         console.error("Failed to load property", err);
-        setError("Failed to load property details.");
+        setError(t('propertyAdmin.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -43,20 +45,20 @@ export default function EditProperty() {
 
   const handleSave = async () => {
     if (!name.trim() || !address.trim()) {
-      setError("Name and address are required.");
+      setError(t('propertyAdmin.nameAddressRequired'));
       return;
     }
     setError(null);
     setSaving(true);
     try {
-      await apiRequest(`/properties/${id}`, {
-        method: 'PATCH',
-        token,
-        body: { name, address, locality: locality || undefined },
+      await updateProperty(token, id, {
+        name: name.trim(),
+        address: address.trim(),
+        locality: locality.trim() || undefined,
       });
       router.back();
     } catch (err: any) {
-      setError(err.message || "Failed to update property");
+      setError(err.message || t('propertyAdmin.updateFailed'));
     } finally {
       setSaving(false);
     }
@@ -74,8 +76,8 @@ export default function EditProperty() {
 
   return (
     <MobileFrame>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: '#f5f8ff' }}
       >
         {/* Header */}
@@ -86,39 +88,39 @@ export default function EditProperty() {
             </TouchableOpacity>
           </Link>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Edit Property</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Details</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('propertyAdmin.edit')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('propertyAdmin.details')}</Text>
           </View>
         </View>
 
         {/* Form */}
         <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 16 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-          <Field 
-            label="Property name" 
-            placeholder="e.g. Ridge Villa 2B" 
-            icon={<Building2 size={16} color="gray" />} 
+          <Field
+            label="Property name"
+            placeholder="e.g. Ridge Villa 2B"
+            icon={<Building2 size={16} color="gray" />}
             value={name}
             onChangeText={setName}
           />
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Street address" 
-              placeholder="e.g. 12 Palm Ave" 
-              icon={<MapPin size={16} color="gray" />} 
+            <Field
+              label="Street address"
+              placeholder="e.g. 12 Palm Ave"
+              icon={<MapPin size={16} color="gray" />}
               value={address}
               onChangeText={setAddress}
             />
           </View>
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Locality / Area (optional)" 
-              placeholder="e.g. East Legon" 
-              icon={<Navigation size={16} color="gray" />} 
+            <Field
+              label="Locality / Area (optional)"
+              placeholder="e.g. East Legon"
+              icon={<Navigation size={16} color="gray" />}
               value={locality}
               onChangeText={setLocality}
             />
           </View>
-          
+
           {error && (
             <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', padding: 12, borderRadius: 12, marginTop: 16 }}>
               <Text style={{ color: '#ef4444', fontSize: 12 }}>{error}</Text>
@@ -127,7 +129,7 @@ export default function EditProperty() {
 
           <View style={{ marginTop: 32, marginBottom: 32 }}>
             <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? t('profile.saving') : t('profile.saveChanges')}
             </PrimaryButton>
           </View>
         </ScrollView>

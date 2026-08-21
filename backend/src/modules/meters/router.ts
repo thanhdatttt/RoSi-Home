@@ -2,8 +2,8 @@ import { Router } from "express";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
-import { meterReadingSchema, correctMeterReadingSchema } from "./schema.js";
-import { record, correct } from "./controller.js";
+import { meterReadingSchema, correctMeterReadingSchema, meterReadingListQuerySchema } from "./schema.js";
+import { list, record, correct } from "./controller.js";
 
 export const metersRouter = Router();
 
@@ -17,6 +17,13 @@ export const metersRouter = Router();
 metersRouter.use(requireAuth);
 
 // US-METER-01 / US-METER-02
+metersRouter.get(
+  "/rooms/:roomId/meter-readings",
+  requireRole("Landlord"),
+  validate(meterReadingListQuerySchema, "query"),
+  asyncHandler(list),
+);
+
 metersRouter.post(
   "/rooms/:roomId/meter-readings",
   requireRole("Landlord"),

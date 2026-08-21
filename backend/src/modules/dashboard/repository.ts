@@ -84,6 +84,7 @@ export type ActiveTenantLeaseRow = {
   leaseId: string;
   propertyId: string;
   propertyName: string;
+  roomId: string;
   roomName: string;
   startDate: string;
   endDate: string;
@@ -101,6 +102,7 @@ export async function findActiveLeaseForTenantUser(
       leaseId: leases.id,
       propertyId: properties.id,
       propertyName: properties.name,
+      roomId: rooms.id,
       roomName: rooms.name,
       startDate: leases.startDate,
       endDate: leases.endDate,

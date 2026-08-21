@@ -8,9 +8,16 @@ import { PrimaryButton } from "../../../../../components/ui/PrimaryButton";
 import { ArrowLeft, Zap, Droplets, Info, CalendarClock, CheckCircle2, X, Pencil } from "lucide-react-native";
 import { ActivityIndicator } from "react-native";
 import { useAuth } from "../../../../../contexts/auth-context";
-import { apiRequest } from "../../../../../lib/api";
+import {
+  cancelPropertyUtilityRate,
+  getPropertyUtilityRates,
+  schedulePropertyUtilityRate,
+  type ScheduleUtilityRateInput,
+  type UtilityRateView,
+} from "../../../../../features/portfolio/api";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type Schedule = {
   id: string;
@@ -38,35 +45,33 @@ const parseDate = (s: string): Date => {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 };
 
-const fmtMonth = (d: Date) => {
-  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-};
-
-function mapRate(r: any): Schedule {
+function mapRate(r: UtilityRateView): Schedule {
   return {
     id: r.id,
     elec: r.electricityRatePerKwh.toString(),
     waterMethod: r.waterBillingMethod.toLowerCase() as "metered" | "flat",
-    waterMetered: r.waterRatePerM3 ? r.waterRatePerM3.toString() : "",
-    waterFlat: r.waterFlatAmountPerTenant ? r.waterFlatAmountPerTenant.toString() : "",
+    waterMetered: r.waterRatePerM3?.toString() ?? "",
+    waterFlat: r.waterFlatAmountPerTenant?.toString() ?? "",
     effectiveMonth: parseDate(r.effectiveFrom),
   };
 }
 
-const rateSummary = (s: Schedule) =>
-  `${Number(s.elec).toLocaleString()} VNĐ/kWh · ${
+const rateSummary = (s: Schedule, locale: string, flatLabel: string) =>
+  `${Number(s.elec).toLocaleString(locale)} VNĐ/kWh · ${
     s.waterMethod === "metered"
-      ? `${Number(s.waterMetered).toLocaleString()} VNĐ/m³`
-      : `${Number(s.waterFlat).toLocaleString()} VNĐ flat`
+      ? `${Number(s.waterMetered).toLocaleString(locale)} VNĐ/m³`
+      : `${Number(s.waterFlat).toLocaleString(locale)} VNĐ ${flatLabel}`
   }`;
 
 export default function UtilitiesConfig() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  
+
   const { token } = useAuth();
-  
+  const { language, translateLegacy } = useI18n();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const fmtMonth = useCallback((date: Date) => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(date), [locale]);
+
   const [active, setActive] = useState<Schedule | null>(null);
   const [upcoming, setUpcoming] = useState<Schedule | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,13 +81,15 @@ export default function UtilitiesConfig() {
   useFocusEffect(
     useCallback(() => {
       async function loadData() {
-        if (!token) return;
+        if (!token) {
+          setLoading(false);
+          return;
+        }
         setLoading(true);
         try {
-          const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
-          if (res.current) setActive(mapRate(res.current));
-          if (res.upcoming) setUpcoming(mapRate(res.upcoming));
-          else setUpcoming(null);
+          const res = await getPropertyUtilityRates(token, id);
+          setActive(res.current ? mapRate(res.current) : null);
+          setUpcoming(res.upcoming ? mapRate(res.upcoming) : null);
         } catch (err) {
           console.error("Failed to load rates", err);
         } finally {
@@ -108,7 +115,7 @@ export default function UtilitiesConfig() {
     setWaterMethod(initial.waterMethod);
     setWaterMetered(initial.waterMetered);
     setWaterFlat(initial.waterFlat);
-    
+
     if (upcoming) {
       setMonth(upcoming.effectiveMonth);
     } else {
@@ -121,16 +128,16 @@ export default function UtilitiesConfig() {
 
   async function submit() {
     setErr(null);
-    if (elec === "" || Number(elec) < 0) return setErr("Electricity rate must be non-negative.");
-    if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr("Water rate must be non-negative.");
-    if (waterMethod === "flat" && (waterFlat === "" || Number(waterFlat) < 0)) return setErr("Flat water amount must be non-negative.");
-    
+    if (elec === "" || Number(elec) < 0) return setErr(translateLegacy("Electricity rate must be non-negative."));
+    if (waterMethod === "metered" && (waterMetered === "" || Number(waterMetered) < 0)) return setErr(translateLegacy("Water rate must be non-negative."));
+    if (waterMethod === "flat" && (waterFlat === "" || Number(waterFlat) < 0)) return setErr(translateLegacy("Flat water amount must be non-negative."));
+
     const d1st = new Date(month.getFullYear(), month.getMonth(), 1);
     const curr1st = thisMonth1st();
-    
-    if (d1st <= curr1st) return setErr("Rate changes must take effect in a future month.");
 
-    const payload = {
+    if (d1st <= curr1st) return setErr(translateLegacy("Rate changes must take effect in a future month."));
+
+    const payload: ScheduleUtilityRateInput = {
       electricityRatePerKwh: Number(elec),
       waterBillingMethod: waterMethod === "metered" ? "Metered" : "Flat",
       waterRatePerM3: waterMethod === "metered" ? Number(waterMetered) : null,
@@ -139,47 +146,38 @@ export default function UtilitiesConfig() {
     };
 
     try {
-      await apiRequest(`/utilities/properties/${id}/utility-rates`, {
-        method: "POST",
-        token,
-        body: payload
-      });
-      
-      const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
-      if (res.current) setActive(mapRate(res.current));
-      if (res.upcoming) setUpcoming(mapRate(res.upcoming));
-      else setUpcoming(null);
-      
-      setSaved(`Saved. New rates start ${fmtMonth(d1st)}.`);
+      await schedulePropertyUtilityRate(token, id, payload);
+
+      const res = await getPropertyUtilityRates(token, id);
+      setActive(res.current ? mapRate(res.current) : null);
+      setUpcoming(res.upcoming ? mapRate(res.upcoming) : null);
+
+      setSaved(language === "vi" ? `Đã lưu. Đơn giá mới bắt đầu từ ${fmtMonth(d1st)}.` : `Saved. New rates start ${fmtMonth(d1st)}.`);
       setMode("view");
     } catch (error: any) {
-      setErr(error.message || "Failed to save rate");
+      setErr(error.message || translateLegacy("Failed to save rate"));
     }
   }
 
   async function handleCancelUpcoming() {
     if (!upcoming) return;
     Alert.alert(
-      "Cancel Scheduled Change",
-      "Are you sure you want to cancel the scheduled rate change?",
+      translateLegacy("Cancel Scheduled Change"),
+      translateLegacy("Are you sure you want to cancel the scheduled rate change?"),
       [
-        { text: "No", style: "cancel" },
-        { 
-          text: "Yes, cancel it", 
+        { text: translateLegacy("No"), style: "cancel" },
+        {
+          text: translateLegacy("Yes, cancel it"),
           style: "destructive",
           onPress: async () => {
             try {
               setLoading(true);
-              await apiRequest(`/utilities/properties/${id}/utility-rates/${upcoming.id}`, {
-                method: "DELETE",
-                token
-              });
-              const res = await apiRequest<any>(`/utilities/properties/${id}/utility-rates`, { token });
-              if (res.current) setActive(mapRate(res.current));
-              if (res.upcoming) setUpcoming(mapRate(res.upcoming));
-              else setUpcoming(null);
+              await cancelPropertyUtilityRate(token, id, upcoming.id);
+              const res = await getPropertyUtilityRates(token, id);
+              setActive(res.current ? mapRate(res.current) : null);
+              setUpcoming(res.upcoming ? mapRate(res.upcoming) : null);
             } catch (error: any) {
-              setErr(error.message || "Failed to cancel change");
+              setErr(error.message || translateLegacy("Failed to cancel change"));
             } finally {
               setLoading(false);
             }
@@ -228,7 +226,7 @@ export default function UtilitiesConfig() {
               )}
 
               <View style={{ borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-                
+
                 <View style={{ padding: 16, flexDirection: 'row', gap: 12 }}>
                   <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: '#10b981', marginTop: 6 }} />
                   <View style={{ flex: 1 }}>
@@ -238,7 +236,7 @@ export default function UtilitiesConfig() {
                         <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#059669' }}>In effect</Text>
                       </View>
                     </View>
-                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(active)}</Text>
+                    <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(active, locale, translateLegacy("Flat"))}</Text>
                     <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Since {fmtMonth(active.effectiveMonth)}</Text>
                   </View>
                 </View>
@@ -253,7 +251,7 @@ export default function UtilitiesConfig() {
                           <Text style={{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', color: '#64748b' }}>Pending</Text>
                         </View>
                       </View>
-                      <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(upcoming)}</Text>
+                      <Text style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{rateSummary(upcoming, locale, translateLegacy("Flat"))}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
                         <CalendarClock size={12} color="#94a3b8" />
                         <Text style={{ fontSize: 11, color: '#94a3b8' }}>Starts {fmtMonth(upcoming.effectiveMonth)}</Text>
@@ -286,16 +284,16 @@ export default function UtilitiesConfig() {
             </View>
           ) : (
             <View style={{ gap: 20 }}>
-              
+
               <View>
-                <DatePicker 
+                <DatePicker
                   label="Applies from (Future month)"
                   value={month}
                   onChange={(d) => setMonth(d)}
                   monthOnly
                 />
                 <Text style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                  Takes effect on 1 {fmtMonth(month)}. Earlier months are closed for billing.
+                  {translateLegacy("Takes effect on 1 ")}{fmtMonth(month)}. {translateLegacy("Earlier months are closed for billing.")}
                 </Text>
               </View>
 
@@ -331,15 +329,15 @@ export default function UtilitiesConfig() {
                     <Text style={{ fontSize: 11, color: '#94a3b8' }}>Choose one billing method</Text>
                   </View>
                 </View>
-                
+
                 <View style={{ flexDirection: 'row', borderRadius: 12, backgroundColor: '#f1f5f9', padding: 4, marginBottom: 12 }}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: waterMethod === "metered" ? '#ffffff' : 'transparent', ...(waterMethod === "metered" ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
                     onPress={() => setWaterMethod("metered")}
                   >
                     <Text style={{ fontSize: 12, fontWeight: '600', color: waterMethod === "metered" ? '#0f172a' : '#64748b' }}>Metered per m³</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: waterMethod === "flat" ? '#ffffff' : 'transparent', ...(waterMethod === "flat" ? { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : {}) }}
                     onPress={() => setWaterMethod("flat")}
                   >
@@ -379,9 +377,9 @@ export default function UtilitiesConfig() {
 
               <View style={{ gap: 8, marginTop: 8 }}>
                 <PrimaryButton onPress={submit}>
-                  {`Schedule for ${fmtMonth(month)}`}
+                  {translateLegacy("Schedule for ")}{fmtMonth(month)}
                 </PrimaryButton>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setMode("view")}
                   style={{ height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' }}
                 >

@@ -7,27 +7,37 @@ import { Field } from "../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
 import { DatePicker } from "../../../../components/ui/DatePicker";
 import { ArrowLeft, Mail, User, Phone, IdCard, Building2, DoorOpen, Calendar, Wallet, ShieldCheck, Copy, Check, KeyRound } from "lucide-react-native";
-import { apiRequest, apiRequestWithEnvelope } from "../../../../lib/api";
 import { useAuth } from "../../../../contexts/auth-context";
+import { createLease } from "../../../../features/leasing/api";
+import { listProperties, listRooms } from "../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 
 type Option = { id: string; label: string };
+
+const toLocalDateString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function NewLease() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { language, translateLegacy } = useI18n();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [idNo, setIdNo] = useState("");
-  
+
   const [properties, setProperties] = useState<Option[]>([]);
   const [rooms, setRooms] = useState<Option[]>([]);
   const [propertyId, setPropertyId] = useState("");
   const [roomId, setRoomId] = useState("");
-  
+
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(() => {
     const d = new Date();
@@ -36,25 +46,23 @@ export default function NewLease() {
   });
   const [rent, setRent] = useState("");
   const [deposit, setDeposit] = useState("");
-  
+
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
-  
+
   const [tempPassword, setTempPassword] = useState("");
+  const [tenantAccountProvisioned, setTenantAccountProvisioned] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Fetch properties on mount
   useEffect(() => {
     async function fetchProperties() {
       try {
-        const res = await apiRequest<any>('/properties?pageSize=100', { token });
-        const data = res.data || res;
-        if (Array.isArray(data)) {
-          const opts = data.map((p: any) => ({ id: p.id, label: p.name }));
-          setProperties(opts);
-          if (opts.length > 0) setPropertyId(opts[0].id);
-        }
+        const res = await listProperties(token, 1, 100);
+        const opts = res.data.map((property) => ({ id: property.id, label: property.name }));
+        setProperties(opts);
+        if (opts.length > 0) setPropertyId(opts[0].id);
       } catch (e) {
         console.error("Failed to fetch properties", e);
       }
@@ -67,15 +75,12 @@ export default function NewLease() {
     if (!propertyId) return;
     async function fetchRooms() {
       try {
-        const res = await apiRequest<any>(`/rooms/properties/${propertyId}`, { token });
-        const data = res.data || res;
-        if (Array.isArray(data)) {
-          // Only show vacant rooms if the backend has status, otherwise show all
-          const opts = data.map((r: any) => ({ id: r.id, label: r.name }));
-          setRooms(opts);
-          if (opts.length > 0) setRoomId(opts[0].id);
-          else setRoomId("");
-        }
+        const res = await listRooms(token, propertyId, 1, 100);
+        const opts = res.data
+          .filter((room) => room.status === "Vacant")
+          .map((room) => ({ id: room.id, label: room.name }));
+        setRooms(opts);
+        setRoomId(opts[0]?.id ?? "");
       } catch (e) {
         console.error("Failed to fetch rooms", e);
       }
@@ -91,28 +96,25 @@ export default function NewLease() {
   const getRawNumber = (val: string) => val.replace(/,/g, "");
 
   async function submit() {
-    if (!name.trim()) return setErr("Tenant full name is required.");
-    if (!/^\+?[\d\s]{8,}$/.test(phone)) return setErr("Enter a valid phone number (used as login username).");
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr("Enter a valid email address.");
-    if (!idNo.trim()) return setErr("Identification number is required.");
-    if (!propertyId) return setErr("Please select a property.");
-    if (!roomId) return setErr("Please select a room.");
-    
+    if (!name.trim()) return setErr(translateLegacy("Tenant full name is required."));
+    if (!/^\+?[\d\s]{8,}$/.test(phone)) return setErr(translateLegacy("Enter a valid phone number (used as login username)."));
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr(translateLegacy("Enter a valid email address."));
+    if (!idNo.trim()) return setErr(translateLegacy("Identification number is required."));
+    if (!propertyId) return setErr(translateLegacy("Please select a property."));
+    if (!roomId) return setErr(translateLegacy("Please select a room."));
+
     const rentRaw = getRawNumber(rent);
     const depositRaw = getRawNumber(deposit);
-    if (Number(rentRaw) <= 0) return setErr("Monthly rent must be greater than 0.");
-    if (Number(depositRaw) < 0) return setErr("Deposit must be zero or more.");
-    
+    if (Number(rentRaw) <= 0) return setErr(translateLegacy("Monthly rent must be greater than 0."));
+    if (Number(depositRaw) < 0) return setErr(translateLegacy("Deposit must be zero or more."));
+
+    if (endDate <= startDate) return setErr(translateLegacy("End date must be after start date."));
+
     setErr(null);
     setLoading(true);
 
-    if (endDate <= startDate) return setErr("End date must be after start date.");
-
     try {
-      const res = await apiRequest<any>('/leases', {
-        method: 'POST',
-        token,
-        body: {
+      const res = await createLease(token, {
           roomId,
           tenant: {
             fullName: name.trim(),
@@ -120,18 +122,16 @@ export default function NewLease() {
             idNumber: idNo.trim(),
             email: email.trim(),
           },
-          startDate: startDate.toISOString().slice(0, 10),
-          endDate: endDate.toISOString().slice(0, 10),
+          startDate: toLocalDateString(startDate),
+          endDate: toLocalDateString(endDate),
           agreedRent: Number(rentRaw),
           deposit: Number(depositRaw),
-        }
       });
-      if (res.meta?.tempPassword) {
-        setTempPassword(res.meta.tempPassword);
-      }
+      setTenantAccountProvisioned(res.meta?.tenantAccountProvisioned ?? false);
+      setTempPassword(res.meta?.tempPassword ?? "");
       setCreated(true);
     } catch (e: any) {
-      setErr(e.message || "Failed to create lease and provision account.");
+      setErr(e.message || translateLegacy("Failed to create lease and provision account."));
     } finally {
       setLoading(false);
     }
@@ -155,21 +155,22 @@ export default function NewLease() {
           </View>
           <Text style={{ fontSize: 24, fontWeight: '800', marginTop: 16, color: '#0f172a' }}>Lease created</Text>
           <Text style={{ fontSize: 14, color: '#64748b', marginTop: 8, lineHeight: 22 }}>
-            A tenant account was auto-provisioned for <Text style={{ fontWeight: '700', color: '#0f172a' }}>{name}</Text>. 
-            An invite email was sent to <Text style={{ fontWeight: '700', color: '#0f172a' }}>{email}</Text> with the login link and temporary password.
+            {tenantAccountProvisioned
+              ? <>A tenant account was provisioned for <Text style={{ fontWeight: '700', color: '#0f172a' }}>{name}</Text>. Credential email delivery is best-effort and is not confirmed by this screen.</>
+              : <>The existing tenant account for <Text style={{ fontWeight: '700', color: '#0f172a' }}>{name}</Text> was reused.</>}
           </Text>
 
           <View style={{ marginTop: 20, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
             <Summary icon={<Building2 size={16} color="#2563eb" />} label="Property · Room" value={`${propName} · ${roomName}`} />
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
-            <Summary icon={<Calendar size={16} color="#2563eb" />} label="Lease starts" value={startDate.toISOString().slice(0, 10)} />
+            <Summary icon={<Calendar size={16} color="#2563eb" />} label="Lease starts" value={toLocalDateString(startDate)} />
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
             <Summary icon={<Wallet size={16} color="#2563eb" />} label="Monthly rent" value={`${Number(getRawNumber(rent)).toLocaleString()} VNĐ`} />
             <View style={{ height: 1, width: '100%', backgroundColor: '#e2e8f0' }} />
             <Summary icon={<Phone size={16} color="#2563eb" />} label="Username (phone)" value={phone} />
           </View>
 
-          <View style={{ marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 16 }}>
+          {tempPassword ? <View style={{ marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <KeyRound size={16} color="#2563eb" />
               <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, fontWeight: '700', color: '#2563eb' }}>Temporary password</Text>
@@ -188,10 +189,10 @@ export default function NewLease() {
             <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingRight: 8 }}>
               <Mail size={14} color="gray" style={{ marginTop: 2 }} />
               <Text style={{ fontSize: 11, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1 }}>
-                Also sent by email. Not stored in plain text. Tenant must change it at first sign-in.
+                Email delivery is best-effort and not confirmed here. Tenant must change this password at first sign-in.
               </Text>
             </View>
-          </View>
+          </View> : null}
 
           <View style={{ marginTop: 'auto', paddingTop: 24 }}>
             <PrimaryButton onPress={() => router.navigate('/landlord')}>Back to dashboard</PrimaryButton>
@@ -211,22 +212,22 @@ export default function NewLease() {
             </TouchableOpacity>
           </Link>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Leases</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>New lease</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{translateLegacy('Leases')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{translateLegacy('New lease')}</Text>
           </View>
         </View>
 
         <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-          
+
           <View style={{ borderRadius: 12, borderWidth: 1, borderColor: 'rgba(37,99,235,0.4)', backgroundColor: 'rgba(37,99,235,0.1)', padding: 14, flexDirection: 'row', gap: 8, marginBottom: 20 }}>
             <ShieldCheck size={16} color="#2563eb" style={{ marginTop: 2 }} />
             <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.8)', lineHeight: 18, flex: 1 }}>
-              Creating a lease auto-provisions a tenant account. Their <Text style={{ fontWeight: '700' }}>phone number</Text> becomes their login username, and a temp password is emailed to them.
+              {language === 'vi' ? 'Tạo hợp đồng sẽ tạo tài khoản cho người thuê mới hoặc dùng lại tài khoản có sẵn. Số điện thoại là tên đăng nhập; việc gửi email là tối đa có thể.' : <>Creating a lease provisions an account for a new tenant or reuses an existing one. Their <Text style={{ fontWeight: '700' }}>phone number</Text> is the login username; email delivery is best-effort.</>}
             </Text>
           </View>
 
           <View style={{ marginBottom: 24 }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 16 }}>Tenant information</Text>
+            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 16 }}>{translateLegacy('Tenant information')}</Text>
             <View style={{ marginBottom: 16 }}>
               <Field label="Full name" placeholder="Kojo Mensah" icon={<User size={16} color="gray" />} value={name} onChangeText={setName} />
             </View>
@@ -240,38 +241,38 @@ export default function NewLease() {
           </View>
 
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 16 }}>Lease details</Text>
-            
+            <Text style={{ fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', marginBottom: 16 }}>{translateLegacy('Lease details')}</Text>
+
             <View style={{ marginBottom: 16 }}>
-              <SelectField 
-                label="Property" 
-                icon={<Building2 size={16} color="gray" />} 
-                value={propertyId} 
+              <SelectField
+                label="Property"
+                icon={<Building2 size={16} color="gray" />}
+                value={propertyId}
                 onChange={setPropertyId}
-                options={properties} 
+                options={properties}
               />
             </View>
-            
+
             <View style={{ marginBottom: 16 }}>
-              <SelectField 
-                label="Vacant room" 
-                icon={<DoorOpen size={16} color="gray" />} 
-                value={roomId} 
+              <SelectField
+                label="Vacant room"
+                icon={<DoorOpen size={16} color="gray" />}
+                value={roomId}
                 onChange={setRoomId}
-                options={rooms} 
+                options={rooms}
               />
             </View>
-            
+
             <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
               <View style={{ flex: 1 }}>
-                <DatePicker 
+                <DatePicker
                   label="Lease start date"
                   value={startDate}
                   onChange={setStartDate}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <DatePicker 
+                <DatePicker
                   label="Lease end date"
                   value={endDate}
                   onChange={setEndDate}
@@ -309,13 +310,14 @@ function SelectField({
   label, icon, value, onChange, options,
 }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: Option[] }) {
   const [open, setOpen] = useState(false);
+  const { language, translateLegacy } = useI18n();
 
   const selectedLabel = options.find(o => o.id === value)?.label || "Select...";
 
   if (Platform.OS === 'web') {
     return (
       <View>
-        <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{label}</Text>
+        <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{translateLegacy(label)}</Text>
         <View style={{ position: 'relative', justifyContent: 'center' }}>
           <View style={{ position: 'absolute', left: 14, zIndex: 10, pointerEvents: 'none' }}>
             {icon}
@@ -324,7 +326,7 @@ function SelectField({
             value: value,
             onChange: (e: any) => onChange(e.target.value),
             style: { width: '100%', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingLeft: 44, paddingRight: 16, fontSize: 14, fontWeight: '500', outline: 'none', color: '#0f172a', appearance: 'none' }
-          }, 
+          },
             options.length === 0 ? [React.createElement('option', { key: 'empty', value: '' }, 'None available')] :
             options.map(o => React.createElement('option', { key: o.id, value: o.id }, o.label))
           )}
@@ -335,8 +337,8 @@ function SelectField({
 
   return (
     <View>
-      <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{label}</Text>
-      <TouchableOpacity 
+      <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8' }}>{translateLegacy(label)}</Text>
+      <TouchableOpacity
         onPress={() => setOpen(true)}
         style={{ width: '100%', height: 48, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 16, paddingLeft: 44, justifyContent: 'center', position: 'relative' }}
       >
@@ -350,13 +352,13 @@ function SelectField({
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <TouchableOpacity style={{ flex: 1 }} onPress={() => setOpen(false)} activeOpacity={1} />
           <View style={{ backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '60%' }}>
-            <Text style={{ fontSize: 18, fontWeight: '800', marginBottom: 16 }}>Select {label}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', marginBottom: 16 }}>{language === 'vi' ? `Chọn ${translateLegacy(label)}` : `Select ${label}`}</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {options.length === 0 && (
                 <Text style={{ color: '#94a3b8', paddingVertical: 16 }}>No options available</Text>
               )}
               {options.map((opt) => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   key={opt.id}
                   onPress={() => { onChange(opt.id); setOpen(false); }}
                   style={{ paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
@@ -367,7 +369,7 @@ function SelectField({
               ))}
             </ScrollView>
             <TouchableOpacity onPress={() => setOpen(false)} style={{ marginTop: 24, height: 48, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontWeight: '700' }}>Cancel</Text>
+              <Text style={{ fontWeight: '700' }}>{translateLegacy('Cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -377,13 +379,14 @@ function SelectField({
 }
 
 function Summary({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  const { translateLegacy } = useI18n();
   return (
     <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
       <View style={{ height: 40, width: 40, borderRadius: 12, backgroundColor: 'rgba(37,99,235,0.15)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {icon}
       </View>
       <View style={{ flex: 1, paddingRight: 8 }}>
-        <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', fontWeight: '600' }}>{label}</Text>
+        <Text style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#94a3b8', fontWeight: '600' }}>{translateLegacy(label)}</Text>
         <Text style={{ fontSize: 14, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>{value}</Text>
       </View>
     </View>
