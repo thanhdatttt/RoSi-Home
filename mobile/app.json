@@ -48,13 +48,15 @@
       "expo-web-browser",
       "@react-native-community/datetimepicker"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "2bd46abb-07f1-49ad-9b4f-d2e51bb2d48d"
-      }
-    },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "642d7d83-6ac5-49aa-a5f3-9a3f4cabe386"
+      }
+    },
+    "owner": "dreckiez"
   }
 }
