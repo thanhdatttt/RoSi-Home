@@ -67,11 +67,26 @@ export async function findProperty(
   id: string,
 ): Promise<PropertyRow | null> {
   const [row] = await db
-    .select()
+    .select({
+      id: properties.id,
+      landlordId: properties.landlordId,
+      name: properties.name,
+      address: properties.address,
+      locality: properties.locality,
+      createdAt: properties.createdAt,
+      updatedAt: properties.updatedAt,
+      deletedAt: properties.deletedAt,
+      deletedBy: properties.deletedBy,
+      units: sql<number>`count(distinct ${rooms.id})`.mapWith(Number),
+      occupied: sql<number>`count(distinct case when ${leases.status} = 'Active' then ${rooms.id} else null end)`.mapWith(Number),
+    })
     .from(properties)
+    .leftJoin(rooms, and(eq(properties.id, rooms.propertyId), isNull(rooms.deletedAt)))
+    .leftJoin(leases, and(eq(rooms.id, leases.roomId), isNull(leases.deletedAt)))
     .where(
       and(eq(properties.id, id), eq(properties.landlordId, landlordId), isNull(properties.deletedAt)),
-    );
+    )
+    .groupBy(properties.id);
   return row ?? null;
 }
 

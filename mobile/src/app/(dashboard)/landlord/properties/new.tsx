@@ -1,13 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, TextInput, Modal, FlatList } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileFrame } from "../../../../components/MobileFrame";
 import { Field } from "../../../../components/ui/Field";
 import { PrimaryButton } from "../../../../components/ui/PrimaryButton";
-import { ArrowLeft, Building2, MapPin, Navigation, Zap, Droplets, Plus, X } from "lucide-react-native";
+import { ArrowLeft, Building2, MapPin, Zap, Droplets, Plus, X, ChevronDown, Check } from "lucide-react-native";
 import { useAuth } from "../../../../contexts/auth-context";
-import { apiRequest } from "../../../../lib/api";
+import {
+  createProperty,
+  type CreatePropertyInput,
+  type UtilityRatesInput,
+} from "../../../../features/portfolio/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type WaterMethod = "Metered" | "Flat";
 type Surcharge = { name: string; amount: string };
@@ -23,21 +28,41 @@ export default function NewProperty() {
   const router = useRouter();
   const { token } = useAuth();
   const insets = useSafeAreaInsets();
+  const { language, translateLegacy } = useI18n();
 
-  // ── Property basics ──
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [locality, setLocality] = useState("");
+  
+  const [provinces, setProvinces] = useState<{code: number, name: string}[]>([]);
+  const [districts, setDistricts] = useState<{code: number, name: string}[]>([]);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
 
-  // ── Utility rates ──
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/p/")
+      .then(res => res.json())
+      .then(data => setProvinces(data))
+      .catch(err => console.error("Failed to load provinces", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedProvinceCode) {
+      fetch(`https://provinces.open-api.vn/api/p/${selectedProvinceCode}?depth=2`)
+        .then(res => res.json())
+        .then(data => setDistricts(data.districts || []))
+        .catch(err => console.error("Failed to load districts", err));
+    } else {
+      setDistricts([]);
+    }
+    setSelectedDistrictCode(null);
+  }, [selectedProvinceCode]);
+
   const [electricRate, setElectricRate] = useState("");
   const [waterMethod, setWaterMethod] = useState<WaterMethod>("Metered");
-  const [waterRate, setWaterRate] = useState("");      // metered: per m³
-  const [waterFlat, setWaterFlat] = useState("");      // flat: per tenant
+  const [waterRate, setWaterRate] = useState("");
+  const [waterFlat, setWaterFlat] = useState("");
 
-  // ── Surcharges ──
   const [surcharges, setSurcharges] = useState<Surcharge[]>([]);
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,32 +73,31 @@ export default function NewProperty() {
 
   const handleSave = async () => {
     if (!name.trim() || !address.trim()) {
-      return setError("Name and address are required.");
+      return setError(translateLegacy("Name and address are required."));
     }
     if (rawNumber(electricRate) <= 0) {
-      return setError("Electricity rate is required.");
+      return setError(translateLegacy("Electricity rate is required."));
     }
     if (waterMethod === "Metered" && rawNumber(waterRate) <= 0) {
-      return setError("Water rate per m³ is required for metered billing.");
+      return setError(translateLegacy("Water rate per m³ is required for metered billing."));
     }
     if (waterMethod === "Flat" && rawNumber(waterFlat) <= 0) {
-      return setError("Water flat amount per tenant is required.");
+      return setError(translateLegacy("Water flat amount per tenant is required."));
     }
 
-    // Validate surcharges if any
     for (let i = 0; i < surcharges.length; i++) {
       if (!surcharges[i].name.trim()) {
-        return setError(`Surcharge #${i + 1} needs a name.`);
+        return setError(language === "vi" ? `Khoản phụ thu #${i + 1} cần có tên.` : `Surcharge #${i + 1} needs a name.`);
       }
       if (rawNumber(surcharges[i].amount) <= 0) {
-        return setError(`Surcharge "${surcharges[i].name}" needs an amount > 0.`);
+        return setError(language === "vi" ? `Khoản phụ thu “${surcharges[i].name}” cần có số tiền lớn hơn 0.` : `Surcharge "${surcharges[i].name}" needs an amount > 0.`);
       }
     }
 
     setError(null);
     setSaving(true);
     try {
-      const utilityRates: Record<string, unknown> = {
+      const utilityRates: UtilityRatesInput = {
         electricityRatePerKwh: rawNumber(electricRate),
         waterBillingMethod: waterMethod,
       };
@@ -83,12 +107,19 @@ export default function NewProperty() {
         utilityRates.waterFlatAmountPerTenant = rawNumber(waterFlat);
       }
 
-      const body: Record<string, unknown> = {
+      const provinceName = provinces.find(p => p.code === selectedProvinceCode)?.name || "";
+      const districtName = districts.find(d => d.code === selectedDistrictCode)?.name || "";
+      let combinedLocality = "";
+      if (provinceName && districtName) combinedLocality = `${districtName}, ${provinceName}`;
+      else if (provinceName) combinedLocality = provinceName;
+
+      const body: CreatePropertyInput = {
         name: name.trim(),
         address: address.trim(),
+        locality: combinedLocality || undefined,
         utilityRates,
       };
-      if (locality.trim()) body.locality = locality.trim();
+
       if (surcharges.length > 0) {
         body.surcharges = surcharges.map(s => ({
           name: s.name.trim(),
@@ -96,15 +127,10 @@ export default function NewProperty() {
         }));
       }
 
-      const res = await apiRequest<any>('/properties', {
-        method: 'POST',
-        token,
-        body,
-      });
-      const id = res?.data?.id ?? res?.id;
-      router.replace(`/landlord/properties/${id}`);
+      const property = await createProperty(token, body);
+      router.replace(`/landlord/properties/${property.id}`);
     } catch (err: any) {
-      setError(err.message || "Failed to create property.");
+      setError(err.message || translateLegacy("Failed to create property."));
     } finally {
       setSaving(false);
     }
@@ -116,23 +142,17 @@ export default function NewProperty() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1, backgroundColor: '#f5f8ff' }}
       >
-        {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/landlord/properties" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>New Property</Text>
             <Text style={{ fontSize: 24, fontWeight: '800' }}>Details</Text>
           </View>
         </View>
 
-        {/* Form */}
         <ScrollView style={{ flex: 1, paddingHorizontal: 24, marginTop: 8 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 32) }}>
-
-          {/* ─── Section 1: Property Info ─── */}
           <SectionLabel>Property information</SectionLabel>
 
           <Field
@@ -151,14 +171,26 @@ export default function NewProperty() {
               onChangeText={setAddress}
             />
           </View>
-          <View style={{ marginTop: 12 }}>
-            <Field
-              label="Locality / Area (optional)"
-              placeholder="e.g. East Legon"
-              icon={<Navigation size={16} color="gray" />}
-              value={locality}
-              onChangeText={setLocality}
-            />
+          <View style={{ marginTop: 12, flexDirection: 'row', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <SelectDropdown
+                label="Province (Optional)"
+                options={provinces.map(p => ({ label: p.name, value: p.code }))}
+                value={selectedProvinceCode}
+                onChange={setSelectedProvinceCode}
+                placeholder="Select Province"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <SelectDropdown
+                label="District (Optional)"
+                options={districts.map(d => ({ label: d.name, value: d.code }))}
+                value={selectedDistrictCode}
+                onChange={setSelectedDistrictCode}
+                placeholder="Select District"
+                disabled={!selectedProvinceCode}
+              />
+            </View>
           </View>
 
           {/* ─── Section 2: Utility Rates ─── */}
@@ -290,6 +322,72 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
+function SelectDropdown({ label, options, value, onChange, placeholder, disabled }: { label: string; options: { label: string, value: number }[]; value: number | null; onChange: (v: number) => void; placeholder: string; disabled?: boolean }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const selectedLabel = options.find(o => o.value === value)?.label || "";
+  const [search, setSearch] = useState("");
+
+  const filteredOptions = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <View style={{ gap: 8 }}>
+      <Text style={{ fontSize: 13, fontWeight: '600', color: '#0f172a' }}>{label}</Text>
+      <TouchableOpacity
+        onPress={() => !disabled && setModalVisible(true)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
+          borderRadius: 12,
+          paddingHorizontal: 16,
+          height: 48,
+          backgroundColor: disabled ? '#f8fafc' : '#ffffff'
+        }}
+      >
+        <Text style={{ fontSize: 13, color: selectedLabel ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+          {selectedLabel || placeholder}
+        </Text>
+        <ChevronDown size={16} color="#94a3b8" />
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700' }}>{placeholder}</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text style={{ color: '#2563eb', fontWeight: '600' }}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ backgroundColor: '#f1f5f9', borderRadius: 8, paddingHorizontal: 12, height: 40, justifyContent: 'center', marginBottom: 16 }}>
+              <TextInput placeholder="Search..." value={search} onChangeText={setSearch} style={{ fontSize: 14 }} />
+            </View>
+            <FlatList
+              data={filteredOptions}
+              keyExtractor={(item) => item.value.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    onChange(item.value);
+                    setModalVisible(false);
+                  }}
+                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderColor: '#f1f5f9' }}
+                >
+                  <Text style={{ fontSize: 15, fontWeight: item.value === value ? '600' : '400', color: item.value === value ? '#2563eb' : '#0f172a' }}>
+                    {item.label}
+                  </Text>
+                  {item.value === value && <Check size={16} color="#2563eb" />}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
 function MethodPill({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity

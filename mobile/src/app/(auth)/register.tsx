@@ -8,12 +8,14 @@ import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { ArrowLeft, Mail, Lock, User, Building2 } from "lucide-react-native";
 import { useAuth } from "../../contexts/auth-context";
 import { ApiRequestError } from "../../lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function Register() {
   const router = useRouter();
   const { register, loading } = useAuth();
   const insets = useSafeAreaInsets();
-  
+  const { t } = useI18n();
+
   const [values, setValues] = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -24,42 +26,49 @@ export default function Register() {
 
   async function submit() {
     const errs: Record<string, string> = {};
-    if (!values.name.trim()) errs.name = "Full name is required";
-    if (!values.email.trim()) errs.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) errs.email = "Enter a valid email";
-    if (values.password.length < 8) errs.password = "Minimum 8 characters";
-    if (!/[A-Za-z]/.test(values.password)) errs.password = "Must contain a letter";
-    if (!/[0-9]/.test(values.password)) errs.password = "Must contain a number";
-    if (values.confirm !== values.password) errs.confirm = "Passwords don't match";
-    
+    if (!values.name.trim()) errs.name = t('auth.fullNameRequired');
+    if (!values.email.trim()) errs.email = t('auth.emailRequired');
+    else if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) errs.email = t('auth.emailInvalid');
+    if (values.password.length < 8) errs.password = t('auth.passwordMinimumLength');
+    if (!/[A-Za-z]/.test(values.password)) errs.password = t('auth.passwordMustContainLetter');
+    if (!/[0-9]/.test(values.password)) errs.password = t('auth.passwordMustContainNumber');
+    if (values.confirm !== values.password) errs.confirm = t('auth.passwordsDoNotMatch');
+
     setErrors(errs);
     setApiError(null);
     if (Object.keys(errs).length) return;
 
     try {
-      const user = await register({
+      await register({
         fullName: values.name.trim(),
         email: values.email.trim(),
         password: values.password,
         passwordConfirmation: values.confirm,
       });
-      router.push("/landlord");
+      router.replace("/login");
     } catch (e: any) {
       if (e instanceof ApiRequestError) {
         if (e.fields) {
           const fieldErrors: Record<string, string> = {};
+          const errorKeyByField = {
+            fullName: 'auth.fullNameRequired',
+            email: 'auth.emailInvalid',
+            password: 'auth.passwordPolicyNotMet',
+            passwordConfirmation: 'auth.passwordsDoNotMatch',
+          } as const;
           e.fields.forEach((f) => {
-            if (f.field === 'fullName') fieldErrors.name = f.message;
-            if (f.field === 'email') fieldErrors.email = f.message;
-            if (f.field === 'password') fieldErrors.password = f.message;
-            if (f.field === 'passwordConfirmation') fieldErrors.confirm = f.message;
+            const key = errorKeyByField[f.field as keyof typeof errorKeyByField];
+            const nameByField: Record<string, keyof typeof values> = {
+              fullName: 'name', email: 'email', password: 'password', passwordConfirmation: 'confirm',
+            };
+            if (key && nameByField[f.field]) fieldErrors[nameByField[f.field]] = t(key);
           });
           setErrors(fieldErrors);
         } else {
-          setApiError(e.message || "Registration failed. Please try again.");
+          setApiError(t('auth.registrationFailed'));
         }
       } else {
-        setApiError("An unexpected error occurred. Please try again.");
+        setApiError(t('auth.registrationFailed'));
       }
     }
   }
@@ -69,14 +78,12 @@ export default function Register() {
       <View style={{ flex: 1, backgroundColor: '#f5f8ff' }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: Math.max(insets.top + 16, 56) }}>
-          <Link href="/" asChild>
-            <TouchableOpacity style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowLeft size={16} color="black" />
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={() => router.back()} style={{ height: 40, width: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft size={16} color="black" />
+          </TouchableOpacity>
           <View>
-            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>Landlord sign-up</Text>
-            <Text style={{ fontSize: 24, fontWeight: '800' }}>Create your account</Text>
+            <Text style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: '#2563eb', fontWeight: '600' }}>{t('auth.landlordSignUp')}</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800' }}>{t('auth.createYourAccount')}</Text>
           </View>
         </View>
 
@@ -88,72 +95,70 @@ export default function Register() {
               <Building2 size={16} color="#ffffff" />
             </View>
             <Text style={{ fontSize: 12, color: 'rgba(0,0,0,0.7)', lineHeight: 18, flex: 1 }}>
-              This creates a <Text style={{ fontWeight: '700' }}>Landlord</Text> account. Tenant accounts are created by their landlord — tenants can't self-register.
+              {t('auth.landlordRegistrationNotice')}
             </Text>
           </View>
 
-          <Field 
-            label="Full name" 
-            placeholder="Amelia Osei" 
-            icon={<User size={16} color="gray" />} 
-            value={values.name} 
-            onChangeText={(text) => set("name", text)} 
-            error={errors.name} 
+          <Field
+            label={t('profile.fullName')}
+            placeholder={t('auth.fullNamePlaceholder')}
+            icon={<User size={16} color="gray" />}
+            value={values.name}
+            onChangeText={(text) => set("name", text)}
+            error={errors.name}
           />
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Email address" 
+            <Field
+              label={t('auth.email')}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholder="you@email.com" 
-              icon={<Mail size={16} color="gray" />} 
-              value={values.email} 
-              onChangeText={(text) => set("email", text)} 
-              error={errors.email} 
-              hint="Used as your unique login identifier" 
+              placeholder="you@email.com"
+              icon={<Mail size={16} color="gray" />}
+              value={values.email}
+              onChangeText={(text) => set("email", text)}
+              error={errors.email}
+              hint={t('auth.landlordEmailIdentifierHint')}
             />
           </View>
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Password" 
-              secureTextEntry 
-              placeholder="At least 8 characters" 
-              icon={<Lock size={16} color="gray" />} 
-              value={values.password} 
-              onChangeText={(text) => set("password", text)} 
-              error={errors.password} 
+            <Field
+              label={t('auth.password')}
+              secureTextEntry
+              placeholder={t('auth.passwordMinimumPlaceholder')}
+              icon={<Lock size={16} color="gray" />}
+              value={values.password}
+              onChangeText={(text) => set("password", text)}
+              error={errors.password}
             />
           </View>
           <View style={{ marginTop: 16 }}>
-            <Field 
-              label="Confirm password" 
-              secureTextEntry 
-              placeholder="Re-enter password" 
-              icon={<Lock size={16} color="gray" />} 
-              value={values.confirm} 
-              onChangeText={(text) => set("confirm", text)} 
-              error={errors.confirm} 
+            <Field
+              label={t('auth.confirmPassword')}
+              secureTextEntry
+              placeholder={t('auth.confirmPasswordPlaceholder')}
+              icon={<Lock size={16} color="gray" />}
+              value={values.confirm}
+              onChangeText={(text) => set("confirm", text)}
+              error={errors.confirm}
             />
           </View>
 
-          {apiError && (
+          {apiError ? (
             <View style={{ borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 12, paddingVertical: 8, marginTop: 16 }}>
               <Text style={{ fontSize: 12, color: '#ef4444' }}>{apiError}</Text>
             </View>
-          )}
+          ) : null}
 
           <View style={{ marginTop: 16 }}>
             <PrimaryButton variant="primary" onPress={submit} disabled={loading}>
-              {loading ? "Creating account..." : "Create landlord account"}
+              {loading ? t('auth.creatingAccount') : t('auth.createLandlordAccount')}
             </PrimaryButton>
           </View>
-          
+
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 16 }}>
-            <Text style={{ fontSize: 12, color: '#94a3b8' }}>Already registered?</Text>
-            <Link href="/login" asChild>
-              <TouchableOpacity>
-                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>Sign in</Text>
-              </TouchableOpacity>
+            <Text style={{ fontSize: 12, color: '#94a3b8' }}>{t('auth.alreadyRegistered')}</Text>
+            <Link href="/login" replace style={{ fontSize: 12, color: '#2563eb', fontWeight: '600', textDecorationLine: 'underline' }}>
+              {t('auth.signIn')}
             </Link>
           </View>
         </ScrollView>

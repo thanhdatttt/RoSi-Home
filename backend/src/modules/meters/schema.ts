@@ -23,3 +23,15 @@ export const correctMeterReadingSchema = z
   .strict();
 
 export type CorrectMeterReadingInput = z.infer<typeof correctMeterReadingSchema>;
+
+export const meterReadingListQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    billingPeriod: periodStr.optional(),
+  })
+  .strict();
+
+export type MeterReadingListQuery = z.infer<
+  typeof meterReadingListQuerySchema
+>;

@@ -35,13 +35,20 @@
         }
       ],
       "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RoSi Home to attach maintenance photos.",
+          "cameraPermission": "Allow RoSi Home to take maintenance photos.",
+          "microphonePermission": false
+        }
+      ],
       "expo-font",
       "expo-secure-store",
       "expo-web-browser",
       "@react-native-community/datetimepicker"
     ],
     "extra": {
-      "apiUrl": "http://172.20.10.8:3000",
       "eas": {
         "projectId": "2bd46abb-07f1-49ad-9b4f-d2e51bb2d48d"
       }

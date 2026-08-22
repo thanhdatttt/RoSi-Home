@@ -182,7 +182,10 @@ describe("Leases + Notifications HTTP contract", () => {
       data: leaseView,
       meta: { tenantAccountProvisioned: true },
     });
-    expect(mocks.createLeaseService).toHaveBeenCalledWith(LANDLORD_ID, body);
+    expect(mocks.createLeaseService).toHaveBeenCalledWith(LANDLORD_ID, {
+      ...body,
+      headcount: 1,
+    });
   });
 
   it("US-LEASE-01: maps an overlapping lease to the 409 error envelope", async () => {

@@ -114,8 +114,9 @@ export async function setupIntegrationDatabase(
 }
 
 export async function teardownIntegrationDatabase(
-  handles: IntegrationHandles,
+  handles?: IntegrationHandles,
 ): Promise<void> {
+  if (!handles) return;
   const { adminPool, dbPool, appPool, databaseName } = handles;
   if (appPool) await appPool.end();
   if (dbPool) await dbPool.end();

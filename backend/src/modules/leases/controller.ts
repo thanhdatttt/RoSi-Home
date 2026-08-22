@@ -12,8 +12,8 @@ import {
 } from "./service.js";
 
 async function create(req: Request, res: Response): Promise<void> {
-  const { lease, tenantAccountProvisioned, tempPassword } = await createLeaseService(req.user!.id, req.body);
-  res.status(201).json({ data: lease, meta: { tenantAccountProvisioned, tempPassword } });
+  const { lease, tenantAccountProvisioned, tempPassword, coTenantsProvisioned } = await createLeaseService(req.user!.id, req.body);
+  res.status(201).json({ data: lease, meta: { tenantAccountProvisioned, tempPassword, coTenantsProvisioned } });
 }
 
 async function list(req: Request, res: Response): Promise<void> {

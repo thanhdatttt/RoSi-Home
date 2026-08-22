@@ -2,20 +2,20 @@
 
 ## 1. Who Feels the Pain
 
-| Persona | Description |
-|---|---|
-| **The Self-Managing Landlord** | Owns 1–30 units (rooms, boarding house, small apartment block), manages everything himself alongside a day job or other business |
-| **The Tenant** | Rents from a self-managing landlord, communicates mostly over Zalo, has no formal system to check charges or raise issues |
+| Persona                        | Description                                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **The Self-Managing Landlord** | Owns 1–30 units (rooms, boarding house, small apartment block), manages everything by themselves                          |
+| **The Tenant**                 | Rents from a self-managing landlord, communicates mostly over Zalo, has no formal system to check charges or raise issues |
 
 ## 2. Pain Points
 
-| # | Pain Point | Who Feels It | Root Cause | Real Impact |
-|---|---|---|---|---|
-| P1 | Rent & utility calculation is manual | Landlord | No system to auto-calculate rent + metered utilities per unit | Hours lost every month; calculation errors |
-| P2 | No shared record of payments | Landlord + Tenant | Payment confirmed only via Zalo message or memory | "I already paid" disputes with no proof either side can check |
-| P3 | Lease renewal dates are tracked by memory | Landlord | No reminder system for lease expiry | Missed renewals, unplanned vacancy, lost rent |
-| P4 | Maintenance requests get lost | Landlord + Tenant | Requests come in as phone calls/texts with no log | Delayed repairs, tenant frustration, higher move-out rate |
-| P5 | No visibility into portfolio performance | Landlord | Data scattered across notebooks/spreadsheets/chat | Can't answer "am I actually making money this month?" |
+| #   | Pain Point                                | Who Feels It      | Root Cause                                                    | Real Impact                                                   |
+| --- | ----------------------------------------- | ----------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| P1  | Rent & utility calculation is manual      | Landlord          | No system to auto-calculate rent + metered utilities per unit | Hours lost every month; calculation errors                    |
+| P2  | No shared record of payments              | Landlord + Tenant | Payment confirmed only via Zalo message or memory             | "I already paid" disputes with no proof either side can check |
+| P3  | Lease renewal dates are tracked by memory | Landlord          | No reminder system for lease expiry                           | Missed renewals, unplanned vacancy, lost rent                 |
+| P4  | Maintenance requests get lost             | Landlord + Tenant | Requests come in as phone calls/texts with no log             | Delayed repairs, tenant frustration, higher move-out rate     |
+| P5  | No visibility into portfolio performance  | Landlord          | Data scattered across notebooks/spreadsheets/chat             | Can't answer "am I actually making money this month?"         |
 
 ## 3. Problem Statement
 
