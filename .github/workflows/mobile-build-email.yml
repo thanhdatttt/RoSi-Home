@@ -44,10 +44,13 @@ jobs:
       - name: Parse Build URLs
         id: parse_build
         run: |
-          PAGE_URL=$(jq -r '.[0].buildDetailsPageUrl // "N/A"' build-result.json)
-          APK_URL=$(jq -r '.[0].artifacts.buildUrl // "N/A"' build-result.json)
-          echo "PAGE_URL=$PAGE_URL" >> $GITHUB_OUTPUT
+          APK_URL=$(jq -r '.[0].artifacts.buildUrl' build-result.json)
+          build_id=$(jq -r '.[0].id' build-result.json)
+          account_name=$(jq -r '.[0].app.ownerAccount.name' build-result.json)
+          project_slug=$(jq -r '.[0].app.slug' build-result.json)
+          PAGE_URL="https://expo.dev/accounts/${account_name}/projects/${project_slug}/builds/${build_id}"
           echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
+          echo "PAGE_URL=$PAGE_URL" >> $GITHUB_OUTPUT
 
       - name: Send Email Notification via Gmail SMTP
         uses: dawidd6/action-send-mail@v3
@@ -74,9 +77,9 @@ jobs:
               </tr>
               <tr>
                 <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>Direct APK Download</strong></td>
-                <td style="padding: 10px; border: 1px solid #cbd5e1;"><a href="${{ steps.parse_build.outputs.APK_URL }}">Download .apk File</a></td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;"><a href="${{ steps.parse_build.outputs.APK_URL }}" download="RoSiHome.apk">Download .apk File</a></td>
               </tr>
             </table>
             <p style="margin-top: 20px; color: #64748b; font-size: 12px;">
-              <i>Note: Direct APK download links remain active on Expo for 30 days.</i>
+              <i>Note: Direct APK download links remain active on Expo for 30 days. Some browsers may still save the file with Expo's default hash name.</i>
             </p>
