@@ -100,7 +100,7 @@ The following are excluded unless approved through change control:
 - product features not contained in the approved backlog;
 - long-term commercial operation and support after the course.
 
-## 5. Deliverables and Acceptance
+	## 5. Deliverables and Acceptance
 
 | ID | Deliverable | Acceptance Conditions |
 |---|---|---|
@@ -127,20 +127,17 @@ Acceptance does not imply production-scale availability or long-term commercial 
 
 ## 6. Schedule and Milestones
 
-The total course spans 10 calendar weeks. Following the project pivot at Week 4/5, active development of the RosiHome MVP is executed in Weeks 5–10 (~30 working days):
+The total course spans 10 calendar weeks. Following the project pivot at Week 4/5, active development of the RosiHome MVP is executed in Weeks 5–10 (~30 working days). Each two-batch delivery cycle is planned across three weeks: Batches 1–2 in Weeks 5–7 and Batches 3–4 in Weeks 8–10.
 
 | Milestone | Target Period | Acceptance Evidence |
 |---|---|---|
 | M1 – Technical baseline & setup | Week 5 (Day 2) | Approved Backlog 2.0, architecture, CI pipeline, environments |
-| M2 – Foundation available | End of Week 5 | Batch 1 APIs/UI foundations integrated (68 SP) |
-| M3 – Core business workflows | End of Week 6 | Batch 2 workflows deployed (87 SP — 50% MVP) |
-| M4 – Billing/payment workflow | End of Week 7 | Batch 3 workflow deployed (58 SP) |
-| M5 – Dashboard/report workflow | End of Week 8 | Batch 4 outputs deployed (34 SP — 100% Backlog) |
-| M6 – Pilot candidate & Live testing | Week 9 | 7-day live pilot with 2 landlords in TP.HCM completed |
-| M7 – Final delivery & Defense | Week 10 | Final verified revision, user guide, and academic demonstration |
+| M2 – Foundation available | End of Week 6 | Batch 1 APIs/UI foundations integrated (68 SP) |
+| M3 – Core business workflows | End of Week 7 | Batch 2 workflows deployed (87 SP — 50% MVP) |
+| M4 – Billing/payment workflow | End of Week 9 | Batch 3 workflow deployed (58 SP) |
+| M5 – Dashboard/report workflow | End of Week 10 | Batch 4 outputs deployed (34 SP — 100% Backlog) |
 
-
-Week 10 is schedule contingency for integration, external-service, deployment, or sponsor-feedback rework. It is not automatic additional scope.
+Week 10 is the target completion week for Batch 4 and the 100% MVP backlog. Any integration, external-service, deployment, or sponsor-feedback rework must be managed within the approved baseline or through change control.
 
 ## 7. Roles and Responsibilities
 
@@ -163,7 +160,7 @@ The team consists of five part-time student members with approximately 3–4 hou
 
 | Estimate | Expected | Range |
 |---|---:|---:|
-| Complete MVP duration | 9 weeks | 8–10 weeks |
+| Complete MVP duration | 10 weeks | 8–10 weeks |
 | Gross team capacity | 787.5 hours | 600–1,000 hours |
 | Development cash budget | VND 3,277,500 | VND 950,000–4,062,500 |
 
