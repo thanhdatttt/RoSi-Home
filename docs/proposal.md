@@ -4,7 +4,7 @@
 
 ### 1.1 Who Feels the Pain
 
-- **Landlords managing small properties:** Owners who manage roughly 1-30 rooms and handle leases, maintenance requests, and monthly rent and utility calculations.
+- **Landlords managing small properties:** Owners who manage roughly 10-50 rooms and handle leases, maintenance requests, and monthly rent and utility calculations.
 - **Tenants:** Renters who usually communicate through Zalo and have no formal place to check charges, payments, leases, or maintenance requests.
 
 ### 1.2 Pain Points
@@ -29,13 +29,11 @@
 
 Mr. Tuấn (48, Ho Chi Minh City) owns a 12-room boarding house. Every month, he spends about an hour reading electricity and water meters, calculating bills, and texting tenants the bills. Last month, he forgot to add the 200,000 VND Wi-Fi fee for two rooms, undercharging them by 400,000 VND.
 
-One month, a tenant transferred 3,200,000 VND for a 3,700,000 VND rent bill. While checking his bank notifications and updating his notebook, Mr. Tuấn mistakenly marked the rent as fully paid. He only noticed the missing 500,000 VND after the tenant had already moved out and was unable to recover the outstanding amount.
-
 Lease renewals are tracked manually from paper contracts. He forgot Room 7's lease expired in June and only learned the tenant had moved out on July 5. The room stayed vacant for a month, costing him 3,500,000 VND in rent.
 
 A tenant in Room 5 reported a leaking pipe, but the request was mixed with other conversations and was not followed up. The leak continued for a week, damaging part of the cabinet and costing Mr. Tuấn an additional 800,000 VND for repairs.
 
-Mr. Tuấn lost 5,200,000 VND in total due to manual billing errors, missed payment tracking, overlooked lease renewals, and untracked maintenance requests.
+Mr. Tuấn lost 4,700,000 VND in total: 400,000 VND from manual billing errors, 3,500,000 VND from the overlooked lease renewal, and 800,000 VND from the untracked maintenance request.
 
 ## 3. Stakeholders
 
@@ -51,22 +49,22 @@ Mr. Tuấn lost 5,200,000 VND in total due to manual billing errors, missed paym
 
 ### 4.1 Comparable Business Cases
 
-Each case uses the same 12-room property and follows monthly billing, payment reconciliation, lease handling, maintenance follow-up, tenant access, and data continuity.
+Each case uses the same 12-room property and follows monthly billing, lease handling, maintenance follow-up, tenant access, and data continuity.
 
 #### 4.1.1 Excel / Google Sheets + Zalo + Calculator
 
-Mr. Tuấn reads each meter, calculates rent, utilities, Wi-Fi, and other charges, records the totals in a spreadsheet, and sends each bill through Zalo. He then compares bank notifications with the spreadsheet and updates payment status manually. Because every step depends on correct entry and checking, the two Wi-Fi fees can still be omitted and a 3,200,000 VND transfer can still be marked as full payment for a 3,700,000 VND bill.
+Mr. Tuấn reads each meter, calculates rent, utilities, Wi-Fi, and other charges, records the totals in a spreadsheet, and sends each bill through Zalo. Because every step depends on correct entry and checking, the two Wi-Fi fees can still be omitted.
 
-Lease dates remain in paper contracts or spreadsheet cells, while maintenance reports remain among other Zalo messages. The workflow is familiar and flexible, but billing, payment, lease, and repair records are disconnected and must be maintained manually.
+Lease dates remain in paper contracts or spreadsheet cells, while maintenance reports remain among other Zalo messages. The workflow is familiar and flexible, but billing, lease, and repair records are disconnected and must be maintained manually.
 
-Mr. Tuấn lost 5,200,000 VND in total due to manual billing errors, missed payment tracking, overlooked lease renewals, and untracked maintenance requests.
+Mr. Tuấn lost 4,700,000 VND in total: 400,000 VND from manual billing errors, 3,500,000 VND from the overlooked lease renewal, and 800,000 VND from the untracked maintenance request.
 
 #### 4.1.2 EasyTro
 <p align="center">
   <img src="easytro3R.jpg">
 </p>
 
-Mr. Tuấn starts with EasyTro's Zalo Mini App, but there is no clear way to add a tenant. He spends one hour looking for the tenant-creation page before adding his first tenant. He then enters his rooms and monthly charges and uses EasyTro's billing, VietQR invoice, and debt features. This removes some calculator work, but the generated invoice displays the **wrong total**. Its QR also does not lock the invoice amount, so the tenant can enter a different transfer amount. The debt record keeps an underpayment visible for follow-up.
+Mr. Tuấn starts with EasyTro's Zalo Mini App, but there is no clear way to add a tenant. He spends one hour looking for the tenant-creation page before adding his first tenant. He then enters his rooms and monthly charges and uses EasyTro's billing, VietQR invoice, and debt features. This removes some calculator work, but the generated invoice displays the **wrong total**. Its QR also does not lock the invoice amount, so the tenant can enter a different transfer amount.
 <p align="center">
   <img src="easytro1R.jpg">
 </p>
@@ -74,7 +72,7 @@ EasyTro has no contract management, tenant-side application, or maintenance-requ
 <p align="center">
   <img src="easytro2R.jpg">
 </p>
-In the modeled case, Mr. Tuấn lost 4,700,000 VND in total due to the incorrect invoice total, missed lease renewal, and untracked maintenance request. The 500,000 VND underpayment was not lost because the debt record kept it visible. He also spent one additional hour finding where to add his first tenant; this setup time is separate from the financial-loss total.
+In the modeled case, Mr. Tuấn lost 4,700,000 VND in total: 400,000 VND from the incorrect invoice total, 3,500,000 VND from the missed lease renewal, and 800,000 VND from the untracked maintenance request. He also spent one additional hour finding where to add his first tenant; this setup time is separate from the financial-loss total.
 
 #### 4.1.3 Quản lý trọ - CL Team
 <p align="center">
@@ -83,15 +81,15 @@ In the modeled case, Mr. Tuấn lost 4,700,000 VND in total due to the incorrect
 <p align="center">
   <img src="trocl2R.jpg">
 </p>
-Before using the core features, Mr. Tuấn must pay or register for the one-month free **Pro package**. He can then record rooms, tenants, utilities, and basic finances in the Android application. CL Tro shows the landlord's bank information but **does not generate a QR code**. The tenant must manually enter the bank details and transfer amount. Without underpayment tracking, Mr. Tuấn misread the 3,200,000 VND transfer as full payment for the 3,700,000 VND bill and cannot recover the missing 500,000 VND after the tenant leaves.
+Before using the core features, Mr. Tuấn must pay or register for the one-month free **Pro package**. CL Tro shows the landlord's bank information but **does not generate a QR code**. The tenant must manually enter the bank details and transfer amount.
 
-CL Tro does not support lease-renewal tracking, so Mr. Tuấn misses the expiry and loses 3,500,000 VND during the vacancy. It stores property data on the landlord's phone, so replacing the old phone causes him to **lose the records** and rebuild them. The product also has no tenant-side application or maintenance-request tracking, leaving the leaking-pipe report outside the application and causing the additional 800,000 VND repair cost.
+CL Tro does not support lease-renewal tracking, so Mr. Tuấn misses the expiry and loses 3,500,000 VND during the vacancy. It stores property data on the landlord's phone, so replacing the old phone causes him to **lose the records** and rebuild them. The product also has no maintenance-request tracking, leaving the leaking-pipe report outside the application and causing the additional 800,000 VND repair cost.
 
-In the modeled case, Mr. Tuấn lost 4,800,000 VND in total: 500,000 VND from the untracked underpayment, 3,500,000 VND from the missed lease renewal, and 800,000 VND from the untracked maintenance request. The financial impact of losing all phone-stored data was not quantified.
+In the modeled case, Mr. Tuấn lost 4,300,000 VND in total: 3,500,000 VND from the missed lease renewal and 800,000 VND from the untracked maintenance request. The financial impact of losing all phone-stored data was not quantified.
 
 #### 4.1.4 RosiHome Proposed MVP
 
-Mr. Tuấn enters his bank-transfer details once, then records recurring charges and meter readings for each room. RosiHome calculates the invoice and generates a QR that locks the exact invoice amount when scanned, preventing tenants from entering a lower amount. The tenant-side application displays the invoice, notifies the tenant, and accepts payment-proof uploads, while Mr. Tuấn still verifies the transfer in his bank account.
+Mr. Tuấn enters his bank-transfer details once, then records recurring charges and meter readings for each room. RosiHome calculates the invoice and generates a QR for the exact invoice amount. The tenant-side application displays the invoice, notifies the tenant, and accepts payment-proof uploads, while Mr. Tuấn still verifies the transfer in his bank account.
 
 RosiHome notifies Mr. Tuấn 15 days before Room 7's lease expires, giving him time to find another tenant who can move in immediately after the current tenant leaves.
 
@@ -99,7 +97,7 @@ Mr. Tuấn notices the unresolved repair request on the RosiHome dashboard one d
 
 Records are stored centrally, so replacing Mr. Tuấn's phone does not remove the property's history.
 
-In the modeled case, Mr. Tuấn loses 0 VND and saves several hours across the four original problems if RosiHome's proposed controls work as intended.
+In the modeled case, RosiHome's proposed controls address the 4,700,000 VND loss from billing errors, the missed lease renewal, and the untracked maintenance request. 
 
 ### 4.2 Market Gap
 
@@ -154,10 +152,10 @@ This proposal specifically refers to **RP-01, RP-02, RP-03, RP-04, RP-05, RP-06,
 
 ## 9. Elevator Pitch
 
-**Managing a small boarding house should not require landlords to spend hours calculating bills, checking payments, remembering lease expiry dates, and searching through Zalo messages for repair requests.**
+**Managing a small boarding house should not require landlords to spend hours calculating bills, remembering lease expiry dates, and searching through Zalo messages for repair requests.**
 
 **RosiHome helps landlords manage all of these in one place.** It automatically calculates monthly rent and utility bills, generates a QR code for the exact amount due, reminds you when leases are about to expire, and keeps tenant repair requests visible until they are resolved.
 
-**Instead of relying on notebooks, spreadsheets, and scattered Zalo messages, you can see what each tenant owes, which leases need attention, and which repairs are still pending from one dashboard.**
+**Instead of relying on notebooks, spreadsheets, and scattered Zalo messages, landlords can see what each tenant owes, which leases need attention, and which repairs are still pending from one dashboard.**
 
-**RosiHome helps small landlords save time, reduce costly mistakes, and avoid losing money from missed payments, vacant rooms, and forgotten repairs.**
+**RosiHome helps small landlords save time, reduce costly billing mistakes, and avoid losing money from vacant rooms and forgotten repairs.**
