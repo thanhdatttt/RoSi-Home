@@ -80,17 +80,17 @@ Reminders, proof, and payment status stay linked to the invoice, while final rec
 ## Use Case 3 – Lease Renewal
 **User Type:** Self-managing landlord and tenant
 ### Problem
-The landlord needs a dependable way to act before lease expiry.
+The landlord needs a dependable reminder before lease expiry.
 ### Future Workflow
 1. The landlord stores the lease terms and start and end dates in RosiHome.
-2. RosiHome notifies the landlord 15 days before the lease expires.
-3. The landlord discusses renewal with the tenant and updates the lease record.
+2. RosiHome notifies the landlord 7/15/30 days before the lease expires.
+3. The landlord discusses renewal with the tenant and updates the lease record or find a new tenant if the current one plan on leaving.
 ### Result
 The landlord has time to renew the lease or prepare a replacement tenant before a room becomes vacant.
 ## Use Case 4 – Maintenance Requests
 **User Type:** Self-managing landlord and tenant
 ### Problem
-The landlord and tenant need one visible repair record from submission through completion.
+The landlord and tenant need to keep track of repair status from submission through completion.
 ### Future Workflow
 1. The tenant submits a request with a description and photos in RosiHome.
 2. The landlord reviews it and sets its status to Pending, In Progress, or Completed.
