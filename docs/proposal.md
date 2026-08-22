@@ -1,280 +1,163 @@
-# Project Proposal — RosiHome
-
----
+# Project Proposal - RosiHome
 
 ## 1. Pain Points & Problem Statement
 
-### 1.1. Who Feels the Pain
+### 1.1 Who Feels the Pain
 
-| Persona | Description |
-|---|---|
-| **The Self-Managing Landlord** | Owns 1–30 units (rooms, boarding house, small apartment block), manages everything himself alongside a day job or other business |
-| **The Tenant** | Rents from a self-managing landlord, communicates mostly over Zalo, has no formal system to check charges or raise issues |
+- **Landlords managing small properties:** Owners who manage roughly 1-30 rooms and handle leases, maintenance requests, and monthly rent and utility calculations.
+- **Tenants:** Renters who usually communicate through Zalo and have no formal place to check charges, payments, leases, or maintenance requests.
 
-### 1.2. Pain Points
+### 1.2 Pain Points
 
-| # | Pain Point | Who Feels It | Root Cause | Real Impact |
-|---|---|---|---|---|
-| P1 | Rent & utility calculation is manual | Landlord | No system to auto-calculate rent + metered utilities per unit | Hours lost every month; calculation errors |
-| P2 | No shared record of payments | Landlord + Tenant | Payment confirmed only via Zalo message or memory | "I already paid" disputes with no proof either side can check |
-| P3 | Lease renewal dates are tracked by memory | Landlord | No reminder system for lease expiry | Missed renewals, unplanned vacancy, lost rent |
-| P4 | Maintenance requests get lost | Landlord + Tenant | Requests come in as phone calls/texts with no log | Delayed repairs, tenant frustration, higher move-out rate |
-| P5 | No visibility into portfolio performance | Landlord | Data scattered across notebooks/spreadsheets/chat | Can't answer "am I actually making money this month?" |
+- Rent and utility calculation is manual, which costs time and creates billing errors.
+- Lease renewal dates are remembered manually, so missed renewals can create vacancies.
+- Maintenance requests arrive through calls and chats, so they can be forgotten or delayed.
+- Data is scattered across notebooks and spreadsheets, so landlords cannot see occupancy, late fee, or revenue quickly.
 
-### 1.3. Problem Statement
+### 1.3 Problem Statement
 
-> Small-scale landlords lose time and money every month because rent calculation, payment tracking, lease renewals, and maintenance requests are handled manually and informally — they actually have to manage the whole process themselves by using different tools such as calculators, spreadsheets, and chat apps to communicate with tenants.
+> Small-scale landlords lose time and money every month because rent calculation, lease renewals, and maintenance requests are handled manually and informally. They have to manage the process themselves by switching between calculators, spreadsheets, notebooks, and chat apps.
 
-### 1.4. Evidence This Is a Real, Widespread Problem
+### 1.4 Evidence This Is a Real, Widespread Problem
 
-- **Physical, repeated visits are the norm.** A guide aimed at Vietnamese boarding-house owners describes that landlords must visit their property **at least twice a month** — once to finalize electricity/water meter readings, once to collect payment — not counting extra trips when a tenant delays payment or raises a complaint, work "often eating up an entire evening" because tenants are usually out during the day.
-- **Most lease contracts are informal, with no legal grounding.** The same source states that **up to 80% of boarding-house/mini-apartment owners still draft their own lease contracts** with loosely defined terms, not based on proper legal provisions — usually handwritten or typed, making it hard to track deadlines, terms, or resolve disputes when they arise.
-- **Excel remains the default tool nationwide, and it's fragile.** Among the hundreds of thousands of boarding-house rows across Vietnam, Excel is still described as the most commonly used management tool - but sources warn it "still requires manual meter entry," "makes it hard to get a periodic overview of the business," and is "prone to errors and permanent data loss from unexpected computer crashes." - [Smartos.space: Quản lý phòng trọ bằng excel? Nên hay Không?](https://smartos.space/quan-ly-phong-tro-bang-excel-nen-hay-khong/) 
-- **Utility billing complexity is a widely discussed problem on its own.** A dedicated guide on calculating electricity/water charges for boarding houses acknowledges that manual calculation "often causes errors, wastes time, and is hard to keep under control," especially once a property has a shared water pump or multiple sub-meters. — [Amerigroup.vn: File Excel Tính Tiền Điện Nước Nhà Trọ](https://amerigroup.vn/file-excel-tinh-tien-dien-nuoc-nha-tro/)
-
-
----
+- Excel is described as a common but fragile tool: it requires manual meter entry, makes periodic business review difficult, and is prone to errors and data loss. - [Smartos.space: Quản lý phòng trọ bằng Excel? Nên hay Không?](https://smartos.space/quan-ly-phong-tro-bang-excel-nen-hay-khong/)
+- Manual electricity and water calculation is also described as error-prone and time-consuming, especially with shared pumps or multiple sub-meters. - [Amerigroup.vn: File Excel Tính Tiền Điện Nước Nhà Trọ](https://amerigroup.vn/file-excel-tinh-tien-dien-nuoc-nha-tro/)
 
 ## 2. Business Case
 
-### 2.1. The Story: Mr. Tuấn's Boarding House
+### 2.1 The Story: Mr. Tuấn's Boarding House
 
-Mr. Tuấn (48, Ho Chi Minh City) owns a 12-room boarding house that he built up over a decade of saving. He also works a full-time day job, so the boarding house runs on whatever time he has left in the evenings. Every month he walks room to room with a notebook to read the electricity and water meters by hand, then does the rent math on his phone's calculator before texting each tenant on Zalo. Two tenants always "forget" to reply. One month he loses track of who has paid and who hasn't, deposits a rent payment into the wrong ledger line in his spreadsheet, and ends up in an awkward argument with a tenant who insists she already paid. Three months later, a tenant's lease quietly expires without Mr. Tuấn noticing — he only finds out when the tenant has already moved out, leaving the room empty for a month with no new tenant lined up.
+Mr. Tuấn (48, Ho Chi Minh City) owns a 12-room boarding house. Every month, he spends about an hour reading electricity and water meters, calculating bills, and texting tenants the bills. Last month, he forgot to add the 200,000 VND Wi-Fi fee for two rooms, undercharging them by 400,000 VND.
 
-### 2.2. How RosiHome Changes the Game
+One month, a tenant transferred 3,200,000 VND for a 3,700,000 VND rent bill. While checking his bank notifications and updating his notebook, Mr. Tuấn mistakenly marked the rent as fully paid. He only noticed the missing 500,000 VND after the tenant had already moved out and was unable to recover the outstanding amount.
 
-RosiHome replaces the notebook-and-Zalo routine with one simple way. Landlords enter meter readings and bank - transfer QR code, RosiHome will calculate each invoice and send the tenant scans it to pay directly and uploads proof, and RosiHome stores the full payment history automatically. Lease renewals are tracked and flagged in advance, maintenance requests are logged with photos, and a dashboard shows occupancy, arrears, and revenue at a glance.
+Lease renewals are tracked manually from paper contracts. He forgot Room 7's lease expired in June and only learned the tenant had moved out on July 5. The room stayed vacant for a month, costing him 3,500,000 VND in rent.
 
-### 2.3. The Result
- 
-Mr. Tuấn stops losing evenings to notebooks and calculators, stops losing rent to disputes he can't prove, and stops losing tenants to renewal dates he forgot to track. What used to be an anxious, error-prone side job now runs itself in the background, with RosiHome doing the arithmetic and the reminders so Mr. Tuấn only has to make decisions, not chase paperwork.
+A tenant in Room 5 reported a leaking pipe, but the request was mixed with other conversations and was not followed up. The leak continued for a week, damaging part of the cabinet and costing Mr. Tuấn an additional 800,000 VND for repairs.
 
----
+Mr. Tuấn lost 5,200,000 VND in total due to manual billing errors, missed payment tracking, overlooked lease renewals, and untracked maintenance requests.
 
 ## 3. Stakeholders
 
-### Who's Involved
- 
-| Stakeholder | Who they are | What they want |
-|---|---|---|
-| **Landlords** | Landlords using the app day-to-day | Save time, stop losing money to missed payments or missed renewals |
-| **Tenants** | Tenants using the app | Clear, transparent way to see charges, pay rent, and report issues |
-| **Director / Project Manager** | Team member leading day-to-day execution | On-time delivery, clear scope, smooth team coordination |
-| **Development Team** | The other 4 student members | Clear tasks, technical ownership, a strong portfolio piece |
-| **External Corporation** | Cloud providers (Azure/AWS), banks (via VietQR-standard QR generation), GitHub | Reliable use of their platforms/standards — no payment gateway partnership needed, since RosiHome only generates a bank-transfer QR code and never holds tenant funds |
-| **University** | The school/program | A strong showcase project reflecting well on the program |
+| Stakeholder                       | Role                     | Interest                                                                                  |
+| --------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
+| Project Manager                   | Team leader              | On-time, in-scope, quality delivery.                                                      |
+| Five developers, including the PM | Execution                | Clear tasks and a working MVP.                                                            |
+| Landlords                         | End user - landlord side | Fewer billing, lease, and repair issues.                                                  |
+| Tenants                           | End user - tenant side   | Clear bills, payments, and repair status.                                                 |
+| University and advisor            | Project evaluator        | Students gain practical project management skills and successfully apply course concepts. |
 
----
 ## 4. Competitor Analysis
 
-## 4.1 Existing Solutions
+### 4.1 Comparable Business Cases
 
-The rental property management market already offers several solutions ranging from manual methods to dedicated property management platforms. However, these alternatives target different user segments and provide different levels of functionality.
+Each case uses the same 12-room property and follows monthly billing, payment reconciliation, lease handling, maintenance follow-up, tenant access, and data continuity.
 
-|Solution|Target Users|Strengths|Weaknesses|
-|---|---|---|---|
-|**Excel / Google Sheets**|Small landlords|Free, familiar, highly customizable|Manual rent calculation, no payment tracking, no reminders, no tenant portal, prone to data entry errors, difficult to use on mobile devices.|
-|**Zalo + Notebook + Calculator**|Individual landlords|No additional cost, already widely used|Information is scattered across chats and notebooks, no audit trail, no centralized records, maintenance requests and payment history are easily lost.|
-|**EasyTro**|Small and medium landlords|Runs directly on Zalo Mini App, automatic billing, VietQR invoices, debt tracking, contract management, free plan for up to 10 rooms.|Focuses mainly on operational management, with limited customization and analytics for landlords who want a more comprehensive business overview. Hands-on testing also found significant **UI/UX weaknesses**: the app provides **no onboarding guidance for first-time users**, and the flow for **adding a tenant is not discoverable** — a new landlord has no clear indication of where to start or what the expected setup sequence is.|
-|**Quản lý trọ – CL Team**|Individual landlords using Android devices|Supports room management, utility calculation, tenant information, contracts, debt tracking and financial reports through a lightweight mobile application.|Android-only application with relatively basic functionality, limited ecosystem integration, and lacks collaborative landlord–tenant workflows compared with modern cloud-based platforms. Hands-on testing also found **weak payment automation**: the landlord must **manually add their own payment QR code** and the **tenant has to manually type in the amount to transfer** rather than the app generating a QR pre-filled with the correct invoice amount, which reintroduces the same manual-entry error risk RosiHome is designed to eliminate. Pricing is also **not transparent** — the app pushes new users into a **1-month free trial with no visible information on what it will cost afterward** to keep full feature access, making it difficult for a landlord to budget or compare cost against alternatives before committing.|
+#### 4.1.1 Excel / Google Sheets + Zalo + Calculator
 
----
+Mr. Tuấn reads each meter, calculates rent, utilities, Wi-Fi, and other charges, records the totals in a spreadsheet, and sends each bill through Zalo. He then compares bank notifications with the spreadsheet and updates payment status manually. Because every step depends on correct entry and checking, the two Wi-Fi fees can still be omitted and a 3,200,000 VND transfer can still be marked as full payment for a 3,700,000 VND bill.
 
-## 4.2 Market Gap
+Lease dates remain in paper contracts or spreadsheet cells, while maintenance reports remain among other Zalo messages. The workflow is familiar and flexible, but billing, payment, lease, and repair records are disconnected and must be maintained manually.
 
-Although several property management solutions already exist, there remains a gap in the Vietnamese market.
+Mr. Tuấn lost 5,200,000 VND in total due to manual billing errors, missed payment tracking, overlooked lease renewals, and untracked maintenance requests.
 
-Current solutions generally fall into two categories:
+#### 4.1.2 EasyTro
+<p align="center">
+  <img src="easytro3R.jpg">
+</p>
 
-- **Manual tools**, such as Excel and Zalo, which are inexpensive but require landlords to calculate bills manually, track payments themselves, and remember important dates.
-- **Professional property management platforms**, which provide comprehensive features but are designed for larger rental businesses and property management companies, making them more complex than necessary for many self-managing landlords.
+Mr. Tuấn starts with EasyTro's Zalo Mini App, but there is no clear way to add a tenant. He spends one hour looking for the tenant-creation page before adding his first tenant. He then enters his rooms and monthly charges and uses EasyTro's billing, VietQR invoice, and debt features. This removes some calculator work, but the generated invoice displays the **wrong total**. Its QR also does not lock the invoice amount, so the tenant can enter a different transfer amount. The debt record keeps an underpayment visible for follow-up.
+<p align="center">
+  <img src="easytro1R.jpg">
+</p>
+EasyTro has no contract management, tenant-side application, or maintenance-request tracking. Lease expiry therefore remains in a separate record, while the leaking-pipe report stays outside the product.
+<p align="center">
+  <img src="easytro2R.jpg">
+</p>
+In the modeled case, Mr. Tuấn lost 4,700,000 VND in total due to the incorrect invoice total, missed lease renewal, and untracked maintenance request. The 500,000 VND underpayment was not lost because the debt record kept it visible. He also spent one additional hour finding where to add his first tenant; this setup time is separate from the financial-loss total.
 
-Meanwhile, many Vietnamese landlords own only **1–30 rental units** and manage their properties themselves as a side business. Their primary need is not an enterprise management system but a lightweight, affordable solution that digitizes their daily workflow with minimal learning effort.
+#### 4.1.3 Quản lý trọ - CL Team
+<p align="center">
+  <img src="trocl1R.jpg">
+</p>
+<p align="center">
+  <img src="trocl2R.jpg">
+</p>
+Before using the core features, Mr. Tuấn must pay or register for the one-month free **Pro package**. He can then record rooms, tenants, utilities, and basic finances in the Android application. CL Tro shows the landlord's bank information but **does not generate a QR code**. The tenant must manually enter the bank details and transfer amount. Without underpayment tracking, Mr. Tuấn misread the 3,200,000 VND transfer as full payment for the 3,700,000 VND bill and cannot recover the missing 500,000 VND after the tenant leaves.
 
-Another gap is that **most solutions in the small-landlord segment are landlord-centric**. While some platforms provide limited tenant-facing features (such as viewing invoices or receiving payment requests), tenants often still rely on messaging applications like Zalo for communication and issue reporting. RosiHome is designed as a **two-sided platform**, giving both landlords and tenants dedicated applications that improve transparency, communication, and collaboration throughout the rental lifecycle.
+CL Tro does not support lease-renewal tracking, so Mr. Tuấn misses the expiry and loses 3,500,000 VND during the vacancy. It stores property data on the landlord's phone, so replacing the old phone causes him to **lose the records** and rebuild them. The product also has no tenant-side application or maintenance-request tracking, leaving the leaking-pipe report outside the application and causing the additional 800,000 VND repair cost.
 
----
+In the modeled case, Mr. Tuấn lost 4,800,000 VND in total: 500,000 VND from the untracked underpayment, 3,500,000 VND from the missed lease renewal, and 800,000 VND from the untracked maintenance request. The financial impact of losing all phone-stored data was not quantified.
 
-## 4.3 Competitive Comparison
+#### 4.1.4 RosiHome Proposed MVP
 
-| Capability                                      | Excel    | Zalo     | EasyTro                                             | Quản lý trọ – CL Team                                     | **RosiHome** |
-| ----------------------------------------------- | -------- | -------- | --------------------------------------------------- | --------------------------------------------------------- | ------------ |
-| Room management                                 | ✓        | ✗        | ✓                                                   | ✓                                                         | ✓            |
-| Automatic utility calculation                   | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
-| QR payment support                              | ✗        | ✗        | ✓                                                   | Partial                                                   | ✓            |
-| Payment history                                 | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
-| Lease renewal reminders                         | ✗        | ✗        | ✓                                                   | ✓                                                         | ✓            |
-| Maintenance request management                  | ✗        | ✗        | Limited                                             | Limited                                                   | ✓            |
-| Revenue dashboard                               | ✗        | ✗        | Basic                                               | Basic                                                     | ✓            |
-| Tenant self-service                             | ✗        | ✗        | Partial                                             | ✗                                                         | ✓            |
-| Designed for self-managing landlords            | ✓        | ✓        | ✓                                                   | ✓                                                         | ✓            |
-| Guided onboarding for first-time landlords      | ✗        | ✗        | Weak — no onboarding, tenant setup not discoverable | Weak — no guided setup                                    | ✓            |
-| Auto-filled payment QR (no manual amount entry) | ✗        | ✗        | ✓                                                   | ✗ — landlord adds own QR, tenant types amount manually    | ✓            |
-| Transparent pricing before commitment           | ✓ (free) | ✓ (free) | Free plan advertised up front                       | ✗ — 1-month free trial with no visible post-trial pricing | ✓            |
+Mr. Tuấn enters his bank-transfer details once, then records recurring charges and meter readings for each room. RosiHome calculates the invoice and generates a QR that locks the exact invoice amount when scanned, preventing tenants from entering a lower amount. The tenant-side application displays the invoice, notifies the tenant, and accepts payment-proof uploads, while Mr. Tuấn still verifies the transfer in his bank account.
 
----
+RosiHome notifies Mr. Tuấn 15 days before Room 7's lease expires, giving him time to find another tenant who can move in immediately after the current tenant leaves.
 
-## 4.4 RosiHome's Unique Value Proposition
+Mr. Tuấn notices the unresolved repair request on the RosiHome dashboard one day after it is submitted, arranges the repair, and avoids 800,000 VND in cabinet damage.
 
-Rather than competing directly with enterprise property management systems, **RosiHome focuses on the underserved segment of self-managing landlords who own between 1 and 30 rental units**.
-**Built for Both Landlords and Tenants** – Unlike many small-landlord solutions that primarily optimize the landlord's workflow, RosiHome provides dedicated experiences for both landlords and tenants. Tenants can view invoices, payment history, lease information, and submit maintenance requests directly through the app, reducing reliance on messaging apps and improving transparency.
+Records are stored centrally, so replacing Mr. Tuấn's phone does not remove the property's history.
 
-Its competitive advantage lies in four key principles:
+In the modeled case, Mr. Tuấn loses 0 VND and saves several hours across the four original problems if RosiHome's proposed controls work as intended.
 
-- **Simple** – only includes features that landlords use every month, reducing learning time and operational complexity. This directly addresses the onboarding gap observed in EasyTro and CL Team, where first-time landlords have no guided setup and cannot easily discover how to add a tenant.
-- **Affordable and Transparent** – avoids expensive infrastructure and payment gateway integration by using VietQR-based bank transfers, and states pricing clearly up front, in contrast to CL Team's 1-month free trial with no disclosed cost for continued full-feature access.
-- **Localized** – designed specifically for Vietnamese rental practices, including utility billing, VietQR payments, and local lease management.
-- **End-to-End Workflow** – integrates rent calculation, billing, payment tracking, lease reminders, maintenance requests, and business reporting into a single platform, eliminating the need to switch between spreadsheets, calculators, messaging applications, and notebooks.
+### 4.2 Market Gap
 
----
+The comparison suggests a gap between fragmented manual tools and products that solve only part of the small-landlord workflow. The reviewed alternatives do not combine a verified invoice total, an exact-amount QR, tenant-side access, lease reminders, maintenance tracking, and centrally stored records. RosiHome brings these functions into one place.
 
-## 4.5 Comparison with Combining Existing Tools Manually
+### 4.3 RosiHome's Unique Value Proposition
 
-Section 4.1 compares RosiHome against individual products already on the market. A separate and equally important question is whether a landlord could get the same outcome without buying any product at all, simply by **combining several free/general-purpose tools they already use** — typically a notebook or Excel sheet for meter readings, a calculator for billing, Zalo for communication and payment requests, a phone reminder/calendar app for lease dates, and manual bank-transfer checking for payment confirmation.
+- **Accurate payment flow:** RosiHome calculates the invoice and generates a QR that locks the exact amount when scanned; the landlord still verifies the bank transfer.
+- **Two-sided:** Landlords manage rooms and payments, while tenants view invoices and upload payment proofs through their application.
+- **Lease-renewal reminders:** RosiHome tracks lease expiry dates and alerts landlords before renewal action is due.
+- **Maintenance-request tracking:** Tenants submit requests with photos, while landlords track each request's status until completion.
 
-This manual "tool stack" is in fact the real baseline that RosiHome competes with for most self-managing landlords (more so than EasyTro, which very few of them have actually adopted yet). The table below evaluates that combined workflow against RosiHome on the same tasks used in the 4.3 comparison table.
-
-| Task | Manual Combination (Excel + Calculator + Zalo + Calendar + Bank App) | RosiHome |
-|---|---|---|
-| Record meter readings & calculate utility charges | Possible, but each room is calculated by hand every month; formulas can be copied incorrectly between sheets and there is no validation against the previous reading. | Automatic calculation from the previous reading and configured rates; consistent formula applied to every room. |
-| Generate and send invoices | Landlord types the amount into a Zalo message per tenant; no standard invoice format; easy to send the wrong amount to the wrong tenant. | System generates a standardized invoice per tenant automatically from billing data. |
-| Collect payment | Tenant transfers money and sends a screenshot in Zalo; landlord must manually match the screenshot/bank SMS to the right tenant and month. | VietQR code generated per invoice; payment status can be verified against the bank reference tied to that invoice. |
-| Keep a payment history | Scattered across bank statements, Zalo chat history (which can be deleted or lost when a phone is changed), and possibly a notebook. | Centralized, persistent payment history accessible to both landlord and tenant at any time. |
-| Track lease renewal dates | Depends on the landlord remembering to check a calendar app and manually cross-referencing which tenant is due; nothing proactively surfaces upcoming expirations. | System automatically tracks lease expiration dates and pushes reminders to landlord and tenant. |
-| Track maintenance requests | Reported ad hoc via phone call or Zalo message; no status, no history, easy to forget once the chat is buried under other messages. | Structured maintenance request with status (Pending/In Progress/Completed) and a visible history. |
-| Get an overview of the business (occupancy, revenue, overdue payments) | Landlord must manually reopen and cross-reference several Excel sheets and Zalo threads; realistically this is rarely done except at a rough, infrequent level. | Dashboard aggregates data automatically from rooms, invoices, and leases in real time. |
-| Cost | "Free", but the true cost is the landlord's own time every month, plus the cost of errors (wrong bills, missed renewals, disputed payments). | Low subscription/usage cost, but replaces recurring manual effort with automated processing. |
-
-**Conclusion.** Combining existing general-purpose tools does not fail because any single tool is bad — Excel, Zalo, and a calendar app all work fine individually. It fails because **none of these tools were designed to talk to each other**, so the landlord becomes the integration layer: manually copying numbers from a notebook into Excel, from Excel into a Zalo message, and from a Zalo screenshot into a mental record of "who has paid." This manual integration is exactly where time is lost and errors are introduced, and it does not scale as the number of rooms grows. RosiHome's core value proposition is therefore not "a single new feature" but **removing the manual integration work** between billing, payment, communication, and record-keeping — the same conclusion reached independently in the competitor-focused comparison in 4.3–4.4.
-
----
 ## 5. Feasibility Study
 
-### 5.1. Operational Feasibility — **Feasible with caveats**
-
-- The product replaces manual/spreadsheet workflows that landlords are already motivated to leave behind — <cite index="9-1">more than 40% of small landlords still rely on manual tools today</cite>, indicating real latent demand rather than a workflow no one wants.
-- Onboarding must be extremely low-friction given the target user is not technical and does everything themselves. <cite index="10-1">Small landlords need software that is fast to use without requiring a training course, since most of their day is not spent on property management</cite>.
-
-> [!NOTE]
-> **Caveat:** Sustained operation after the academic term ends (hosting costs, support, further development) is not guaranteed unless the team explicitly plans a post-capstone maintenance owner or treats the project as capstone-only with a clean handover/shutdown plan. This should be decided explicitly by the team and advisor (see Risks section).
-
-### 5.2. Economic Feasibility — **Feasible**
-
-- No paid labor is required (student project); primary cash costs are cloud hosting, domain, and optional tool subscriptions — all of which have free or heavily discounted student tiers (GitHub Student Pack, Azure for Students, Figma Education, etc.).
-- If pursued beyond graduation, the freemium/per-unit pricing precedent set by comparable products (<cite index="4-1">e.g. $15–29/month entry tiers</cite>, <cite index="3-1">or flat $5/unit/month models</cite>) shows a viable, proven monetization path — not required for the academic deliverable, but supports longer-term viability.
-
-### 5.3. Schedule Feasibility — **Feasible within 8 - 10 weeks**
-
-Based on the scope defined in the business case (core modules only, QR-based bank-transfer payment with proof upload, no AI features at MVP) and a 5-person team augmented by AI coding assistants, the estimated effort fits within a standard undergraduate capstone timeline. Scope discipline is the primary lever for keeping this feasible.
-
-### 5.4. Legal / Compliance Feasibility — **Feasible with specific constraints**
-
-- **Data privacy:** Tenant PII (ID documents, contact info, payment history) must be handled carefully even at MVP/demo stage — use of test/synthetic data during development and pilot, with a basic privacy notice for any real pilot users.
-- **E-signature / e-contract legality:** Vietnam's lease-management landscape involves land-price volatility and evolving compliance requirements; the MVP should treat digital lease **storage** (not legally binding e-signature) as the safe initial scope, since binding e-signature has jurisdiction-specific legal requirements beyond an academic MVP's scope.
-- **Payments:** RosiHome never touches, holds, or moves tenant money — it only calculates the amount owed, sends a bank-transfer QR code addressed to the landlord's own account, and stores the proof-of-payment screenshot the tenant uploads. Because funds move directly bank-to-bank between tenant and landlord, RosiHome is not a payment intermediary and does not require a payment license, PCI compliance, or escrow handling, at MVP or beyond.
-
----
-
+- **Technical:** The five-member team has the skills and tools needed to build the core MVP, including billing, exact-amount QR generation, tenant/landlord views, lease reminders, maintenance tracking, and centralized records. AI coding agents support development and document writing but are not product features; RosiHome contains no AI-powered feature.
+- **Operational:** RosiHome follows existing landlord–tenant workflows while replacing manual calculations, chat-based requests, and paper-based lease tracking with one system.
+- **Economic:** The estimated **4,250,000 VND** budget covers AI coding-agent subscriptions, team meeting meals and coffee, cloud infrastructure, domain, security, and contingency for the ten-week MVP. Student labor is provided as part of the course.
+- **Schedule:** The ten-week plan allocates four weeks to research and proposal development, two weeks to core management features, three weeks to invoice and payment features, and one week to review, demonstration, and project closure.
 ## 6. Project Timeline & Schedule
 
-### 6.1. How We Estimated This
- 
-1. **What the team already knows** — the 5 members already have coursework in web, mobile, testing and database, so it costs not too much time for learning a brand-new stack from zero.
-2. **How long similar apps take to build** — rental/property management apps are a well-understood app category (forms, lists, invoices, a dashboard) with standard, well-documented patterns — not something being invented from scratch.
-3. **Heavy AI assistance** — the team is using paid AI coding tools (Claude Code, Codex, Gemini, ChatGPT) across all 5 members, not just for autocomplete but to generate whole features, write tests, debug, and scaffold boilerplate. With one AI tool per person working in parallel on different modules, the team effectively multiplies its own output — this is the main reason the timeline compresses well below the "typical human-only" 4–6 month benchmark for this kind of app.
+The course lasts **10 weeks** and ends with an internal review, final demonstration, and project closure.
 
-Based on this, we estimate **8–10 weeks** for the MVP, working part-time alongside coursework.
+| Phase | Time | Deliverable |
+|---|---:|---|
+| Problem research and proposal | Weeks 1-4 | Research the problem and pain points, generate and evaluate ideas, select the final idea, and write the proposal. |
+| Core management features | Weeks 5-6 | Build authentication, profiles, properties, room management, billing, tenant management, and meter readings. |
+| Invoice and payment features | Weeks 7-9 | Build invoices, payments, dashboard, reminders, and exact-amount QR generation. |
+| Review and project closure | Week 10 | Review the completed work, fix final issues, prepare and deliver the demonstration, finish documentation, and close the project. |
 
-### 6.2. Timeline
- 
-| Phase | Time | What Happens |
-|---|---|---|
-| Planning & Design | 1 week | Finalize features, wireframes, database design (AI-assisted: quick prototyping of schema/UI ideas) |
-| Core Build — Web + Backend | 3 weeks | Login, properties/rooms, tenants, billing + QR payment — AI generates boilerplate CRUD/API code, team focuses on logic and review |
-| Core Build — Mobile App | 2 weeks | Landlord + tenant mobile app, built in parallel with web using AI to scaffold screens quickly |
-| Testing & Fixes | 1–2 weeks | AI-assisted test generation (unit/E2E), bug fixing, polish |
-| Pilot & Demo | 1–2 weeks | Try it with a few real landlords, fix feedback, final presentation |
- 
-**Total: 8–10 weeks**
-
----
+**Total: 10 weeks.**
 
 ## 7. Cost & Budget Plan
 
-### 7.1. Seed Budget for MVP Build (Startup-Style)
+The estimated cash budget to build and complete the RosiHome MVP during the ten-week course is **4,250,000 VND**. The five student members provide labor as coursework, so labor is excluded. The budget contains no funding for AI product features or experiments.
 
-RosiHome needs **4,250,000 VND** to build and pilot its MVP over 8–10 weeks.
+| Category | Estimated cost | Purpose |
+|---|---:|---|
+| AI coding-agent subscriptions | 1,600,000 VND | Help the team build the MVP and write project documents. |
+| Team meeting meals and coffee | 900,000 VND | Cover lunch or coffee when the team meets at school or coffee shops. |
+| Cloud infrastructure | 800,000 VND | Host the application, database, and uploaded payment or maintenance evidence during development and the final demonstration. |
+| Domain and security | 450,000 VND | Provide a project domain and secure access. |
+| Contingency | 500,000 VND | Cover unexpected project costs or service-usage overages. |
+| **Total** | **4,250,000 VND** | |
 
-This isn't a traditional "team salary" budget — it's a lean, tools-only budget, because the founding team (5 SE students) contributes labor for equity in learning/portfolio value, not cash. Every dong requested goes into the tools that let 5 people ship like a much bigger team: AI coding agents and the minimum cloud/infra to run a real pilot.
-
-### 7.2. Use of Funds & Cost Breakdown
- 
-| Category / Allocation | Service / Upgrade Detail | Estimated Cost (VND) | % of Budget | Role & Practical Effect / Purpose |
-|---|---|---|---|---|
-| **Development Tools** | Claude Code / Claude Pro upgraded plan, shared across the 5-person dev team | 1,600,000 đ | 38% | Lets the dev team generate code, test QR-payment logic, and scaffold/debug faster. Acts as the core "force multiplier" for the 5-person team. |
-| **AI Agent Infrastructure (LLM APIs)** | Pay-as-you-go API credit (Claude Sonnet or GPT-4o) for in-app AI features | 900,000 đ | 21% | Powers in-product AI (meter-photo reading and weekly landlord reports). Sufficient for ~400–600 smart-processing calls during the pilot. |
-| **Cloud Infrastructure** | Upgraded cloud server + database (small production tier) | 800,000 đ | 19% | Production-grade hosting that prevents timeouts/lag when processing meter-reading photos or generating AI reports. |
-| **Domain & Security** | 1 domain (.com or .vn) + SSL certificate | 450,000 đ | 11% | Brand presence + SSL; builds user trust and protects tenant and lease data. |
-| **System Contingency** | Buffer for AI API overage / rate-limit spikes during testing | 500,000 đ | 12% | Buffer for heavy testing and experimentation weeks to cover extra token consumption. |
-| **TOTAL** | **Cost to build & pilot the AI-assisted MVP** | **4,250,000 đ** | **100%** | **~4.25 million VND for the entire project** |
-
-#### Notes on Costs:
-- **No labor cost:** unlike a commercial project, developer time is not counted — it's a coursework contribution, not paid work. Every number above is cash the team would actually spend.
-- **AI is used in two ways**, both reflected above: (1) as a *development tool* (Claude Code/Claude Pro helping the team write code faster) and (2) as a *product feature* (in-app AI reading meter photos and summarizing reports for the landlord) — the "Development Tools" and "AI Agent Infrastructure" rows are deliberately separate line items because they're different costs for different purposes.
-
-### 7.3. Burn Rate & Runway
- 
-| Metric | Value |
-|---|---|
-| Runway needed | 8–10 weeks (~2–2.5 months) |
-| Average monthly burn | ~1,700,000 – 2,125,000 đ/month |
-| Peak burn week | Sprint weeks with heaviest AI usage (mobile build + testing phases) |
-| Cash-out risk | Low — 500,000 đ contingency reserve (12% of budget) covers overage without needing a follow-on ask mid-build |
-
-At this burn rate, the entire MVP is funded through to pilot/demo day without requiring any additional capital — a deliberately tight, no-slack-needed budget rather than one padded for comfort.
-
-### 7.4. Funding Sources (Cap Table of Effort, Not Equity)
- 
-| Source | Round | Amount | Status |
-|---|---|---|---|
-| University / department resources | "Grant" | Azure/AWS student credits, GitHub Student Pack | Apply first — reduces cash ask below 4,250,000 đ if approved |
-| Team self-funding | "Founder capital" | 4,250,000 đ ÷ 5 = ~850,000 đ/person | Fallback if no university support |
-
-No outside investors are needed at this stage — this is a **bootstrapped, founder-funded MVP**, consistent with how most successful software products start: prove the product works before raising anything.
-
-### 7.5. Milestone-Based Spending (Spend Tied to Progress, Not Just Time)
- 
-| Milestone | Cumulative Spend | Unlocks |
-|---|---|---|
-| M1 — Design freeze | ~450,000 đ (domain secured) | Team starts building against a locked spec |
-| M2 — Web MVP functional | ~1,600,000 đ (dev tools fully utilized) | Core billing + QR payment flow working end-to-end |
-| M3 — Mobile MVP functional | ~2,500,000 đ (cloud infra scaled up) | Full landlord + tenant app usable |
-| M4 — AI features live | ~3,400,000 đ (LLM API spend active) | Meter-reading AI + weekly report AI shipped |
-| M5 — Pilot & demo | 4,250,000 đ (contingency available if needed) | Real landlords using RosiHome, ready to present |
-
----
+If student credits are unavailable, equal self-funding is **850,000 VND per member**.
 
 ## 8. Risk Assessment
- 
-### 8.1 The Risks
- 
-| Risk                                                          | Why It Could Happen                                                                                         | What We'll Do About It                                                                                                       |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **The 8–10 week timeline slips**                              | Students juggle exams and other coursework; AI-assisted speed doesn't remove real-life scheduling conflicts | Keep sprints short (2 weeks), do daily 10-minute check-ins, and cut non-essential features before cutting the deadline       |
-| **Mobile app takes longer than expected**                     | Mobile is usually the biggest single piece of work in this kind of app                                      | Build a small working version early (Week 1–2 of mobile work) to catch surprises before they eat the whole schedule          |
-| **Team relies too much on AI without understanding the code** | Easy to accept AI-generated code without reviewing it                                                       | Every teammate reviews and understands the code they ship — AI drafts, humans approve                                        |
-| **Tenant uploads a fake payment screenshot**                  | RosiHome doesn't verify the bank transfer directly — it only stores the proof the tenant uploads            | Landlord confirms payment manually by checking their own bank app first; this is a known limitation, not a solved problem    |
-| **Can't find real landlords to pilot the app with**           | No marketing budget — outreach is manual                                                                    | Start reaching out early (personal network, local Zalo/Facebook landlord groups), don't wait until the app is finished       |
-| **AI tool costs go over budget**                              | Heavy testing/experimentation can burn through API credits faster than expected                             | The budget already includes a contingency reserve (~500,000 VND) for exactly this                                            |
-| **Scope creep**                                               | Tempting to add features (live payment gateway, SMS, more AI) before the core app works                     | Freeze features once the core flow (billing, QR payment, maintenance, dashboard) works; anything else goes on a "later" list |
-| **No one maintains the app after the course ends**            | It's a student project with no built-in long-term owner                                                     | Decide with the advisor upfront: either wrap up cleanly at demo day, or one teammate agrees to keep it running               |
- 
-### 8.2 Risk Summary
 
-None of these risks are about the technology being too hard — they're about **time, discipline, and follow-through**, which is normal for a startup project. The single best thing the team can do to manage risk is keep the scope small, ship the core flow first, and get real landlords using it as early as possible instead of waiting for a "finished" version.
+Detailed risk descriptions, scores, mitigations, contingencies, and rankings are maintained in the [Risk Management Plan](risk_management.md), which is the source of truth for project risk control.
 
-### 9. Elevator pitch
+This proposal specifically refers to **RP-01, RP-02, RP-03, RP-04, RP-05, RP-06, RP-07, RP-08, RP-09, and RP-10**. These cover schedule pressure, AI-generated code review, changing landlord needs, scope creep, AI coding-agent availability, landlord adoption, demonstration deployment, fake payment proofs, private-data exposure, and market competition.
 
-**For** self-managing landlords who own between **1 and 30 rental units**, **RosiHome** is a lightweight property management platform that automates rent calculation, utility billing, payment tracking, lease reminders, and maintenance requests in one place.
+## 9. Elevator Pitch
 
-**Unlike** spreadsheets, messaging apps, or enterprise property management software that are either too manual or too complex, **RosiHome** provides an affordable, easy-to-use solution specifically designed for the everyday workflow of small landlords, helping them save time, reduce disputes, and manage their rental business with confidence.
+**Managing a small boarding house should not require landlords to spend hours calculating bills, checking payments, remembering lease expiry dates, and searching through Zalo messages for repair requests.**
+
+**RosiHome helps landlords manage all of these in one place.** It automatically calculates monthly rent and utility bills, generates a QR code for the exact amount due, reminds you when leases are about to expire, and keeps tenant repair requests visible until they are resolved.
+
+**Instead of relying on notebooks, spreadsheets, and scattered Zalo messages, you can see what each tenant owes, which leases need attention, and which repairs are still pending from one dashboard.**
+
+**RosiHome helps small landlords save time, reduce costly mistakes, and avoid losing money from missed payments, vacant rooms, and forgotten repairs.**
