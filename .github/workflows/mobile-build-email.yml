@@ -1,0 +1,82 @@
+name: Mobile Build & Email Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-build-email.yml'
+  workflow_dispatch:
+
+jobs:
+  mobile_build:
+    name: Build Android APK & Send Email
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Expo & EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install mobile dependencies
+        run: npm ci
+
+      - name: Trigger EAS Build & export JSON
+        run: |
+          npx eas build --platform android --profile preview --non-interactive --json --output=build-result.json
+
+      - name: Parse Build URLs
+        id: parse_build
+        run: |
+          PAGE_URL=$(jq -r '.[0].buildDetailsPageUrl // "N/A"' build-result.json)
+          APK_URL=$(jq -r '.[0].artifacts.buildUrl // "N/A"' build-result.json)
+          echo "PAGE_URL=$PAGE_URL" >> $GITHUB_OUTPUT
+          echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
+
+      - name: Send Email Notification via Gmail SMTP
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASS }}
+          subject: "🚀 [Deployment] RoSi Home Mobile Android APK Built Successfully"
+          to: ${{ secrets.TEAM_EMAIL_LIST || secrets.SMTP_USER }}
+          from: RoSi Home CI/CD <${{ secrets.SMTP_USER }}>
+          html_body: |
+            <h2>RoSi Home Mobile App Deployment Build Complete! 🎉</h2>
+            <p>A new Android APK has been built automatically from the <code>main</code> branch.</p>
+            <table style="border-collapse: collapse; width: 100%; max-width: 600px; margin-top: 15px;">
+              <tr style="background-color: #f1f5f9;">
+                <th style="padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Resource</th>
+                <th style="padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Link</th>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>Expo Build Details Page</strong></td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;"><a href="${{ steps.parse_build.outputs.PAGE_URL }}">View Build Status & Details</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;"><strong>Direct APK Download</strong></td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1;"><a href="${{ steps.parse_build.outputs.APK_URL }}">Download .apk File</a></td>
+              </tr>
+            </table>
+            <p style="margin-top: 20px; color: #64748b; font-size: 12px;">
+              <i>Note: Direct APK download links remain active on Expo for 30 days.</i>
+            </p>
