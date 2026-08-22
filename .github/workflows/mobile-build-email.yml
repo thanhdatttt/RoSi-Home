@@ -39,7 +39,7 @@ jobs:
 
       - name: Trigger EAS Build & export JSON
         run: |
-          npx eas build --platform android --profile preview --non-interactive --json --output=build-result.json
+          eas build --platform android --profile preview --non-interactive --json --output=build-result.json
 
       - name: Parse Build URLs
         id: parse_build
