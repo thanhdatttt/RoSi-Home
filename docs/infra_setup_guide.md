@@ -139,20 +139,6 @@ It runs for pull requests and pushes to `main`, and checks backend changes by:
 
 CI uses a separate test database. Never point CI at the Supabase production database.
 
-### CI/CD flow
-
-```mermaid
-flowchart TB
-    DEV[Developer] --> PR[Create or update Pull Request]
-    PR --> REVIEW[Review and approve PR]
-    REVIEW --> MAIN[Merge or push code to main]
-    MAIN --> CI[GitHub Actions CI]
-    CI --> CHECKS[Install dependencies<br/>Migrate test DB<br/>Typecheck, test, build]
-    CHECKS -->|Failed| FIX[Fix code and update PR]
-    FIX --> PR
-    CHECKS --> RENDER[Render auto-deploy]
-```
-
 ## 7. CD setup on Render
 
 ### 7.1. Create and configure the Web Service
