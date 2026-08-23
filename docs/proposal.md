@@ -20,7 +20,7 @@ Mr. Tuấn (48, Ho Chi Minh City) owns a 12-room boarding house. Every month, he
 
 One week after the payment deadline, 4 of his 12 tenants still have not transferred their rent. Mr. Tuấn sends a separate Zalo reminder to each tenant. Every time someone pays, he checks the payment proof in Zalo, checks the transfer in his banking application, confirms that the full amount was received, and marks the invoice as paid in Excel.
 
-Lease renewals are tracked manually from paper contracts. He forgot Room 7's lease expired in June and only learned the tenant had moved out on July 5. The room stayed vacant for a month, costing him 3,500,000 VND in rent.
+He forgot Room 7's lease expired in June and only learned the tenant had moved out on July 5. The room stayed vacant for a month, costing him 3,500,000 VND in rent.
 
 A tenant in Room 5 reported a leaking pipe, but the request was mixed with other conversations and was not followed up. The leak continued for a week, damaging part of the cabinet and costing Mr. Tuấn an additional 800,000 VND for repairs.
 
@@ -37,11 +37,11 @@ Mr. Tuấn lost 4,700,000 VND in total due to manual billing errors, the missed 
 ### 4.1 Comparable Business Cases
 Each case uses the same 12-room property and follows monthly billing, late-payment reminders and verification, lease handling, maintenance follow-up, tenant access, and data continuity.
 #### 4.1.1 Excel / Google Sheets + Zalo + Calculator
-Mr. Tuấn reads each meter, calculates rent, utilities, Wi-Fi, and other charges, records the totals in a spreadsheet, and sends each bill through Zalo. Because every step depends on correct entry and checking, the two Wi-Fi fees can still be omitted.
+Mr. Tuấn reads each meter, calculates rent, utilities and other charges, records the totals in a spreadsheet, and sends each bill through Zalo. Because every step depends on correct entry when calculating, the two Wi-Fi fees can still be omitted.
 
-After one week, 4 of the 12 tenants have not paid. Mr. Tuấn reminds each person through Zalo. For every later payment, he checks the Zalo proof, confirms the transfer and full amount in his banking application, and manually marks the invoice as paid in Excel.
+After one week, 4 of the 12 tenants have not paid. Mr. Tuấn reminds each person through Zalo. For every later payment, he checks the Zalo proof, confirms the transfer and full amount in his banking application, and marks the invoice as paid in Excel.
 
-Lease dates remain in paper contracts or spreadsheet cells, while maintenance reports remain among other Zalo messages. The workflow is familiar and flexible, but billing, lease, and repair records are disconnected and must be maintained manually.
+Lease dates remain in paper contracts or spreadsheet cells, while maintenance reports remain among other Zalo messages.
 
 Mr. Tuấn lost 4,700,000 VND in total due to manual billing errors, the missed lease renewal, and the untracked maintenance request. Mr. Tuấn also lost hours calculating bills, checking payments, updating the spreadsheet, and fixing avoidable mistakes.
 #### 4.1.2 EasyTro
@@ -55,17 +55,17 @@ Mr. Tuấn starts with EasyTro's Zalo Mini App, but there is no clear way to add
   <img src="easytro2R.jpg">
 </p>
 
-He then enters his rooms and monthly charges and uses EasyTro's billing, VietQR invoice, and debt features. This removes some calculator work, but the generated invoice displays the **wrong total**. Its QR also does not lock the invoice amount, so the tenant can enter a different transfer amount.
+He then enters his rooms and monthly charges and uses EasyTro's billing, QR invoice, and debt features. This removes some calculator work, but the generated invoice displays the **wrong total**. Its QR also does not lock the invoice amount, so the tenant can enter a different transfer amount.
 <p align="center">
   <img src="easytro1R.jpg">
 </p>
-EasyTro has no contract management, tenant-side application, or maintenance-request tracking. Lease expiry therefore remains in a separate record, while the leaking-pipe report stays outside the product.
+EasyTro has no contract management or maintenance-request tracking. Lease expiry therefore remains in a separate record, while the leaking-pipe report stays outside the product.
 
-EasyTro provides a payment-reminder button, but Mr. Tuấn must use it separately for each late tenant. He opens the reminder action, selects the corresponding person from his contacts, sends the message, and repeats the entire process for all 4 tenants. EasyTro also does not support the full payment-verification workflow, so after each tenant pays, Mr. Tuấn still checks the proof, banking transaction, and payment status manually.
+EasyTro provides a payment-reminder button, but Mr. Tuấn must use it separately for each late tenant. He opens the reminder action, selects the corresponding person from his contacts, sends the message, and repeats the entire process for all 4 tenants.  After each tenant pays, Mr. Tuấn still checks the proof, banking transaction, and payment status through 3 apps.
 
 <div style="display: flex; justify-content: center; gap: 10px;"> <img src="easytro4R20.jpg" width="30%"> <img src="easytro5R20.jpg" width="30%"> <img src="easytro6R20.jpg" width="30%"> </div>
 
-Mr. Tuấn lost 4,700,000 VND in total due to the incorrect invoice total, the missed lease renewal, and the untracked maintenance request. Mr. Tuấn also lost hours finding how to add a tenant, sending individual reminders, checking payments, and fixing avoidable mistakes.
+Mr. Tuấn lost 4,700,000 VND in total due to the incorrect invoice total, the missed lease renewal, and the untracked maintenance request. Mr. Tuấn also lost time finding how to add a tenant, sending individual reminders, checking payments, and fixing avoidable mistakes.
 #### 4.1.3 Quản lý trọ - CL Team
 <div style="display: flex; justify-content: center; gap: 10px;"> 
 	<img src="trocl1.jpg" width="50%"> 
@@ -131,9 +131,9 @@ If student credits are unavailable, equal self-funding is **850,000 VND per memb
 ## 8. Risk Assessment
 Detailed risk descriptions, scores, mitigations, contingencies, and rankings are maintained in the [Risk Management Plan](risk_management.md), which is the source of truth for project risk control.
 
-This proposal specifically refers to **RP-01, RP-02, RP-03, RP-04, RP-05, RP-06, RP-07, RP-08, RP-09, and RP-10**. These cover schedule pressure, AI-generated code review, changing landlord needs, scope creep, AI coding-agent availability, landlord adoption, demonstration deployment, fake payment proofs, private-data exposure, and market competition.
+This proposal specifically refers to **RP-01, RP-02, RP-03, RP-04, RP-05, RP-06, and RP-07**. These cover schedule pressure, AI-generated code review, scope creep, AI coding-agent availability, landlord adoption, private-data exposure, and market competition.
 ## 9. Elevator Pitch
-**Managing a small boarding house should not require landlords to spend hours calculating bills, reminding late-paying tenants, checking each transfer across Zalo and banking applications, remembering lease expiry dates, and searching for repair requests.**
+**Managing a small boarding house should not require landlords to spend hours calculating bills, reminding late-paying tenants, checking each transfer across Excel, Zalo and banking applications, remembering lease expiry dates, and searching for repair requests.**
 
 **RosiHome helps landlords manage all of these in one place.** It automatically calculates monthly rent and utility bills, generates a QR code for the exact amount due, reminds tenants when rent is overdue, alerts landlords before leases expire, and keeps repair requests visible until they are resolved.
 
