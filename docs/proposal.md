@@ -133,10 +133,5 @@ Detailed risk descriptions, scores, mitigations, contingencies, and rankings are
 
 This proposal specifically refers to **RP-01, RP-02, RP-03, RP-04, RP-05, RP-06, and RP-07**. These cover schedule pressure, AI-generated code review, scope creep, AI coding-agent availability, landlord adoption, private-data exposure, and market competition.
 ## 9. Elevator Pitch
-**Managing a small boarding house should not require landlords to spend hours calculating bills, reminding late-paying tenants, checking each transfer across Excel, Zalo and banking applications, remembering lease expiry dates, and searching for repair requests.**
 
-**RosiHome helps landlords manage all of these in one place.** It automatically calculates monthly rent and utility bills, generates a QR code for the exact amount due, reminds tenants when rent is overdue, alerts landlords before leases expire, and keeps repair requests visible until they are resolved.
-
-**Instead of relying on notebooks, spreadsheets, and scattered Zalo messages, landlords can see what each tenant owes, who has paid, which leases need attention, and which repairs are still pending from one dashboard.**
-
-**RosiHome helps small landlords save time, reduce costly billing mistakes, and avoid losing money from vacant rooms and forgotten repairs.**
+RosiHome helps small landlords manage rent, utilities, payments, lease renewals, and repairs in one place. It automates billing, payment reminders, lease alerts, and repair tracking - saving landlords time, reducing mistakes, and preventing lost income.
