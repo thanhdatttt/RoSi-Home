@@ -100,10 +100,10 @@ The reviewed alternatives address only separate parts of rental management, so t
 - **Lease-renewal reminders:** RosiHome tracks lease expiry dates and alerts landlords before renewal action is due.
 - **Maintenance-request tracking:** Tenants submit requests with photos, while landlords track each request's status until completion.
 ## 5. Feasibility Study
-- **Technical:** The five-member team has the skills and tools needed to build the core MVP, including billing, exact-amount QR generation, tenant/landlord views, rent-payment and lease reminders, maintenance tracking, and centralized records.
-- **Operational:** RosiHome follows existing landlord–tenant workflows while replacing manual calculations, individual late-payment follow-up, chat-based requests, and paper-based lease tracking with one system.
-- **Economic:** The estimated **4,250,000 VND** budget covers AI coding-agent subscriptions, team meeting meals and coffee, cloud infrastructure, domain, security, and contingency for the ten-week MVP. Student labor is provided as part of the course.
-- **Schedule:** The ten-week plan allocates four weeks to research and proposal development, two weeks to core management features, three weeks to invoice and payment features, and one week to review, demonstration, and project closure.
+
+The feasibility assessment was first developed in this Proposal and was later expanded into the standalone [`Feasibility Study Report`](feasibility_study.md), which is now the canonical source for the method, evidence, results, caveats, and reassessment history.
+
+The current report evaluates four dimensions: **Technical, Operational, Economic, and Schedule**. Its overall decision is to proceed conditionally with the course MVP: the selected solution is supportable for the five-student team and ten-week plan, provided the team controls scope, keeps onboarding simple, treats the **4,250,000 VND** budget as an estimate rather than actual cost, and does not claim production readiness or completed UAT without evidence. Privacy, lease, and direct-transfer payment boundaries remain cross-cutting constraints rather than an independent legal approval.
 ## 6. Project Timeline & Schedule
 The course lasts **10 weeks** and ends with an internal review, final demonstration, and project closure.
 
