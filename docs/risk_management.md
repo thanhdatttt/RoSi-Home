@@ -32,10 +32,10 @@
 ### RP-01 — Academic Workload and Schedule Delay
 
 **Description**
-The team consists of full-time students. Midterms, assignments, or delays in an early phase may reduce availability and leave insufficient time for later development, review, demonstration, and project closure.
+The team consists of full-time students. Midterms, assignments, delayed academic feedback, changes to course requirements or deadlines, or delays in an early phase may reduce availability and leave insufficient time for later development, review, demonstration, and project closure.
 
 **Mitigation & Contingency**
-- **Mitigation:** Set weekly milestones for the fixed ten-week plan, review availability at every team meeting, and reassign work before a delayed task blocks the next phase.
+- **Mitigation:** Set weekly milestones for the fixed ten-week plan, schedule academic reviews early, monitor official course notices, review team availability at every meeting, and reassign work before a delayed task blocks the next phase.
 - **Contingency:** If progress falls behind, reduce non-essential work, rebalance tasks, and protect the core features and Week 10 review, demonstration, and closure activities.
 
 **Risk Exposure**
@@ -105,7 +105,7 @@ Suddenly losing AI assistance mid-sprint cuts coding speed in half.
 ### RP-05 — Low Landlord Adoption
 
 **Description**
-Landlords may continue using Zalo, spreadsheets, or existing applications because they do not see enough value in changing to RosiHome. The project has no external pilot, so real-world adoption will remain unverified at final submission.
+Landlords may continue using Zalo, spreadsheets, or existing applications because they do not see enough value in changing to RosiHome. Limited landlord or tenant participation may also leave workflow and usability feedback incomplete. The project has no external pilot, so real-world adoption will remain unverified at final submission.
 
 **Mitigation & Contingency**
 - **Mitigation:** Use the Weeks 1–4 research findings and competitor business cases to keep landlord workflows simple and focused. Review the completed flows internally with synthetic landlord accounts.
@@ -215,11 +215,11 @@ Messing up the database structure requires throwing away and rewriting a lot of 
 ### RP-11 — Third-Party Services Fail or Block Us
 
 **Description**
-Later in the project, we need external tools for emails, push notifications, and generating PDFs. If we can't figure out how to set them up, we can't finish those features.
+The project depends on external services for source hosting and CI, deployment, database and storage, emails, push notifications, and PDF generation. Access failures, outages, quota limits, configuration errors, or accidental repository damage may interrupt development or block affected features.
 
 **Mitigation & Contingency**
-- **Mitigation:** The team will research, prepare, and test multiple free or free-tier external services for email, push notifications, and PDF generation, so we can replace the current service if necessary.
-- **Contingency:** If an external service becomes unavailable, we will switch to one of the prepared alternatives, reconfigure the integration, and continue with the affected feature.
+- **Mitigation:** Verify permissions, use pull requests and protected branches, monitor service dashboards and quotas, document configurations, keep local clones, and prepare alternatives for replaceable integrations.
+- **Contingency:** Restore repository work from a verified clone or switch a replaceable integration to a prepared alternative, reconfigure it, and continue with the affected feature.
 
 **Risk Exposure**
 Getting stuck trying to configure a broken email server wastes days of coding time.
@@ -408,3 +408,15 @@ The following risks have the highest **Risk Score** and demand immediate action/
 3. **RP-09 — Frontend Waiting on Backend (Score 12):** Deliver APIs in batches so frontend integration can continue.
 4. **RP-02 — Over-Reliance on AI Code (Score 12):** Require human review and testing before AI-generated code is merged.
 5. **RP-06 — Private Data Got Leaked (Score 12):** Enforce authentication, permissions, HTTPS, and safe test data before the final demonstration.
+
+### 3.5 Stakeholder and Member Monitoring
+
+Risk scores and responses remain defined by the RP items above. This mapping carries stakeholder and member monitoring into the Risk Management Plan without creating a second register.
+
+| Monitoring Area | Related Risks | Primary Monitoring Owner |
+|---|---|---|
+| Academic approvals, requirements, deadlines, and overall workload | RP-01, RP-03 | Project Manager |
+| Team capacity, delivery dependencies, and knowledge continuity | RP-01, RP-08, RP-09, RP-10, RP-12 | Project Manager and assigned technical owners |
+| Landlord and tenant requirements, participation, adoption, privacy, and access | RP-03, RP-05, RP-06, RP-16 | Project Manager and assigned frontend owners |
+| Cloud, source hosting, CI, storage, and ongoing service availability | RP-02, RP-11, RP-15, RP-17 | Chí and Đạt |
+| Feature-specific integration and performance | RP-10, RP-13, RP-14 | Assigned backend and frontend owners |
