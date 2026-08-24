@@ -3,12 +3,12 @@
 | Component | Configuration |
 |---|---|
 | Hosting | Render Web Service |
-| Database | PostgreSQL through Supabase |
+| Database | PostgreSQL (Supabase) |
 | Storage | Supabase Storage |
-| Source repository | GitHub repository for RosiHome |
-| Provisioning method | Render Dashboard and the repository `render.yaml` Blueprint |
-| Production URL | <https://rosi-home.onrender.com> |
-| Health endpoint | <https://rosi-home.onrender.com/health> |
+| Repo | GitHub – RosiHome |
+| Provisioning | Render Dashboard |
+| Production URL | https://rosi-home.onrender.com |
+| Health check | https://rosi-home.onrender.com/health |
 
 The setup order is: **Supabase Database -> Supabase Storage -> EmailJS -> Expo -> CI -> CD**.
 ## 2. Supabase Database setup
@@ -75,113 +75,86 @@ SUPABASE_SERVICE_KEY=<server-side service role key>
    From:    {{from}}
    Body:    {{body}}
    ```
+   - Render does **not** run migrations automatically during build → this step must be run manually before testing data-dependent APIs.
+   - ⚠️ Do not use `TEST_DATABASE_URL`, `db:push`, or `db:seed` for production without explicit approval.
+4. Verify: check the tables in the **Table Editor**/**SQL Editor** and confirm the migration was applied correctly before connecting Render.
 
-   The current backend sends `to`, `subject`, and `body`. Therefore, use the verified sender configured in the EmailJS service for **From**, unless the backend is updated to send a `from` parameter.
+## 3. Supabase Storage
 
-5. Copy the EmailJS values and map them to Render Environment variables:
+1. Create two **private** buckets: `maintenance-photos` and `payment-proofs`.
+   - The backend returns **signed URLs** for authorized access.
+2. Get `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` (service role key) from project Settings.
+   - ⚠️ `SUPABASE_SERVICE_KEY` is a server-side secret: keep it only in Render Environment — never put it in the mobile app, commit it to Git, or expose it in screenshots.
+3. Verify: bucket names match the code exactly, test an image upload + signed-URL read, check Storage logs if uploads fail.
 
-   ```text
-   email_service_id  -> EMAILJS_SERVICE_ID
-   email_template_id -> EMAILJS_TEMPLATE_ID
-   email_public_key  -> EMAILJS_PUBLIC_KEY
-   private key       -> EMAILJS_PRIVATE_KEY
+## 4. EmailJS
+
+1. Sign in to EmailJS → create/connect an email service → create a template with fields: `to`, `subject`, `from`, `body`.
+   - The backend currently sends only `to`, `subject`, `body` → **From** uses the verified sender configured in the EmailJS service (unless the backend is updated to send a `from` parameter).
+2. Map EmailJS values → Render environment variables:
    ```
-
-6. Send a test email and verify the recipient, subject, sender, and body.
-7. Keep `EMAILJS_PRIVATE_KEY` secret.
-## 5. Expo Push Notifications setup
-The backend sends push notifications through Expo Push Service.
-
-1. Confirm the mobile app uses the correct Expo project.
-2. If the Expo project enables **Enhanced Security for Push Notifications**, create/copy its access token.
-3. Add the token to the backend environment:
-
-   ```text
-   EXPO_ACCESS_TOKEN=<optional Expo access token>
+   email_service_id  → EMAILJS_SERVICE_ID
+   email_template_id → EMAILJS_TEMPLATE_ID
+   email_public_key  → EMAILJS_PUBLIC_KEY
+   private key       → EMAILJS_PRIVATE_KEY
    ```
+3. Send a test email and check recipient/subject/sender/body. Keep `EMAILJS_PRIVATE_KEY` secret.
 
-The token is optional when enhanced security is not enabled.
-## 6. CI setup
-The GitHub Actions workflow is `.github/workflows/ci.yml`.
+## 5. CI (GitHub Actions)
 
-It runs for pull requests and pushes to `main`, and checks backend changes by:
+File: `.github/workflows/ci.yml` — runs on PRs and pushes to `main`.
 
-1. Installing dependencies.
-2. Starting a temporary PostgreSQL service.
-3. Running database migrations against the test database.
-4. Running typecheck, unit tests, integration tests, API tests, and the production build.
+Steps: install dependencies → spin up a temporary PostgreSQL service → run migrations against the **test database** → run typecheck, unit tests, integration tests, API tests, and the production build.
 
-CI uses a separate test database. Never point CI at the Supabase production database.
-## 7. CD setup on Render
-### 7.1. Create and configure the Web Service
-1. Open Render and create a project or Web Service.
-2. Connect the service to the RosiHome GitHub repository.
-3. Select branch `main`.
-4. Configure:
+⚠️ CI uses a separate test database — **never** point CI at the Supabase production database.
+
+## 6. CD (Render)
+
+### 6.1. Web Service Configuration
+
+1. Create a Web Service on Render, connect the RosiHome repo, branch `main`.
+2. Configure:
 
    | Setting | Value |
    |---|---|
    | Root Directory | `backend` |
    | Build Command | `npm install && npm run build` |
    | Start Command | `npm start` |
-   | Auto-Deploy | `After CI check pass` |
-   | Service Notifications | `All notifications` |
+   | Auto-Deploy | After CI check pass |
+   | Notifications | All notifications |
 
-5. In the **Environment** tab, select **Import from .env** and paste the protected production variables from Sections 2-5.
-6. Save the configuration and deploy.
+3. In the **Environment** tab → **Import from .env** → paste the production variables (sections 2–5).
+4. Save & deploy.
 
-Because the Root Directory is `backend`, Render executes the commands from the directory containing `package.json`.
+### 6.2. Deployment Notifications
 
-The repository also contains `render.yaml` as a Blueprint reference. If the Blueprint is used to recreate the service, keep its auto-deploy trigger aligned with the Dashboard setting: `checksPass` means **After CI Checks Pass**.
-### 7.2. Deployment script reference
-Render is a PaaS, so a separate shell script is not required. The deployment script is represented by the configured commands:
+Enable **Email notifications** at the **All notifications** level in service/workspace settings, and confirm the notification email is verified. Covers: failed builds/deploys and successful deploys.
 
-```bash
-cd backend
-npm install
-npm run build
-npm start
-```
-
-The `cd backend` line is only needed when reproducing the process locally. Render already starts from `backend`. `npm run build` creates the TypeScript output in `dist`, and `npm start` runs `node dist/server.js`.
-### 7.3. Render deployment notifications
-In Render Dashboard, open the service/workspace notification settings, choose **Email**, and set the notification level to **All notifications**. Confirm that the notification email address is verified. This should cover failed builds/deploys and successful deploys.
-## 8. Environment and security rules
-Configure these application variables in Render:
+## 7. Environment Variables & Security
 
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | Supabase PostgreSQL connection string |
-| `JWT_SECRET` | Secret used to sign JWTs |
-| `NODE_ENV` | Set to `production` |
-| `APP_PUBLIC_URL` | Public application URL |
-| `JWT_EXPIRY_SECONDS` | Access-token lifetime; default `900` |
-| `JWT_REFRESH_EXPIRY_SECONDS` | Refresh-token lifetime; default `604800` |
+| `JWT_SECRET` | Used to sign JWTs |
+| `NODE_ENV` | `production` |
+| `APP_PUBLIC_URL` | Public app URL |
+| `JWT_EXPIRY_SECONDS` | Access-token lifetime (default `900`) |
+| `JWT_REFRESH_EXPIRY_SECONDS` | Refresh-token lifetime (default `604800`) |
 | `SUPABASE_URL` | Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | Server-side Supabase service key |
-| `EMAILJS_SERVICE_ID` | EmailJS service ID |
-| `EMAILJS_TEMPLATE_ID` | EmailJS template ID |
-| `EMAILJS_PUBLIC_KEY` | EmailJS public key |
-| `EMAILJS_PRIVATE_KEY` | EmailJS private key/access token |
-| `EXPO_ACCESS_TOKEN` | Optional Expo access token |
+| `EMAILJS_SERVICE_ID` / `TEMPLATE_ID` / `PUBLIC_KEY` / `PRIVATE_KEY` | EmailJS configuration |
 
-Do not commit the real `.env` file or expose secret values in screenshots and printed documents. Show variable names only.
-## 9. Post-deployment verification and rollback
-After CI passes and Render deploys:
+⚠️ Do not commit the real `.env` file, and do not expose secret values in screenshots or printed docs — show variable names only.
 
-1. Open <https://rosi-home.onrender.com/health>.
-2. Confirm HTTP `200` and:
+## 8. Post-Deployment Verification & Rollback
 
+1. Open `/health` → should return `200` and:
    ```json
-   {
-     "status": "ok",
-     "service": "rosihome-backend"
-   }
+   { "status": "ok", "service": "rosihome-backend" }
    ```
+2. Open Swagger: `/api/v1/api-docs`.
+3. Check Render Runtime Logs (build, env, database, Supabase, EmailJS).
+4. Confirm the production migration ran correctly + send a test email.
 
-3. Open Swagger at <https://rosi-home.onrender.com/api/v1/api-docs>.
-4. Check Render Runtime Logs for build, environment, database, Supabase, and EmailJS errors.
-5. Verify the production migration and send a test email.
-
-
-If a deployment fails, inspect **Deploys/Logs** and redeploy the last stable commit. Rolling back application code does not automatically roll back database migrations.
+**If deployment fails:** check **Deploys/Logs** → redeploy the last stable commit.
+⚠️ Rolling back application code does **not** automatically roll back database migrations.

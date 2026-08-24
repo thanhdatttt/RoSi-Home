@@ -1,14 +1,13 @@
 # Test Execution Report
-**Project:** RosiHome – Property & Rental Management Mobile MVP <br>
-**Team:** 5 students — 3 Backend Developers, 2 Mobile Frontend Developers <br>
-**Methodology:** Kanban <br>
-**Date:** 16 August 2026 (End of Week 10) <br>
+**Project:** RosiHome – Property & Rental Management Mobile MVP
+**Team:** 5 students — 3 Backend Developers, 2 Mobile Frontend Developers
+**Methodology:** Kanban 
+**Date:** 16 August 2026 (End of Week 10)
 **Prepared By:** Development Team
 ## 1. Purpose
 This report summarizes the testing performed for the RosiHome MVP during the 10-week development period.
 
 Testing covered:
-
 * Automated testing of important backend business logic.
 * Manual exploratory testing of the mobile application.
 * Defect tracking and verification of fixes.
@@ -23,7 +22,6 @@ Important backend business logic was tested using automated unit tests.
 * **Result:** All 33 test files reported passing results.
 
 The tested areas included:
-
 * Meter reading calculations
 * Utility rate calculations
 * Invoice generation
@@ -34,11 +32,9 @@ The automated tests provide regression protection for these areas. They do not v
 **Evidence:** `Unit Tests.png` and the corresponding CI execution results.
 ## 3. Manual Mobile Testing
 An exploratory testing session was conducted on 12 August 2026 using physical mobile devices.
-
 The session focused on realistic user workflows and user-facing behavior.
 
 Areas reviewed included:
-
 * Property management
 * Lease-related workflows
 * Invoice viewing
@@ -48,9 +44,7 @@ Areas reviewed included:
 * Input and displayed information
 ### Issues Identified
 A total of **11 issues or improvement items** were recorded.
-
 **Functional or significant UI defects — 3**
-
 1. Bottom navigation layout problem
 2. Missing back navigation on the Profile screen
 3. Incorrect water charge calculation based on head count
@@ -58,9 +52,7 @@ A total of **11 issues or improvement items** were recorded.
 These were recorded as dedicated Kanban bug cards and resolved during Week 10.
 
 **Minor UI/UX improvements — 8**
-
 Examples included:
-
 * Currency formatting
 * City selection
 * Search bar behavior
@@ -73,7 +65,6 @@ These were handled as smaller changes associated with their existing feature wor
 The identified issues were handled through the project's Kanban workflow.
 
 For the three significant defects:
-
 * The problems were recorded as bug cards.
 * Fixes were implemented.
 * Code changes were peer-reviewed.
@@ -85,7 +76,6 @@ The eight minor UI/UX items were also addressed during the final development per
 Based on the recorded results, all issues identified during the documented exploratory session were addressed before the end of Week 10.
 ## 5. Test Limitations
 The following areas were not specifically tested as part of this MVP:
-
 * Load and performance testing
 * Penetration or dedicated security testing
 * Extensive device and OS compatibility testing

@@ -3,8 +3,6 @@
 **Date of Testing:** 12 August 2026
 **Tested By:** External User / Beta Tester  
 **Testing Scope:** Mobile Application MVP (Frontend UI & Core Flows)  
-
----
 ## 1. Overview
 On August 12, 2026, an external user conducted a hands-on testing session with the RosiHome mobile application MVP. The purpose of this session was to gather authentic customer feedback on usability, detect undiscovered bugs, and identify areas for improvement before the final release. 
 

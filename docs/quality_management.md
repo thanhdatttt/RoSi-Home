@@ -1,14 +1,13 @@
 # Quality Management Plan (QMP)
 **Project:** RosiHome – Property & Rental Management Mobile MVP <br>
-**Team:** 5 students — 3 Backend Developers, 2 Mobile Frontend Developers <br>
-**Methodology:** Kanban <br>
-**Project Duration:** 10 weeks <br>
+**Team:** 5 students — 3 Backend Developers, 2 Mobile Frontend Developers 
+**Methodology:** Kanban
+**Project Duration:** 10 weeks
 **Date:** August 2026
 ## 1. Purpose
 This Quality Management Plan defines how the RosiHome team will maintain and evaluate quality during the 10-week MVP development period.
 
 The plan focuses on:
-
 * Delivering the agreed MVP features correctly.
 * Preventing avoidable defects during development.
 * Keeping code consistent and understandable.
@@ -22,7 +21,6 @@ The team will focus on four practical quality characteristics.
 Core property management workflows must behave according to their defined requirements.
 
 The MVP focuses on:
-
 * Property and room management
 * Lease management
 * Meter readings
@@ -34,7 +32,6 @@ The MVP focuses on:
 The application should handle normal user operations without crashes, incorrect business calculations, or corrupted data.
 
 Particular attention is given to:
-
 * Rent and invoice calculations
 * Meter-related calculations
 * Lease status changes
@@ -46,7 +43,6 @@ Particular attention is given to:
 The mobile interface should be understandable to typical landlords and tenants without requiring technical knowledge.
 
 The team will check:
-
 * Navigation clarity
 * Form usability
 * Clear validation and error messages
@@ -58,7 +54,6 @@ The team will check:
 The codebase should remain understandable and manageable for the team throughout development.
 
 The team will use:
-
 * Consistent TypeScript practices
 * ESLint and Prettier
 * Modular code structure
@@ -70,7 +65,6 @@ The team will use:
 Quality assurance focuses on preventing problems while work is being developed.
 ### 3.1 Coding Standards
 Backend and mobile frontend code will use:
-
 * TypeScript with strict type checking
 * ESLint for code-quality checks
 * Prettier for consistent formatting
@@ -78,9 +72,7 @@ Backend and mobile frontend code will use:
 These checks are automated where practical so that developers do not need to perform them manually.
 ### 3.2 Unit Testing
 Unit tests will be used selectively for logic where defects could have a significant impact.
-
 Priority areas include:
-
 * Utility calculations
 * Rent and meter calculations
 * Invoice generation
@@ -90,9 +82,7 @@ Priority areas include:
 The team will not set an artificial target for the number of tests. Tests are added where they provide useful protection for important logic.
 ### 3.3 Code Review
 Direct commits to the `main` branch are not allowed.
-
 For a feature or significant change:
-
 1. The developer creates a Pull Request.
 2. At least one teammate reviews the change.
 3. Review comments are addressed when necessary.
@@ -105,7 +95,6 @@ All development work is managed through the team's Kanban board on Trello.
 The board contains the following functional lists:
 
 **Backlog → In Progress → Done | Bugs | Done in Week 6–10**
-
 - **Main Flow:** Work moves from `Backlog` to `In Progress`, and finally to `Done` upon satisfying the Definition of Done.
 - **Defect Column:** A dedicated `Bugs` list is used to isolate post-merge functional defects.
 - **Weekly Archives:** At the end of each week, completed cards in `Done` are archived into `Done in Week X` lists (e.g., `Done in Week 6`, `Done in Week 7`). This enables the team to track weekly throughput and construct the project's Burndown Chart.
@@ -127,7 +116,6 @@ The Definition of Done is a **process control**, not a test-count target.
 Quality control focuses on finding problems in completed or nearly completed work.
 ### 5.1 Automated Checks
 Pull Requests should run the available automated checks, including:
-
 * Type checking
 * ESLint
 * Relevant automated tests
@@ -135,11 +123,8 @@ Pull Requests should run the available automated checks, including:
 A Pull Request with failed required checks should not be merged until the issue is resolved or the failure is understood and intentionally handled.
 ### 5.2 Manual Verification
 Developers manually verify important workflows on the actual mobile application and backend environment.
-
 Verification should focus on realistic user actions rather than attempting to test every possible input.
-
 Examples include:
-
 * Creating and editing a property
 * Managing rooms
 * Creating or updating a lease

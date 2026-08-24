@@ -2,13 +2,13 @@
 This picks a simple, realistic tech stack for a undergraduate team building an 8–10 week MVP with AI coding assistance.
 ## 1. Architecture Style
 RosiHome uses a simple **3-layer client-server architecture**, built as a single (monolithic) backend rather than microservices. For a student team on an 8–10 week timeline, this is a deliberate choice, not a shortcut:
- 
+
 | Layer | What's In It | Role |
 |---|---|---|
 | **Presentation Layer** | Web app (React) + Mobile app (React Native) | What landlords and tenants actually see and use |
 | **Application/API Layer** | One backend service (Node.js/Express), exposing a REST API | Handles business logic: billing calculations, QR generation, auth, AI calls |
 | **Data Layer** | PostgreSQL (structured data) + Cloud Storage (photos/images) | Stores everything persistently |
- 
+
 ```mermaid
 flowchart LR
     subgraph Presentation
