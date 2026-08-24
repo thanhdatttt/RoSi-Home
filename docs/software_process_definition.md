@@ -16,9 +16,9 @@
 ## 4. Phase Definition
 | Phase | Purpose | Deliverables |
 |---|---|---|
-| **Phase 1: Core Foundation**<br/>*(Weeks 5–6)* | Setup architecture, CI/CD, and develop the first 2 core batches: Platform -> Operations. | Functioning CI/CD, Core features on Staging, Mobile interface (via Expo) testable on laptop. |
-| **Phase 2: Advanced Features**<br/>*(Weeks 7–8)* | Code and integrate the final 2 batches: Billing -> Reporting. | All functional features completed on Staging. |
-| **Phase 3: Pilot & Closure**<br/>*(Weeks 9–10)* | Cross-functional E2E testing, run a real-world Pilot with 2 landlords, finalize documentation. | Stable Production release, handover documentation. |
+| **Phase 1: Core Foundation**<br/>*(Weeks 5–6)* | Setup architecture, CI/CD, and develop the first 2 core batches: Platform -> Operations. | Functioning CI/CD, Core features verified on Mobile interface (via Expo). |
+| **Phase 2: Advanced Features**<br/>*(Weeks 7–9)* | Code and integrate the final 2 batches: Billing -> Reporting. | All functional features completed and integrated. |
+| **Phase 3: Pilot & Closure**<br/>*(Week 10)* | Cross-functional E2E testing, run a real-world Pilot with 2 landlords, finalize project materials. | Stable Production release, verified Pilot trial results. |
 ### 4.1. Execution Strategy: Sashimi Principle
 To prevent bottlenecks between the Backend and Frontend teams, the project employs the **Sashimi model** (overlapping phases):
 - The Backend team always develops one batch ahead of the Frontend team.
@@ -36,8 +36,7 @@ Every User Story must satisfy all of the following criteria before its status mo
 - [ ] Code passes all automated CI checks (TypeCheck, Lint, Unit/Integration tests) on GitHub Actions before merging.
 - [ ] Pull Request (PR) is reviewed and approved by at least 1 other team member (Peer Review).
 - [ ] Database migrations and environment configuration changes are reproducible and committed to the repository.
-- [ ] The completed feature is deployed to and verified on the Mobile app interacting with the real Staging API.
-- [ ] No unresolved Critical or High severity defects remain within the story scope.
+- [ ] The completed feature is verified on the Mobile app interacting with the real Backend API.
 - [ ] Error messages and API responses do not expose passwords, tokens, private files, or unauthorized tenant/landlord data.
 
 **Quality Policies:**
