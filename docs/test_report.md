@@ -1,49 +1,119 @@
 # Test Execution Report
 
-**Project:** RosiHome Property Management MVP  
-**Date:** 16 August 2026 (End of Week 10)  
-**Prepared By:** Development & QA Team
+**Project:** RosiHome – Property & Rental Management Mobile MVP <br>
+**Team:** 5 students — 3 Backend Developers, 2 Mobile Frontend Developers <br>
+**Methodology:** Kanban <br>
+**Date:** 16 August 2026 (End of Week 10) <br>
+**Prepared By:** Development Team
 
----
+## 1. Purpose
 
-## 1. Executive Summary
-This document summarizes the testing activities and results for the RosiHome MVP. Testing encompassed automated Unit & API Contract tests for the Backend (via Vitest & GitHub Actions CI) and manual User Acceptance Testing (UAT) for the Mobile Frontend. 
-Overall, the software has achieved the required quality threshold for MVP release.
+This report summarizes the testing performed for the RosiHome MVP during the 10-week development period.
 
-## 2. Automated Testing Results (Backend)
+Testing covered:
 
-The backend was developed using strict testing principles. All test suites are executed automatically via the GitHub Actions CI pipeline upon every Pull Request.
+* Automated testing of important backend business logic.
+* Manual exploratory testing of the mobile application.
+* Defect tracking and verification of fixes.
 
-- **Framework:** Vitest
-- **Execution Environment:** Node.js (v22), PostgreSQL (via Docker)
-- **Total Test Suites (Files):** 33
-- **Total Test Cases:** 266
-- **Pass Rate:** 100% (266 / 266 passed)
+The results provide evidence of the testing performed within the MVP scope. They do not represent a complete assessment of performance, security, or production readiness.
 
-### Key Areas Tested
-- **Domain Logic:** Charges, Invoices, Leases, Maintenance, Meters.
-- **API Contracts:** Dashboard, Reports, Billing, Payments.
+## 2. Automated Backend Testing
 
-*Reference: See `Unit Tests.png` and `Coding Standard - 2.png` for terminal output and CI execution evidence.*
+Important backend business logic was tested using automated unit tests.
 
-## 3. Manual Testing & UAT Results (Frontend)
+### Test Results
 
-User Acceptance Testing was conducted on August 12, 2026, by external beta testers interacting with the React Native MVP.
+* **Framework:** Vitest
+* **CI:** GitHub Actions
+* **Test files executed:** 33
+* **Result:** All 33 test files reported passing results.
 
-- **Total Issues Logged:** 11
-- **Severity Breakdown:**
-  - Critical/Functional Bugs: 2
-  - UI/UX Issues: 5
-  - Localization: 1
-  - Enhancements/Business Logic: 3
-- **Resolution Status:** 3 critical defects (Bugs) were logged directly into the Bug Tracking Kanban Board. The remaining 8 issues (Enhancements/UI Tweaks) were categorized as unfinished features and addressed iteratively during Week 10 feature completion.
+The tested areas included:
 
-*Reference: See `customer_feedback.md` for detailed UAT logs and `Bug Tracking.png` for the resolution workflow.*
+* Meter reading calculations
+* Utility rate calculations
+* Invoice generation
+* Lease status transitions
 
-## 4. Defect Management
-- 3 critical bugs discovered during UAT were strictly tracked using the project's Kanban board under the `Bug` label.
-- Non-critical enhancements were merged into existing feature cards to maintain Kanban flow without inflating the task count.
-- All code fixes were subjected to peer Code Review (Pull Requests) and mandatory CI pipeline checks (Typecheck & Vitest) before being merged into the `main` branch. 
+The automated tests provide regression protection for these areas. They do not verify every possible backend behavior or guarantee that the application contains no defects.
 
-## 5. Conclusion
-The RosiHome MVP exhibits stable backend functionality validated by comprehensive automated test coverage, and a frontend interface refined through active user feedback. The system is certified ready for initial deployment.
+**Evidence:** `Unit Tests.png` and the corresponding CI execution results.
+
+## 3. Manual Mobile Testing
+
+An exploratory testing session was conducted on 12 August 2026 using physical mobile devices.
+
+The session focused on realistic user workflows and user-facing behavior.
+
+Areas reviewed included:
+
+* Property management
+* Lease-related workflows
+* Invoice viewing
+* Payment-related screens
+* Navigation
+* UI layout
+* Input and displayed information
+
+### Issues Identified
+
+A total of **11 issues or improvement items** were recorded.
+
+**Functional or significant UI defects — 3**
+
+1. Bottom navigation layout problem
+2. Missing back navigation on the Profile screen
+3. Incorrect water charge calculation based on head count
+
+These were recorded as dedicated Kanban bug cards and resolved during Week 10.
+
+**Minor UI/UX improvements — 8**
+
+Examples included:
+
+* Currency formatting
+* City selection
+* Search bar behavior
+* Login screen helper text
+
+These were handled as smaller changes associated with their existing feature work.
+
+**Evidence:** `customer_feedback.md` and `Bug Tracking.png`.
+
+## 4. Defect Resolution and Verification
+
+The identified issues were handled through the project's Kanban workflow.
+
+For the three significant defects:
+
+* The problems were recorded as bug cards.
+* Fixes were implemented.
+* Code changes were peer-reviewed.
+* Relevant automated checks were run where applicable.
+* The affected functionality was manually verified after the fix.
+
+The eight minor UI/UX items were also addressed during the final development period.
+
+Based on the recorded results, all issues identified during the documented exploratory session were addressed before the end of Week 10.
+
+## 5. Test Limitations
+
+The following areas were not specifically tested as part of this MVP:
+
+* Load and performance testing
+* Penetration or dedicated security testing
+* Extensive device and OS compatibility testing
+* Production-scale data testing
+
+Therefore, the results should be interpreted within the project's intended MVP scope.
+
+## 6. Conclusion
+
+The documented testing confirmed that the main backend business logic covered by the automated tests was passing and that the mobile application underwent manual verification of its key user workflows.
+
+The exploratory session identified three significant defects and eight minor UI/UX issues. The recorded issues were addressed before the end of the project.
+
+The RosiHome MVP is therefore considered **suitable for its planned project demonstration and MVP evaluation**, subject to the testing limitations described above.
+
+This report evaluates the testing that was actually performed. It does not claim that the application is defect-free or production-ready.
