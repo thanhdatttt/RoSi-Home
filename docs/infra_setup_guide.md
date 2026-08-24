@@ -112,21 +112,7 @@ SUPABASE_SERVICE_KEY=<server-side service role key>
 6. Send a test email and verify the recipient, subject, sender, and body.
 7. Keep `EMAILJS_PRIVATE_KEY` secret.
 
-## 5. Expo Push Notifications setup
-
-The backend sends push notifications through Expo Push Service.
-
-1. Confirm the mobile app uses the correct Expo project.
-2. If the Expo project enables **Enhanced Security for Push Notifications**, create/copy its access token.
-3. Add the token to the backend environment:
-
-   ```text
-   EXPO_ACCESS_TOKEN=<optional Expo access token>
-   ```
-
-The token is optional when enhanced security is not enabled.
-
-## 6. CI setup
+## 5. CI setup
 
 The GitHub Actions workflow is `.github/workflows/ci.yml`.
 
@@ -139,9 +125,9 @@ It runs for pull requests and pushes to `main`, and checks backend changes by:
 
 CI uses a separate test database. Never point CI at the Supabase production database.
 
-## 7. CD setup on Render
+## 6. CD setup on Render
 
-### 7.1. Create and configure the Web Service
+### 6.1. Create and configure the Web Service
 
 1. Open Render and create a project or Web Service.
 2. Connect the service to the RosiHome GitHub repository.
@@ -163,7 +149,7 @@ Because the Root Directory is `backend`, Render executes the commands from the d
 
 The repository also contains `render.yaml` as a Blueprint reference. If the Blueprint is used to recreate the service, keep its auto-deploy trigger aligned with the Dashboard setting: `checksPass` means **After CI Checks Pass**.
 
-### 7.2. Deployment script reference
+### 6.2. Deployment script reference
 
 Render is a PaaS, so a separate shell script is not required. The deployment script is represented by the configured commands:
 
@@ -176,11 +162,11 @@ npm start
 
 The `cd backend` line is only needed when reproducing the process locally. Render already starts from `backend`. `npm run build` creates the TypeScript output in `dist`, and `npm start` runs `node dist/server.js`.
 
-### 7.3. Render deployment notifications
+### 6.3. Render deployment notifications
 
 In Render Dashboard, open the service/workspace notification settings, choose **Email**, and set the notification level to **All notifications**. Confirm that the notification email address is verified. This should cover failed builds/deploys and successful deploys.
 
-## 8. Environment and security rules
+## 7. Environment and security rules
 
 Configure these application variables in Render:
 
@@ -198,11 +184,10 @@ Configure these application variables in Render:
 | `EMAILJS_TEMPLATE_ID` | EmailJS template ID |
 | `EMAILJS_PUBLIC_KEY` | EmailJS public key |
 | `EMAILJS_PRIVATE_KEY` | EmailJS private key/access token |
-| `EXPO_ACCESS_TOKEN` | Optional Expo access token |
 
 Do not commit the real `.env` file or expose secret values in screenshots and printed documents. Show variable names only.
 
-## 9. Post-deployment verification and rollback
+##89. Post-deployment verification and rollback
 
 After CI passes and Render deploys:
 
