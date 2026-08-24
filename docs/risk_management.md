@@ -29,25 +29,6 @@
 
 ---
 
-### 2.1 Proposal-Related Risk Priority
-
-The proposal refers to the following existing risks, which are listed first here for quick review. Their detailed entries retain their stable RP identifiers below.
-
-| Order | ID    | Risk Title                           |
-| ----: | ----- | ------------------------------------ |
-|     1 | RP-01 | Academic Workload and Schedule Delay |
-|     2 | RP-02 | Over-Reliance on AI Code             |
-|     3 | RP-03 | Landlords Change Their Minds         |
-|     4 | RP-04 | Scope Creep                          |
-|     5 | RP-05 | AI Token Limits Exhausted            |
-|     6 | RP-06 | Low Landlord Adoption                |
-|     7 | RP-07 | Deployment Failure on Demo Day       |
-|     8 | RP-08 | Tenants Upload Fake Payment Proofs   |
-|     9 | RP-09 | Private Data Got Leaked              |
-|    10 | RP-10 | Someone Else Builds It First         |
-
----
-
 ### RP-01 — Academic Workload and Schedule Delay
 
 **Description**
@@ -84,25 +65,8 @@ Trusting AI blindly can lead to massive security bugs that ruin the whole app ar
 
 ---
 
-### RP-03 — Landlords Change Their Minds
 
-**Description**
-Landlord needs identified during Weeks 1–4 may conflict or change after the team has selected the final idea, causing proposal or implementation rework.
-
-**Mitigation & Contingency**
-- **Mitigation:** Compare findings during problem research, confirm the main pain points, and freeze the MVP after idea evaluation and final selection in Week 4.
-- **Contingency:** Defer late or conflicting requests to future work unless the team can replace an existing feature without extending the schedule.
-
-**Risk Exposure**
-Repeated requirement changes may invalidate proposal decisions and consume the limited development period.
-- **Max Slip:** ~30–45% schedule slip
-- Probability: **75% (Very Likely, 4)**
-- Impact: **Severe (3)**
-- **Risk Score: 4 × 3 = 12 — Critical**
-
----
-
-### RP-04 — Scope Creep
+### RP-03 — Scope Creep
 
 **Description**
 As the app starts to look good, people will get excited and want to add fun new features that aren't in the original plan.
@@ -120,7 +84,7 @@ If we keep adding features, the app will never be finished in time for the deadl
 
 ---
 
-### RP-05 — AI Token Limits Exhausted
+### RP-04 — AI Token Limits Exhausted
 
 **Description**
 If the team uses AI heavily for coding, they might hit their monthly message limits on tools like Claude or ChatGPT, suddenly slowing down their coding speed.
@@ -138,7 +102,7 @@ Suddenly losing AI assistance mid-sprint cuts coding speed in half.
 
 ---
 
-### RP-06 — Low Landlord Adoption
+### RP-05 — Low Landlord Adoption
 
 **Description**
 Landlords may continue using Zalo, spreadsheets, or existing applications because they do not see enough value in changing to RosiHome. The project has no external pilot, so real-world adoption will remain unverified at final submission.
@@ -156,43 +120,9 @@ Low landlord adoption would weaken the business case even if the MVP is technica
 
 ---
 
-### RP-07 — Deployment Failure on Demo Day
 
-**Description**
-If our cloud server on Render crashes, or we break the app right before the presentation, we won't have anything to show the teachers.
 
-**Mitigation & Contingency**
-- **Mitigation:** Developers must make sure the app actually runs properly on their own laptops before merging code. We won't merge any risky new code right before Demo Day.
-- **Contingency:** If the cloud server is completely dead during the presentation, we will run the app locally on a developer's laptop to show it to the audience.
-
-**Risk Exposure**
-A server crash during the final presentation ruins the entire project grade.
-- **Max Slip:** > 60% schedule slip (Demo Fails)
-- Probability: **55% (Likely, 3)**
-- Impact: **Catastrophic (4)**
-- **Risk Score: 3 × 4 = 12 — Critical**
-
----
-
-### RP-08 — Tenants Upload Fake Payment Proofs
-
-**Description**
-Because the app doesn't connect directly to the bank, a tenant could upload a fake screenshot saying they paid. If the landlord trusts the app blindly, they might get scammed.
-
-**Mitigation & Contingency**
-- **Mitigation:** We will put a very clear warning message in the app: "Always check your actual bank app to confirm you received the money before approving this."
-- **Contingency:** If a landlord gets tricked by a fake screenshot, we will manually ban the tenant's account from the system.
-
-**Risk Exposure**
-If landlords assume the app verifies the money automatically, it will destroy their trust in the product.
-- **Max Slip:** ~30–50% budget/trust slip
-- Probability: **75% (Very Likely, 4)**
-- Impact: **Severe (3)**
-- **Risk Score: 4 × 3 = 12 — Critical**
-
----
-
-### RP-09 — Private Data Got Leaked
+### RP-06 — Private Data Got Leaked
 
 **Description**
 We are storing people's phone numbers, IDs, and financial records. If we make a mistake with our security rules, someone could steal this data.
@@ -210,7 +140,7 @@ Leaking personal data could destroy trust, require major rework, and prevent a s
 
 ---
 
-### RP-10 — Someone Else Builds It First
+### RP-07 — Someone Else Builds It First
 
 **Description**
 Another company could release a stronger property-management application in Vietnam, weakening RosiHome's differentiation and business-case credibility.
@@ -228,7 +158,7 @@ A stronger competitor could reduce the proposal's novelty and make RosiHome less
 
 ---
 
-### RP-11 — React Native Mobile Overrun
+### RP-08 — React Native Mobile Overrun
 
 **Description**
 The frontend developers (2 people) are learning React Native and Expo for the first time. Fighting with unknown tools usually causes weird build errors that take days to fix.
@@ -246,7 +176,7 @@ If we don't test the tools early, we might get stuck with unfixable bugs right b
 
 ---
 
-### RP-12 — Frontend Waiting on Backend
+### RP-09 — Frontend Waiting on Backend
 
 **Description**
 Because the frontend needs the backend APIs to work, the 2 frontend developers might be stuck waiting around with nothing to do if the 3 backend developers fall behind.
@@ -264,7 +194,7 @@ If frontend is completely blocked, all their work gets crammed into the final tw
 
 ---
 
-### RP-13 — Database Schema Conflicts
+### RP-10 — Database Schema Conflicts
 
 **Description**
 We have 3 backend engineers all touching the same PostgreSQL database. If two people change the way tables link together without telling each other, the code will break when we try to merge it.
@@ -282,7 +212,7 @@ Messing up the database structure requires throwing away and rewriting a lot of 
 
 ---
 
-### RP-14 — Third-Party Services Fail or Block Us
+### RP-11 — Third-Party Services Fail or Block Us
 
 **Description**
 Later in the project, we need external tools for emails, push notifications, and generating PDFs. If we can't figure out how to set them up, we can't finish those features.
@@ -300,7 +230,7 @@ Getting stuck trying to configure a broken email server wastes days of coding ti
 
 ---
 
-### RP-15 — Knowledge Silos
+### RP-12 — Knowledge Silos
 
 **Description**
 With 3 backend developers, it's easy for one person to become the only one who understands a specific part of the code. If they get sick or drop out, no one else knows how to finish their work.
@@ -318,7 +248,7 @@ Losing the only person who knows how the payment code works will bring the proje
 
 ---
 
-### RP-16 — VietQR Format Incorrect
+### RP-13 — VietQR Format Incorrect
 
 **Description**
 If we don't strictly follow the official NAPAS rules for generating VietQR codes, the QR codes won't scan properly in the tenant's banking apps.
@@ -336,7 +266,7 @@ Edge cases in banking formats easily break the QR codes if we don't test them.
 
 ---
 
-### RP-17 — Dashboard Loads Too Slowly
+### RP-14 — Dashboard Loads Too Slowly
 
 **Description**
 Even though the frontend dashboard is smart and only shows a few items at a time (like the top 3 buildings with a "see all" pagination button), the backend API can still be extremely slow if the database doesn't have proper indexes.
@@ -354,7 +284,7 @@ Bad database queries can easily crash the app or cause 10-second loading screens
 
 ---
 
-### RP-18 — Supabase Free-Tier Runs Out
+### RP-15 — Supabase Free-Tier Runs Out
 
 **Description**
 Because tenants upload photos of utility meters and payment receipts, we might use up our 1 GB of free file storage on Supabase very quickly.
@@ -372,7 +302,7 @@ Uncompressed phone photos will eat through 1 GB of storage in a matter of days.
 
 ---
 
-### RP-19 — Tenants Don't Get Their Passwords
+### RP-16 — Tenants Don't Get Their Passwords
 
 **Description**
 When a landlord adds a tenant, the app automatically emails the tenant a temporary password. If that email gets flagged as spam, the tenant might not see it and will assume they are locked out of the app.
@@ -390,7 +320,7 @@ If tenants can't find their passwords, landlords have to spend time playing tech
 
 ---
 
-### RP-20 — Who Pays for the Server Later?
+### RP-17 — Who Pays for the Server Later?
 
 **Description**
 After we get our grade, the servers will keep running and charging money. If we don't decide who is paying for it, it will drain someone's personal bank account.
@@ -416,24 +346,21 @@ Forgotten servers are a classic way for students to lose money unnecessarily.
 |---|---|---|---|
 | RP-01 | Academic Workload and Schedule Delay | 12 | 🔴 Critical |
 | RP-02 | Over-Reliance on AI Code | 12 | 🔴 Critical |
-| RP-03 | Landlords Change Their Minds | 12 | 🔴 Critical |
-| RP-04 | Scope Creep | 16 | 🔴 Critical |
-| RP-05 | AI Token Limits Exhausted | 6 | 🟠 Substantial |
-| RP-06 | Low Landlord Adoption | 9 | 🟠 Substantial |
-| RP-07 | Deployment Failure on Demo Day | 12 | 🔴 Critical |
-| RP-08 | Tenants Upload Fake Payment Proofs | 12 | 🔴 Critical |
-| RP-09 | Private Data Got Leaked | 12 | 🔴 Critical |
-| RP-10 | Someone Else Builds It First | 6 | 🟠 Substantial |
-| RP-11 | React Native Mobile Overrun | 9 | 🟠 Substantial |
-| RP-12 | Frontend Waiting on Backend | 12 | 🔴 Critical |
-| RP-13 | Database Schema Conflicts | 9 | 🟠 Substantial |
-| RP-14 | Third-Party Services Fail or Block Us | 9 | 🟠 Substantial |
-| RP-15 | Knowledge Silos | 9 | 🟠 Substantial |
-| RP-16 | VietQR Format Incorrect | 6 | 🟠 Substantial |
-| RP-17 | Dashboard Loads Too Slowly | 9 | 🟠 Substantial |
-| RP-18 | Supabase Free-Tier Runs Out | 4 | 🟡 Moderate |
-| RP-19 | Tenants Don't Get Their Passwords | 3 | 🟢 Tolerable |
-| RP-20 | Who Pays for the Server Later? | 4 | 🟡 Moderate |
+| RP-03 | Scope Creep | 16 | 🔴 Critical |
+| RP-04 | AI Token Limits Exhausted | 6 | 🟠 Substantial |
+| RP-05 | Low Landlord Adoption | 9 | 🟠 Substantial |
+| RP-06 | Private Data Got Leaked | 12 | 🔴 Critical |
+| RP-07 | Someone Else Builds It First | 6 | 🟠 Substantial |
+| RP-08 | React Native Mobile Overrun | 9 | 🟠 Substantial |
+| RP-09 | Frontend Waiting on Backend | 12 | 🔴 Critical |
+| RP-10 | Database Schema Conflicts | 9 | 🟠 Substantial |
+| RP-11 | Third-Party Services Fail or Block Us | 9 | 🟠 Substantial |
+| RP-12 | Knowledge Silos | 9 | 🟠 Substantial |
+| RP-13 | VietQR Format Incorrect | 6 | 🟠 Substantial |
+| RP-14 | Dashboard Loads Too Slowly | 9 | 🟠 Substantial |
+| RP-15 | Supabase Free-Tier Runs Out | 4 | 🟡 Moderate |
+| RP-16 | Tenants Don't Get Their Passwords | 3 | 🟢 Tolerable |
+| RP-17 | Who Pays for the Server Later? | 4 | 🟡 Moderate |
 
 ---
 
@@ -441,7 +368,7 @@ Forgotten servers are a classic way for students to lose money unnecessarily.
 
 | Level | Count |
 |---|---|
-| 🔴 Critical (12–20) | 8 |
+| 🔴 Critical (12–20) | 5 |
 | 🟠 Substantial (6–11) | 9 |
 | 🟡 Moderate (4–5) | 2 |
 | 🟢 Tolerable (1–3) | 1 |
@@ -452,26 +379,23 @@ Forgotten servers are a classic way for students to lose money unnecessarily.
 
 | Rank | ID | Risk Title | Risk Score |
 |---|---|---|---|
-| 1 | RP-04 | Scope Creep | 16 |
+| 1 | RP-03 | Scope Creep | 16 |
 | 2 | RP-01 | Academic Workload and Schedule Delay | 12 |
-| 3 | RP-12 | Frontend Waiting on Backend | 12 |
+| 3 | RP-09 | Frontend Waiting on Backend | 12 |
 | 4 | RP-02 | Over-Reliance on AI Code | 12 |
-| 5 | RP-03 | Landlords Change Their Minds | 12 |
-| 6 | RP-07 | Deployment Failure on Demo Day | 12 |
-| 7 | RP-08 | Tenants Upload Fake Payment Proofs | 12 |
-| 8 | RP-09 | Private Data Got Leaked | 12 |
-| 9 | RP-11 | React Native Mobile Overrun | 9 |
-| 10 | RP-13 | Database Schema Conflicts | 9 |
-| 11 | RP-14 | Third-Party Services Fail or Block Us | 9 |
-| 12 | RP-15 | Knowledge Silos | 9 |
-| 13 | RP-06 | Low Landlord Adoption | 9 |
-| 14 | RP-17 | Dashboard Loads Too Slowly | 9 |
-| 15 | RP-05 | AI Token Limits Exhausted | 6 |
-| 16 | RP-16 | VietQR Format Incorrect | 6 |
-| 17 | RP-10 | Someone Else Builds It First | 6 |
-| 18 | RP-18 | Supabase Free-Tier Runs Out | 4 |
-| 19 | RP-20 | Who Pays for the Server Later? | 4 |
-| 20 | RP-19 | Tenants Don't Get Their Passwords | 3 |
+| 5 | RP-06 | Private Data Got Leaked | 12 |
+| 6 | RP-08 | React Native Mobile Overrun | 9 |
+| 7 | RP-10 | Database Schema Conflicts | 9 |
+| 8 | RP-11 | Third-Party Services Fail or Block Us | 9 |
+| 9 | RP-12 | Knowledge Silos | 9 |
+| 10 | RP-05 | Low Landlord Adoption | 9 |
+| 11 | RP-14 | Dashboard Loads Too Slowly | 9 |
+| 12 | RP-04 | AI Token Limits Exhausted | 6 |
+| 13 | RP-13 | VietQR Format Incorrect | 6 |
+| 14 | RP-07 | Someone Else Builds It First | 6 |
+| 15 | RP-15 | Supabase Free-Tier Runs Out | 4 |
+| 16 | RP-17 | Who Pays for the Server Later? | 4 |
+| 17 | RP-16 | Tenants Don't Get Their Passwords | 3 |
 
 ---
 
@@ -479,8 +403,8 @@ Forgotten servers are a classic way for students to lose money unnecessarily.
 
 The following risks have the highest **Risk Score** and demand immediate action/enforcement from Day 1:
 
-1. **RP-04 — Scope Creep (Score 16):** Freeze the MVP scope after Week 4 and defer additional features.
+1. **RP-03 — Scope Creep (Score 16):** Freeze the MVP scope after Week 4 and defer additional features.
 2. **RP-01 — Academic Workload and Schedule Delay (Score 12):** Track weekly milestones and rebalance work before delays affect later phases.
-3. **RP-12 — Frontend Waiting on Backend (Score 12):** Deliver APIs in batches so frontend integration can continue.
+3. **RP-09 — Frontend Waiting on Backend (Score 12):** Deliver APIs in batches so frontend integration can continue.
 4. **RP-02 — Over-Reliance on AI Code (Score 12):** Require human review and testing before AI-generated code is merged.
-5. **RP-03 — Landlords Change Their Minds (Score 12):** Freeze validated requirements and defer late changes.
+5. **RP-06 — Private Data Got Leaked (Score 12):** Enforce authentication, permissions, HTTPS, and safe test data before the final demonstration.

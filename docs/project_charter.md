@@ -8,11 +8,7 @@
 
 ### Project Purpose
 
-Vietnamese self-managing landlords commonly rely on notebooks, spreadsheets, calculators, and messaging applications such as Zalo to manage rental properties. These fragmented manual processes lead to calculation errors, payment disputes, forgotten lease renewals, and inefficient maintenance management.
-
-RosiHome is a lightweight property management platform that centralizes rental operations into a single application. The system enables landlords to manage properties, tenants, lease agreements, utility billing, VietQR-based payments, maintenance requests, and business dashboards while allowing tenants to view invoices, payment history, lease information, and maintenance status.
-
-This project formally authorizes the development of the RosiHome Minimum Viable Product (MVP) to satisfy the needs and expectations of its primary stakeholders.
+RosiHome is an educational project through which the team applies project management and software development knowledge to a real rental-management problem. The project also aims to deliver a complete, functional MVP that reduces manual billing errors, missed payment and lease deadlines, fragmented records, and overlooked maintenance requests while giving tenants clearer access to rental information.
 
 ---
 
@@ -20,12 +16,9 @@ This project formally authorizes the development of the RosiHome Minimum Viable 
 
 The project aims to:
 
-- Develop a centralized rental management platform for self-managing landlords.
-- Reduce manual administrative work through automation of rent and utility calculations.
-- Improve transparency between landlords and tenants.
-- Reduce payment disputes through centralized payment records.
-- Improve lease and maintenance management.
-- Deliver a functional MVP within the planned academic schedule.
+- Apply project management, software engineering, teamwork, and deployment practices in an academic setting.
+- Deliver a complete, functional MVP within the academic schedule.
+- Centralize billing, payment follow-up, lease reminders, maintenance tracking, and rental records to address the proposal's main pain points for landlords and tenants.
 
 ---
 
@@ -33,26 +26,13 @@ The project aims to:
 
 ### In Scope
 
-- User authentication
-- Property and room management
-- Tenant management
-- Lease management
-- Utility calculation
-- Monthly invoice generation
-- VietQR payment generation
-- Payment history
-- Maintenance request management
-- Dashboard and reporting
-- Notifications
+- Authentication; property, room, tenant, and lease management.
+- Utility calculations, invoices, VietQR generation, payment records, and reminders.
+- Maintenance requests, dashboards, reporting, and notifications.
 
 ### Out of Scope
 
-- AI-powered analytics
-- Payment gateway integration
-- Electronic signatures
-- IoT smart meter integration
-- Multi-landlord collaboration
-- Advanced accounting features
+- AI analytics, payment gateways, electronic signatures, IoT meters, multi-landlord collaboration, and advanced accounting.
 
 ---
 
@@ -216,23 +196,15 @@ These activities recur across every batch and are not tied to a single user stor
 
 # 7. Impact Analysis
 
-| Stakeholder      | Expected Impact                                                                                                                          |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Landlords        | Reduced administrative workload, improved payment tracking, better visibility into rental operations, fewer calculation errors.          |
-| Tenants          | Increased transparency, easier access to invoices and payment history, better communication regarding maintenance and lease information. |
-| Development Team | Practical experience in software engineering, project management, teamwork, and system deployment, with the potential to earn income through the application. |
-| University       | Demonstrates successful application of software engineering principles through a real-world capstone project.                            |
-| Supervisor       | Oversees project quality and ensures academic learning outcomes are achieved.                                                            |
+- Landlords and tenants gain simpler workflows and clearer rental information.
+- The team gains practical experience, while the university and supervisor can assess the application of course knowledge.
 
 ---
 
 # 8. Assumptions
 
-- Landlords and tenants have internet-enabled smartphones or computers.
-- Landlords are willing to adopt a digital management system.
-- Utility meter readings are entered accurately by landlords.
-- Payments continue to occur directly between tenant and landlord using VietQR.
-- Landlords manually verify payment receipts before confirming payment.
-- Cloud services remain available throughout the project.
-- Pilot users are available to provide feedback during testing.
-- Development will be completed within the academic project timeline.
+- Landlords and tenants have internet access and can use the system.
+- Landlords enter accurate meter readings and adopt the digital workflow.
+- Payments remain direct; landlords verify transfers before confirmation.
+- Required cloud services and pilot feedback remain available.
+- The team completes the MVP within the academic timeline.
