@@ -117,14 +117,14 @@ Frontend:   [  Pivot  ] ──► [UI Design Mocks] ──► [ FE Batch 1 Live 
 
 $$\text{Risk Exposure} = \text{Probability (1–5)} \times \text{Impact (1–5)}$$
 
-| ID | Risk Description | Prob. | Imp. | Exp. | Owner | Mitigation & Contingency Strategy |
-|:---:|---|:---:|:---:|:---:|:---:|---|
-| **R1** | **Compressed Timeline due to Week 5 Pivot:** 6-week execution window creates high delivery pressure. | 4 | 4 | **16** | Chí (PM) | Leverage AI coding agents to accelerate boilerplate; strictly enforce WIP=1 and modular ownership. |
-| **R2** | **AI Code Logic Flaws:** AI generates subtly incorrect logic. | 4 | 4 | **16** | All Devs | Mandatory PR peer inspection; 100% Vitest coverage on calculation engines. |
-| **R3** | **BE-FE Integration Delay:** Frontend blocked by API delays. | 3 | 4 | **12** | Chí (PM) | Backend leads by 1 batch (Sashimi); OpenAPI contracts agreed upfront. |
-| **R4** | **Third-Party Outage (VietQR/Supabase/Render):** API downtime. | 2 | 4 | **8** | Minh (BE3) | Offline string-format QR fallback; mock payment demo mode. |
-| **R5** | **Scope Creep (Feature Explosion):** Unapproved feature requests. | 3 | 4 | **12** | Chí (PM) | **Scope Freeze after Week 6**; route non-baseline ideas to Post-MVP. |
-| **R6** | **Pilot Landlord Non-Adoption:** Landlords delay testing. | 2 | 3 | **6** | Hưng (FE1) | Provide pre-populated sample data; maintain backup test landlords. |
+|   ID   | Risk Description                                                                                     | Prob. | Imp. |  Exp.  |   Owner    | Mitigation & Contingency Strategy                                                                  |
+| :----: | ---------------------------------------------------------------------------------------------------- | :---: | :--: | :----: | :--------: | -------------------------------------------------------------------------------------------------- |
+| **R1** | **Compressed Timeline due to Week 5 Pivot:** 6-week execution window creates high delivery pressure. |   4   |  4   | **16** |  Chí (PM)  | Leverage AI coding agents to accelerate boilerplate; strictly enforce WIP=1 and modular ownership. |
+| **R2** | **AI Code Logic Flaws:** AI generates subtly incorrect logic.                                        |   4   |  4   | **16** |  All Devs  | Mandatory PR peer inspection; 100% Vitest coverage on calculation engines.                         |
+| **R3** | **BE-FE Integration Delay:** Frontend blocked by API delays.                                         |   3   |  4   | **12** |  Chí (PM)  | Backend leads by 1 batch (Sashimi); OpenAPI contracts agreed upfront.                              |
+| **R4** | **Third-Party Outage (VietQR/Supabase/Render):** API downtime.                                       |   2   |  4   | **8**  | Minh (BE3) | Offline string-format QR fallback; mock payment demo mode.                                         |
+| **R5** | **Scope Creep (Feature Explosion):** Unapproved feature requests.                                    |   3   |  4   | **12** |  Chí (PM)  | **Scope Freeze after Week 6**; route non-baseline ideas to Post-MVP.                               |
+| **R6** | **Pilot Landlord Non-Adoption:** Landlords delay testing.                                            |   2   |  3   | **6**  | Hưng (FE1) | Provide pre-populated sample data; maintain backup test landlords.                                 |
 
 ---
 

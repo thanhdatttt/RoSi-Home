@@ -1,7 +1,5 @@
 # Database and service setup - RosiHone
-
 ## 1. Scope
-
 | Component | Service |
 |---|---|
 | Database (PostgreSQL) | Supabase |
@@ -10,9 +8,7 @@
 | Payment | VietQR (QR generation only) |
 
 ---
-
 ## 2. Supabase (Database) Setup
-
 1. Create a new project on [supabase.com](https://supabase.com), region: Singapore.
 2. Get the connection string (`Settings → Database → Connection string`), use the **Pooler (Transaction mode)** URL.
 3. Set backend env var:
@@ -37,9 +33,7 @@
    ```
 
 ---
-
 ## 3. Render (Backend Deploy) Setup
-
 1. Connect the GitHub repo → create a new **Web Service**.
 2. Build/start commands:
    ```
@@ -59,9 +53,7 @@
    ```
 5. Enable **Auto-Deploy** on `main` — every merged PR triggers a deploy.
 6. Health check path: `/api/v1/health`.
-
 ## 4. VietQR
-
 1. No third-party account needed — uses the public VietQR/napas247 standard.
 2. Backend generates the QR payload from: bank code, landlord account number, invoice amount, transfer description.
 3. Scope is generation only — no payment status callback, no bank integration; payment confirmation stays a manual landlord action.

@@ -1,19 +1,13 @@
 # Customer Feedback & User Acceptance Testing (UAT) Report
-
 **Project:** RosiHome Property Management MVP  
 **Date of Testing:** 12 August 2026
 **Tested By:** External User / Beta Tester  
 **Testing Scope:** Mobile Application MVP (Frontend UI & Core Flows)  
-
----
-
 ## 1. Overview
 On August 12, 2026, an external user conducted a hands-on testing session with the RosiHome mobile application MVP. The purpose of this session was to gather authentic customer feedback on usability, detect undiscovered bugs, and identify areas for improvement before the final release. 
 
 Below is the documented feedback categorized by type, along with the team's proposed resolutions.
-
 ## 2. Feedback Log
-
 | No. | Category | Customer Feedback / Issue Description | Team's Resolution & Action Item |
 |:---:|:---|:---|:---|
 | **1** | **Enhancement** | **Room Search:** Missing a search bar to quickly find specific rooms in a property. | **Accepted.** Will add a search input field at the top of the Room List screen. |
@@ -27,6 +21,5 @@ Below is the documented feedback categorized by type, along with the team's prop
 | **9** | **Functional Bug** | **Navigation Bar:** The Bottom Navigation bar is broken, the icons are squished to the left side. | **High Priority Fix.** Will debug the Flexbox layout styling in the Bottom Tab Navigator component to ensure icons are evenly distributed across the screen width. |
 | **10** | **UI/UX** | **Login Screen Clarity:** The login screen is confusing regarding credentials. It should explicitly state that Landlords use their *Email*, while Tenants use their *Lease-registered Phone Number*. | **Accepted.** Will redesign the Login form placeholders and add helper text to distinguish Landlord vs Tenant login methods. |
 | **11** | **Localization** | **Translation Issues:** Vietnamese language support is broken or incomplete in several screens. | **High Priority Fix.** Will review and update the `i18n` translation JSON files to ensure 100% coverage. |
-
 ## 3. Conclusion & Next Steps
 The feedback provided by the external tester is highly valuable. The majority of the issues identified are UI/UX inconsistencies and navigation bugs. The development team will register these 11 points into the project backlog as technical debt and prioritize fixing the "Functional Bugs" and "High Priority" UI issues before the final production rollout.

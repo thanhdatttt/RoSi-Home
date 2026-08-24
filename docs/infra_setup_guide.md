@@ -1,9 +1,5 @@
-# Infrastructure & CI/CD – RosiHome
-
-**Setup order:** Supabase DB → Supabase Storage → EmailJS → CI → CD
-
-## 1. Infrastructure Overview
-
+# Infrastructure Setup & CI/CD Guide - RosiHome
+## 1. Infrastructure overview
 | Component | Configuration |
 |---|---|
 | Hosting | Render Web Service |
@@ -14,17 +10,70 @@
 | Production URL | https://rosi-home.onrender.com |
 | Health check | https://rosi-home.onrender.com/health |
 
-## 2. Supabase Database
+The setup order is: **Supabase Database -> Supabase Storage -> EmailJS -> Expo -> CI -> CD**.
+## 2. Supabase Database setup
+Supabase provides a PostgreSQL database for the backend.
+### 2.1. Create the Supabase project
+1. Open [Supabase](https://supabase.com/) and create a new project.
+2. Select the team organization and a region close to the users, such as Singapore.
+3. Set and securely save the database password.
+4. Wait until the project is ready.
+### 2.2. Get the production connection string
+1. Open the Supabase project and click **Connect**.
+2. Copy the PostgreSQL connection string.
+3. Use it as the backend `DATABASE_URL` value.
 
-1. Create a Supabase project (choose a region close to users, e.g. Singapore), and securely save the DB password.
-2. Go to **Connect** → copy the PostgreSQL connection string → use it as `DATABASE_URL`.
-   - Prefer a direct connection; if only IPv4 is supported → use the **Session Pooler** connection string instead.
-   - ⚠️ Do not use the frontend Supabase URL/anon key as `DATABASE_URL`.
-3. Run the migration (Drizzle) with the production `DATABASE_URL` loaded from `.env`:
-   ```bash
-   cd backend
-   npm install
-   npm run db:migrate
+For a long-running Render Web Service, use the direct connection when the network supports it. If an IPv4-only connection is required, use the Supabase Session Pooler connection string instead. Do not use a frontend Supabase URL or anon key as `DATABASE_URL`.
+
+```text
+DATABASE_URL=<Supabase PostgreSQL connection string>
+```
+### 2.3. Apply the Drizzle schema migration
+Migration files are stored in `backend/src/db/migrations`. With the production `DATABASE_URL` loaded from the protected `.env` file, run:
+
+```bash
+cd backend
+npm install
+npm run db:migrate
+```
+
+The command applies pending migrations to the Supabase database. The Render build command does not run production migrations, so run this step before testing data-dependent APIs. Do not use `TEST_DATABASE_URL`, `npm run db:push`, or `npm run db:seed` for production without explicit approval.
+### 2.4. Verify the database
+- Open Supabase **Table Editor** or **SQL Editor** and confirm that the application tables exist.
+- Check the migration result in the database before connecting Render.
+- Keep the database password and `DATABASE_URL` private.
+## 3. Supabase Storage setup
+The backend stores maintenance photos and payment-proof files in private Supabase Storage buckets.
+### 3.1. Create the buckets
+1. In the Supabase project, open **Storage**.
+2. Select **New Bucket**.
+3. Create a bucket named `maintenance-photos`.
+4. Create a second bucket named `payment-proofs`.
+5. Keep both buckets **private**. The backend returns signed URLs for authorized file access.
+### 3.2. Configure the backend keys
+Get the project URL and server-side service role key from the Supabase project settings, then configure:
+
+```text
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_SERVICE_KEY=<server-side service role key>
+```
+
+`SUPABASE_SERVICE_KEY` is a server secret. It must only be stored in the backend/Render Environment and must never be placed in the mobile app, committed to Git, or shown in printed screenshots.
+### 3.3. Verify Storage
+- Confirm both bucket names exactly match the backend code.
+- Test an image upload and signed-URL read through the backend API.
+- Check Supabase Storage logs if an upload fails.
+## 4. EmailJS setup
+1. Open the [EmailJS website](https://www.emailjs.com/) and sign in.
+2. Create or connect an email service.
+3. Create an email template.
+4. Format the dynamic template fields as:
+
+   ```text
+   To:      {{to}}
+   Subject: {{subject}}
+   From:    {{from}}
+   Body:    {{body}}
    ```
    - Render does **not** run migrations automatically during build → this step must be run manually before testing data-dependent APIs.
    - ⚠️ Do not use `TEST_DATABASE_URL`, `db:push`, or `db:seed` for production without explicit approval.

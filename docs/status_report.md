@@ -1,5 +1,4 @@
 # Project Status Report #1 — 50% Milestone (Status Email)
-
 - **Completion scope:** **62.75%** (155 / 247 Story Points) — 31 / 51 User Stories completed (8 / 15 Features shipped).
 - **Completion date:** 92 remaining points / 15.5 SP/day = **~6 working days** (~2 calendar weeks: Weeks 7 & 8) + **2 weeks Phase 3 Pilot** $\rightarrow$ **Target completion: Week 10 (ON TIME)**.
 - **Budget usage & Estimated final cost:** Spent: **1,900,000 VND** (44.7%) | Estimated final cost (EAC): **~3,850,000 VND** (On Budget).
@@ -17,9 +16,7 @@
 - **Working software and documentation:** Backend API deployed on Render (`/api/v1`), Mobile Expo Preview build, and reference documentation at root `docs/` (`product_backlog_2.0.md`, `project_estimate_2.0.md`, `project_plan_2.0.md`).
 
 ---
-
 # Project Status Report #2 — 100% Milestone (Final Release Status Email)
-
 - **Completion scope:** **100%** (247 / 247 Story Points) — **51 / 51 User Stories completed** (**15 / 15 Features shipped & accepted**).
 - **Completion date:** **All product deliverables completed at Week 10 (Day 45)** $\rightarrow$ **ON TIME**.
 - **Budget usage & Estimated final cost:** Total actual spend: **3,850,000 VND / 4,250,000 VND** (**90.6%** of budget) $\rightarrow$ **UNDER BUDGET (Saved ~400,000 VND)**.
