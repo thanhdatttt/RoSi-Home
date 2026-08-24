@@ -40,7 +40,7 @@ The 51 User Stories are structured across **3 execution phases**, consisting of 
 | | **Batch 2** | **Core Operations** | 87 SP | TENANT (01–02), LEASE (01–06), METER (01–03), MAINT (01–05) | Tenant profiling, lease agreement lifecycle, monthly utility meter recording, and maintenance tracking. |
 | **Phase 2: Advanced Features**<br/>*(Weeks 7–9)* | **Batch 3** | **Billing & Payments** | 58 SP | INVOICE (01–04), VIETQR (01–02), PAYMENT (01–03), REMINDER (01–02) | Automated invoice calculation, PDF export, dynamic VietQR generation, payment verification, and payment reminders. |
 | | **Batch 4** | **Analytics & Reports**| 34 SP | DASH (01–04), REPORT (01–05) | Visual dashboard (occupancy rate, collected revenue, outstanding debt), and financial PDF reports. |
-| **Phase 3: Pilot & Closure**<br/>*(Week 10)* | — | **Pilot & Final Release** | — | End-to-End Testing, Production Deployment, Final Presentation | Operational system on Production validated with 2 real landlords and final demo video. |
+| **Phase 3: Pilot & Closure**<br/>*(Week 10)* | — | **Pilot & Final Release** | — | End-to-End Testing, Deployment, Final Presentation | Deployed operational system validated with 2 real landlords and final demo video. |
 ## 4. Team Organization & Responsibilities
 Work is assigned based on each member's technical background and domain ownership:
 
@@ -62,12 +62,12 @@ Work is assigned based on each member's technical background and domain ownershi
 | **M0** | Weeks 1–4 | **Initiation & Scoping** | Confirm RoSi-Home topic & 51-Story Backlog | Project proposal & Product Backlog formally approved. |
 | **M1** | Weeks 5–6 | **Phase 1: Core Foundation** | Complete Batch 1 (Foundation) & Batch 2 (Core Ops) | Auth, Rooms, Tenants, Leases, and Meters running on Mobile. |
 | **M2** | Weeks 7–9 | **Phase 2: Advanced Features**| Complete Batch 3 (Billing), Batch 4 (Analytics) & E2E Integration | Automated invoicing, VietQR scanning, and Dashboard/Reports operational; all 51 stories passing test suite. |
-| **M3** | Week 10 | **Phase 3: Project Closure & Pilot** | Real-world Pilot and Final Package | Production release deployed; successful trial with 2 landlords; final presentation & demo ready. |
+| **M3** | Week 10 | **Phase 3: Project Closure & Pilot** | Real-world Pilot and Final Package | Fully deployed system; successful trial with 2 landlords; final presentation & demo ready. |
 ## 6. Execution Process & Quality Gates
 For complete technical definitions, coding standards, and lifecycle policies, refer to the Software Process Definition document.
-### 6.1. 5-Step Kanban Workflow
-Every User Story on Trello flows through 5 standard stages:  
-`Ready` $\rightarrow$ `In Progress` *(WIP = 1 task/person)* $\rightarrow$ `Code Review` *(GitHub PR)* $\rightarrow$ `Testing` *(Mobile Verification)* $\rightarrow$ `Done`.
+### 6.1. 3-Step Kanban Workflow
+Every User Story on Trello flows through 3 standard stages:  
+`Ready` $\rightarrow$ `In Progress` *(WIP = 1 task/person)* $\rightarrow$ `Done`.
 ### 6.2. Core Quality Gates
 1. **Local Validation:** Developers run local Unit Tests, Linter, and TypeScript compiler checks before opening a PR.
 2. **Peer Review:** Every Pull Request requires at least one approval from another team member before merging.
