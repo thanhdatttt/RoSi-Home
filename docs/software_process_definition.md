@@ -37,13 +37,16 @@ Every User Story must flow through these 5 steps on Trello:
 `Ready` -> `In Progress` -> `Code Review` -> `Testing` -> `Done`
 
 **Definition of Done (DoD):**
-The project maintains a single source of truth for DoD to avoid inconsistencies. Please refer to **Section 1.4 (Universal Definition of Done) in the product_backlog.md document** for the complete criteria.
-
-Key requirements to summarize:
-- [ ] Code passes automated checks (TypeCheck, Vitest) on GitHub Actions (CI Gate).
-- [ ] Pull Request (PR) has been approved by at least 1 other team member (Peer Review).
-- [ ] Behavior is verified on the Mobile app interacting with the real API.
-- [ ] No unresolved Critical or High severity defects remain.
+Every User Story must satisfy all of the following criteria before its status moves to `Done`:
+- [ ] All Acceptance Criteria (AC) pass, including edge cases (empty states, invalid inputs, missing dependencies), not just the happy path.
+- [ ] Role-based authorization and data ownership rules are strictly enforced by the backend API.
+- [ ] Relevant automated tests pass, covering core functional paths and critical validation/authorization logic.
+- [ ] Code passes all automated CI checks (TypeCheck, Lint, Unit/Integration tests) on GitHub Actions before merging.
+- [ ] Pull Request (PR) is reviewed and approved by at least 1 other team member (Peer Review).
+- [ ] Database migrations and environment configuration changes are reproducible and committed to the repository.
+- [ ] The completed feature is deployed to and verified on the Mobile app interacting with the real Staging API.
+- [ ] No unresolved Critical or High severity defects remain within the story scope.
+- [ ] Error messages and API responses do not expose passwords, tokens, private files, or unauthorized tenant/landlord data.
 
 **Quality Policies:**
 - **Domain-based Ownership:** Work is assigned by business domain (e.g., Auth, Maintenance) rather than single User Stories. This minimizes context-switching and merge conflicts. While a developer may own multiple stories, they should ideally implement them sequentially.
