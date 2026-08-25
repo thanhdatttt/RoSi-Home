@@ -90,82 +90,82 @@ Planning Poker refines selected product User Stories. Supporting technical, proj
 | Backlog Item   | Description                                           | Initial SP (Chí) | Initial SP (Hưng) | Initial SP (Đạt) | Final SP |
 | -------------- | ----------------------------------------------------- | ---------------: | ----------------: | ---------------: | -------: |
 |                | **Technical and Project Tasks**                       |                  |                   |                  |          |
-| TASK-TECH-01   | Set up backend infrastructure                         |                5 |                 5 |                5 |        5 |
-| TASK-TECH-02   | Set up frontend/mobile infrastructure                 |                5 |                 5 |                5 |        5 |
-| TASK-TECH-03   | Set up quality tooling                                |                8 |                 8 |                8 |        8 |
-| TASK-TECH-04   | Set up continuous integration                         |                3 |                 3 |                3 |        3 |
+| TASK-TECH-01   | Set up backend infrastructure                         |                5 |                 5 |                3 |        5 |
+| TASK-TECH-02   | Set up frontend/mobile infrastructure                 |                5 |                 5 |                8 |        5 |
+| TASK-TECH-03   | Set up quality tooling                                |                8 |                 8 |                5 |        8 |
+| TASK-TECH-04   | Set up continuous integration                         |                5 |                 3 |                3 |        3 |
 | TASK-TECH-05   | Set up continuous deployment to Render                |                3 |                 3 |                3 |        3 |
 | TASK-PM-01     | Manage the team's Trello board                        |                5 |                 5 |                5 |        5 |
-|                | **Technical/Project Task Subtotal (6 items)**         |           **29** |            **29** |           **29** |   **29** |
+|                | **Technical/Project Task Subtotal (6 items)**         |           **31** |            **29** |           **27** |   **29** |
 |                | **Documentation Tasks**                               |                  |                   |                  |          |
-| TASK-DOC-01    | Write the Technical Architecture document             |                8 |                 8 |                8 |        8 |
-| TASK-DOC-03    | Write Product Backlog Version 1                       |               13 |                13 |               13 |       13 |
+| TASK-DOC-01    | Write the Technical Architecture document             |                8 |                 8 |                13 |        8 |
+| TASK-DOC-03    | Write Product Backlog Version 1                       |               13 |                13 |               8 |       13 |
 | TASK-DOC-05    | Write Product Backlog 2.0                             |               13 |                13 |               13 |       13 |
-| TASK-DOC-07    | Write the Project Charter                             |                8 |                 8 |                8 |        8 |
-| TASK-DOC-09    | Write the Software Project Estimation document        |               13 |                13 |               13 |       13 |
+| TASK-DOC-07    | Write the Project Charter                             |               13 |                 8 |                8 |        8 |
+| TASK-DOC-09    | Write the Software Project Estimation document        |               8 |                13 |               13 |       13 |
 | TASK-DOC-11    | Write the Project Proposal                            |                8 |                 8 |                8 |        8 |
 | TASK-DOC-13    | Write the Statement of Work                           |                8 |                 8 |                8 |        8 |
 | TASK-DOC-15    | Write the Vision and Scope document                   |                8 |                 8 |                8 |        8 |
 | TASK-DOC-17    | Write the Risk Management Plan                        |                8 |                 8 |                8 |        8 |
 |                | **Documentation Task Subtotal (9 items)**             |           **87** |            **87** |           **87** |   **87** |
 |                | **EPIC 1: Infrastructure and User Management**        |                  |                   |                  |          |
-| US-AUTH-01     | Register a landlord account                           |                3 |                 3 |                3 |        3 |
-| US-AUTH-02     | Log in                                                |                5 |                 5 |                5 |        5 |
-| US-AUTH-03     | Log out                                               |                1 |                 2 |                3 |        3 |
-| US-AUTH-04     | Enforce role and data ownership                       |                5 |                 5 |                5 |        5 |
-| US-AUTH-05     | Change password                                       |                3 |                 3 |                3 |        3 |
-| US-PROFILE-01  | View and update a user profile                        |                2 |                 2 |                2 |        2 |
-| US-AUTH-06     | Recover a forgotten password                          |                5 |                 5 |                5 |        5 |
+| US-AUTH-01     | Register a landlord account                           |                3 |                 2 |                3 |        3 |
+| US-AUTH-02     | Log in                                                |                8 |                 5 |                5 |        5 |
+| US-AUTH-03     | Log out                                               |                5 |                 1 |                3 |        3 |
+| US-AUTH-04     | Enforce role and data ownership                       |                5 |                 8 |                5 |        5 |
+| US-AUTH-05     | Change password                                       |                3 |                 5 |                3 |        3 |
+| US-PROFILE-01  | View and update a user profile                        |                1 |                 2 |                2 |        2 |
+| US-AUTH-06     | Recover a forgotten password                          |                3 |                 5 |                5 |        5 |
 |                | **EPIC 2: Portfolio and Property Setup**              |                  |                   |                  |          |
-| US-PROPERTY-01 | Create a property                                     |                3 |                 3 |                3 |        3 |
-| US-PROPERTY-02 | View and update owned properties                      |                2 |                 2 |                2 |        2 |
-| US-ROOM-01     | Add a room to a property                              |                3 |                 3 |                3 |        3 |
-| US-ROOM-02     | View and update room information                      |                2 |                 2 |                2 |        2 |
-| US-ROOM-03     | Add multiple rooms to a property                      |                5 |                 5 |                5 |        5 |
-| US-TENANT-01   | View and update tenant information                    |                3 |                 5 |                3 |        3 |
-| US-TENANT-02   | Provision a tenant account from a lease               |                8 |                 8 |                8 |       13 |
-| US-UTILITY-01  | Configure utility rates                               |                5 |                 3 |                3 |        2 |
-| US-UTILITY-02  | View and update utility rates                         |                3 |                 3 |                3 |        3 |
-| US-CHARGE-01   | Configure recurring property surcharges               |                5 |                 3 |                5 |        3 |
+| US-PROPERTY-01 | Create a property                                     |                5 |                 3 |                3 |        3 |
+| US-PROPERTY-02 | View and update owned properties                      |                1 |                 2 |                 2 |        2 |
+| US-ROOM-01     | Add a room to a property                              |                3 |                 2 |                3 |        3 |
+| US-ROOM-02     | View and update room information                      |                2 |                 2 |                3 |        2 |
+| US-ROOM-03     | Add multiple rooms to a property                      |                3 |                 5 |                5 |        5 |
+| US-TENANT-01   | View and update tenant information                    |                5 |                 3 |                3 |        3 |
+| US-TENANT-02   | Provision a tenant account from a lease               |                8 |                 13 |                13 |       13 |
+| US-UTILITY-01  | Configure utility rates                               |                2 |                 2 |                1 |        2 |
+| US-UTILITY-02  | View and update utility rates                         |                3 |                 2 |                3 |        3 |
+| US-CHARGE-01   | Configure recurring property surcharges               |                3 |                 3 |                2 |        3 |
 |                | **EPIC 3: Automated Monthly Billing and Payment**     |                  |                   |                  |          |
-| US-METER-01    | Record an initial meter reading                       |                3 |                 1 |                2 |        1 |
-| US-METER-02    | Record monthly readings and calculate consumption     |               13 |                13 |               13 |       13 |
-| US-METER-03    | Correct a reading used for billing                    |                5 |                 3 |                3 |        3 |
+| US-METER-01    | Record an initial meter reading                       |                2 |                 1 |                1 |        1 |
+| US-METER-02    | Record monthly readings and calculate consumption     |               13 |                8 |               13 |       13 |
+| US-METER-03    | Correct a reading used for billing                    |                3 |                 5 |                3 |        3 |
 | US-INVOICE-01  | Generate a monthly invoice                            |               13 |                13 |               13 |       13 |
-| US-INVOICE-02  | View an invoice                                       |                3 |                 3 |                3 |        3 |
-| US-INVOICE-03  | Download an invoice document                          |                5 |                 5 |                5 |        5 |
-| US-INVOICE-04  | Review and send a draft invoice                       |                5 |                 5 |                5 |        5 |
+| US-INVOICE-02  | View an invoice                                       |                3 |                 5 |                3 |        3 |
+| US-INVOICE-03  | Download an invoice document                          |                5 |                 3 |                5 |        5 |
+| US-INVOICE-04  | Review and send a draft invoice                       |                8 |                 5 |                5 |        5 |
 | US-VIETQR-01   | Configure landlord payment details                    |                3 |                 3 |                3 |        3 |
 | US-VIETQR-02   | Generate and display an invoice VietQR code           |               13 |                13 |               13 |       13 |
-| US-PAYMENT-01  | Upload payment proof                                  |                5 |                 5 |                5 |        5 |
-| US-PAYMENT-02  | Verify payment manually                               |                3 |                 3 |                3 |        3 |
+| US-PAYMENT-01  | Upload payment proof                                  |                3 |                 5 |                5 |        5 |
+| US-PAYMENT-02  | Verify payment manually                               |                3 |                 3 |                5 |        3 |
 | US-PAYMENT-03  | View payment history and outstanding balances         |                5 |                 5 |                5 |        5 |
-| US-REMINDER-01 | Receive an automatic overdue-payment reminder         |                5 |                 5 |                8 |        8 |
-| US-REMINDER-02 | Send a manual payment reminder                        |                3 |                 8 |                3 |        5 |
+| US-REMINDER-01 | Receive an automatic overdue-payment reminder         |                5 |                 8 |                8 |        8 |
+| US-REMINDER-02 | Send a manual payment reminder                        |                8 |                 5 |                5 |        5 |
 |                | **EPIC 4: Lease Management and Maintenance Tracking** |                  |                   |                  |          |
-| US-LEASE-01    | Create a digital lease                                |                5 |                 5 |                5 |        5 |
-| US-LEASE-02    | View lease information                                |                2 |                 2 |                2 |        2 |
+| US-LEASE-01    | Create a digital lease                                |                5 |                 8 |                5 |        5 |
+| US-LEASE-02    | View lease information                                |                2 |                 2 |                3 |        2 |
 | US-LEASE-03    | Update or renew a lease                               |                5 |                 3 |                5 |        5 |
 | US-LEASE-04    | End a lease and release a room                        |                3 |                 3 |                3 |        3 |
-| US-LEASE-05    | Receive a lease-expiration reminder                   |                8 |                 5 |                5 |        5 |
+| US-LEASE-05    | Receive a lease-expiration reminder                   |                5 |                 5 |                8 |        5 |
 | US-LEASE-06    | View upcoming lease expirations                       |                3 |                 3 |                3 |        3 |
-| US-MAINT-01    | Submit a maintenance request                          |                5 |                 5 |                5 |        5 |
+| US-MAINT-01    | Submit a maintenance request                          |                5 |                 5 |                3 |        5 |
 | US-MAINT-02    | View submitted maintenance requests                   |                2 |                 2 |                2 |        2 |
-| US-MAINT-03    | Review maintenance requests                           |                3 |                 2 |                2 |        2 |
-| US-MAINT-04    | Update maintenance status                             |                3 |                 2 |                3 |        2 |
+| US-MAINT-03    | Review maintenance requests                           |                2 |                 2 |                1 |        2 |
+| US-MAINT-04    | Update maintenance status                             |                2 |                 2 |                3 |        2 |
 | US-MAINT-05    | View maintenance history by room                      |                3 |                 3 |                3 |        3 |
 |                | **EPIC 5: Portfolio Performance Monitoring**          |                  |                   |                  |          |
 | US-DASH-01     | View occupied room count                              |                3 |                 3 |                3 |        3 |
 | US-DASH-02     | View monthly revenue summary                          |                5 |                 5 |                5 |        5 |
 | US-DASH-03     | View outstanding and overdue invoices                 |                5 |                 5 |                5 |        5 |
-| US-DASH-04     | View upcoming lease expirations on the dashboard      |                3 |                 3 |                3 |        3 |
-| US-REPORT-01   | Select a reporting period and generate a report       |                5 |                13 |                8 |       13 |
-| US-REPORT-02   | Analyze financial performance and debt                |                8 |                 8 |               13 |       13 |
+| US-DASH-04     | View upcoming lease expirations on the dashboard      |                3 |                 3 |                2 |        3 |
+| US-REPORT-01   | Select a reporting period and generate a report       |                13 |                13 |                5 |       13 |
+| US-REPORT-02   | Analyze financial performance and debt                |                8 |                 13 |               13 |       13 |
 | US-REPORT-03   | Analyze occupancy, churn, and lease expirations       |                8 |                 8 |                8 |        8 |
-| US-REPORT-04   | Analyze maintenance efficiency                        |                5 |                 5 |                8 |        5 |
+| US-REPORT-04   | Analyze maintenance efficiency                        |                5 |                 3 |                8 |        5 |
 | US-REPORT-05   | Export a business report as PDF                       |                5 |                 5 |                5 |        5 |
-|                | **Product User Story Subtotal (51 items)**            |          **236** |           **237** |          **243** |  **247** |
-|                | **Grand Total (66 items)**                            |          **352** |           **353** |          **359** |  **363** |
+|                | **Product User Story Subtotal (51 items)**            |          **242** |           **243** |          **244** |  **247** |
+|                | **Grand Total (66 items)**                            |          **360** |           **359** |          **358** |  **363** |
 
 ---
 ## 4. Story-Point-Based Effort Estimation
@@ -320,7 +320,6 @@ No risk factor is included here.
 | Story Points + Expert Judgment | **64.2 person-days** | Current 66-item backlog and time-calibrated SP       |
 | Linear regression              | **55.5 person-days** | Fitted line from five normalized historical projects |
 | Difference                     |  **8.7 person-days** | The SP result is 15.7% higher than regression        |
-
 ### 6.2 Final Baseline Selection
 The **64.2-person-day Story Point result** is selected because:
 
